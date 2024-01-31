@@ -1,0 +1,226 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_wunderbyte_table/viewtable
+    Template which defines a mooduell view page.
+    Classes required for JS:
+    * none
+    Data attributes required for JS:
+    * none
+    Context variables required for this template:
+    * statistics - array: An array with values.
+    * opengames - array: empty array, will be filled with JS.
+    * finishedgames - array: empty array, will be filled with JS.
+    * highscores - array: empty array, will be filled with JS.
+
+    Example context (json):
+    {
+    "filter": {
+        "categories": [
+        {
+            "collapsed": "collapsed",
+            "uniqueid": "12345",
+            "expanded": true,
+            "name": "Category1",
+            "columnname": "tablecolumn1",
+            "category": "tablecolumn1",
+            "default": true,
+            "values": [
+            {
+                "value": "value1",
+                "key": "Value1",
+                "checked": "checked"
+            },
+            {
+                "value": "value2",
+                "key": "Value2",
+                "checked": ""
+            }
+            ],
+            "datepicker": false
+        },
+        {
+            "collapsed": "",
+            "uniqueid": "67890",
+            "idstring": "sdkjafjlsadjflasjdklf",
+            "expanded": false,
+            "name": "Category2",
+            "columnname": "tablecolumn2",
+            "default": false,
+            "values": [
+            {
+                "value": "value4",
+                "key": "Value4",
+                "checked": "",
+                "count": "8"
+            },
+            {
+                "value": "value5",
+                "key": "Value5",
+                "checked": "checked",
+                "count": "5"
+            }
+            ],
+            "datepicker": true,
+            "datepickers": [
+            {
+                "timestamp": true,
+                "label": "DatePicker1",
+                "checkboxlabel": "Enable Date Picker 1",
+                "datereadable": "2023-05-17",
+                "timereadable": "09:30",
+                "operator": "greater",
+                "columnname": "column1",
+                "startcolumn": "",
+                "endcolumn": "",
+                "starttimestamp": "",
+                "startdatereadable": "",
+                "starttimereadable": "",
+                "endtimestamp": "",
+                "enddatereadable": "",
+                "endtimereadable": "",
+                "possibleoperations": [
+                {
+                    "operator": "greater",
+                    "label": "Greater than"
+                },
+                {
+                    "operator": "less",
+                    "label": "Less than"
+                }
+                ]
+            },
+            {
+                "timestamp": false,
+                "label": "DatePicker2",
+                "checkboxlabel": "Enable Date Picker 2",
+                "datereadable": "",
+                "timereadable": "",
+                "operator": "",
+                "columnname": "column2",
+                "startcolumn": "startcolumn",
+                "endcolumn": "endcolumn",
+                "starttimestamp": "123456",
+                "startdatereadable": "2023-05-15",
+                "starttimereadable": "12:00",
+                "endtimestamp": "789012",
+                "enddatereadable": "2023-05-19",
+                "endtimereadable": "18:00",
+                "possibleoperations": [
+                {
+                    "operator": "equals",
+                    "label": "Equals"
+                },
+                {
+                    "operator": "between",
+                    "label": "Between"
+                }
+                ]
+            }
+            ]
+        }
+        ]
+    }
+    }
+
+}}
+
+{{#filter}}
+    <div class="wunderbyteTableFilter">
+    {{#categories}}
+    <div class="border mb-4 wbtablefilter-{{columnname}}">
+        <div class="form-group m-0">
+        <div class="p-4 align-items-center collapse-accordion-toggle text-left {{collapsed}}" title="filterbtn-{{uniqueid}}"
+        data-toggle="collapse" data-target="#id_collapse_{{columnname}}" role="button"
+        {{#expanded}}
+            aria-expanded="true"
+        {{/expanded}}
+        {{^expanded}}
+            aria-expanded="false"
+        {{/expanded}}
+        aria-controls="id_collapse_{{columnname}}">
+            <div class="position-relative d-flex ftoggler align-items-center position-relative mr-1">
+                <div class="d-flex align-self-stretch align-items-center mb-0 filtertitle" aria-hidden="true">
+                    {{name}}
+                </div>
+                <span class="ml-auto">
+                        <!-- Icon -->
+                        <svg width="15" height="2" viewBox="0 0 15 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="15" height="2" fill="currentColor"></rect>
+                        </svg>
+
+                        <svg width="15" height="16" viewBox="0 0 15 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M0 7H15V9H0V7Z" fill="currentColor"></path>
+                            <path d="M6 16L6 8.74228e-08L8 0L8 16H6Z" fill="currentColor"></path>
+                        </svg>
+
+                </span>
+            </div>
+        </div>
+        </div>
+            <div class="collapse mt-2 {{show}}" id="id_collapse_{{columnname}}">
+                <input class="search form-control" name="filtersearch-{{columnname}}" placeholder="{{#str}}search, core{{/str}}" hidden>
+                {{#default}}
+                <ul class="wunderbyterFilterList pt-2">
+                    {{#values}}
+                        <li class="form-check">
+                                <input class="filterelement form-check-input" type="checkbox" value="{{value}}" id="{{key}}{{columnname}}{{idstring}}" {{checked}} name="{{category}}" data-action="csshide" data-key="{{key}}" data-targetvalue="{{value}}">
+                                <label class="form-check-label" for="{{key}}{{columnname}}{{idstring}}">
+                                    {{key}} {{#count}}({{count}}){{/count}}
+                                </label>
+                        </li>
+                    {{/values}}
+                </ul>
+                {{/default}}
+                {{#datepicker}}
+                    {{#datepickers}}
+                        <form class="datepickerform">
+                            {{#timestamp}}
+                                <input class="filterelement form-check-input" type="checkbox" id="{{label}}{{columnname}}{{idstring}}" {{checked}} data-action="csshide" name="{{columnname}}" value="datecheckbox" data-dateelement = "dateelement" data-filtername="{{label}}" data-operator="{{operator}}" data-columnname="{{columnname}}">
+                                <label class="filterelement form-check-label" for="{{label}}{{columnname}}{{idstring}}">{{checkboxlabel}}</label>
+                                <div class="datepicker-label">{{label}}</div>
+                                <input class="filterelement datepicker-input" type="date" id="{{label}}{{columnname}}{{idstring}}datefilter_date" value="{{datereadable}}" data-timestamp="{{timestamp}}" name="{{columnname}}_single-date" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}">
+                                <input class="filterelement datepicker-input" type="time" id="{{label}}{{columnname}}{{idstring}}datefilter_time" name="{{columnname}}_single-time" value="{{timereadable}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}">
+                            {{/timestamp}}
+                            {{#startcolumn}}
+
+                                <input class="filterelement form-check-input" type="checkbox" id="{{label}}{{columnname}}{{idstring}}" {{checked}} data-action="csshide" name="{{columnname}}" value="datecheckbox" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}" data-operator="{{operator}}" data-timespan="true">
+                                <label class="filterelement form-check-label" for="{{label}}{{columnname}}{{idstring}}">{{checkboxlabel}}</label>
+                                <div class="filtertimespan">
+                                    <div class="datepicker-label">{{#str}} startvalue, local_wunderbyte_table {{/str}}</div>
+                                    <input class="filterelement datepicker-input" type="date" id="startdate_date_{{startcolumn}}{{label}}{{columnname}}{{idstring}}" value="{{startdatereadable}}" data-timestamp="{{starttimestamp}}" name="date-{{startcolumn}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}" data-applytocolumn="{{startcolumn}}">
+                                    <input class="filterelement datepicker-input" type="time" id="startdate_time_{{startcolumn}}{{label}}{{columnname}}{{idstring}}" name="time-{{startcolumn}}" value="{{starttimereadable}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}" data-applytocolumn="{{startcolumn}}">
+                                    <div class="datepicker-label">{{#str}} endvalue, local_wunderbyte_table {{/str}}</div>
+                                    <input class="filterelement datepicker-input" type="date" id="enddate_date_{{endcolumn}}{{label}}{{columnname}}{{idstring}}" value="{{enddatereadable}}" data-timestamp="{{endtimestamp}}" name="date-{{endcolumn}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}" data-applytocolumn="{{endcolumn}}">
+                                    <input class="filterelement datepicker-input" type="time" id="enddate_time_{{endcolumn}}{{label}}{{columnname}}{{idstring}}" name="time-{{endcolumn}}" value="{{endtimereadable}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}" data-applytocolumn="{{endcolumn}}">
+                                </div>
+                                <div>
+                                    <label for="filteroperationselect_{{label}}{{columnname}}{{idstring}}" class="datepicker-label">{{#str}} displayrecords, local_wunderbyte_table {{/str}}</label>
+                                    <select class="form-control filterelement" id="filteroperationselect_{{label}}{{columnname}}{{idstring}}" name="{{columnname}}" data-dateelement = "dateelement" data-filtername="{{label}}" data-columnname="{{columnname}}">
+                                        {{#possibleoperations}}
+                                            <option value="{{operator}}">{{label}}</option>
+                                        {{/possibleoperations}}
+                                    </select>
+                                    <div class="datepicker-label">{{#str}} selectedtimespan, local_wunderbyte_table {{/str}}</div>
+                                </div>
+
+                            {{/startcolumn}}
+                        </form>
+                    {{/datepickers}}
+                {{/datepicker}}
+            </div>
+        </div>
+    {{/categories}}
+    </div>
+{{/filter}}
