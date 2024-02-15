@@ -73,7 +73,7 @@ $string['substitutionspool:mailproblems'] = 'Click here if you have problems wit
 $string['substitutionspool:copypastemails'] = 'You can copy the emails manually and paste them into the BCC of your mail client:';
 $string['gateway'] = 'Gateway';
 $string['invisibleoption'] = '<i class="fa fa-eye-slash" aria-hidden="true"></i>';
-$string['showmore'] = 'Show more';
+$string['showdescription'] = 'Show description';
 $string['sportsdivision'] = 'Sports division';
 $string['sportsdivisions'] = 'Sports divisions';
 $string['titleprefix'] = 'Course number';
@@ -225,7 +225,7 @@ $string['action'] = 'Action';
 // Easy availability feature.
 $string['easyavailability:overbook'] = 'Even if the course is fully booked';
 $string['easyavailability:previouslybooked'] = 'Users who already booked a specific USI course are always allowed to book';
-$string['easyavailability:selectusers'] = 'Selected users are allowed to book outside this timespan';
+$string['easyavailability:selectusers'] = 'Selected users are allowed to book outside normal booking times';
 $string['easyavailability:formincompatible'] = '<div class="alert alert-warning">This form uses availability conditions
  that are incompatible with this form. Please contact a M:USI admin.</div>';
  $string['easyavailability:openingtime'] = 'Can be booked from';

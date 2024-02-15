@@ -61,6 +61,24 @@ class responsiblecontact extends field_base {
     public static $header = MOD_BOOKING_HEADER_RESPONSIBLECONTACT;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -134,12 +152,15 @@ class responsiblecontact extends field_base {
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
         if (empty($data->importing) && !empty($data->id)) {
-            $teacherhandler = new teachers_handler($data->id);
-            $teacherhandler->set_data($data);
+            if (empty($data->responsiblecontact)) {
+                $data->responsiblecontact = $settings->responsiblecontact ?? [];
+            }
         } else {
             if (!empty($data->responsiblecontact)) {
                 $userids = teachers_handler::get_user_ids_from_string($data->responsiblecontact);
                 $data->responsiblecontact = $userids[0] ?? [];
+            } else {
+                $data->responsiblecontact = $settings->responsiblecontact ?? [];
             }
         }
     }

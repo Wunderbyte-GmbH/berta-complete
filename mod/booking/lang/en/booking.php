@@ -84,8 +84,8 @@ $string['reviewed'] = 'Reviewed';
 $string['rowupdated'] = 'Row was updated.';
 $string['search'] = 'Search...';
 $string['semesterid'] = 'SemesterID';
+$string['nosemester'] = 'No semester chosen';
 $string['sendmailtoallbookedusers'] = 'Send e-mail to all booked users';
-$string['showmore'] = 'Show more';
 $string['sortorder'] = 'Sort order';
 $string['sortorder:asc'] = 'A&rarr;Z';
 $string['sortorder:desc'] = 'Z&rarr;A';
@@ -187,6 +187,13 @@ $string['booking:viewrating'] = 'View the total rating you received';
 $string['booking:addeditownoption'] = 'Add new option and edit own options.';
 $string['booking:canseeinvisibleoptions'] = 'View invisible options.';
 $string['booking:changelockedcustomfields'] = 'Can change locked custom booking option fields.';
+
+$string['booking:expertoptionform'] = "Expert option form";
+$string['booking:reducedoptionform1'] = "1. Reduced option form for course category";
+$string['booking:reducedoptionform2'] = "2. Reduced option form for course category";
+$string['booking:reducedoptionform3'] = "3. Reduced option form for course category";
+$string['booking:reducedoptionform4'] = "4. Reduced option form for course category";
+
 $string['booking:comment'] = 'Add comments';
 $string['booking:managecomments'] = 'Manage comments';
 $string['bookingfull'] = 'There are no available places';
@@ -1091,7 +1098,6 @@ Go to course: {$a->courselink}
 See all booking options: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Book other users page: Send mail to user who books instead to users who are booked';
 $string['sendmailtobooker_help'] = 'Activate this option in order to send booking confirmation mails to the user who books other users instead to users, who have been added to a booking option. This is only relevant for bookings made on the page "book other users".';
-$string['startendtimeknown'] = 'Start and end time of course are known';
 $string['submitandadd'] = 'Save and add new';
 $string['submitandstay'] = 'Save and stay';
 $string['waitinglisttaken'] = 'On the waiting list';
@@ -1382,7 +1388,7 @@ $string['selectanoption'] = 'Please, select a booking option';
 $string['delnotification'] = 'You deleted {$a->del} of {$a->all} users. Users, that have completed activity, can\'t be deleted!';
 $string['delnotificationactivitycompletion'] = 'You deleted {$a->del} of {$a->all} users. Users, that have completed activity, can\'t be deleted!';
 $string['selectoptionid'] = 'Please, select option!';
-$string['sendcustommessage'] = 'Send custom message';
+$string['sendcustommsg'] = 'Send custom message';
 $string['sendpollurltoteachers'] = 'Send poll url';
 $string['toomuchusersbooked'] = 'The max number of users you can book is: {$a}';
 $string['userid'] = 'UserID';
@@ -1584,6 +1590,8 @@ $string['signincustfields'] = 'Custom profile fields';
 $string['signincustfields_desc'] = 'Select the custom profiles fields to be shown on the sign-in sheet';
 $string['showcustomfields'] = 'Custom booking option fields';
 $string['showcustomfields_desc'] = 'Select the custom booking option fields to be shown on the sign-in sheet';
+$string['alloptionsinreport'] = 'One report for a booking activity' . $string['badge:pro'];
+$string['alloptionsinreportdesc'] = 'The report of one booking activity will include all the answers of all booking options within this activity.';
 
 $string['showlistoncoursepage'] = 'Show extra information on course page';
 $string['showlistoncoursepage_help'] = 'If you activate this setting, the course name, a short info and a button
@@ -2104,6 +2112,7 @@ $string['manageresponses'] = 'Manage bookings';
 
 // Bo conditions.
 $string['availabilityconditions'] = 'Availability conditions';
+$string['availabilityconditionsheader'] = '<i class="fa fa-fw fa-key" aria-hidden="true"></i>&nbsp;Availability conditions';
 $string['apply'] = 'Apply';
 $string['delete'] = 'Delete';
 

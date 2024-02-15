@@ -188,7 +188,7 @@ class booking_option {
      * @throws coding_exception
      * @throws dml_exception
      */
-    public static function create_option_from_optionid($optionid, ?int $bookingid = null): ?booking_option {
+    public static function create_option_from_optionid($optionid, ?int $bookingid = null) {
         global $DB;
 
         if (empty($bookingid)) {
@@ -420,14 +420,14 @@ class booking_option {
 
         $text = "";
 
-        if (empty($this->option->aftercompletedtext
-            && empty($this->option->beforecompletedtext)
-            && empty($this->option->beforebookedtext)
+        if (empty($this->settings->aftercompletedtext)
+            && empty($this->settings->beforecompletedtext)
+            && empty($this->settings->beforebookedtext)
             && empty($this->booking->settings->aftercompletedtext)
             && empty($this->booking->settings->beforecompletedtext)
-            && empty($this->booking->settings->beforebookedtext))) {
+            && empty($this->booking->settings->beforebookedtext)) {
 
-                return '';
+            return '';
         }
 
         // New message controller.
@@ -446,21 +446,21 @@ class booking_option {
             [MOD_BOOKING_STATUSPARAM_BOOKED, MOD_BOOKING_STATUSPARAM_WAITINGLIST])) {
             $ac = $bookinganswers->is_activity_completed($userid);
             if ($ac == 1) {
-                if (!empty($this->option->aftercompletedtext)) {
-                    $text = format_text($this->option->aftercompletedtext);
+                if (!empty($this->settings->aftercompletedtext)) {
+                    $text = format_text($this->settings->aftercompletedtext);
                 } else if (!empty($this->booking->settings->aftercompletedtext)) {
                     $text = format_text($this->booking->settings->aftercompletedtext);
                 }
             } else {
-                if (!empty($this->option->beforecompletedtext)) {
-                    $text = format_text($this->option->beforecompletedtext);
+                if (!empty($this->settings->beforecompletedtext)) {
+                    $text = format_text($this->settings->beforecompletedtext);
                 } else if (!empty($this->booking->settings->beforecompletedtext)) {
                     $text = format_text($this->booking->settings->beforecompletedtext);
                 }
             }
         } else {
-            if (!empty($this->option->beforebookedtext)) {
-                $text = format_text($this->option->beforebookedtext);
+            if (!empty($this->settings->beforebookedtext)) {
+                $text = format_text($this->settings->beforebookedtext);
             } else if (!empty($this->booking->settings->beforebookedtext)) {
                 $text = format_text($this->booking->settings->beforebookedtext);
             }
@@ -1887,7 +1887,6 @@ class booking_option {
             $newoption = $settings->return_settings_as_stdclass();
             $newoption->coursestarttime = $optiondate->starttimestamp;
             $newoption->courseendtime = $optiondate->endtimestamp;
-            $newoption->startendtimeknown = 1;
             if (!$firstrun) {
                 unset($newoption->optionid);
                 unset($newoption->id);
@@ -3210,7 +3209,7 @@ class booking_option {
      * @param int $optionid
      * @return int|null $cmid
      */
-    public static function get_cmid_from_optionid(int $optionid): ?int {
+    public static function get_cmid_from_optionid(int $optionid) {
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         if (!empty($settings->cmid)) {
             return (int) $settings->cmid;
@@ -3273,7 +3272,7 @@ class booking_option {
     public static function update($data, context $context = null,
         int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
 
-        global $DB, $PAGE;
+        global $DB;
 
         // When we come here, we have the following possibilities:
         // A) Normal saving via Form of an existing option.
@@ -3287,14 +3286,19 @@ class booking_option {
         // ... that's not the case for C to F.
 
         // Get the old option. We need to compare it with the new one to get the changes.
-        // If no ID provided we threat record as new and set id to "0".
+        // If no ID provided we treat record as new and set id to "0".
         $optionid = is_array($data) ? ($data['id'] ?? 0) : ($data->id ?? 0);
         $originaloption = singleton_service::get_instance_of_booking_option_settings($optionid);
 
         // If $formdata is an array, we need to run set_data.
         if (is_array($data) || isset($data->importing)) {
             $data = (object)$data;
-            fields_info::set_data($data);
+
+            // If we encounter an error in set data, we need to exit here.
+            $errormessage = fields_info::set_data($data);
+            if (!empty($errormessage)) {
+                throw new moodle_exception('erroronsetdata', 'mod_booking', '', $data, $errormessage);
+            }
 
             $errors = [];
 
@@ -3321,28 +3325,6 @@ class booking_option {
         }
 
         fields_info::save_fields_post($data, $newoption, $updateparam);
-
-        // Todo:
-        // - Integrate customfields and more settings to option dates - half done.
-        // - implement saving and loading of templates.
-        // - implement returnurl - done
-        // - implement cancel
-        // - implement save and stay
-        // - implement save and add new
-        // - implement entities for optiondates - done
-        // - Test csv importer - done
-        // - test webservice importer
-        // - test availability
-        // - test actions
-        // - test subbookings
-        // - test events
-        // - test caches
-        // - test rules
-        // - rename everything and make it the only way to go.
-        // - fix save and add new
-        // - fix save and stay.
-
-        // Todo: Add the react on changes call.
 
         // We need to purge cache after updating an option.
         self::purge_cache_for_option($newoption->id);

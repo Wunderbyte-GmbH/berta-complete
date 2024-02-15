@@ -85,8 +85,8 @@ $string['reviewed'] = 'Kontrolliert';
 $string['rowupdated'] = 'Zeile wurde aktualisiert.';
 $string['search'] = 'Suche...';
 $string['semesterid'] = 'SemesterID';
+$string['nosemester'] = 'Kein Semester gewählt';
 $string['sendmailtoallbookedusers'] = 'E-Mail an alle gebuchten Nutzer:innen senden';
-$string['showmore'] = 'Zeige mehr';
 $string['sortorder'] = 'Sortierreihenfolge';
 $string['sortorder:asc'] = 'A&rarr;Z';
 $string['sortorder:desc'] = 'Z&rarr;A';
@@ -185,6 +185,13 @@ $string['booking:viewrating'] = 'Gesamtbewertung sehen';
 $string['booking:addeditownoption'] = 'Neue Buchungsoptionen anlegen und eigene bearbeiten.';
 $string['booking:canseeinvisibleoptions'] = 'Unsichtbare Buchungsoptionen sehen.';
 $string['booking:changelockedcustomfields'] = 'Kann gesperrte benutzerdefinierte Buchungsoptionsfelder verändern.';
+
+$string['booking:expertoptionform'] = "Expert Buchungsoptions Formular";
+$string['booking:reducedoptionform1'] = "1. Reduziertes Buchungsoptionsformular für Kursbereich.";
+$string['booking:reducedoptionform2'] = "2. Reduziertes Buchungsoptionsformular für Kursbereich.";
+$string['booking:reducedoptionform3'] = "3. Reduziertes Buchungsoptionsformular für Kursbereich.";
+$string['booking:reducedoptionform4'] = "4. Reduziertes Buchungsoptionsformular für Kursbereich.";
+
 $string['manageoptiontemplates'] = 'Kann Buchungsoptionsvorlagen erstellen';
 $string['bookingfull'] = 'Ausgebucht';
 $string['bookingname'] = 'Buchungsinstanzname';
@@ -1073,7 +1080,6 @@ Zum Kurs: {$a->courselink}
 Alle Buchungsoptionen ansehen: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Buchung für andere User durchführen: Mail an User, der Buchung durchführt, anstatt an gebuchte User senden';
 $string['sendmailtobooker_help'] = 'Diese Option aktivieren, um Buchungsbestätigungsmails anstatt an die gebuchten Nutzer:innen zu senden an den/die Nutzer/in senden, die die Buchung durchgeführt hat. Dies betrifft nur Buchungen, die auf der Seite "Buchung für andere Nutzer:innen durchführen" getätigt wurden';
-$string['startendtimeknown'] = 'Kursbeginn und Kursende sind bekannt';
 $string['submitandadd'] = 'Speichern und neue';
 $string['submitandstay'] = 'Speichern';
 $string['waitinglisttaken'] = 'Auf der Warteliste';
@@ -1347,7 +1353,7 @@ $string['searchsurname'] = 'Nachname';
 $string['selectatleastoneuser'] = 'Mindestens 1 Nutzer/in auswählen!';
 $string['selectanoption'] = 'Wählen Sie eine Buchungsoption aus!';
 $string['selectoptionid'] = 'Eine Auswahl treffen';
-$string['sendcustommessage'] = 'Persönliche Nachricht senden';
+$string['sendcustommsg'] = 'Persönliche Nachricht senden';
 $string['sendreminderemailsuccess'] = 'Benachrichtung wurde per E-Mail versandt';
 $string['sign_in_sheet_download'] = 'Unterschriftenliste herunterladen';
 $string['status_complete'] = "Abgeschlossen";
@@ -1533,6 +1539,8 @@ $string['signincustfields'] = 'Anzuzeigende Profilfelder';
 $string['signincustfields_desc'] = 'Wählen Sie die Profilfelder, die auf der Unterschriftenliste abgedruckt werden sollen';
 $string['showcustomfields'] = 'Anzuzeigende benutzerdefnierte Buchungsoptionsfelder';
 $string['showcustomfields_desc'] = 'Wählen Sie die benutzerdefinierte Buchungsoptionfelder, die auf der Unterschriftenliste abgedruckt werden sollen';
+$string['alloptionsinreport'] = 'Report über alle Buchungen einer Instanz' . $string['badge:pro'];
+$string['alloptionsinreportdesc'] = 'Der Report einer Buchungsoption beinhaltet alle Antworten der ganzen Instanz';
 
 $string['showlistoncoursepage'] = 'Extra-Info auf Kursseite anzeigen';
 $string['showlistoncoursepage_help'] = 'Wenn Sie diese Einstellung aktivieren, werden der Kursname, eine Kurzinfo
@@ -1992,6 +2000,7 @@ $string['manageresponses'] = 'Buchungen verwalten';
 
 // Bo conditions.
 $string['availabilityconditions'] = 'Verfügbarkeit einschränken';
+$string['availabilityconditionsheader'] = '<i class="fa fa-fw fa-key" aria-hidden="true"></i>&nbsp;Verfügbarkeit einschränken';
 $string['apply'] = 'Anwenden';
 $string['delete'] = 'Löschen';
 
@@ -2415,8 +2424,6 @@ $string['selected'] = 'Ausgewählt';
 $string['bookelectivesbtn'] = 'Ausgewählte Wahlfächer buchen';
 $string['electivesbookedsuccess'] = 'Ihre ausgewählten Wahlfächer wurden erfolgreich gebucht.';
 $string['errormultibooking'] = 'Beim Buchen der Wahlfächer ist ein Fehler aufgetreten.';
-$string['showdescription'] = 'Info anzeigen';
-$string['hidedescription'] = 'Info verstecken';
 $string['editteacherslink'] = 'Lehrer:innen bearbeiten';
 $string['selectelective'] = 'Wahlfach für {$a} Credits auswählen';
 $string['electivedeselectbtn'] = 'Wahlfach abwählen';

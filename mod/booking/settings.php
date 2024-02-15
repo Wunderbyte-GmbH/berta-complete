@@ -526,9 +526,11 @@ if ($ADMIN->fulltree) {
                 get_string('infotext:prolicensenecessary', 'mod_booking')));
     }
 
+    // We currently do not show actions as they do not work yet.
     // PRO feature: Booking actions.
     // Booking actions are not yet finished, so we do not show them yet.
-    if ($proversion) {
+    // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+    /* if ($proversion) {
         $settings->add(
             new admin_setting_heading('boactions',
                 get_string('boactions', 'mod_booking'),
@@ -542,7 +544,7 @@ if ($ADMIN->fulltree) {
             new admin_setting_heading('boactions',
                 get_string('boactions', 'mod_booking'),
                 get_string('infotext:prolicensenecessary', 'mod_booking')));
-    }
+    } */
 
     // PRO feature: Progress bars.
     if ($proversion) {
@@ -660,6 +662,11 @@ if ($ADMIN->fulltree) {
         $setting = new admin_setting_configtext($name, $visiblename, $description, '');
         $settings->add($setting);
     }
+
+    $settings->add(
+        new admin_setting_configcheckbox('booking/alloptionsinreport',
+                get_string('alloptionsinreport', 'mod_booking'),
+                get_string('alloptionsinreportdesc', 'mod_booking'), 0));
 
     // Global mail templates (PRO).
     $settings->add(

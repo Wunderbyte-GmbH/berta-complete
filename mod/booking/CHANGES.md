@@ -1,3 +1,79 @@
+## Version 8.1.17 (2024021401)
+* Improvement: Add easy option form functionality.
+* Improvement: Add reduced optionforms capabilities.
+* Improvement: Every editing teacher has the right to see the standard form (default setting).
+* Improvement: Add new table to store configs for forms.
+* Improvement: Add option form config webservice.
+* Improvement: Add necessary json class to make sure we don't lose json values even when the classes are not there.
+* Improvement: Add alternative import strings to instantiate classes.
+* Improvement: Add Pro Flag to report over all booking options feature.
+* Improvement: Add eventslist field.
+* Improvement: Better handling of empty $PAGE.
+* Bugfix: Make sure prices are not set involuntarily on import.
+* Bugfix: Fix dates import on Webservice and mergeparams.
+* Bugfix: Make sure not to delete unaffected availability conditions.
+* Bugfix: Fix merge error on feature branch.
+* Bugfix: On webservice & ajax, always use the standard fields.
+* Bugfix: Save lowest entity in location (not parent).
+* Bugfix: Fix CSV importer.
+* Bugfix: Fix issue #405.
+* Bugfix: Make new option form logic work in easy availability modal.
+* Bugfix: Do not show elective settings in form if instance is no elective instance.
+* Bufix: Fix check for $PAGE.
+* Bugfix: Lots of little fixes for option form and CSV import.
+
+## Version 8.1.16 (2024021300)
+* Bugfix: Make sure price does not get lost when using the CSV importer.
+* Bugfix: Fix update of price and canceluntil.
+* Bugfix: Make sure settings class is instantiated during import.
+* Bugfix: Make sure location can be saved again.
+* Bugfix: Make sure bookingopeningtime and bookingclosingtime do not get lost on import.
+* Bugfix: Fix set_data functions for bookingopeningtime, bookingclosingtime and responsiblecontact.
+
+## Version 8.1.15 (2024021200)
+* Bugfix: Fix bug with wrong usage of strpos with "~" and "!~" operators.
+* Bugfix: Fix booking_navigation_setting behat scenarios to use precise navigation element selector.
+* Bugfix: Fix behat test - add datesmarker field.
+
+## Version 8.1.14 (2024020900)
+* Improvement: Show updated string for send custom message button.
+* Improvement: Use less space for availability condition notification warnings.
+* Improvement: Slightly smaller Moodle course button.
+* Improvement: Do not execute fullybooked check if item is already in cart or already booked.
+* Improvement: Only show dates when dates exist in option view. Also get rid of string duplicates.
+* Improvement: Show responsible contact in change logs.
+* Bugfix: Fix an exception when creating date series with no semester set.
+* Bugfix: Make sure, we respect module visibility and activity restrictions on the booking instance - closes #385.
+* Bugfix: Fix bugs with entities and optiondates when called with different form.
+* Bugfix: Fix a bug when price was null ins save_from_form of price.php.
+
+## Version 8.1.13 (2024020601)
+* Improvement: Get rid of startendtimeknown param as it is legacy code.
+* Improvement: Collapse the full description and do not show it twice.
+* Bugfix: Text depending on status was not shown anymore at all.
+
+## Version 8.1.12 (2024020600)
+* Improvement: Better feedback for import.
+* Improvement: Report with all booking answers - closes #386.
+* Bugfix: Fix import for canceluntil #401.
+* Bugfix: Fix wrong variable bug.
+* Bugfix: Fix course enrolement.
+* Bugfix: Loosen to strict import rules.
+* Bugfix: Catch error for task.
+* Bugfix: fix elective enrolement.
+* Bugfix: Remove unnecessary redundancy.
+
+## Version 8.1.11 (2024020100)
+* Improvement: Styling of booking description in musi_table.
+* Improvement: Harmonize and restore save (create) and delete functions for optiondates and remove redundancies.
+* Improvement: For new optiondates we use the entity of the parent option as default.
+* Improvement: Don't use the ? typecast to null for functions, as it's not yet supported in PHP 7.4.
+* Improvement: Add no semester option.
+* Bugfix: Fix context bug in optiondate class.
+* Bugfix: Don't access entities constant without actually having called the handler.
+* Bugfix: Don't trigger events when cmid is empty (as for global templates)
+* Bugfix: Load responsible contact.
+
 ## Version 8.1.10 (2024013001)
 * Bugfix: Add missing isset check in booking_handler.
 * Bugfix: Fixed a bug that sent status change notifications to ALL users on waiting list.

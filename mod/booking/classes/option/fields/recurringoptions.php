@@ -61,6 +61,24 @@ class recurringoptions extends field_base {
     public static $header = MOD_BOOKING_HEADER_RECURRINGOPTIONS;
 
     /**
+     * An int value to define if this field is standard or used in a different context.
+     * @var array
+     */
+    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_STANDARD];
+
+    /**
+     * Additionally to the classname, there might be others keys which should instantiate this class.
+     * @var array
+     */
+    public static $alternativeimportidentifiers = [];
+
+    /**
+     * This is an array of incompatible field ids.
+     * @var array
+     */
+    public static $incompatiblefields = [];
+
+    /**
      * This function interprets the value from the form and, if useful...
      * ... relays it to the new option class for saving or updating.
      * @param stdClass $formdata
@@ -101,12 +119,10 @@ class recurringoptions extends field_base {
 
             $mform->addElement('checkbox', 'repeatthisbooking',
                         get_string('repeatthisbooking', 'mod_booking'));
-            $mform->disabledIf('repeatthisbooking', 'startendtimeknown', 'notchecked');
             $mform->addElement('text', 'howmanytimestorepeat',
                         get_string('howmanytimestorepeat', 'mod_booking'));
             $mform->setType('howmanytimestorepeat', PARAM_INT);
             $mform->setDefault('howmanytimestorepeat', 1);
-            $mform->disabledIf('howmanytimestorepeat', 'startendtimeknown', 'notchecked');
             $mform->disabledIf('howmanytimestorepeat', 'repeatthisbooking', 'notchecked');
             $howoften = [
                 86400 => get_string('day'),
@@ -117,7 +133,6 @@ class recurringoptions extends field_base {
                         $howoften);
             $mform->setType('howoftentorepeat', PARAM_INT);
             $mform->setDefault('howoftentorepeat', 86400);
-            $mform->disabledIf('howoftentorepeat', 'startendtimeknown', 'notchecked');
             $mform->disabledIf('howoftentorepeat', 'repeatthisbooking', 'notchecked');
         }
     }

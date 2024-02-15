@@ -1,3 +1,18 @@
+## Version 0.8.5 (2024021400)
+* Bugfix: Fixes for easy availability form.
+
+## Version 0.8.4 (2024020900)
+* Improvement: Slightly smaller Moodle course button.
+* Improvement: Add responsible contact to MUSI shortcode.
+* Bugfix: Fix a bug with collapsibles of subsitutions for sports categories.
+* Bugfix: Typo in $title led to deprecation warnings.
+* Bugfix: Layout - remove double border in mobile view.
+* Bugfix: Fix call to booking_update_options which is now booking_option::update.
+
+## Version 0.8.3 (2024020600)
+* Improvement: Styling of booking description in musi_table.
+* Improvement: Collapse the full description and do not show it twice.
+
 ## Version 0.8.2 (2024012900)
 * New feature: Add new setting to collapse descriptions with a certain length.
 * New feature: Add settings to (de)activate time filters, start time, end time, bookable from and bookable until.

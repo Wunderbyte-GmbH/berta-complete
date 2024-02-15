@@ -95,8 +95,8 @@ class dates {
             $mform->setExpanded('datesheader', (bool)$formdata[$key]);
         }
 
-        $bookingid = $formdata['bookingid'];
-        $optionid = $formdata['optionid'];
+        $bookingid = $formdata['bookingid'] ?? 0;
+        $optionid = $formdata['id'] ?? $formdata['optionid'] ?? 0;
 
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_bookingid($bookingid);
         $bookingoptionsettings = singleton_service::get_instance_of_booking_option_settings($optionid);
@@ -238,7 +238,9 @@ class dates {
                 unset($defaultvalues->{$odate});
             }
 
-            $newoptiondates = dates_handler::get_optiondate_series($defaultvalues->semesterid, $defaultvalues->dayofweektime);
+            if (!empty($defaultvalues->semesterid)) {
+                $newoptiondates = dates_handler::get_optiondate_series($defaultvalues->semesterid, $defaultvalues->dayofweektime);
+            }
 
             if (!empty($newoptiondates)) {
                 $sessions = array_map(fn($a) =>
@@ -279,22 +281,33 @@ class dates {
         // This Logic is linked to the webservice importer functionality.
         // We might need to add coursestartime and courseendtime as new session.
         if (!empty($defaultvalues->importing)
-            && (!empty($defaultvalues->mergeparam)
-            && $defaultvalues->mergeparam == 2)
+            && !empty($defaultvalues->mergeparam)
             && !empty($sessions)) {
 
-            // If we are importing via webservice and have already sessions in this option...
-            // ... and we have already added new coursestarttime and courseendtime, we move them.
-            $session[] = (object)[
-                'optiondateid' => 0,
-                'coursestarttime' => $defaultvalues->{MOD_BOOKING_FORM_COURSESTARTTIME . 0},
-                'courseendtime' => $defaultvalues->{MOD_BOOKING_FORM_COURSEENDTIME . 0},
-                'daystonotify' => 0,
-            ];
-            unset($defaultvalues->{MOD_BOOKING_FORM_OPTIONDATEID . 0});
-            unset($defaultvalues->{MOD_BOOKING_FORM_COURSESTARTTIME . 0});
-            unset($defaultvalues->{MOD_BOOKING_FORM_COURSEENDTIME . 0});
-            unset($defaultvalues->{MOD_BOOKING_FORM_DAYSTONOTIFY . 0});
+            // If we add another session, we need to add it to the sessions object.
+            if ($defaultvalues->mergeparam == 2) {
+                // If we are importing via webservice and have already sessions in this option...
+                // ... and we have already added new coursestarttime and courseendtime, we move them.
+                $sessions[] = (object)[
+                    'optiondateid' => 0,
+                    'coursestarttime' => $defaultvalues->{MOD_BOOKING_FORM_COURSESTARTTIME . 0},
+                    'courseendtime' => $defaultvalues->{MOD_BOOKING_FORM_COURSEENDTIME . 0},
+                    'daystonotify' => 0,
+                ];
+                unset($defaultvalues->{MOD_BOOKING_FORM_OPTIONDATEID . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_COURSESTARTTIME . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_COURSEENDTIME . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_DAYSTONOTIFY . 0});
+            } else if ($defaultvalues->mergeparam == 1) {
+                // If this is the first date, we need to make sure that we delete all the other dates.
+                $sessions = [];
+            } else if ($defaultvalues->mergeparam == 3) {
+                // 3 Means that we add other stuff, so we just leave the dates alone.
+                unset($defaultvalues->{MOD_BOOKING_FORM_OPTIONDATEID . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_COURSESTARTTIME . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_COURSEENDTIME . 0});
+                unset($defaultvalues->{MOD_BOOKING_FORM_DAYSTONOTIFY . 0});
+            }
         }
 
         // We need to make sure we have all options already added to the form.
@@ -308,8 +321,13 @@ class dates {
             // We have to increment datescounter.
             $datescounter++;
 
-            // Set entity from booking option as default for entity of new optiondate.
-            $defaultvalues->{LOCAL_ENTITIES_FORM_ENTITYID . $datescounter} = $defaultvalues->{LOCAL_ENTITIES_FORM_ENTITYID . 0};
+            if (class_exists('local_entities\entitiesrelation_handler')) {
+
+                $erhandler = new entitiesrelation_handler('mod_booking', 'optiondate');
+
+                // Set entity from booking option as default for entity of new optiondate.
+                $defaultvalues->{LOCAL_ENTITIES_FORM_ENTITYID . $datescounter} = $defaultvalues->{LOCAL_ENTITIES_FORM_ENTITYID . 0};
+            }
 
             $defaultvalues->datescounter = $datescounter;
         } else {
@@ -607,7 +625,6 @@ class dates {
         $element = $mform->addElement('date_time_selector', MOD_BOOKING_FORM_COURSESTARTTIME . $idx,
             get_string("coursestarttime", "booking"));
         $mform->setType(MOD_BOOKING_FORM_COURSESTARTTIME . $idx, PARAM_INT);
-        $mform->disabledIf(MOD_BOOKING_FORM_COURSESTARTTIME . $idx, 'startendtimeknown', 'notchecked');
         $time = self::timestamp_to_array($starttime);
         $element->setValue($time);
         $elements[] = $element;
@@ -615,7 +632,6 @@ class dates {
         $element = $mform->addElement('date_time_selector', MOD_BOOKING_FORM_COURSEENDTIME . $idx,
             get_string("courseendtime", "booking"));
         $mform->setType(MOD_BOOKING_FORM_COURSEENDTIME . $idx, PARAM_INT);
-        $mform->disabledIf(MOD_BOOKING_FORM_COURSEENDTIME . $idx, 'startendtimeknown', 'notchecked');
         $time = self::timestamp_to_array($endtime);
         $element->setValue($time);
         $elements[] = $element;

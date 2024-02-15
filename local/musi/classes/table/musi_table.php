@@ -80,12 +80,7 @@ class musi_table extends wunderbyte_table {
         /* $this->outputbooking = $PAGE->get_renderer('mod_booking');
         $this->outputmusi = $PAGE->get_renderer('local_musi'); */
 
-        // We set buyforuser here for better performance.
-        if (empty($buyforuserid)) {
-            $this->buyforuser = price::return_user_to_buy_for();
-        } else {
-            $this->buyforuser = singleton_service::get_instance_of_user($buyforuserid);
-        }
+        $this->buyforuser = price::return_user_to_buy_for();
 
         // Columns and headers are not defined in constructor, in order to keep things as generic as possible.
     }
@@ -183,6 +178,8 @@ class musi_table extends wunderbyte_table {
         // Render col_price using a template.
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
 
+        $this->buyforuser = price::return_user_to_buy_for();
+
         return booking_bookit::render_bookit_button($settings, $this->buyforuser->id);
     }
 
@@ -199,6 +196,8 @@ class musi_table extends wunderbyte_table {
         if (!$this->booking) {
             $this->booking = singleton_service::get_instance_of_booking_by_bookingid($values->bookingid);
         }
+
+        $this->buyforuser = price::return_user_to_buy_for();
 
         if ($this->booking) {
             $url = new moodle_url('/mod/booking/optionview.php', ['optionid' => $values->id,
@@ -243,10 +242,11 @@ class musi_table extends wunderbyte_table {
                 $shortdescription = substr($shortdescription, 0, $maxlength) . '...';
 
                 $ret =
-                    '<div>' . $shortdescription .
-                        '<a data-toggle="collapse" href="#collapseDescription' . $values->id . '" role="button"
-                            aria-expanded="false" aria-controls="collapseDescription"> ' .
-                            get_string('showmore', 'local_musi') . '</a>
+                    '<div>
+                        <a data-toggle="collapse" href="#collapseDescription' . $values->id . '" role="button"
+                            aria-expanded="false" aria-controls="collapseDescription">
+                            <i class="fa fa-info-circle" aria-hidden="true"></i>&nbsp;' .
+                            get_string('showdescription', 'local_musi') . '...</a>
                     </div>
                     <div class="collapse" id="collapseDescription' . $values->id . '">
                         <div class="card card-body border-1 mt-1 mb-1 mr-3">' . $fulldescription . '</div>
@@ -271,6 +271,9 @@ class musi_table extends wunderbyte_table {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
         // Render col_bookings using a template.
+
+        $this->buyforuser = price::return_user_to_buy_for();
+
         $data = new col_availableplaces($values, $settings, $this->buyforuser);
         if (!empty($this->displayoptions['showmaxanwers'])) {
             $data->showmaxanswers = $this->displayoptions['showmaxanwers'];
@@ -429,7 +432,6 @@ class musi_table extends wunderbyte_table {
      * @throws coding_exception
      */
     public function col_course($values) {
-        global $USER;
 
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
         $ret = '';
@@ -441,8 +443,10 @@ class musi_table extends wunderbyte_table {
             return $courseurl;
         }
 
+        $this->buyforuser = price::return_user_to_buy_for();
+
         $answersobject = singleton_service::get_instance_of_booking_answers($settings);
-        $status = $answersobject->user_status($USER->id);
+        $status = $answersobject->user_status($this->buyforuser->id);
 
         $isteacherofthisoption = booking_check_if_teacher($values);
 
@@ -455,7 +459,7 @@ class musi_table extends wunderbyte_table {
             // ...is a teacher of this option.
             // ...has the system-wide "updatebooking" capability (admins).
             $gotomoodlecourse = get_string('tocoursecontent', 'local_musi');
-            $ret = "<a href='$courseurl' target='_self' class='btn btn-primary mt-2 mb-2 w-100'>
+            $ret = "<a href='$courseurl' target='_self' class='btn btn-primary p-1 mt-2 mb-2 w-100'>
                 <i class='fa fa-graduation-cap fa-fw' aria-hidden='true'></i>&nbsp;&nbsp;$gotomoodlecourse
             </a>";
         }
@@ -685,6 +689,34 @@ class musi_table extends wunderbyte_table {
 
     /**
      * This function is called for each data row to allow processing of the
+     * responsiblecontact value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string $string Return a link to the responsible contact's user profile.
+     * @throws dml_exception
+     */
+    public function col_responsiblecontact($values) {
+        $settings = singleton_service::get_instance_of_booking_option_settings($values->id);
+        $ret = '';
+        if (empty($settings->responsiblecontact)) {
+            return $ret;
+        }
+        if ($user = singleton_service::get_instance_of_user($settings->responsiblecontact)) {
+            $userstring = "$user->firstname $user->lastname";
+            $emailstring = " ($user->email)";
+            if ($this->is_downloading()) {
+                $ret = $userstring . $emailstring;
+            } else {
+                $profileurl = new moodle_url('/user/profile.php', ['id' => $settings->responsiblecontact]);
+                $ret = get_string('responsible', 'mod_booking')
+                    . ":&nbsp;" . html_writer::link($profileurl, $userstring);
+            }
+        }
+        return $ret;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
      * action button.
      *
      * @param object $values Contains object with all the values of record.
@@ -711,6 +743,9 @@ class musi_table extends wunderbyte_table {
         // This is in case we render modal.
         $data->modalcounter = $values->id;
         $data->modaltitle = $values->text;
+
+        $this->buyforuser = price::return_user_to_buy_for();
+
         $data->userid = $this->buyforuser->id;
 
         // Get the URL to edit the option.
@@ -749,13 +784,10 @@ class musi_table extends wunderbyte_table {
 
                 // The simplified availability menu.
                 $alloweditavailability = (
-                    // Admin capability.
-                    has_capability('mod/booking:updatebooking', $this->context) ||
-                    // Or: Everyone with the M:USI editavailability capability.
-                    has_capability('local/musi:editavailability', $this->context) ||
-                    // Or: Teachers can edit the availability of their own option.
+                    has_capability('local/musi:editavailability', $this->context) &&
+                    (has_capability('mod/booking:updatebooking', $this->context) ||
                     (has_capability('mod/booking:addeditownoption', $this->context) && booking_check_if_teacher($values)) ||
-                    (has_capability('mod/booking:limitededitownoption', $this->context) && booking_check_if_teacher($values))
+                    (has_capability('mod/booking:limitededitownoption', $this->context) && booking_check_if_teacher($values)))
                 );
                 if ($alloweditavailability) {
                     $data->editavailability = true;
