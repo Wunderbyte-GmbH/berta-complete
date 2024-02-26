@@ -163,7 +163,7 @@ class booking {
      * Returm number of displayed rows of options per page for pagination (or given default)
      * @return int
      */
-    public function get_pagination_setting():int {
+    public function get_pagination_setting(): int {
         $paginationnum = (int) $this->settings->paginationnum > 0 ? (int) $this->settings->paginationnum :
             MOD_BOOKING_PAGINATIONDEF;
         return $paginationnum;
@@ -569,7 +569,7 @@ class booking {
      * @param stdClass $user
      * @return int of bookings made by user
      */
-    public function get_user_booking_count($user):int {
+    public function get_user_booking_count($user): int {
         global $DB;
         if (!empty($this->userbookings)) {
             return $this->userbookings;
@@ -1074,10 +1074,12 @@ class booking {
                 $where .= " AND ( ";
                 $orstring = [];
 
+                // TODO: This could be replaced with in or equal, but not sure of if its worth it.
                 foreach ($value as $arrayvalue) {
 
-                    if (gettype($arrayvalue) == 'integer') {
-                        $orstring[] = " $key = $arrayvalue ";
+                    if (is_numeric($arrayvalue)) {
+                        $number = (float)$arrayvalue;
+                        $orstring[] = " $key = $number ";
                     } else {
                         // Be sure to have a lower key string.
                         $paramsvaluekey = "param";
@@ -1289,7 +1291,7 @@ class booking {
      *
      * @return string
      */
-    private static function return_sql_for_options_dates():string {
+    private static function return_sql_for_options_dates(): string {
 
         global $DB;
 

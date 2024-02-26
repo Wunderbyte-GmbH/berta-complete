@@ -26,6 +26,7 @@ global $CFG;
 
 // General strings.
 $string['accept'] = 'Accept';
+$string['aftersubmitaction'] = 'After saving...';
 $string['age'] = 'Age';
 $string['allowupdatedays'] = 'Days before reference date';
 $string['areyousure:book'] = 'Click again to confirm booking';
@@ -113,6 +114,7 @@ $string['usersmatching'] = 'Matching users';
 $string['allmoodleusers'] = 'All users of this site';
 $string['enrolledusers'] = 'Users enrolled in course';
 $string['nopriceisset'] = 'No price has been set for pricecategory {$a}';
+$string['youareediting'] = 'You are editing "<b>{$a}</b>".';
 
 // Badges.
 $string['badge:pro'] = '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
@@ -359,6 +361,7 @@ $string['reminder_teacher_sent'] = 'Teacher reminder sent';
 $string['optiondates_teacher_added'] = 'Substitution teacher was added';
 $string['optiondates_teacher_deleted'] = 'Teacher deleted from teaching journal';
 $string['booking_failed'] = 'Booking failed';
+$string['booking_afteractionsfailed'] = 'Actions after booking failed';
 
 // View.php.
 $string['bookingpolicyagree'] = 'I have read, understood and agree to the booking policy.';
@@ -1098,8 +1101,8 @@ Go to course: {$a->courselink}
 See all booking options: {$a->bookinglink}';
 $string['sendmailtobooker'] = 'Book other users page: Send mail to user who books instead to users who are booked';
 $string['sendmailtobooker_help'] = 'Activate this option in order to send booking confirmation mails to the user who books other users instead to users, who have been added to a booking option. This is only relevant for bookings made on the page "book other users".';
-$string['submitandadd'] = 'Save and add new';
-$string['submitandstay'] = 'Save and stay';
+$string['submitandadd'] = 'Add a new booking option';
+$string['submitandstay'] = 'Stay here';
 $string['waitinglisttaken'] = 'On the waiting list';
 $string['groupexists'] = 'The group already exists in the target course, please choose another name for the booking option';
 $string['groupdeleted'] = 'This booking instance creates groups automatically in the target course. But the group has been manually deleted in the target course. Activate the following checkbox in order to recreate the group';
@@ -1120,7 +1123,7 @@ $string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"><
 
 // Option_form.php.
 $string['bookingoptionimage'] = 'Upload an image';
-$string['submitandgoback'] = 'Save and go back';
+$string['submitandgoback'] = 'Close this form';
 $string['bookingoptionprice'] = 'Price';
 
 // We removed this, but keep it for now as we might need these strings again.
@@ -2077,6 +2080,31 @@ $string['optionformconfigsubtitle'] = '<p>Turn off features you do not need, in 
 <p><strong>BE CAREFUL:</strong> Only deactivate fields if you are completely sure that you won\'t need them!</p>';
 $string['optionformconfig:nobooking'] = 'You need to create at least one booking instance before you can use this form!';
 
+$string['prepare_import'] = "Prepare Import";
+$string['id'] = "Id";
+$string['json'] = "Stores supplementary information";
+$string['returnurl'] = "Url to return to";
+$string['template'] = 'Templates';
+$string['text'] = 'Titel';
+$string['maxanswers'] = 'Limit for answers';
+$string['identifier'] = 'Identification';
+$string['easy_text'] = 'Easy, not changeable text';
+$string['easy_bookingopeningtime'] = 'Easy booking opening time';
+$string['easy_bookingclosingtime'] = 'Easy booking closing time';
+$string['easy_availability_selectusers'] = 'Easy selected users condition';
+$string['easy_availability_previouslybooked'] = 'Easy already booked condition';
+$string['invisible'] = 'Invisible';
+$string['annotation'] = 'Internal annotation';
+$string['courseid'] = 'Course to subscribe to';
+$string['entities'] = 'Choose places with entities plugin';
+$string['optiondates'] = 'Dates';
+$string['actions'] = 'Booking actions';
+$string['attachment'] = 'Attachments';
+$string['howmanyusers'] = 'Book other users limit';
+$string['recurringoptions'] = 'Recurring booking options';
+$string['bookusers'] = 'For Import, to book users directly';
+$string['timemodified'] = 'Time modified';
+
 // Tasks.
 $string['task_adhoc_reset_optiondates_for_semester'] = 'Adhoc task: Reset and generate new optiondates for semester';
 $string['task_remove_activity_completion'] = 'Booking: Remove activity completion';
@@ -2598,3 +2626,11 @@ $string['actionoperator:adddate'] = 'Add date';
 $string['adddatebutton'] = "Add date";
 $string['nodatesstring'] = "There are currently no dates associated with this booking option";
 $string['nodatesstring_desc'] = "no dates";
+
+// Access.
+$string['mod/booking:expertoptionform'] = 'Bookingoption for experts';
+$string['mod/booking:reducedoptionform1'] = 'Reduced booking option 1';
+$string['mod/booking:reducedoptionform2'] = 'Reduced booking option 2';
+$string['mod/booking:reducedoptionform3'] = 'Reduced booking option 3';
+$string['mod/booking:reducedoptionform4'] = 'Reduced booking option 4';
+$string['mod/booking:reducedoptionform5'] = 'Reduced booking option 5';

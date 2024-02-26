@@ -85,17 +85,28 @@ export function createAppStore() {
                 }
 
             },
-            async fetchTabs(context) {
-                const tabs = await ajax('local_berta_get_parent_categories',
-                    { });
-                context.commit('setTabs', tabs);
-            },
-            async fetchParentContent(context, index) {
+            async fetchTab(context, index) {
                 const params = { coursecategoryid: index };
-                const content = await ajax('local_berta_get_parent_content', params);
-                context.commit('setContent', content);
+                const content = await ajax('local_berta_get_parent_categories', params);
+                if (index === 0) {
+                    context.commit('setTabs', content);
+                }
+
+                // we get back an array, so we need to get the first element for tab.
+                const tabcontent = content[0];
+                if (tabcontent.json.length > 3) {
+                  tabcontent.json = JSON.parse(tabcontent.json)
+                }
+                context.commit('setContent', tabcontent);
                 const configlist = await ajax('mod_booking_get_option_field_config', params);
                 context.commit('setConfigList', configlist);
+            },
+            async setParentContent(context, index) {
+              return await ajax('local_berta_set_parent_content', {
+                capability: index.capability,
+                id: index.id,
+                json: index.json,
+              });
             },
         }
     });

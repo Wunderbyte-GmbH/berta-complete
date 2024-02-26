@@ -303,10 +303,16 @@ li[data-area=bookingfee] .sc-cart-item-image {
     width: 25px;
 }
 
+/* The booking fee coins icon should be smaller. */
+#page-local-shopping_cart-checkout .shopping-cart-checkout-items-container .shopping-cart-items
+li[data-area=rebookingcredit] .sc-cart-item-image {
+    width: 25px;
+}
+
 /* The images in the checkout page should be larger than in the navbar popup.
 We exclude the booking fee image from the selector. */
 #page-local-shopping_cart-checkout .shopping-cart-checkout-items-container .shopping-cart-items
-li:not(li[data-area=bookingfee]) .sc-cart-item-image {
+li:not(li[data-area=bookingfee]) li:not(li[data-area=rebookingcredit]) .sc-cart-item-image {
     width: 100px;
 }
 
@@ -387,4 +393,18 @@ div.shopping-cart-items-container div.item-description {
 
 .shopping-cart-items .item-button:hover {
     color: rgb(29, 33, 37);
+}
+
+#page-local-shopping_cart-cashier li[data-area="rebookingcredit"] img {
+    width: 20px;
+}
+
+#page-local-shopping_cart-cashier li[data-area="bookingfee"] img {
+    width: 20px;
+}
+
+#page-local-shopping_cart-cashier #shopping_cart-cashiers-section #checkout .shopping-cart-items li {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px dashed #ccc;
 }

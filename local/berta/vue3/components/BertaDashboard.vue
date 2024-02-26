@@ -1,22 +1,23 @@
 <template>
   <div>
-    <Searchbar 
-      :tabs="tabsstored" 
+    <notifications width="100%" />
+    <Searchbar
+      :tabs="tabsstored"
       @filteredTabs="updateFilteredTabs"
     />
     <div class="overflow-tabs-container">
       <div>
         <div
-          v-if="tabs.length > 0" 
+          v-if="tabs.length > 0"
           class="nav nav-tabs"
         >
-          <div 
-            v-for="tab in tabs" 
-            :key="tab.id" 
+          <div
+            v-for="tab in tabs"
+            :key="tab.id"
             class="nav-item"
           >
-            <a 
-              :class="['nav-link', { 'active': activeTab === tab.id }]" 
+            <a
+              :class="['nav-link', { 'active': activeTab === tab.id }]"
               @click="changeTab(tab.id)"
             >
               {{ tab.name }}
@@ -25,44 +26,61 @@
         </div>
         <div v-else>
           <div class="nav nav-tabs">
-            <SkeletonTab 
-              v-for="index in 3" 
+            <SkeletonTab
+              v-for="index in 3"
               :key="index"
             />
           </div>
         </div>
       </div>
     </div>
-    <transition 
-      name="fade" 
+    <transition
+      name="fade"
       mode="out-in"
     >
-      <div 
+      <div
         v-if="content"
         class="content-container"
       >
-        <p 
-          v-if="content.name" 
+        <p
+          v-if="content.name"
           class="mb-0"
         >
-          <strong>Name:</strong> {{ content.name }}
+          <strong>Name: (LOKALIZE!)</strong> {{ content.name }}
         </p>
-        <p 
-          v-if="content.coursecount" 
+        <p
+          v-if="content.coursecount"
           class="mb-0"
         >
-          <strong>Course Count:</strong> {{ content.coursecount }}
+          <strong>Course Count: (LOKALIZE!)</strong> {{ content.coursecount }}
         </p>
-        <p 
-          v-if="content.path" 
+        <p
+          v-if="content.path"
           class="mb-0"
         >
-          <strong>Path:</strong> {{ content.path }}
+          <strong>Path: (LOKALIZE!)</strong> {{ content.path }}
         </p>
+        <p
+          class="mb-0"
+        >
+          <a href="http://10.111.0.2:8000/course/editcategory.php?parent=0">
+            Create new OE (LOKALIZE!)
+          </a>
+        </p>
+        <p
+          v-if="content.contextid"
+          class="mb-0"
+        >
+          <a :href="'http://10.111.0.2:8000/admin/roles/assign.php?contextid=' + content.contextid">
+            Assign Roles (LOKALIZE!)
+          </a>
+        </p>
+          
+        <BookingStats :bookingstats="content" />
         <CapabilityButtons @capabilityClicked="handleCapabilityClicked" />
         <CapabilityOptions :selectedcapability="selectedCapability" />
       </div>
-      <div 
+      <div
         v-else
         class="content-container"
       >
@@ -80,18 +98,21 @@
   import SkeletonContent from '../components/helper/SkeletonContent.vue';
   import CapabilityButtons from '../components/helper/CapabilityButtons.vue';
   import CapabilityOptions from '../components/helper/CapabilityOptions.vue';
+  import BookingStats from '../components/dashboard/BookingStats.vue';
 
-  const content = ref()
-  const store = useStore()
+  const content = ref();
+  const store = useStore();
   const tabsstored = ref([]);
   const tabs = ref([]);
   const activeTab = ref(0);
-  const selectedCapability = ref(null)
+  const selectedCapability = ref(null);
 
   // Trigger web services on mount
   onMounted(() => {
-    store.dispatch('fetchTabs')
-    store.dispatch('fetchParentContent', 0)
+    store.dispatch('fetchTab', 0);
+    tabsstored.value = store.state.tabs
+    tabs.value = store.state.tabs
+    content.value = store.state.content
   });
 
   watch(() => store.state.tabs, async () => {
@@ -100,15 +121,13 @@
   }, { deep: true } );
 
   watch(() => store.state.content, async () => {
-    content.value = null
-    setTimeout(() => {
-      content.value = store.state.content
-    }, 200);
+    content.value = store.state.content
+
   }, { deep: true } );
 
   function changeTab(index) {
     activeTab.value = index;
-    store.dispatch('fetchParentContent', index);
+    store.dispatch('fetchTab', index);
   }
 
   const updateFilteredTabs = (filteredTabsFromSearchbar) => {

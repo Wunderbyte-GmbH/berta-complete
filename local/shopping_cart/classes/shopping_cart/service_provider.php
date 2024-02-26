@@ -38,26 +38,55 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
      */
     public static function load_cartitem(string $area, int $itemid, int $userid = 0): array {
 
-        if ($area == 'bookingfee') {
+        switch ($area) {
+            case 'bookingfee':
+                $imageurl = new \moodle_url('/local/shopping_cart/pix/coins.png');
+                $cartitem = new cartitem(
+                    $itemid,
+                    get_string('bookingfee', 'local_shopping_cart'),
+                    get_config('local_shopping_cart', 'bookingfee'),
+                    get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
+                    'local_shopping_cart',
+                    'bookingfee',
+                    '',  // No item description for booking fee.
+                    $imageurl->out(), // Fee image.
+                    time(),
+                    0,
+                    0,
+                    'A',
+                    1, // Booking fee cannot be deleted.
+                );
+                return ['cartitem' => $cartitem];
+            case 'rebookingcredit':
 
-            $imageurl = new \moodle_url('/local/shopping_cart/pix/coins.png');
+                if (get_config('local_shopping_cart', 'cancelationfee') > 0) {
+                    $price = -1 * (
+                        (float)get_config('local_shopping_cart', 'bookingfee') +
+                        (float)$itemid * (float)get_config('local_shopping_cart', 'cancelationfee')
+                    );
+                } else {
+                    $price = -1 * (
+                        (float)get_config('local_shopping_cart', 'bookingfee')
+                    );
+                }
 
-            $cartitem = new cartitem($itemid,
-            get_string('bookingfee', 'local_shopping_cart'),
-            get_config('local_shopping_cart', 'bookingfee'),
-            get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
-            'local_shopping_cart',
-            'bookingfee',
-            '',  // No item description for booking fee.
-            $imageurl->out(), // Fee image.
-            time(),
-            0,
-            0,
-            'A',
-            1, // Booking fee cannot be deleted.
-            );
-
-            return ['cartitem' => $cartitem];
+                $imageurl = new \moodle_url('/local/shopping_cart/pix/rebookingcredit.png');
+                $cartitem = new cartitem(
+                    $itemid,
+                    get_string('rebookingcredit', 'local_shopping_cart'),
+                    $price,
+                    get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
+                    'local_shopping_cart',
+                    'rebookingcredit',
+                    '',  // No item description for rebookingcredit.
+                    $imageurl->out(),
+                    time(),
+                    0,
+                    0,
+                    'A',
+                    1, // Rebookingcredit cannot be deleted.
+                );
+                return ['cartitem' => $cartitem];
         }
 
         $now = time();
@@ -67,7 +96,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
 
         $imageurl = new \moodle_url('/local/shopping_cart/pix/edu.png');
 
-        // For behat tests, we want clear separtion of items and no random values.
+        // For behat tests, we want clear separation of items and no random values.
         switch ($itemid) {
             case 1:
                 $price = 10.00;
@@ -106,7 +135,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
 
     /**
      * Callback function that unloads a cart item and thus frees
-     * Used only in test.php for test purches.
+     * Used only in test.php for test purchases.
      *
      * @param string $area
      * @param int $itemid An identifier that is known to the plugin
@@ -156,7 +185,7 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
      */
     public static function quota_consumed(string $area, int $itemid, int $userid = 0): float {
 
-        if ($area == 'bookingfee') {
+        if ($area == 'bookingfee' || $area == 'rebookingcredit') {
             return 0;
         }
 

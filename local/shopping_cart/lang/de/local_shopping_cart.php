@@ -30,10 +30,14 @@ $string['modulename'] = 'Warenkorb';
 
 // General strings.
 $string['addtocart'] = 'In den Warenkorb';
+$string['allowrebookingcredit'] = 'Umbuchungsgutschrift';
+$string['allowrebookingcredit_desc'] = 'Wenn Sie die Umbuchungsgutschrift aktivieren, bekommt ein:e Nutzer:in eine Gutschrift in Höhe der Buchungs- und Stornogebühr gutgeschrieben,
+wenn er:sie innerhalb der Stornofrist ein Item storniert und ein anderes bucht.';
 $string['cash'] = 'Bargeld';
 $string['choose...'] = 'Auswählen...';
 $string['mycart'] = 'Mein Warenkorb';
 $string['optioncancelled'] = 'Buchungsoption storniert';
+$string['rebookingcredit'] = 'Umbuchungsgutschrift';
 $string['sendpaymentbutton'] = 'Zur Bezahlung';
 $string['showorderid'] = 'Order-ID anzeigen...';
 
@@ -126,6 +130,8 @@ $string['error:capabilitymissing'] = 'FEHLER: Ihnen fehlt eine erforderliche Ber
 $string['error:cashiercapabilitymissing'] = 'FEHLER: Ihnen fehlt die Berechtigung zum Erstellen von Kassenbelegen.';
 $string['error:costcentertitle'] = 'Andere Kostenstelle';
 $string['error:costcentersdonotmatch'] = 'Diese Kurse können nicht gemeinsam gebucht werden.';
+$string['error:alreadybookedtitle'] = 'Bereits gebucht';
+$string['error:alreadybooked'] = 'Sie haben diesen Artikel bereits gebucht.';
 $string['error:fullybookedtitle'] = 'Ausgebucht';
 $string['error:fullybooked'] = 'Sie können nicht mehr buchen, da bereits alle Plätze belegt sind.';
 $string['error:gatewaymissingornotsupported'] = 'Sie haben entweder noch kein Zahlungs-Gateway eingerichtet
@@ -419,6 +425,7 @@ $string['floatonly'] = 'Nur Dezimalzahlen werden akzeptiert. Das richtige Trennz
 
 // Events.
 $string['item_bought'] = 'Artikel gekauft';
+$string['item_notbought'] = 'Artikel konnte nicht gekauft werden';
 $string['item_added'] = 'Artikel hinzugefügt';
 $string['item_expired'] = 'Zeit für Artikel im Warenkorb abgelaufen';
 $string['item_deleted'] = 'Artikel gelöscht';
@@ -426,6 +433,7 @@ $string['item_canceled'] = 'Artikel storniert';
 $string['useraddeditem'] = 'Nutzer/in mit der id {$a->userid} hat Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} hinzugefügt';
 $string['userdeleteditem'] = 'Nutzer/in mit der id {$a->userid} hat Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} gelöscht';
 $string['userboughtitem'] = 'Nutzer/in mit der id {$a->userid} hat Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} gekauft';
+$string['usernotboughtitem'] = 'Nutzer/in mit der id {$a->userid} konnte den Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} nicht kaufen';
 $string['itemexpired'] = 'Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} ist abgelaufen';
 $string['itemcanceled'] = 'Nutzer/in mit der id {$a->userid} hat Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} storniert';
 $string['payment_added'] = 'Nutzer/in hat eine Zahlung gestartet';

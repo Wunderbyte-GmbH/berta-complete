@@ -1,9 +1,9 @@
 <template>
   <div v-if="configurationList && configurationList.length > 0">
-    <p>Capability Configuration:</p>
+    <p>Capability Configuration: (LOKALIZE!)</p>
     <ul>
-      <li 
-        v-for="(value, key) in configurationList" 
+      <li
+        v-for="(value, key) in configurationList"
         :key="key"
         draggable="true"
         style="cursor: move"
@@ -15,19 +15,19 @@
         @dragend="handleDragEnd"
       >
         <span v-if="value.necessary">
-          <input 
+          <input
             :id="'checkbox_' + key"
             type="checkbox"
-            disabled 
+            disabled
             :checked="1"
           >
           <label :for="'checkbox_' + key"><strong>{{ value.name }}</strong></label>
           <i> necessary</i>
         </span>
         <span v-else>
-          <input 
+          <input
             :id="'checkbox_' + key"
-            type="checkbox" 
+            type="checkbox"
             :checked="value.checked"
             :disabled="disableCheckbox(value)"
             @change="handleCheckboxChange(value)"
@@ -41,7 +41,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { useStore } from 'vuex'
 
 const store = useStore()
@@ -54,13 +54,22 @@ const props = defineProps({
 });
 const draggedOverIndex = ref(null);
 
+
+onMounted(() => {
+  getConfigurationList()
+});
+
 watch(() => props.selectedcapability, async () => {
+  getConfigurationList()
+}, { deep: true } );
+
+const getConfigurationList = (() => {
   if (props.selectedcapability && props.selectedcapability.json) {
     configurationList.value = JSON.parse(props.selectedcapability.json)
   } else {
     configurationList.value = null
   }
-}, { deep: true } );
+})
 
 watch(() => configurationList.value, async () => {
   saveConfigurationList(configurationList.value)
@@ -69,6 +78,7 @@ watch(() => configurationList.value, async () => {
 let draggedItemIndex = null;
 
 const handleDragStart = (index, event) => {
+  console.log(event)
   draggedItemIndex = index;
   event.dataTransfer.effectAllowed = 'move';
   event.dataTransfer.setData('text/plain', draggedItemIndex);
@@ -137,7 +147,7 @@ const handleCheckboxChange = (value) => {
     const blocked = disableCheckbox(configuration)
     if (blocked) {
       configuration.checked = 0;
-    } 
+    }
   })
   saveConfigurationList(configurationList.value)
 };

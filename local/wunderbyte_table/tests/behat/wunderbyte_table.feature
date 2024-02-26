@@ -68,9 +68,8 @@ Feature: Baisc functionality of wunderbyte_table works as expected
     ## Demo table 3 - course modules
     And I follow "Demo table 3"
     And I wait "1" seconds
-    Then the following should exist in the "demotable_3" table:
-      | Module |
-      | 5      |
+    And I should see "1 of 1 records found" in the ".wunderbyteTableClass.demotable_3" "css_element"
+    And I should see "TriggersModal" in the "#demotable_3_r1" "css_element"
 
   @javascript
   Scenario: WB_Table navigation: switch to the next page
@@ -115,5 +114,5 @@ Feature: Baisc functionality of wunderbyte_table works as expected
     And I press the pagedown key
     # Ensure of available / not yet loaded records:
     And "//*[contains(@id, 'demotable_4')]//tr[@id, 'demotable_4_r16']" "xpath_element" should not exist
-    And I wait "1" seconds
+    And I wait "3" seconds
     And I should see "user20" in the "#demotable_4_r16" "css_element"

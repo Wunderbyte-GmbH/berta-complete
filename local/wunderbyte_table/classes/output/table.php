@@ -391,8 +391,8 @@ class table implements renderable, templatable {
                             break;
                         case (SORT_DESC):
                             $item['sortclass'] = 'desc';
-                            $this->sort['sortdown'] = true;
                             $this->sort['sortup'] = false;
+                            $this->sort['sortdown'] = true;
                             break;
                     }
                 };
@@ -410,8 +410,8 @@ class table implements renderable, templatable {
                             break;
                         case (SORT_DESC):
                             $item['sortclass'] = 'desc';
-                            $this->sort['sortdown'] = true;
                             $this->sort['sortup'] = false;
+                            $this->sort['sortdown'] = true;
                             break;
                     }
                 };
@@ -703,9 +703,13 @@ class table implements renderable, templatable {
 
             $sortarray['options'][] = $item;
         }
-        if ($this->wbtable->return_current_sortorder() == SORT_ASC) {
+        if ($this->wbtable->return_current_sortorder() == SORT_ASC ||
+            empty($this->wbtable->return_current_sortorder())) {
+            // Sort up is the default.
             $sortarray['sortup'] = true;
+            $sortarray['sortdown'] = null; // For mustache, we neeed null, not false.
         } else {
+            $sortarray['sortup'] = null; // For mustache, we neeed null, not false.
             $sortarray['sortdown'] = true;
         }
 
@@ -742,22 +746,36 @@ class table implements renderable, templatable {
             if (isset($column['datepicker'])) {
                 foreach ($column['datepicker']['datepickers'] as $vkey => $value) {
                     if (isset($value['timestamp'])) {
-                        if (isset($value['timestamp']) && ($value['timestamp'] === 'now')) {
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['datereadable'] = date('Y-m-d', $now);
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['timereadable'] = date('h:i', $now);
-                            continue;
+                        if ((is_string($value['timestamp']) && !is_numeric($value['timestamp']))) {
+
+                            $time = strtotime($value['timestamp']);
+                        } else {
+                            $time = (int)$value['timestamp'];
                         }
-                    } else {
-                        if (isset($value['starttimestamp']) && ($value['starttimestamp'] === 'now')) {
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['startdatereadable'] = date('Y-m-d', $now);
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['starttimereadable'] = date('h:i', $now);
-                            continue;
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['datereadable'] = date('Y-m-d', $time);
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['timereadable'] = date('h:i', $time);
+
+                    }
+                    if (isset($value['starttimestamp'])) {
+
+                        if (is_string($value['starttimestamp']) && !is_numeric($value['starttimestamp'])) {
+                            $time = strtotime($value['starttimestamp']);
+
+                        } else {
+                            $time = (int)$value['starttimestamp'];
                         }
-                        if (isset($value['endtimestamp']) && ($value['endtimestamp'] === 'now')) {
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['enddatereadable'] = date('Y-m-d', $now);
-                            $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['endtimereadable'] = date('h:i', $now);
-                            continue;
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['startdatereadable'] = date('Y-m-d', $time);
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['starttimereadable'] = date('h:i', $time);
+                    }
+                    if (isset($value['endtimestamp'])) {
+
+                        if (is_string($value['endtimestamp']) && !is_numeric($value['endtimestamp'])) {
+                            $time = strtotime($value['endtimestamp']);
+                        } else {
+                            $time = (int)$value['endtimestamp'];
                         }
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['enddatereadable'] = date('Y-m-d', $time);
+                        $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['endtimereadable'] = date('h:i', $time);
                     }
                 }
             }

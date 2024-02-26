@@ -70,13 +70,20 @@ class availability extends field_base {
      * Additionally to the classname, there might be others keys which should instantiate this class.
      * @var array
      */
-    public static $alternativeimportidentifiers = [];
+    public static $alternativeimportidentifiers = [
+        'boavenrolledincourse',
+    ];
 
     /**
      * This is an array of incompatible field ids.
      * @var array
      */
-    public static $incompatiblefields = [];
+    public static $incompatiblefields = [
+        MOD_BOOKING_OPTION_FIELD_EASY_BOOKINGCLOSINGTIME,
+        MOD_BOOKING_OPTION_FIELD_EASY_BOOKINGOPENINGTIME,
+        MOD_BOOKING_OPTION_FIELD_EASY_AVAILABILITY_PREVIOUSLYBOOKED,
+        MOD_BOOKING_OPTION_FIELD_EASY_AVAILABILITY_SELECTUSERS,
+    ];
 
     /**
      * This function interprets the value from the form and, if useful...
@@ -134,6 +141,7 @@ class availability extends field_base {
                 $availability = $data->availability;
             } else {
                 $availability = $settings->availability ?? "{}";
+                $data->availability = $availability;
             }
 
             // On importing, we support the boavenrolledincourse key.

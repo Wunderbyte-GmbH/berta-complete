@@ -41,7 +41,9 @@ use local_shopping_cart\event\payment_rebooked;
 use local_shopping_cart\task\delete_item_task;
 use moodle_exception;
 use Exception;
+use local_shopping_cart\event\item_notbought;
 use local_shopping_cart\interfaces\interface_transaction_complete;
+use local_shopping_cart\payment\service_provider;
 use moodle_url;
 use stdClass;
 
@@ -136,7 +138,7 @@ class shopping_cart {
                 $costcenterincart = '';
                 if (!empty($cachedrawdata['items'])) {
                     foreach ($cachedrawdata['items'] as $itemincart) {
-                        if ($itemincart['area'] == 'bookingfee') {
+                        if ($itemincart['area'] = 'bookingfee' || $itemincart['area'] = 'rebookingcredit') {
                             // We only need to check for "real" items, booking fee does not apply.
                             continue;
                         } else {
@@ -161,6 +163,12 @@ class shopping_cart {
                 && isset($cartitem['info']) && $cartitem['info'] == "fullybooked") {
                 return [
                     'success' => LOCAL_SHOPPING_CART_CARTPARAM_FULLYBOOKED,
+                    'itemname' => $cartitem['itemname'] ?? '',
+                ];
+            } else if (isset($cartitem['allow']) && $cartitem['allow'] == false
+                && isset($cartitem['info']) && $cartitem['info'] == "alreadybooked") {
+                return [
+                    'success' => LOCAL_SHOPPING_CART_CARTPARAM_ALREADYBOOKED,
                     'itemname' => $cartitem['itemname'] ?? '',
                 ];
             } else if (isset($cartitem['allow']) && $cartitem['allow']) {
@@ -205,7 +213,7 @@ class shopping_cart {
      */
     public static function add_item_to_cart(string $component, string $area, int $itemid, int $userid): array {
 
-        global $USER;
+        global $DB, $USER;
 
         $buyforuser = false;
 
@@ -230,20 +238,22 @@ class shopping_cart {
         $cachedrawdata = $cache->get($cachekey);
         $cacheitemkey = $component . '-' . $area . '-' . $itemid;
 
-        // If we have nothing in our cart and we are not about...
-        // ... to add the booking fee...
-        // ... we add the booking fee.
-        if (empty($cachedrawdata['items'])
-            && $area != 'bookingfee') {
-
-            // If we buy for user, we need to use -1 as userid.
-            // Also we add $userid as second param so we can check if fee was already paid.
-            shopping_cart_bookingfee::add_fee_to_cart($buyforuser ? -1 : $userid, $buyforuser ? $userid : 0);
-            $cachedrawdata = $cache->get($cachekey);
-        }
-
         $response = self::allow_add_item_to_cart($component, $area, $itemid, $userid);
         $cartparam = $response['success'];
+
+        if ($cartparam == LOCAL_SHOPPING_CART_CARTPARAM_SUCCESS) {
+            // If we have nothing in our cart and we are not about...
+            // ... to add the booking fee...
+            // ... we add the booking fee.
+            if (empty($cachedrawdata['items'])
+                && $area != 'bookingfee'
+                && $area != 'rebookingcredit') {
+                // If we buy for user, we need to use -1 as userid.
+                // Also we add $userid as second param so we can check if fee was already paid.
+                shopping_cart_bookingfee::add_fee_to_cart($buyforuser ? -1 : $userid, $buyforuser ? $userid : 0);
+                $cachedrawdata = $cache->get($cachekey);
+            }
+        }
 
         $expirationtimestamp = self::get_expirationdate();
 
@@ -261,6 +271,9 @@ class shopping_cart {
                     $cachedrawdata['items'][$cacheitemkey] = $itemdata;
                     $cachedrawdata['expirationdate'] = $expirationtimestamp;
                     $cache->set($cachekey, $cachedrawdata);
+
+                    // If it applies, we add the rebookingcredit.
+                    shopping_cart_rebookingcredit::add_rebookingcredit($cachedrawdata, $area, $buyforuser ? -1 : $userid);
 
                     $itemdata['expirationdate'] = $expirationtimestamp;
                     $itemdata['success'] = LOCAL_SHOPPING_CART_CARTPARAM_SUCCESS;
@@ -320,6 +333,12 @@ class shopping_cart {
                 $itemdata['expirationdate'] = $expirationtimestamp;
                 $itemdata['price'] = 0;
                 break;
+            case LOCAL_SHOPPING_CART_CARTPARAM_ALREADYBOOKED:
+                $itemdata['success'] = LOCAL_SHOPPING_CART_CARTPARAM_ALREADYBOOKED;
+                $itemdata['buyforuser'] = $USER->id == $userid ? 0 : $userid;
+                $itemdata['expirationdate'] = $expirationtimestamp;
+                $itemdata['price'] = 0;
+                break;
             case LOCAL_SHOPPING_CART_CARTPARAM_ERROR:
             default:
                 $itemdata['success'] = LOCAL_SHOPPING_CART_CARTPARAM_ERROR;
@@ -342,6 +361,7 @@ class shopping_cart {
 
     /**
      * This is to unload all the items from the cart.
+     * In the first instance, this is about cached items.
      *
      * @param string $component
      * @param string $area
@@ -400,19 +420,32 @@ class shopping_cart {
             $event->trigger();
         }
 
-        // If there is only one item left and it'sthe booking fee, we delete it.
-        if (isset($cachedrawdata['items']) && count($cachedrawdata['items']) === 1) {
+        // If there are only fees and/or rebookingcredits left, we delete them.
+        if (!empty($cachedrawdata['items'])) {
 
-            $item = reset($cachedrawdata['items']);
+            // At first, check we can delete.
+            $letsdelete = true;
+            foreach ($cachedrawdata['items'] as $remainingitem) {
+                if ($remainingitem['area'] === 'bookingfee' ||
+                    $remainingitem['area'] === 'rebookingcredit') {
+                    continue;
+                } else {
+                    // If we still have bookable items, we cannot delete fees and credits from cart.
+                    $letsdelete = false;
 
-            if ($item['area'] == 'bookingfee'
-                && $item['componentname'] == 'local_shopping_cart') {
-                self::delete_item_from_cart(
-                    $item['componentname'],
-                    $item['area'],
-                    $item['itemid'],
-                    $userid,
-                );
+                    // Also check, if we need to adjust rebookingcredit.
+                    shopping_cart_rebookingcredit::add_rebookingcredit($cachedrawdata, $area, $userid);
+                }
+            }
+
+            if ($letsdelete) {
+                foreach ($cachedrawdata['items'] as $item) {
+                    if (($item['area'] == 'bookingfee' ||
+                        $item['area'] == 'rebookingcredit')
+                        && $item['componentname'] == 'local_shopping_cart') {
+                        self::delete_all_items_from_cart($userid);
+                    }
+                }
             }
         }
 
@@ -913,6 +946,19 @@ class shopping_cart {
             if (!self::successful_checkout($item['componentname'], $item['area'], $item['itemid'], $userid)) {
                 $success = false;
                 $error[] = get_string('itemcouldntbebought', 'local_shopping_cart', $item['itemname']);
+
+                $context = context_system::instance();
+                // Trigger item deleted event.
+                $event = item_notbought::create([
+                    'context' => $context,
+                    'userid' => $USER->id,
+                    'relateduserid' => $userid,
+                    'other' => [
+                        'itemid' => $item['itemid'],
+                        'component' => $item['componentname'],
+                    ],
+                ]);
+
             } else {
                 // Delete Item from cache.
                 // Here, we don't need to unload the component, so the last parameter is false.
@@ -1197,7 +1243,7 @@ class shopping_cart {
      * @param int $userid
      * @return bool
      */
-    public static function allowed_to_cancel(int $historyid, int $itemid, string $area, int $userid):bool {
+    public static function allowed_to_cancel(int $historyid, int $itemid, string $area, int $userid): bool {
 
         $context = context_system::instance();
 
@@ -1680,6 +1726,20 @@ class shopping_cart {
 
                         // Whenever we find a pending payment and we could complete it, we redirect to the success url.
                         if (isset($response['success']) && $response['success']) {
+
+                            // At this point, we need to do one more check.
+                            // If, for some reason, the payment was successful...
+                            // ...  but the shopping car history is not updated, we might run in a loop.
+
+                            if ($paymentid = $DB->get_field('payments', 'id', [
+                                'component' => 'local_shopping_cart',
+                                'itemid' => $record->identifier,
+                                'userid' => $record->userid,
+                                'gateway' => $name,
+                            ])) {
+                                service_provider::deliver_order('', $record->identifier, $paymentid, $record->userid);
+                            }
+
                             if (!empty($response['url'])) {
                                 redirect($response['url']);
                             }
@@ -1988,5 +2048,23 @@ class shopping_cart {
         }
 
         return $dailysumsdata;
+    }
+
+    /**
+     * Is rebooking credit.
+     *
+     * @param string $component
+     * @param string $area
+     * @return bool
+     */
+    public static function is_rebookingcredit(string $component, string $area): bool {
+
+        if ($component === 'local_shopping_cart'
+            && $area === 'rebookingcredit') {
+
+            return true;
+        }
+
+        return false;
     }
 }

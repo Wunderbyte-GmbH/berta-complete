@@ -294,6 +294,12 @@ class wunderbyte_table extends table_sql {
     public $placebuttonandpageelementsontop = false;
 
     /**
+     * We need to store the context in the class.
+     * @var \context
+     */
+    public $context;
+
+    /**
      * Constructor. Does store uniqueid as hashed value and the actual classname.
      * The $uniqueid should be composed by ASCII alphanumeric characters, underlines and spaces only!
      * It is recommended to avoid of usage of simple single words like "table" to reduce chance of affecting by Moodle`s core CSS
@@ -301,6 +307,9 @@ class wunderbyte_table extends table_sql {
      * @param string $uniqueid Has to be really unique eg. by adding the cmid, so it's unique over all instances of one plugin!
      */
     public function __construct($uniqueid) {
+
+        global $PAGE;
+
         // We will not breack working code but have to inform developers about potentially severe issue.
         if (debugging() && preg_match('#[^a-zA-Z0-9_\s]#', $uniqueid)) {
             throw new coding_exception(
@@ -308,9 +317,13 @@ class wunderbyte_table extends table_sql {
                 $uniqueid
             );
         }
+
+        // We always add the contextid to the table.
+        $this->context = $PAGE->context;
+
         parent::__construct($uniqueid);
 
-        $this->idstring = md5($uniqueid);
+        $this->idstring = md5($uniqueid . $this->context->id ?? 1);
         $this->classname = get_class($this);
 
         // This unsets the eventual memory of sorting in session to apply the default sorting on load as defined.
@@ -486,6 +499,20 @@ class wunderbyte_table extends table_sql {
         } else {
             return new table($this, $encodedtable);
         }
+    }
+
+    /**
+     * Get the context for the table.
+     *
+     * Note: This function _must_ be overridden by dynamic tables to ensure that the context is correctly determined
+     * from the filterset parameters.
+     *
+     * @return \context
+     */
+    public function get_context(): \context {
+        global $PAGE;
+
+        return $this->context;
     }
 
     /**
@@ -781,7 +808,7 @@ class wunderbyte_table extends table_sql {
      */
     public function query_db_cached($pagesize, $useinitialsbar=true) {
 
-        global $CFG, $DB;
+        global $CFG, $DB, $PAGE, $USER;
 
         // At this point, we need seperate the unfiltered sql and the filtered sql and create respective cachekeys.
         // The sepearation of the sql is important because it allows us to distinguish ...
@@ -812,15 +839,23 @@ class wunderbyte_table extends table_sql {
             $cachedrawdata = false;
         }
 
+        // Pagination might have been set independend from cachedrawdata.
+        // Because if there is no result, we don't save rawdata.
+        // But we still want to save pagination.
+        $paginationset = $this->get_pagination_from_cache($cachekey);
+
         if ($cachedrawdata !== false) {
             // If so, just return it.
             $this->rawdata = (array)$cachedrawdata;
-            $pagination = $cache->get($cachekey . '_pagination');
-            $this->pagesize = $pagination['pagesize'];
-            $this->totalrows = $pagination['totalrows'];
-            $this->currpage = $pagination['currpage'];
-            $this->use_pages = $pagination['use_pages'];
-            $this->totalrecords = $pagination['totalrecords'];
+
+            // If we hit the cache, we may increase the count for debugging reasons.
+            if (count($this->rawdata) > 0) {
+                if ($record = $DB->get_record('local_wunderbyte_table', ['hash' => $cachekey], 'id, count')) {
+                    $record->count++;
+                    $record->timemodified = time();
+                    $DB->update_record('local_wunderbyte_table', $record);
+                }
+            }
         } else {
             // If not, we query as usual.
             try {
@@ -847,27 +882,85 @@ class wunderbyte_table extends table_sql {
                 // Only set cachekey when rawdata is bigger than 0.
                 if (count($this->rawdata) > 0) {
                     $cache->set($cachekey, $this->rawdata);
+
+                    if (get_config('local_wunderbyte_table', 'logfiltercaches')) {
+                        $sql = $this->get_sql_for_cachekey();
+
+                        // For testing, we save the filter settings at this point.
+                        $url = $PAGE->url->out();
+                        $now = time();
+                        $data = (object)[
+                            'hash' => $cachekey,
+                            'tablehash' => $this->tablecachehash,
+                            'idstring' => $this->idstring,
+                            'userid' => 0,
+                            'page' => $url,
+                            'jsonstring' => json_encode($this->sql),
+                            'sql' => $sql,
+                            'usermodified' => $USER->id,
+                            'timecreated' => $now,
+                            'timemodified' => $now,
+                            'count' => 1,
+                        ];
+                        if ($record = $DB->get_record('local_wunderbyte_table', ['hash' => $cachekey], 'id, count')) {
+                            $record->count++;
+                            $record->timemodified = time();
+                            $DB->update_record('local_wunderbyte_table', $record);
+                            $dontinsert = true;
+                        } else {
+                            $DB->insert_record('local_wunderbyte_table', $data);
+                        }
+                    }
                 }
 
-                $this->totalrecords = $DB->count_records_sql($totalcountsql, $this->sql->params);
-                $lang = current_language();
-                $totalrecordskey = $this->idstring . $lang . '_totalrecords';
-                $cache->set($totalrecordskey, $this->totalrecords);
-
-                if (isset($this->use_pages)
-                            && isset($this->pagesize)
-                            && isset($this->totalrows)) {
-                    $pagination['pagesize'] = $this->pagesize;
-                    $pagination['totalrecords'] = $this->totalrecords;
-                    $pagination['totalrows'] = $this->totalrows;
-                    $pagination['currpage'] = $this->currpage;
-                    $pagination['use_pages'] = $this->use_pages;
-                    $cache->set($cachekey . '_pagination', $pagination);
+                if (!$paginationset) {
+                    $this->totalrecords = $DB->count_records_sql($totalcountsql, $this->sql->params);
+                    $this->set_pagination_to_cache($cachekey);
                 }
             }
         }
 
         $this->filteredrecords = empty($filter) ? $this->totalrows : count($this->rawdata);
+    }
+
+    /**
+     * Sets the pagination values of the class from the cache.
+     * Returns false if no cache was found.
+     * @param string $cachekey
+     * @return bool
+     * @throws coding_exception
+     */
+    private function get_pagination_from_cache(string $cachekey) {
+
+        $cache = \cache::make($this->cachecomponent, $this->rawcachename);
+        if ($pagination = $cache->get($cachekey . '_pagination')) {
+            $this->pagesize = $pagination['pagesize'];
+            $this->totalrows = $pagination['totalrows'];
+            $this->currpage = $pagination['currpage'];
+            $this->use_pages = $pagination['use_pages'];
+            $this->totalrecords = $pagination['totalrecords'];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Set pagination to cache.
+     * @param string $cachekey
+     * @return void
+     * @throws coding_exception
+     */
+    private function set_pagination_to_cache(string $cachekey) {
+
+        $cache = \cache::make($this->cachecomponent, $this->rawcachename);
+
+        $pagination['pagesize'] = $this->pagesize;
+        $pagination['totalrecords'] = $this->totalrecords;
+        $pagination['totalrows'] = $this->totalrows;
+        $pagination['currpage'] = $this->currpage;
+        $pagination['use_pages'] = $this->use_pages;
+        $cache->set($cachekey . '_pagination', $pagination);
     }
 
     /**
@@ -957,73 +1050,77 @@ class wunderbyte_table extends table_sql {
         if (!isset($filterobject)) {
             $filterobject = new stdClass;
         }
-        if (!$searchtext == '') {
-            // Separator defines which character seperates key (columnname) from value (searchterm).
-            $separator = ":";
-            $remainingstring = $searchtext;
-            // If the separator is in the searchstring, we check if we get params to apply as filter.
-            if (strpos($searchtext, $separator) !== false ) {
-                $characterstoreplace = ["'", '„', '“'];
-                $replacements = ['"', '"', '"'];
-                $searchtext = str_replace($characterstoreplace, $replacements, $searchtext);
 
-                $regex = '/(?|"([^"]+)"|(\w+))'.$separator.'(?:"([^"]+)"|([^,\s]+))/';
-                $initialsearchtext = $searchtext;
-                $columnname = '';
-                $value = '';
-                preg_match_all($regex, $searchtext, $matches, PREG_SET_ORDER);
+        if (get_config('local_wunderbyte_table', 'allowsearchincolumns')) {
+            if (!$searchtext == '') {
+                // Separator defines which character seperates key (columnname) from value (searchterm).
+                $separator = ":";
+                $remainingstring = $searchtext;
+                // If the separator is in the searchstring, we check if we get params to apply as filter.
+                if (strpos($searchtext, $separator) !== false ) {
+                    $characterstoreplace = ["'", '„', '“'];
+                    $replacements = ['"', '"', '"'];
+                    $searchtext = str_replace($characterstoreplace, $replacements, $searchtext);
 
-                // Combining defined columns and their localized names.
-                // If you get an error here you have a problem with the definition of your headers and columns,
-                // they must be exactly the same.
-                $columns = array_combine(array_keys($this->columns), array_values($this->headers));
+                    $regex = '/(?|"([^"]+)"|(\w+))'.$separator.'(?:"([^"]+)"|([^,\s]+))/';
+                    $initialsearchtext = $searchtext;
+                    $columnname = '';
+                    $value = '';
+                    preg_match_all($regex, $searchtext, $matches, PREG_SET_ORDER);
 
-                foreach ($matches as $match) {
-                    // Assigning the values the columnname and value.
-                    $columnname = $match[1];
-                    $value = $match[2];
-                    if ($match[2] == "") {
-                        $value = $match[3];
-                    }
+                    // Combining defined columns and their localized names.
+                    // If you get an error here you have a problem with the definition of your headers and columns,
+                    // they must be exactly the same.
+                    $columns = array_combine(array_keys($this->columns), array_values($this->headers));
 
-                    // Checking if we find a doublequote after the semicolon.
-                    $quotedvalue = false;
-                    $separatorposition = strpos($match[0], $separator);
-                    if ($separatorposition !== false) {
-                        $separatorposition++;
-                        if ($separatorposition < strlen($match[0])) {
-                            $characterafter = $match[0][$separatorposition];
-                            if ($characterafter == '"') {
-                                $quotedvalue = true;
+                    foreach ($matches as $match) {
+                        // Assigning the values the columnname and value.
+                        $columnname = $match[1];
+                        $value = $match[2];
+                        if ($match[2] == "") {
+                            $value = $match[3];
+                        }
+
+                        // Checking if we find a doublequote after the semicolon.
+                        $quotedvalue = false;
+                        $separatorposition = strpos($match[0], $separator);
+                        if ($separatorposition !== false) {
+                            $separatorposition++;
+                            if ($separatorposition < strlen($match[0])) {
+                                $characterafter = $match[0][$separatorposition];
+                                if ($characterafter == '"') {
+                                    $quotedvalue = true;
+                                }
                             }
                         }
-                    }
 
-                    if (!$quotedvalue && // Value is unquoted.
-                    !filter_var($value, FILTER_VALIDATE_INT) && // And not a number.
-                    !filter_var($value, FILTER_VALIDATE_FLOAT)) {
-                        $value = "%" . $value . "%"; // Add wildcards.
-                    }
+                        if (!$quotedvalue && // Value is unquoted.
+                        !filter_var($value, FILTER_VALIDATE_INT) && // And not a number.
+                        !filter_var($value, FILTER_VALIDATE_FLOAT)) {
+                            $value = "%" . $value . "%"; // Add wildcards.
+                        }
 
-                    // Check if searchstring column corresponds to localized name. If so set columnname.
-                    if (in_array($columnname, $columns)) {
-                        $columnname = array_search($columnname, $columns);
-                    } else if (!array_key_exists($columnname, $columns) || !array_key_exists(strtolower($columnname), $columns)) {
-                        // Or columnname.
-                        continue;
-                    }
+                        // Check if searchstring column corresponds to localized name. If so set columnname.
+                        if (in_array($columnname, $columns)) {
+                            $columnname = array_search($columnname, $columns);
+                        } else if (!array_key_exists($columnname, $columns)
+                            || !array_key_exists(strtolower($columnname), $columns)) {
+                            // Or columnname.
+                            continue;
+                        }
 
-                    if (property_exists($filterobject, $columnname)) {
-                        if (!in_array($value, $filterobject->$columnname)) {
+                        if (property_exists($filterobject, $columnname)) {
+                            if (!in_array($value, $filterobject->$columnname)) {
+                                $filterobject->{$columnname}[] = $value;
+                            }
+                        } else {
                             $filterobject->{$columnname}[] = $value;
                         }
-                    } else {
-                        $filterobject->{$columnname}[] = $value;
-                    }
 
-                    // Check if there is a string remaining after getting key and value.
-                    if (isset($match[0]) && is_string($match[0])) {
-                        $remainingstring = str_replace($match[0], "", $remainingstring);
+                        // Check if there is a string remaining after getting key and value.
+                        if (isset($match[0]) && is_string($match[0])) {
+                            $remainingstring = str_replace($match[0], "", $remainingstring);
+                        }
                     }
                 }
             }
@@ -1352,13 +1449,18 @@ class wunderbyte_table extends table_sql {
             // Therefore, we add the capability to the hash.
             $this->tablecachehash = md5($this->idstring . $this->requirecapability ?? '' . $this->requirelogin ?? '');
 
-            if (($cashedtable = $cache->get($this->tablecachehash)) && !$newcache) {
-                $this->pagesize = $cashedtable->pagesize;
+            // We just fetch the pagesize, no need to get all the table here.
+            if (($pagesize = $cache->get($this->tablecachehash . '_pagesize')) && !$newcache) {
+                $this->pagesize = $pagesize;
             } else {
                 // Make sure that we don't use old filter params.
                 $filter = $this->sql->filter ?? '';
                 $this->sql->filter = '';
+
                 $cache->set($this->tablecachehash, $this);
+                $cache->set($this->tablecachehash . '_pagesize', $this->pagesize);
+
+                // Reassign those properties we didn't want to cache.
                 $this->sql->filter = $filter;
             }
         }
@@ -1420,7 +1522,7 @@ class wunderbyte_table extends table_sql {
      * @param string $data
      * @return array
      */
-    public function action_rownumberperpage(int $id, string $data):array {
+    public function action_rownumberperpage(int $id, string $data): array {
 
         $jsonobject = json_decode($data);
         $this->pagesize = $jsonobject->numberofrowsselect;
@@ -1509,7 +1611,7 @@ class wunderbyte_table extends table_sql {
         $sql = $this->get_sql_for_cachekey($forfilter, $useinitialsbar);
 
         // Now that we have the string, we hash it with a very fast method.
-        $cachekey = crc32($sql);
+        $cachekey = crc32($sql) . '_sqlquery';
 
         return $cachekey;
     }
@@ -1591,9 +1693,8 @@ class wunderbyte_table extends table_sql {
         // This creates a hash from the sql settings.
         $cachekey = $this->create_cachekey(true);
 
-        // We add to this the url of the page, where it appears.
-        $url = $PAGE->url->out();
-        $idstring = md5($cachekey . $url);
+        // We add the contextid.
+        $idstring = md5($cachekey . $this->context->id ?? 1);
 
         $this->idstring = $idstring;
     }

@@ -30,10 +30,14 @@ $string['modulename'] = 'Shopping Cart';
 
 // General strings.
 $string['addtocart'] = 'Add to cart';
+$string['allowrebookingcredit'] = 'Rebooking credit';
+$string['allowrebookingcredit_desc'] = 'If you activate rebooking credit, a user will get refunded the cancelation and booking fee
+if (s)he cancels an item within the cancelation period and books another item.';
 $string['cash'] = 'Cash';
 $string['choose...'] = 'Choose...';
 $string['mycart'] = 'My Cart';
 $string['optioncancelled'] = 'Booking option cancelled';
+$string['rebookingcredit'] = 'Rebooking credit';
 $string['sendpaymentbutton'] = 'Checkout';
 $string['showorderid'] = 'Show Order-ID...';
 
@@ -126,6 +130,8 @@ $string['error:costcentersdonotmatch'] = 'You already have an item with a differ
 You have to buy this item separately!';
 $string['error:fullybookedtitle'] = 'Fully booked';
 $string['error:fullybooked'] = 'You cannot book this item anymore because it is already fully booked.';
+$string['error:alreadybookedtitle'] = 'Already booked';
+$string['error:alreadybooked'] = 'You have already booked this item.';
 $string['error:gatewaymissingornotsupported'] = 'Note: Your current payment gateway is either not supported or you still need
 to set up a payment gateway.';
 $string['error:generalcarterror'] = 'You cannot add this item to your shopping cart because there was an error.
@@ -425,6 +431,7 @@ $string['floatonly'] = 'Only numeric values (decimals) are accepted. The correct
 
 // Events.
 $string['item_bought'] = 'Item bought';
+$string['item_notbought'] = 'Item could not be bought';
 $string['item_added'] = 'Item added';
 $string['item_expired'] = 'Item expired';
 $string['item_deleted'] = 'Item deleted';
@@ -432,6 +439,7 @@ $string['item_canceled'] = 'Item canceled';
 $string['useraddeditem'] = 'User with the userid {$a->userid} added item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
 $string['userdeleteditem'] = 'User with the userid {$a->userid} deleted item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
 $string['userboughtitem'] = 'User with the userid {$a->userid} bought item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
+$string['usernotboughtitem'] = 'User with the userid {$a->userid} could not buy item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
 $string['itemexpired'] = 'Item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid} expired';
 $string['itemcanceled'] = 'User with the userid {$a->userid} canceled item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
 $string['payment_added'] = 'User has started a payment transaction';

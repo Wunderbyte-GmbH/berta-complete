@@ -1,3 +1,18 @@
+## Version 1.9.13 (2024022200)
+* Bugfix: Use SORT_ASC as default sort order when return_current_sortorder() returns null.
+
+## Version 1.9.12 (2024021900)
+* Improvement: Better handling of pagination cache.
+* Improvement: More efficient cache handling.
+* Bugfix: Fix a behat scenario.
+* Bugfix: Fix JSON for template.
+* Bugfix: Revert "Improvement: Constructor may not be overriden".
+
+## Version 1.9.11 (2024021600)
+* Improvement: Constructur can not be overriden anymore to prevent unwanted caching.
+* Improvement: Filter default values can be set via strtotime function
+* Improvement: Add debugging option via db
+
 ## Version 1.9.10 (2024012900)
 * Improvement: Add more fields to WB table for better debugging.
 * Bugfix: Fix switch statement in edit filter.
