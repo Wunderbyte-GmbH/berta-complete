@@ -38,6 +38,7 @@ $string['couldnotloaddata'] = "Konnte keine Daten laden";
 
 $string['filter'] = 'Tabelle filtern';
 $string['reload'] = "Tabelle neu laden";
+$string['edittable'] = "Editieren";
 $string['print'] = "Tabelle herunterladen";
 $string['downloadas'] = "Tabelle laden als";
 
@@ -45,6 +46,7 @@ $string['norecords'] = "Keine Daten gefunden.";
 
 // Capabilities.
 $string['wunderbyte_table:canaccess'] = 'Kann auf Wunderbyte Table zugreifen';
+$string['wunderbyte_table:canedittable'] = 'Kann auf Wunderbyte Table editieren';
 
 // Caches.
 $string['cachedef_cachedfulltable'] = 'Wunderbyte Table: Cache für die ganze Tabelle';
@@ -105,6 +107,43 @@ $string['action_executed_desc'] = 'Die NutzerIn hat eine Aktion "{$a->methodname
 $string['savesettingstodb'] = 'Speichere Wunderbyte Table-Einstellungen in der Datenbank (Experimentell)';
 $string['logfiltercaches'] = 'Debug feature: Speichere query hashes in der DB. Das hat negative Auswirkugen auf die Performance (Experimentell)';
 $string['allowsearchincolumns'] = 'Allow search in columsn via ":" (Experimentell)';
+$string['allowedittable'] = 'Allow users to edit the table directly';
+
+// Hourlist filter.
+$string['from0to1'] = "00:00 - 01:00";
+$string['from1to2'] = "01:00 - 02:00";
+$string['from2to3'] = "02:00 - 03:00";
+$string['from3to4'] = "03:00 - 04:00";
+$string['from4to5'] = "04:00 - 05:00";
+$string['from5to6'] = "05:00 - 06:00";
+$string['from6to7'] = "06:00 - 07:00";
+$string['from7to8'] = "07:00 - 08:00";
+$string['from8to9'] = "08:00 - 09:00";
+$string['from9to10'] = "09:00 - 10:00";
+$string['from10to11'] = "10:00 - 11:00";
+$string['from11to12'] = "11:00 - 12:00";
+$string['from12to13'] = "12:00 - 13:00";
+$string['from13to14'] = "13:00 - 14:00";
+$string['from14to15'] = "14:00 - 15:00";
+$string['from15to16'] = "15:00 - 16:00";
+$string['from16to17'] = "16:00 - 17:00";
+$string['from17to18'] = "17:00 - 18:00";
+$string['from18to19'] = "18:00 - 19:00";
+$string['from19to20'] = "19:00 - 20:00";
+$string['from20to21'] = "20:00 - 21:00";
+$string['from21to22'] = "21:00 - 22:00";
+$string['from22to23'] = "22:00 - 23:00";
+$string['from23to24'] = "23:00 - 24:00";
+
+// Edit filter.
+$string['filterinactive'] = 'Deactivate the entire filter';
+$string['showfilter'] = 'Show this filter';
+$string['editfiltername'] = 'Edit filtername';
+
+$string['datepicker'] = 'Datepicker filter';
+$string['hourlist'] = 'Hourlist filter';
+$string['standardfilter'] = 'Standard filter';
+$string['weekdays'] = 'Weekdays filter';
 
 // Bewlow this line, there are only strings for the demo site.
 // Action Buttons demo names.

@@ -1,7 +1,3 @@
-## Version 1.9.16 (2024022900)
-* Improvement: Show cards right next to each other (CSS fix).
-* Bugfix: Add missing cache definitions.
-
 ## Version 1.9.15 (2024022600)
 * Improvement: Better layout (margins) for filter search.
 

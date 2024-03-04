@@ -55,6 +55,7 @@ class wunderbyte_table extends table_sql {
      * @var string Id of this table.
      */
     public $idstring = '';
+
     /**
      * @var string classname of possible subclass.
      */
@@ -894,7 +895,7 @@ class wunderbyte_table extends table_sql {
                             'tablehash' => $this->tablecachehash,
                             'idstring' => $this->idstring,
                             'userid' => 0,
-                            'page' => $url,
+                            'page' => $this->context->id,
                             'jsonstring' => json_encode($this->sql),
                             'sql' => $sql,
                             'usermodified' => $USER->id,
@@ -902,7 +903,13 @@ class wunderbyte_table extends table_sql {
                             'timemodified' => $now,
                             'count' => 1,
                         ];
-                        if ($record = $DB->get_record('local_wunderbyte_table', ['hash' => $cachekey], 'id, count')) {
+                        if ($record = $DB->get_record('local_wunderbyte_table',
+                                [
+                                    'hash' => $cachekey,
+                                    'page' => $this->context->id,
+                                ],
+                                'id,
+                                count')) {
                             $record->count++;
                             $record->timemodified = time();
                             $DB->update_record('local_wunderbyte_table', $record);
@@ -1234,7 +1241,7 @@ class wunderbyte_table extends table_sql {
                     } else if (is_numeric($value)) {
 
                         // Here we check if it's an hourslist filter.
-                        if (isset($this->subcolumns['datafields'][$categorykey]['hourlist'])) {
+                        if (isset($this->subcolumns['datafields'][$categorykey]['local_wunderbyte_table\filters\types\hourlist'])) {
                             $filter .= filter::apply_hourlist_filter($categorykey, ":$paramsvaluekey");
                             $this->sql->params[$paramsvaluekey] = "". $value;
                         } else {

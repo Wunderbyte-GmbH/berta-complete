@@ -23,8 +23,14 @@
  */
 
 namespace local_wunderbyte_table;
+use local_wunderbyte_table\filters\base;
+use local_wunderbyte_table\filters\types\datepicker;
+use local_wunderbyte_table\filters\types\hourlist;
+use local_wunderbyte_table\filters\types\standardfilter;
+use local_wunderbyte_table\filters\types\weekdays;
 
 use coding_exception;
+use core_component;
 use dml_exception;
 
 /**
@@ -48,7 +54,7 @@ class filter {
             // We need to localize the filter for every user.
             $lang = current_language();
 
-            $key = $table->idstring . $lang . '_filterjson';
+            $key = $table->tablecachehash . $lang . '_filterjson';
 
             $table->filterjson = editfilter::get_userspecific_filterjson($table, $key);
 
@@ -83,6 +89,11 @@ class filter {
             return;
         }
 
+        $filterclasses = core_component::get_component_classes_in_namespace(
+            "local_wunderbyte_table",
+            'filters\types'
+        );
+
         // Here, we create the filter first like this:
         // For every field we want to filter for, we look in our rawdata...
         // ... to fetch all the available values once.
@@ -96,14 +107,13 @@ class filter {
                 continue;
             }
 
-            if (isset($value['datepicker'])) {
-                $filtercolumns[$key] = 'datepicker';
+            $rawdata = false;
+
+            $rawdata = $value['wbfilterclass']::get_data_for_filter_options($table, $key);
+
+            // Some filters might want us to continue here.
+            if (isset($rawdata['continue'])) {
                 continue;
-            } else if (isset($value['hourlist'])) {
-                $filtercolumns[$key] = 'hourlist';
-                $rawdata = self::get_db_filter_column_hours($table, $key);
-            } else {
-                $rawdata = self::get_db_filter_column($table, $key);
             }
 
             $filtercolumns[$key] = [];
@@ -140,177 +150,11 @@ class filter {
                 'collapsed' => 'collapsed',
             ];
 
-            if (is_string($values) && $values === 'datepicker') {
-
-                $datepickerarray = $filtersettings[$fckey];
-
-                foreach ($datepickerarray['datepicker'] as $labelkey => $object) {
-
-                    if (!isset($object['columntimestart'])) {
-                        $defaulttimestamp = $datepickerarray['datepicker'][$labelkey]['defaultvalue'];
-
-                        $datepickerobject = [
-                            'label' => $labelkey,
-                            'operator' => $datepickerarray['datepicker'][$labelkey]['operator'],
-                            'timestamp' => $defaulttimestamp,
-                            'datereadable' => $defaulttimestamp,
-                            'timereadable' => $defaulttimestamp,
-                            'checkboxlabel' => $datepickerarray['datepicker'][$labelkey]['checkboxlabel'],
-                        ];
-
-                    } else { // Inbetween Filter applied.
-                        // Prepare the array for output.
-                        if (empty($datepickerarray['datepicker'][$labelkey]['possibleoperations'])) {
-                            $datepickerarray['datepicker'][$labelkey]['possibleoperations'] =
-                                ['within', 'overlapboth', 'overlapstart', 'overlapend', 'before', 'after', 'flexoverlap'];
-                        }
-                        $operationsarray = array_map(fn($y) => [
-                            'operator' => $y,
-                            'label' => get_string($y, 'local_wunderbyte_table'),
-                        ], $datepickerarray['datepicker'][$labelkey]['possibleoperations']);
-
-                        $datepickerobject = [
-                            'label' => $labelkey,
-                            'startcolumn' => $datepickerarray['datepicker'][$labelkey]['columntimestart'],
-                            'starttimestamp' => $datepickerarray['datepicker'][$labelkey]['defaultvaluestart'],
-                            'startdatereadable' => $datepickerarray['datepicker'][$labelkey]['defaultvaluestart'],
-                            'starttimereadable' => $datepickerarray['datepicker'][$labelkey]['defaultvaluestart'],
-                            'endcolumn' => $datepickerarray['datepicker'][$labelkey]['columntimeend'],
-                            'endtimestamp' => $datepickerarray['datepicker'][$labelkey]['defaultvalueend'],
-                            'enddatereadable' => $datepickerarray['datepicker'][$labelkey]['defaultvalueend'],
-                            'endtimereadable' => $datepickerarray['datepicker'][$labelkey]['defaultvalueend'],
-                            'checkboxlabel' => $datepickerarray['datepicker'][$labelkey]['checkboxlabel'],
-                            'possibleoperations' => $operationsarray, // Array.
-                        ];
-                    }
-
-                    $categoryobject['datepicker']['datepickers'][] = $datepickerobject;
-                }
-
-            } else if (is_array($values)) {
-                // We might need to explode values, because of a multi-field.
-                if (isset($filtersettings[$fckey]['explode'])
-                    || self::check_if_multi_customfield($fckey)) {
-
-                    // We run through the array of values and explode each item.
-                    foreach ($values as $keytoexplode => $valuetoexplode) {
-
-                        $separator = $filtersettings[$fckey]['explode'] ?? ',';
-
-                        $explodedarray = explode($separator, $keytoexplode);
-
-                        // Only if we have more than one item, we unset key and insert all the new keys we got.
-                        if (count($explodedarray) > 1) {
-                            // Run through all the keys.
-                            foreach ($explodedarray as $explodeditem) {
-
-                                // Make sure we don't have any empty values.
-                                $explodeditem = trim($explodeditem);
-
-                                if (empty($explodeditem)) {
-                                    continue;
-                                }
-
-                                $values[$explodeditem] = true;
-                            }
-                            // We make sure the strings with more than one values are not treated anymore.
-                            unset($values[$keytoexplode]);
-                        }
-                    }
-
-                    unset($filtersettings[$fckey]['explode']);
-                }
-
-                // If we have JSON, we need special treatment.
-                if (!empty($filtersettings[$fckey]['jsonattribute'])) {
-                    $valuescopy = $values;
-                    $values = [];
-
-                    // We run through the array of values containing the JSON strings.
-                    foreach ($valuescopy as $jsonstring => $boolvalue) {
-                        // Convert into an array, so we can handle items with multiple objects.
-                        $jsonstring = '[' . $jsonstring . ']';
-                        $jsonarray = json_decode($jsonstring);
-
-                        foreach ($jsonarray as $jsonobj) {
-                            if (empty($jsonobj)) {
-                                continue;
-                            }
-                            // We only want to show the attribute of the JSON which is relevant for the filter.
-                            $searchattribute = $jsonobj->{$filtersettings[$fckey]['jsonattribute']};
-                            $values[$searchattribute] = true;
-                        }
-                    }
-
-                    unset($filtersettings[$fckey]['json']);
-                }
-
-                // We have to check if we have a sortarray for this filtercolumn.
-                if (isset($filtersettings[$fckey])
-                            && count($filtersettings[$fckey]) > 0) {
-
-                                    $sortarray = $filtersettings[$fckey];
-                } else {
-                    $sortarray = null;
-                }
-
-                // First we create our sortedarray and add all values in the right order.
-                if ($sortarray != null) {
-                    $sortedarray = [];
-                    foreach ($sortarray as $sortkey => $sortvalue) {
-                        if (isset($values[$sortkey])) {
-                            $sortedarray[$sortvalue] = $sortkey;
-
-                            unset($values[$sortkey]);
-                        }
-                    }
-
-                    // Now we make sure we havent forgotten any values.
-                    // If so, we sort them and add them at the end.
-                    if (count($values) > 0) {
-                        // First sort the values first.
-                        ksort($values);
-
-                        foreach ($values as $unsortedkey => $unsortedvalue) {
-                            $sortedarray[$unsortedkey] = true;
-                        }
-                    }
-
-                    // Finally, we pass the sorted array to the values back.
-                    $values = $sortedarray;
-                } else {
-                    $values = array_combine(array_keys($values), array_keys($values));
-                }
-
-                foreach ($values as $valuekey => $valuevalue) {
-
-                    $itemobject = [
-                        // We do not want to show html entities, so replace &amp; with &.
-                        'key' => str_replace("&amp;", "&", $valuekey),
-                        'value' => $valuevalue === true ? $valuekey : $valuevalue,
-                        'category' => $fckey,
-                    ];
-
-                    // Count may not be used, so we have an extra check.
-                    if (!empty($filtercolumns[$fckey][$valuevalue])) {
-                        $itemobject['count'] = $filtercolumns[$fckey][$valuevalue];
-                    }
-
-                    $categoryobject['default']['values'][$valuekey] = $itemobject;
-                }
-
-                if (!isset($categoryobject['default']) || count($categoryobject['default']['values']) == 0) {
-                    continue;
-                }
-
-                if ($sortarray == null) {
-                    // If we didn't sort otherwise, we do it now.
-                    ksort($categoryobject['default']['values']);
-                }
-
-                // Make the arrays mustache ready, we have to jump through loops.
-                $categoryobject['default']['values'] = array_values($categoryobject['default']['values']);
+            if ($classname = $filtersettings[$fckey]['wbfilterclass'] ?? false) {
+                $classname::add_to_categoryobject($categoryobject, $filtersettings, $fckey, $values);
+                $categoryobject['wbfilterclass'] = $classname;
             }
+
             $filterjson['categories'][] = $categoryobject;
         }
 
@@ -326,7 +170,7 @@ class filter {
      * @param string $columnname
      * @return bool
      */
-    private static function check_if_multi_customfield($columnname) {
+    public static function check_if_multi_customfield($columnname) {
         global $DB;
 
         $configmulti = $DB->sql_like('configdata', ":mcfparam1");
@@ -355,7 +199,7 @@ class filter {
      * @param string $key
      * @return array
      */
-    private static function get_db_filter_column(wunderbyte_table $table, string $key) {
+    public static function get_db_filter_column(wunderbyte_table $table, string $key) {
 
         global $DB;
 
@@ -367,7 +211,17 @@ class filter {
 
         $records = $DB->get_records_sql($sql, $table->sql->params);
 
-        return $records;
+        // If there are only empty strings, we don't want the filter to show.
+        if (!$records
+            || count($records) < 2
+            || (reset($records)->{$key} === null
+                || reset($records)->{$key} === '')) {
+            return [
+                'continue' => true,
+            ];
+        } else {
+            return $records;
+        }
     }
 
     /**
@@ -376,7 +230,7 @@ class filter {
      * @param string $key
      * @return array
      */
-    private static function get_db_filter_column_hours(wunderbyte_table $table, string $key) {
+    public static function get_db_filter_column_hours(wunderbyte_table $table, string $key) {
 
         global $DB;
 
