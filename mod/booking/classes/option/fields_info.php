@@ -36,6 +36,7 @@ use context_module;
 use dml_exception;
 use Exception;
 use mod_booking\price;
+use mod_booking\settings\optionformconfig\optionformconfig_info;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -154,10 +155,9 @@ class fields_info {
      * Add all available fields in the right order.
      * @param MoodleQuickForm $mform
      * @param array $formdata
-     * @param array $optionformconfig
      * @return void
      */
-    public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array &$optionformconfig) {
+    public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata) {
 
         $classes = self::get_field_classes();
 
@@ -168,7 +168,7 @@ class fields_info {
                 continue;
             }
 
-            $classname::instance_form_definition($mform, $formdata, $optionformconfig);
+            $classname::instance_form_definition($mform, $formdata, []);
         }
     }
 
@@ -280,6 +280,7 @@ class fields_info {
 
     /**
      * Get all classes function.
+     * This already filters classes for the given users and settings.
      * Save param allows to filter for all (default) or special save logic.
      * @param int $save
      * @return array
@@ -325,7 +326,7 @@ class fields_info {
      */
     private static function check_field_for_user(string $classname) {
 
-        global $OUTPUT, $PAGE;
+        global $OUTPUT, $PAGE, $USER;
 
         try {
             $cmid = $PAGE->cm->id;
@@ -338,7 +339,7 @@ class fields_info {
         try {
             if ($cm = $PAGE->cm ?? false) {
                 $cmid = $cm->id;
-                $modulecontext = context_module::instance($cmid);
+                $context = context_module::instance($cmid);
             } else {
                 $cmid = 0;
             }
@@ -352,21 +353,35 @@ class fields_info {
             return true;
         }
 
-        if (empty($cmid) || has_capability('mod/booking:expertoptionform', $modulecontext)) {
-            // Standard fields only.
-            if (in_array(MOD_BOOKING_OPTION_FIELD_STANDARD, $classname::$fieldcategories)) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+        // We iterate over all capabilities.
+        // From expert to lowest reduced.
+        foreach (optionformconfig_info::CAPABILITIES as $capability) {
+            // If cmid is empty, we always use the expert form (the first one).
+            if (empty($cmid) || has_capability($capability, $context)) {
+                // First check if the fields turned on in the fields configuration.
+                $status = optionformconfig_info::return_status_for_field(
+                    $classname::$id,
+                    $USER->id,
+                    $context->id,
+                    $capability);
 
-            // Easy fields only.
-            // Standard fields only.
-            if (in_array(MOD_BOOKING_OPTION_FIELD_EASY, $classname::$fieldcategories)) {
-                return true;
-            } else {
-                return false;
+                switch ($status) {
+                    case optionformconfig_info::SHOWFIELD:
+                        return true;
+                    case optionformconfig_info::HIDEFIELD:
+                        return false;
+                }
+
+                // Only for the Expert capability, we use expert, else easy.
+                $formstouse = 'capability' === 'mod/booking:expertoptionform'
+                    ? MOD_BOOKING_OPTION_FIELD_STANDARD : MOD_BOOKING_OPTION_FIELD_EASY;
+
+                // If we arrive here this means that there is no configuration and we use the fallback.
+                if (in_array($formstouse, $classname::$fieldcategories)) {
+                    return true;
+                } else {
+                    return false;
+                }
             }
         }
 
@@ -374,7 +389,8 @@ class fields_info {
     }
 
     /**
-     * Ignore class.
+     * Ignore class only applies to importing mode.
+     * During import, forms are created differently then normally.
      * @param mixed $data
      * @param mixed $classname
      * @return bool
@@ -395,7 +411,6 @@ class fields_info {
             if (!in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $classname::$fieldcategories)
                 && !isset($data->{$shortclassname})) {
 
-                // The custom field class is the only one which still needs to executed, as we dont.
                 if ($classname::$id === MOD_BOOKING_OPTION_FIELD_PRICE) {
                     // TODO: if a column is called like any price category.
                     $existingpricecategories = $DB->get_records('booking_pricecategories', ['disabled' => 0]);
