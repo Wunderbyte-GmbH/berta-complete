@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,21 +12,25 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Lexa theme.
  *
- * @package     local_entities
- * @copyright   2023 Wunderbyte GmbH <info@wunderbyte.at>
- * @author      Thomas Winkler, Bernhard Fischer, Georg Maißer
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    theme_lexa
+ * @copyright  2024 G J Barnard.
+ *               {@link https://gjbarnard.co.uk}
+ * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
  */
 
-defined('MOODLE_INTERNAL') || die();
+defined('MOODLE_INTERNAL') || die;
 
-$plugin->component = 'local_entities';
-$plugin->release = '0.3.3';
-$plugin->version = 2024030600;
-$plugin->requires = 2020061500;
+$plugin->version   = 2024030600;
+$plugin->requires = 2023100900.00; // 4.3 (Build: 20231009).
+$plugin->supported = array(403, 403);
+$plugin->component = 'theme_lexa';
 $plugin->maturity = MATURITY_ALPHA;
+$plugin->release = '403.0.1';
+$plugin->dependencies = array(
+    'theme_boost'  => 2023100900
+);
