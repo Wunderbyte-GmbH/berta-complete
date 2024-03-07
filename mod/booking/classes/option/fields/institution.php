@@ -107,8 +107,6 @@ class institution extends field_base {
 
         global $DB;
 
-        // We don't show the location and address fields if we have entities installed.
-        // if (!class_exists('local_entities\entitiesrelation_handler')) {
         // Standardfunctionality to add a header to the mform (only if its not yet there).
         fields_info::add_header_to_mform($mform, self::$header);
 
@@ -124,11 +122,9 @@ class institution extends field_base {
         $options = [
                 'noselectionstring' => get_string('donotselectinstitution', 'mod_booking'),
                 'tags' => true,
-                'multiple' => false,
         ];
         $mform->addElement('autocomplete', 'institution',
             get_string('institution', 'mod_booking'), $institutionstrings, $options);
         $mform->addHelpButton('institution', 'institution', 'mod_booking');
-        // }
     }
 }

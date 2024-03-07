@@ -45,6 +45,10 @@ use mod_booking\utils\wb_payment;
 define('MOD_BOOKING_BOOKINGOPTION_DEFAULTFIELDS', "identifier,titleprefix,text,description,teacher,responsiblecontact," .
 "showdates,dayofweektime,location,institution,course,minanswers,bookings,bookingopeningtime,bookingclosingtime");
 
+// View params.
+define('MOD_BOOKING_VIEW_PARAM_LIST', 0); // List view.
+define('MOD_BOOKING_VIEW_PARAM_CARDS', 1); // Cards view.
+
 // Currently up to 9 different price categories can be set.
 define('MOD_BOOKING_MAX_PRICE_CATEGORIES', 9);
 
@@ -105,6 +109,7 @@ define('MOD_BOOKING_BO_COND_ISCANCELLED', 130);
 define('MOD_BOOKING_BO_COND_ISBOOKABLE', 120);
 define('MOD_BOOKING_BO_COND_ONWAITINGLIST', 110);
 define('MOD_BOOKING_BO_COND_NOTIFYMELIST', 100);
+define('MOD_BOOKING_BO_COND_ALLOWEDTOBOOKININSTANCE', 95); // We might want to moove this up?
 define('MOD_BOOKING_BO_COND_FULLYBOOKED', 90);
 define('MOD_BOOKING_BO_COND_MAX_NUMBER_OF_BOOKINGS', 80);
 define('MOD_BOOKING_BO_COND_OPTIONHASSTARTED', 70);
@@ -166,6 +171,7 @@ define('MOD_BOOKING_OPTION_FIELD_PREPARE_IMPORT', 1); // Has to be the first fie
 define('MOD_BOOKING_OPTION_FIELD_ID', 10);
 define('MOD_BOOKING_OPTION_FIELD_JSON', 11);
 define('MOD_BOOKING_OPTION_FIELD_RETURNURL', 20);
+define('MOD_BOOKING_OPTION_FIELD_FORMCONFIG', 25);
 define('MOD_BOOKING_OPTION_FIELD_TEMPLATE', 30);
 define('MOD_BOOKING_OPTION_FIELD_TEXT', 40);
 define('MOD_BOOKING_OPTION_FIELD_IDENTIFIER', 50);
@@ -822,6 +828,13 @@ function booking_update_instance($booking) {
         booking::remove_key_from_json($booking, "disablecancel");
     } else {
         booking::add_data_to_json($booking, "disablecancel", 1);
+    }
+    // View param (list view or card view) is also stored in JSON.
+    if (empty($booking->viewparam)) {
+        // Save list view as default value.
+        booking::add_data_to_json($booking, "viewparam", MOD_BOOKING_VIEW_PARAM_LIST);
+    } else {
+        booking::add_data_to_json($booking, "viewparam", $booking->viewparam);
     }
 
     // Update, delete or insert answers.

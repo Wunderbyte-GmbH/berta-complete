@@ -157,13 +157,6 @@ tr.mod-booking-invisible {
     color: red;
 }
 
-.wunderbyte-table-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    padding: 10px;
-    grid-gap: 20px;
-}
-
 .wunderbyte-table-grid .course-card-footer {
     display: flex;
     justify-content: space-between;
@@ -371,6 +364,10 @@ if there only was one booking option. */
     width: max-content;
 }
 
+#page-mod-booking-report #studentsform table {
+    margin-bottom: 15px;
+}
+
 .prepage-booking-page {
     margin-top: 30px;
     margin-bottom: 30px;
@@ -433,4 +430,17 @@ if there only was one booking option. */
 
 #page-mod-booking-optionview ul.infolist {
     padding-inline-start: 10px;
+}
+
+#page-mod-booking-editoptions .editoption-youareediting-alert {
+    position: sticky;
+    top: 5px;
+    z-index: 999;
+    width: 70%;
+}
+
+#page-mod-booking-view .wunderbyte-table-list .action {
+    position: absolute;
+    top: 0;
+    right: 0;
 }

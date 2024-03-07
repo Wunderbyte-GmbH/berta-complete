@@ -175,4 +175,12 @@ abstract class field_base implements fields {
         $classname = array_pop($array);
         return $classname;
     }
+
+    /**
+     * Every class can provide subfields.
+     * @return array
+     */
+    public static function get_subfields() {
+        return [];
+    }
 }

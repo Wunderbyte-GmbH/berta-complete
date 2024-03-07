@@ -416,9 +416,16 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             // There are two cases where we can actually book.
             // We call thefunction with hadblock set to true.
             // This means that we only get those blocks that actually should prevent booking.
-            list($id, $isavailable, $description) = $boinfo->is_available($itemid, $userid, true);
+            list($id, $isavailable, $description) = $boinfo->is_available($itemid, $userid, true, true);
 
-            if ($id > 1 && $id != MOD_BOOKING_BO_COND_PRICEISSET) {
+            // These conditions are allowed, so we need a check.
+            $allowedconditions = [
+                MOD_BOOKING_BO_COND_PRICEISSET,
+                MOD_BOOKING_BO_COND_ALREADYRESERVED,
+                MOD_BOOKING_BO_COND_BOOKITBUTTON,
+            ];
+
+            if ($id > 0 && !in_array($id, $allowedconditions)) {
                 switch($id) {
                     case MOD_BOOKING_BO_COND_FULLYBOOKED:
                         return [
@@ -441,32 +448,27 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 }
             }
 
-            if (!booking_option::has_price_set($itemid, $userid)) {
-                return [
-                    'allow' => true,
-                    'info' => 'nopriceisset',
-                    'itemname' => $settings->get_title_with_prefix() ?? '',
-                ];
+            // TODO: Dont call allow_add_item_to_cart when NOT adding to cart!
+            if ($id !== MOD_BOOKING_BO_COND_BOOKITBUTTON) {
+                $user = singleton_service::get_instance_of_user($userid);
+                $item = $settings->return_booking_option_information($user);
+                $cartitem = new cartitem($itemid,
+                    $item['title'],
+                    $item['price'],
+                    $item['currency'],
+                    'mod_booking',
+                    'option',
+                    $item['description'],
+                    $item['imageurl'],
+                    $item['canceluntil'],
+                    $item['coursestarttime'],
+                    $item['courseendtime'],
+                    null,
+                    0,
+                    $item['costcenter']
+                );
+                return $cartitem->as_array() ?? [];
             }
-
-            $user = singleton_service::get_instance_of_user($userid);
-            $item = $settings->return_booking_option_information($user);
-            $cartitem = new cartitem($itemid,
-                $item['title'],
-                $item['price'],
-                $item['currency'],
-                'mod_booking',
-                'option',
-                $item['description'],
-                $item['imageurl'],
-                $item['canceluntil'],
-                $item['coursestarttime'],
-                $item['courseendtime'],
-                null,
-                0,
-                $item['costcenter']
-            );
-            return $cartitem->as_array() ?? [];
         }
         return [
             'allow' => true,
