@@ -53,7 +53,6 @@ $string['customformnotchecked'] = 'You didn\'t accept yet.';
 $string['customfieldsplaceholdertext'] = 'Custom fields';
 $string['updatebooking'] = 'Update booking';
 $string['booking:manageoptiontemplates'] = "Manage option templates";
-$string['booking:cantoggleformmode'] = 'User can edit all settings';
 $string['booking:overrideboconditions'] = 'User can book even when conditions return false.';
 $string['confirmchangesemester'] = 'YES, I really want to delete all existing dates of the booking instance and generate new ones.';
 $string['course'] = 'Moodle course';
@@ -716,8 +715,6 @@ $string['usedinbookinginstances'] = 'Template is used in following booking insta
 $string['optiontemplatename'] = 'Option template name';
 $string['option_template_not_saved_no_valid_license'] = 'Booking option template could not be saved as template.
                                                   Upgrade to PRO version to save an unlimited number of templates.';
-$string['toggleformmode_simple'] = '<i class="fa fa-compress" aria-hidden="true"></i> Switch to simple mode';
-$string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"></i> Switch to expert mode';
 
 // Option_form.php.
 $string['bookingoptionimage'] = 'Header image';

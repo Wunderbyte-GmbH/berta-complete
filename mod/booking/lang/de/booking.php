@@ -50,7 +50,6 @@ $string['customformnotchecked'] = 'Noch nicht akzeptiert.';
 $string['customfieldsplaceholdertext'] = 'Benutzerdefinierte Felder';
 $string['updatebooking'] = 'Update Buchung';
 $string['booking:manageoptiontemplates'] = "Buchungsoptionsvorlagen verwalten";
-$string['booking:cantoggleformmode'] = 'Nutzer:in darf alle Einstellungen verwalten';
 $string['booking:overrideboconditions'] = 'Nutzer:in darf buchen auch wenn Verfügbarkeit false zurückliefert.';
 $string['collapsedescriptionoff'] = 'Beschreibungen nicht einklappen';
 $string['collapsedescriptionmaxlength'] = 'Beschreibungen einklappen (Zeichenanzahl)';
@@ -708,8 +707,6 @@ $string['newtemplatesaved'] = 'Neue Buchungsoptionsvorlage wurde gespeichert.';
 $string['option_template_not_saved_no_valid_license'] = 'Buchungsoption konnte nicht als Vorlage gespeichert werden.
                                                   Holen Sie sich die PRO-Version, um beliebig viele Vorlagen erstellen
                                                   zu können.';
-$string['toggleformmode_simple'] = '<i class="fa fa-compress" aria-hidden="true"></i> Wechsle zu Einfach-Modus';
-$string['toggleformmode_expert'] = '<i class="fa fa-expand" aria-hidden="true"></i> Wechsle zu Experten-Modus';
 
 // Option_form.php.
 $string['bookingoptionimage'] = 'Header-Bild';

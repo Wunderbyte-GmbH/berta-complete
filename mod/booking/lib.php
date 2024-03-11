@@ -689,11 +689,7 @@ function booking_add_instance($booking) {
     booking_grade_item_update($booking);
 
     // When adding an instance, we need to invalidate the cache for booking instances.
-    cache_helper::invalidate_by_event('setbackbookinginstances', [$cmid]);
-
-    // Also purge caches for options table and booking_option_settings.
-    cache_helper::purge_by_event('setbackoptionstable');
-    cache_helper::purge_by_event('setbackoptionsettings');
+    booking::purge_cache_for_booking_instance_by_cmid($cmid);
 
     return $booking->id;
 }
@@ -879,16 +875,7 @@ function booking_update_instance($booking) {
     $event->trigger();
 
     // When updating an instance, we need to invalidate the cache for booking instances.
-    cache_helper::invalidate_by_event('setbackbookinginstances', [$cm->id]);
-
-    // Also purge caches for options table, semesters and booking_option_settings.
-    cache_helper::purge_by_event('setbackoptionstable');
-    cache_helper::purge_by_event('setbacksemesters');
-    cache_helper::purge_by_event('setbackoptionsettings');
-
-    // We also need to set back Wunderbyte table cache!
-    cache_helper::purge_by_event('setbackencodedtables');
-    cache_helper::purge_by_event('setbackeventlogtable');
+    booking::purge_cache_for_booking_instance_by_cmid($cm->id);
 
     return $DB->update_record('booking', $booking);
 }
@@ -1809,11 +1796,7 @@ function booking_delete_instance($id) {
     }
 
     // When deleting an instance, we need to invalidate the cache for booking instances.
-    cache_helper::invalidate_by_event('setbackbookinginstances', [$cm->id]);
-
-    // Also purge caches for options table and booking_option_settings.
-    cache_helper::purge_by_event('setbackoptionstable');
-    cache_helper::purge_by_event('setbackoptionsettings');
+    booking::purge_cache_for_booking_instance_by_cmid($cm->id);
 
     return $result;
 }
@@ -1932,27 +1915,22 @@ function booking_show_subcategories($catid, $courseid) {
  */
 function mod_booking_cm_info_view(cm_info $cm) {
     global $PAGE;
+    $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cm->id);
+    $html = '';
+    if (isset($bookingsettings->showlistoncoursepage) &&
+        ($bookingsettings->showlistoncoursepage == 1 || $bookingsettings->showlistoncoursepage == 2)) {
 
-    $booking = singleton_service::get_instance_of_booking_by_cmid($cm->id);
+        /* NOTE: For backwards compatibility, we kept both values (1 and 2).
+        Coursepage_available_options are no longer supported! */
 
-    if (!empty($booking)) {
-        $html = '';
+        // Show course name, a short info text and a button redirecting to available booking options.
+        $data = new coursepage_shortinfo_and_button($cm);
+        $output = $PAGE->get_renderer('mod_booking');
+        $html .= $output->render_coursepage_shortinfo_and_button($data);
+    }
 
-        if (isset($booking->settings->showlistoncoursepage) &&
-            ($booking->settings->showlistoncoursepage == 1 || $booking->settings->showlistoncoursepage == 2)) {
-
-            /* NOTE: For backwards compatibility, we kept both values (1 and 2).
-            Coursepage_available_options are no longer supported! */
-
-            // Show course name, a short info text and a button redirecting to available booking options.
-            $data = new coursepage_shortinfo_and_button($cm);
-            $output = $PAGE->get_renderer('mod_booking');
-            $html .= $output->render_coursepage_shortinfo_and_button($data);
-        }
-
-        if ($html !== '') {
-            $cm->set_content($html);
-        }
+    if ($html !== '') {
+        $cm->set_content($html);
     }
 }
 

@@ -1,3 +1,15 @@
+## Version 8.1.34 (2024030801)
+* Improvement: Only use cached data for enrolled in course check.
+* Improvement: Make sure calendar events are always stored as optiondates.
+* Improvement: Get rid of old form modes (toggle between simple and expert form).
+* Improvement: New function to purge all booking instance caches and destroy booking instance singleton.
+* Bugfix: Make sure institution stores only empty strings.
+* Bugfix: Fix bugs with showlistoncoursepage field.
+
+## Version 8.1.33 (2024030700)
+* Improvement: Add possibility to format personal messages with HTML editor.
+* Improvement: Make sure images in cards view always have the same height of 220px.
+
 ## Version 8.1.32 (2024030601)
 * Improvement: Layout fix for cards.
 * Improvement: Show "Choose..." string in autocompletes if value is missing.
@@ -20,7 +32,7 @@ With cards view, we always have modals.
 * Bugfix: Don't call add to calendar on template.
 * Bugfix: Add isset check for addtocalendar.
 * Bugfix: Don't block booking options without price with prepages.
-* Bugfix: Destroy all instances of booking options when calling destroy_booking_option.
+* Bugfix: Destroy all instances of booking options when calling destroy_booking_option_singleton.
 * Bugfix: Make sure we use correct context when creating booking option sql.
 * Bugfix: Wrong settings were used on report.php.
 * Bugfix: Use context_system if context_module can't be found (eg for template).

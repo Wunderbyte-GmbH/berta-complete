@@ -182,8 +182,8 @@ class booking_handler extends \core_customfield\handler {
                 }
 
                 $mform->addElement('header', 'category_' . $categoryid,
-                        '<i class="fa fa-fw fa-puzzle-piece" aria-hidden="true"></i>&nbsp;' .
-                        $categoryname);
+                    '<i class="fa fa-fw fa-puzzle-piece" aria-hidden="true"></i>&nbsp;' .
+                    $categoryname);
 
                 $lastcategoryid = $categoryid;
             }
