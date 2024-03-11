@@ -104,10 +104,9 @@ $string['action_executed'] = 'Aktion ausgeführt';
 $string['action_executed_desc'] = 'Die NutzerIn hat eine Aktion "{$a->methodname}" in der folgenden Tabelle ausgeführt: "{$a->tablename}"';
 
 // Settings.
-$string['savesettingstodb'] = 'Speichere Wunderbyte Table-Einstellungen in der Datenbank (Experimentell)';
-$string['logfiltercaches'] = 'Debug feature: Speichere query hashes in der DB. Das hat negative Auswirkugen auf die Performance (Experimentell)';
-$string['allowsearchincolumns'] = 'Allow search in columns via ":" (experimental)';
-$string['allowedittable'] = 'Allow users to edit the table directly';
+$string['savesettingstodb'] = 'Speichere Wunderbyte Table-Einstellungen in der Datenbank (experimentell)';
+$string['logfiltercaches'] = 'Debug-Feature: Speichere Query-Hashes in der DB. Das hat negative Auswirkugen auf die Performance (experimentell)';
+$string['allowsearchincolumns'] = 'Erlaube Suche in Spalten mittels ":" (experimentell)';
 
 // Hourlist filter.
 $string['from0to1'] = "00:00 - 01:00";
@@ -139,6 +138,7 @@ $string['from23to24'] = "23:00 - 24:00";
 $string['filterinactive'] = 'Verberge den Filter';
 $string['showfilter'] = 'Zeige diesen Filter';
 $string['editfiltername'] = 'Bearbeite den Filternamen';
+$string['allowedittable'] = 'Bearbeite Tabelleneinstellungen';
 
 $string['datepicker'] = 'Datumsfilter';
 $string['hourlist'] = 'Stundenlistenfilter';
