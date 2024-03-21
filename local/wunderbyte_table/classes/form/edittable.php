@@ -24,6 +24,8 @@ use context;
 use context_system;
 use core_form\dynamic_form;
 use local_wunderbyte_table\filters\filters_info;
+use local_wunderbyte_table\local\settings\tablesettings;
+use local_wunderbyte_table\wunderbyte_table;
 use moodle_url;
 use stdClass;
 
@@ -54,7 +56,13 @@ class edittable extends dynamic_form {
             $mform->addElement('hidden', 'id', $ajaxformdata['id']);
         }
 
+        $mform->addElement('header', 'wbtablefiltersettingsheader',
+            get_string('wbtablefiltersettingsheader', 'local_wunderbyte_table'));
         filters_info::defintion($mform, $data, []);
+
+        $mform->addElement('header', 'wbtabletablesettingsheader',
+            get_string('wbtabletablesettingsheader', 'local_wunderbyte_table'));
+        tablesettings::definition($mform, (array)$data);
 
     }
 
@@ -69,6 +77,8 @@ class edittable extends dynamic_form {
 
         filters_info::process_data($data, $newdata);
 
+        tablesettings::process_data($data, $newdata);
+
         return $newdata;
     }
 
@@ -79,7 +89,13 @@ class edittable extends dynamic_form {
     public function set_data_for_dynamic_submission(): void {
 
         $data = (object)$this->_ajaxformdata;
-        filters_info::set_data($data);
+
+        $encodedtable = $data->encodedtable;
+        $table = wunderbyte_table::instantiate_from_tablecache_hash($encodedtable);
+
+        filters_info::set_data($data, $table);
+
+        tablesettings::set_data($data, $table);
 
         $this->set_data($data);
 
@@ -95,6 +111,18 @@ class edittable extends dynamic_form {
      */
     public function validation($data, $files) {
         $errors = [];
+
+        if (!is_number($data['gs_wb_pagesize'])) {
+            $errors['gs_wb_pagesize'] = get_string('valuehastobeint', 'local_wunderbyte_table');
+        }
+
+        if (!is_number($data['gs_wb_tableheight'])) {
+            $errors['gs_wb_tableheight'] = get_string('valuehastobeint', 'local_wunderbyte_table');
+        }
+
+        if (!is_number($data['gs_wb_infinitescroll'])) {
+            $errors['gs_wb_infinitescroll'] = get_string('valuehastobeint', 'local_wunderbyte_table');
+        }
 
         return $errors;
     }

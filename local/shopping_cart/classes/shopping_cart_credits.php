@@ -119,9 +119,17 @@ class shopping_cart_credits {
         }
 
         $data['initialtotal'] = $data['price'];
+
+        // Prices can never be negative, so we use 0 in this case.
+
+        $pricebelowzero = shopping_cart_rebookingcredit::correct_total_price_for_rebooking($data);
+        $usecredit = $pricebelowzero ? 0 : $usecredit;
+        $balance = $pricebelowzero ? 0 : $balance;
+
         if (isset($data['price_net'])) {
             $data['initialtotal_net'] = $data['price_net'];
         }
+
         $data['currency'] = $currency ?: $data['currency'];
 
         // Now we account for discounts.

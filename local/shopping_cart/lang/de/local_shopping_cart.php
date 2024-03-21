@@ -30,13 +30,19 @@ $string['modulename'] = 'Warenkorb';
 
 // General strings.
 $string['addtocart'] = 'In den Warenkorb';
+$string['allowrebooking'] = 'Umbuchen erlauben';
+$string['allowrebooking_desc'] = 'Dies ermöglicht es den Nutzer:innen, bereits gekaufte Items umzubuchen.
+Die gekauften Items können mit negativem Preis in den Warenkorb gelegt werden und werden bei Umbuchung storniert,
+gleichzeitig wird ein neues Item gebucht. Eine Umbuchung mit negativem Gesamtpreis ist nicht möglich.';
 $string['allowrebookingcredit'] = 'Umbuchungsgutschrift';
 $string['allowrebookingcredit_desc'] = 'Wenn Sie die Umbuchungsgutschrift aktivieren, bekommt ein:e Nutzer:in eine Gutschrift in Höhe der Buchungs- und Stornogebühr gutgeschrieben,
 wenn er:sie innerhalb der Stornofrist ein Item storniert und ein anderes bucht.';
 $string['cash'] = 'Bargeld';
 $string['choose...'] = 'Auswählen...';
 $string['mycart'] = 'Mein Warenkorb';
+$string['nolimit'] = 'Kein Limit';
 $string['optioncancelled'] = 'Buchungsoption storniert';
+$string['rebooking'] = 'Umbuchung';
 $string['rebookingcredit'] = 'Umbuchungsgutschrift';
 $string['sendpaymentbutton'] = 'Zur Bezahlung';
 $string['showorderid'] = 'Order-ID anzeigen...';
@@ -228,6 +234,8 @@ $string['canceldidntwork'] = 'Fehler beim Stornieren';
 $string['cancelsuccess'] = 'Erfolgreich storniert';
 $string['applytocomponent'] = 'Stornierung an Artikel Plugin melden';
 $string['applytocomponent_desc'] = 'Wird ein Artikel irrtümlich doppelt bezahlt, kann das Häkchen entfernt werden um hier zu stornieren, ohne dass die Käuferin aus z.B. dem Kurs ausgeschrieben wird.';
+$string['markforrebooking'] = 'Kurs umbuchen';
+$string['markedforrebooking'] = 'Fürs Umbuchen markiert';
 
 $string['youcancanceluntil'] = 'Sie können bis {$a} stornieren.';
 $string['youcannotcancelanymore'] = 'Stornieren ist nicht möglich.';
@@ -282,8 +290,9 @@ $string['confirmpaidbacktitle'] = 'Bestätige Auszahlung';
 $string['confirmpaidbackbody'] = 'Wollen Sie die Auszahlung bestätigen? Das setzt das Guthaben auf 0.';
 $string['confirmpaidback'] = 'Bestätige Auszahlung';
 
-$string['confirmzeropricecheckouttitle'] = 'Mit Guthaben bezahlen';
-$string['confirmzeropricecheckoutbody'] = 'Sie haben genug Guthaben, um Ihren Kauf zur Gänze zu bezahlen. Wollen Sie fortfahren?';
+$string['confirmzeropricecheckouttitle'] = 'Jetzt buchen';
+$string['confirmzeropricecheckoutbody'] = 'Für diese Buchung ist keine Zahlung notwendig.
+Wollen Sie fortfahren und direkt buchen?';
 $string['confirmzeropricecheckout'] = 'Bestätige';
 
 $string['deletecreditcash'] = 'Ausbezahlt bar';
@@ -332,6 +341,9 @@ $string['titledailysums:all'] = 'Gesamteinnahmen';
 $string['titledailysums:total'] = 'Saldo';
 $string['titledailysums:current'] = 'Aktuelle:r Kassier:in';
 $string['dailysums:downloadpdf'] = 'Tageseinnahmen als PDF herunterladen';
+$string['downloadcashreportlimit'] = 'Download-Limit festlegen';
+$string['downloadcashreportlimitdesc'] = 'Geben Sie die maximale Anzahl an Zeilen ein, die beim Download des Kassajournals heruntergeladen werden sollen.
+Dies kann Download-Problem bei zu großen Datenmengen beheben.';
 
 // Report headers.
 $string['timecreated'] = 'Erstellt';
@@ -440,7 +452,8 @@ $string['payment_added'] = 'Nutzer/in hat eine Zahlung gestartet';
 $string['payment_added_log'] = 'Nutzer/in mit der id {$a->userid} hat für den Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} einen Zahlungsprozess mit dem identifier {$a->identifier} gestartet';
 
 // Caches.
-$string['cachedef_schistory'] = 'Cache wird verwendet um die Einkaufskörbe der user zu speichern';
+$string['cachedef_schistory'] = 'Warenkorb-Cache (Shopping Cart History Cache)';
+$string['cachedef_cacherebooking'] = 'Umbuchungs-Cache (Rebooking Cache)';
 
 // Cashier manual rebook.
 $string['annotation'] = 'Anmerkung';

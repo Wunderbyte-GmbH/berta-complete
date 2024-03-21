@@ -26,6 +26,7 @@
 namespace local_wunderbyte_table\output;
 
 use core_plugin_manager;
+use local_wunderbyte_table\local\settings\tablesettings;
 use local_wunderbyte_table\wunderbyte_table;
 use renderable;
 use renderer_base;
@@ -257,15 +258,14 @@ class table implements renderable, templatable {
 
         // If we have filtercolumns defined, we add the filter key to the output.
         $this->categories = $this->applyfilterselection($table);
-
         $this->printoptions = $this->return_dataformat_selector();
 
         $this->showdownloadbutton = $table->showdownloadbutton;
-
         $this->showreloadbutton = $table->showreloadbutton;
 
         if (get_config('local_wunderbyte_table', 'allowedittable')
             && has_capability('local/wunderbyte_table:canedittable', $table->context)) {
+
                 $this->edittable = true;
         } else {
             $this->edittable = false;
@@ -839,7 +839,8 @@ class table implements renderable, templatable {
                             // So we can now check all the entries in the filterobject...
                             // ...to see if we find the concrete filter at the right place (values) in the tableobject.
                             foreach ($potentialfiltercolumn['default']['values'] as $vkey => $value) {
-                                if ($value['key'] === $filter) {
+                                if ($value['key'] == $filter
+                                    || $value['value'] == $filter) {
                                     // If we find the filter, we add the checked value...
                                     // ...and key to the initial tableobject array at the right place.
                                     $tableobject[$tokey]['default']['values'][$vkey]['checked'] = 'checked';

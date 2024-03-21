@@ -30,7 +30,9 @@ defined('MOODLE_INTERNAL') || die();
 require_once(__DIR__ . '/../lib.php');
 
 use cache_helper;
+use coding_exception;
 use context_system;
+use dml_exception;
 use lang_string;
 use local_shopping_cart\event\checkout_completed;
 use local_shopping_cart\event\item_added;
@@ -79,21 +81,7 @@ class shopping_cart {
      */
     public static function allow_add_item_to_cart(string $component, string $area, int $itemid, int $userid): array {
 
-        global $USER;
-
-        // If there is no user specified, we determine it automatically.
-        if ($userid < 0 || $userid == self::return_buy_for_userid()) {
-            $context = context_system::instance();
-            if (has_capability('local/shopping_cart:cashier', $context)) {
-                $userid = self::return_buy_for_userid();
-            }
-        } else {
-            // As we are not on cashier anymore, we delete buy for user.
-            self::buy_for_user(0);
-        }
-        if ($userid < 1) {
-            $userid = $USER->id;
-        }
+        $userid = self::set_user($userid);
 
         // Check the cache for items in cart.
         $maxitems = get_config('local_shopping_cart', 'maxitems');
@@ -217,20 +205,7 @@ class shopping_cart {
 
         $buyforuser = false;
 
-        // If there is no user specified, we determine it automatically.
-        if ($userid < 0 || $userid == self::return_buy_for_userid()) {
-            $context = context_system::instance();
-            if (has_capability('local/shopping_cart:cashier', $context)) {
-                $userid = self::return_buy_for_userid();
-                $buyforuser = true;
-            }
-        } else {
-            // As we are not on cashier anymore, we delete buy for user.
-            self::buy_for_user(0);
-        }
-        if ($userid < 1) {
-            $userid = $USER->id;
-        }
+        $userid = self::set_user($userid);
 
         // Check the cache for items in cart.
         $cache = \cache::make('local_shopping_cart', 'cacheshopping');
@@ -245,9 +220,9 @@ class shopping_cart {
             // If we have nothing in our cart and we are not about...
             // ... to add the booking fee...
             // ... we add the booking fee.
-            if (empty($cachedrawdata['items'])
-                && $area != 'bookingfee'
-                && $area != 'rebookingcredit') {
+            if ((empty($cachedrawdata['items'])
+                || array_reduce($cachedrawdata['items'], fn($a, $b) => $a += $b['price']) == 0)
+                && !in_array($area, ['bookingfee', 'rebookingcredit', 'rebookitem'])) {
                 // If we buy for user, we need to use -1 as userid.
                 // Also we add $userid as second param so we can check if fee was already paid.
                 shopping_cart_bookingfee::add_fee_to_cart($buyforuser ? -1 : $userid, $buyforuser ? $userid : 0);
@@ -267,9 +242,26 @@ class shopping_cart {
                     $itemdata = $cartitemarray['cartitem']->as_array();
                     $itemdata['price'] = $itemdata['price'];
 
+                    // At this point, we might have added the booking fee to the cart.
+                    // This is because we always add the fee first.
+                    // But if the price of the item we buy is 0, we don't want to demand a booking fee neither.
+                    // Therefore, we need to delete it again from the cart.
+                    if (($itemdata['price'] == 0)
+                        && count($cachedrawdata['items']) < 2) {
+
+                        $regexkey = '/^local_shopping_cart-bookingfee-/';
+                        // Before we add the other forms, we need to add the nosubmit in case of we just deleted an optiondate.
+                        $itemstodelete = preg_grep($regexkey, array_keys((array)$cachedrawdata['items']));
+
+                        foreach ($itemstodelete as $todelete) {
+                            unset($cachedrawdata['items'][$todelete]);
+                        }
+                    }
+
                     // Then we set item in Cache.
                     $cachedrawdata['items'][$cacheitemkey] = $itemdata;
                     $cachedrawdata['expirationdate'] = $expirationtimestamp;
+
                     $cache->set($cachekey, $cachedrawdata);
 
                     // If it applies, we add the rebookingcredit.
@@ -348,6 +340,33 @@ class shopping_cart {
                 break;
         }
         return $itemdata;
+    }
+
+    /**
+     * Function to set the userid correctly.
+     * @param int $userid
+     * @return mixed
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function set_user(int $userid) {
+
+        global $USER;
+
+        // If there is no user specified, we determine it automatically.
+        if ($userid < 0 || $userid == self::return_buy_for_userid()) {
+            $context = context_system::instance();
+            if (has_capability('local/shopping_cart:cashier', $context)) {
+                $userid = self::return_buy_for_userid();
+            }
+        } else {
+            // As we are not on cashier anymore, we delete buy for user.
+            self::buy_for_user(0);
+        }
+        if ($userid < 1) {
+            $userid = $USER->id;
+        }
+        return $userid;
     }
 
     /**
@@ -549,6 +568,8 @@ class shopping_cart {
 
     /**
      * Confirms Payment and successful checkout for item.
+     * This method also deals with a successful checkout for rebooking item
+     * In this case, we don't book, but we cancel the original item.
      *
      * @param string $component
      * @param string $area
@@ -896,14 +917,18 @@ class shopping_cart {
         $success = true;
         $error = [];
 
+        // When we come from rebooking, we need to correct the price of the rebooking item.
+        // The total price can't be below 0.
+        shopping_cart_rebookingcredit::correct_item_price_for_rebooking($data);
+
         // When we use credits, we have to log this in the ledger so cash report will have the correct sums!
         if (isset($data["usecredit"]) && $data["usecredit"] && isset($data["credit"]) && $data["credit"] > 0) {
 
             // If we have no identifier, we look for it in items.
             if (empty($identifier)) {
                 foreach ($data["items"] as $item) {
-                    if (!empty($item->identifier)) {
-                        $identifier = $item->identifier;
+                    if (!empty($item['identifier'])) {
+                        $identifier = $item['identifier'];
                         break;
                     }
                 }
@@ -931,7 +956,6 @@ class shopping_cart {
         foreach ($data['items'] as $item) {
 
             // We might retrieve the items from history or via cache. From history, they come as stdClass.
-
             $item = (array) $item;
 
             // If the item identifier is specified (this is only the case, when we get data from history)...
@@ -943,7 +967,16 @@ class shopping_cart {
                 $item['itemname'] = $item['itemid'];
             }
 
-            if (!self::successful_checkout($item['componentname'], $item['area'], $item['itemid'], $userid)) {
+            if (($item['componentname'] === 'local_shopping_cart')
+                && ($item['area'] === 'rebookitem')) {
+
+                shopping_cart_rebookingcredit::checkout_rebooking_item(
+                    $item['componentname'],
+                    $item['area'],
+                    $item['itemid'],
+                    $userid,
+                );
+            } else if (!self::successful_checkout($item['componentname'], $item['area'], $item['itemid'], $userid)) {
                 $success = false;
                 $error[] = get_string('itemcouldntbebought', 'local_shopping_cart', $item['itemname']);
 
@@ -959,7 +992,9 @@ class shopping_cart {
                     ],
                 ]);
 
-            } else {
+            }
+
+            if ($success == true) {
                 // Delete Item from cache.
                 // Here, we don't need to unload the component, so the last parameter is false.
                 self::delete_item_from_cart($item['componentname'], $item['area'], $item['itemid'], $userid, false);
@@ -1011,7 +1046,6 @@ class shopping_cart {
                             $USER->id
                     );
                 }
-
             }
         }
 
@@ -1097,7 +1131,7 @@ class shopping_cart {
             }
         }
 
-        // Check if cancelation is still within the allowed periode set in shopping_cart_history.
+        // Check if cancelation is still within the allowed period set in shopping_cart_history.
         if (!self::allowed_to_cancel($historyid, $itemid, $area, $userid)) {
             return [
                     'success' => 0,
@@ -1247,7 +1281,7 @@ class shopping_cart {
 
         $context = context_system::instance();
 
-        if (!$item = shopping_cart_history::return_item_from_history($historyid, $itemid, $area, $userid)) {
+        if (!$item = shopping_cart_history::return_item_from_history($historyid)) {
             return false;
         }
 
@@ -1534,7 +1568,7 @@ class shopping_cart {
      */
     public static function get_quota_consumed(string $component, string $area, int $itemid, int $userid, int $historyid): array {
 
-        $item = shopping_cart_history::return_item_from_history($historyid, $itemid, $area, $userid);
+        $item = shopping_cart_history::return_item_from_history($historyid);
 
         self::add_quota_consumed_to_item($item, $userid);
         $quota = $item->quotaconsumed;
@@ -1625,12 +1659,11 @@ class shopping_cart {
     public static function get_latest_currency_from_history(): string {
         global $DB;
 
-        // We can't use limit command in oracle dbs.
-        if ($records = $DB->get_records('local_shopping_cart_history', [], 'id DESC', 0, 1)) {
-            $record = reset($records);
-            if (!empty($record->currency)) {
-                return $record->currency;
-            }
+        if ($currency = $DB->get_field_sql("SELECT currency
+            FROM {local_shopping_cart_history}
+            ORDER BY id DESC
+            LIMIT 1")) {
+            return $currency;
         }
         return "";
     }

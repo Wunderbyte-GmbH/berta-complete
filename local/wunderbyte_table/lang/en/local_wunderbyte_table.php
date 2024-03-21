@@ -36,6 +36,7 @@ $string['orderdown'] = "Sorted from Z to A";
 $string['noentriesfound'] = "No entries found";
 $string['couldnotloaddata'] = "Could not load data";
 
+$string['customizewbtable'] = 'Customize Wunderbyte Table';
 $string['filter'] = 'Filter table';
 $string['reload'] = "Reload table";
 $string['edittable'] = "Edit table";
@@ -107,7 +108,6 @@ $string['action_executed'] = 'Action executed';
 $string['action_executed_desc'] = 'The user executed an action "{$a->methodname}" on the table "{$a->tablename}"';
 
 // Settings.
-$string['savesettingstodb'] = 'Save Wunderbyte Table settings to db (experimental)';
 $string['logfiltercaches'] = 'Debug feature: Save queries to DB. Has negative impact on performance. (experimental)';
 $string['allowsearchincolumns'] = 'Allow search in columsn via ":" (experimental)';
 
@@ -138,15 +138,33 @@ $string['from22to23'] = "22:00 - 23:00";
 $string['from23to24'] = "23:00 - 24:00";
 
 // Edit filter.
+$string['wbtablefiltersettingsheader'] = 'Edit filters';
+$string['wbtabletablesettingsheader'] = 'More settings';
 $string['filterinactive'] = 'Hide the entire filter';
 $string['showfilter'] = 'Show this filter';
 $string['editfiltername'] = 'Edit filtername';
 $string['allowedittable'] = 'Edit table settings';
+$string['showdownloadbutton'] = 'Show download button';
+$string['showreloadbutton'] = 'Show reload button';
+$string['showcountlabel'] = 'Show numer of records found';
+$string['stickyheader'] = 'Make header sticky';
+$string['showrowcountselect'] = 'Show dropdown for number of rows';
+$string['placebuttonandpageelementsontop'] = 'Show buttons and page elements on top (instead of bottom)';
+$string['tableheight'] = 'Table height';
+$string['pagesize'] = 'Number of records per page';
+$string['addcheckboxes'] = 'Add a checkbox to each row';
+$string['filteronloadinactive'] = 'Collapse filters when table is loaded';
+$string['infinitescroll'] = 'Infinite scrolling';
 
 $string['datepicker'] = 'Datepicker filter';
 $string['hourlist'] = 'Hourlist filter';
 $string['standardfilter'] = 'Standard filter';
 $string['weekdays'] = 'Weekdays filter';
+
+$string['tableheadersortableitem'] = '<i class="fa fa-arrows" aria-label="Sorting"></i>';
+
+// Errors.
+$string['valuehastobeint'] = "Value has to be a number";
 
 // Bewlow this line, there are only strings for the demo site.
 // Action Buttons demo names.

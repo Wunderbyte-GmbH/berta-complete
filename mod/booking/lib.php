@@ -119,6 +119,8 @@ define('MOD_BOOKING_BO_COND_SUBBOOKINGBLOCKS', 45);
 define('MOD_BOOKING_BO_COND_SUBBOOKING', 40);
 define('MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING', 35);
 
+// Careful with changing these JSON COND values! They are stored.
+// If changed, DB Values need to be updated.
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMFORM', 16);
 define('MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOURSE', 15);
 define('MOD_BOOKING_BO_COND_JSON_SELECTUSERS', 14);
@@ -126,21 +128,23 @@ define('MOD_BOOKING_BO_COND_JSON_PREVIOUSLYBOOKED', 13);
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMUSERPROFILEFIELD', 12);
 define('MOD_BOOKING_BO_COND_JSON_USERPROFILEFIELD', 11);
 
-define('MOD_BOOKING_BO_COND_ELECTIVENOTBOOKABLE', 10);
-define('MOD_BOOKING_BO_COND_ELECTIVEBOOKITBUTTON', 9);
+define('MOD_BOOKING_BO_COND_ASKFORCONFIRMATION', 0);
 
-define('MOD_BOOKING_BO_COND_CONFIRMBOOKWITHSUBSCRIPTION', 8);
-define('MOD_BOOKING_BO_COND_BOOKWITHSUBSCRIPTION', 7);
+define('MOD_BOOKING_BO_COND_ELECTIVENOTBOOKABLE', -5);
+define('MOD_BOOKING_BO_COND_ELECTIVEBOOKITBUTTON', -10);
 
-define('MOD_BOOKING_BO_COND_CONFIRMBOOKWITHCREDITS', 6);
-define('MOD_BOOKING_BO_COND_BOOKWITHCREDITS', 5);
+define('MOD_BOOKING_BO_COND_CONFIRMBOOKWITHSUBSCRIPTION', -20);
+define('MOD_BOOKING_BO_COND_BOOKWITHSUBSCRIPTION', -30);
 
-define('MOD_BOOKING_BO_COND_NOSHOPPINGCART', 4);
-define('MOD_BOOKING_BO_COND_PRICEISSET', 3);
+define('MOD_BOOKING_BO_COND_CONFIRMBOOKWITHCREDITS', -40);
+define('MOD_BOOKING_BO_COND_BOOKWITHCREDITS', -50);
 
-define('MOD_BOOKING_BO_COND_CONFIRMBOOKIT', 2);
-define('MOD_BOOKING_BO_COND_BOOKITBUTTON', 1); // This is only used to show the book it button.
-define('MOD_BOOKING_BO_COND_CONFIRMATION', 0); // This is the last page after booking.
+define('MOD_BOOKING_BO_COND_NOSHOPPINGCART', -60);
+define('MOD_BOOKING_BO_COND_PRICEISSET', -70);
+
+define('MOD_BOOKING_BO_COND_CONFIRMBOOKIT', -80);
+define('MOD_BOOKING_BO_COND_BOOKITBUTTON', -90); // This is only used to show the book it button.
+define('MOD_BOOKING_BO_COND_CONFIRMATION', -100); // This is the last page after booking.
 
 // Define conditions parameters.
 define('MOD_BOOKING_CONDPARAM_ALL', 0);
@@ -217,6 +221,7 @@ define('MOD_BOOKING_OPTION_FIELD_ADVANCED', 390);
 define('MOD_BOOKING_OPTION_FIELD_DISABLEBOOKINGUSERS', 400);
 define('MOD_BOOKING_OPTION_FIELD_DISABLECANCEL', 410);
 define('MOD_BOOKING_OPTION_FIELD_CANCELUNTIL', 420);
+define('MOD_BOOKING_OPTION_FIELD_WAITFORCONFIRMATION', 425);
 define('MOD_BOOKING_OPTION_FIELD_ATTACHMENT', 430);
 define('MOD_BOOKING_OPTION_FIELD_NOTIFICATIONTEXT', 440);
 define('MOD_BOOKING_OPTION_FIELD_REMOVEAFTERMINUTES', 450);
@@ -689,7 +694,7 @@ function booking_add_instance($booking) {
     booking_grade_item_update($booking);
 
     // When adding an instance, we need to invalidate the cache for booking instances.
-    booking::purge_cache_for_booking_instance_by_cmid($cmid);
+    booking::purge_cache_for_booking_instance_by_cmid($cmid, false, false, false);
 
     return $booking->id;
 }
@@ -1000,9 +1005,9 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
                 new moodle_url('/mod/booking/teachers_instance_report.php', ['cmid' => $cm->id]),
                 navigation_node::TYPE_CUSTOM, null, 'nav_teachers_instance_report');
         if (wb_payment::pro_version_is_activated()) {
-            $navref->add(get_string('teachers_instance_config', 'mod_booking') . " ($bookingsettings->name)",
-                    new moodle_url('/mod/booking/teachers_instance_config.php', ['cmid' => $cm->id]),
-                    navigation_node::TYPE_CUSTOM, null, 'nav_teachers_instance_config');
+            $navref->add(get_string('optionformconfig', 'mod_booking') . " ($bookingsettings->name)",
+                    new moodle_url('/mod/booking/optionformconfig.php', ['cmid' => $cm->id]),
+                    navigation_node::TYPE_CUSTOM, null, 'nav_optionformconfig');
         }
     }
 

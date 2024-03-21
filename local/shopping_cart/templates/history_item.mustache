@@ -111,4 +111,26 @@
             <i class="fa fa-ban" aria-hidden="true"></i>&nbsp;{{#str}} cancelpurchase, local_shopping_cart {{/str}}
         {{/canceled}}
     </button>
+    {{#showrebooking}}
+    <button type="button"
+        class="shopping_cart_history_rebook_button btn btn-sm pull-left {{#rebooking}}btn-warning{{/rebooking}} {{buttonclass}} "
+        data-historyid="{{id}}"
+        data-componentname="{{componentname}}"
+        data-area="{{area}}"
+        data-itemid="{{itemid}}"
+        data-userid="{{userid}}"
+        data-canceled="{{canceled}}"
+        data-currency="{{currency}}"
+        data-price="{{price}}"
+        data-round="{{round}}"
+        data-quotaconsumed="{{quotaconsumed}}">
+        <i class="fa fa-recycle" aria-hidden="true"></i>&nbsp;
+        {{#rebooking}}
+            {{#str}} markedforrebooking, local_shopping_cart {{/str}}
+        {{/rebooking}}
+        {{^rebooking}}
+            {{#str}} markforrebooking, local_shopping_cart {{/str}}
+        {{/rebooking}}
+    </button>
+    {{/showrebooking}}
 </li>

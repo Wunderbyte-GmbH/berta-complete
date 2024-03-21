@@ -95,9 +95,8 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
             } else if (get_config('booking', 'canceldependenton') == "bookingopeningtime"
                 || get_config('booking', 'canceldependenton') == "bookingclosingtime") {
                 // If cancellation is either dependent on bookingopeningtime or bookingclosingtime...
-                // ...we use the full registration period as service period.
+                // ...the service period may only start at booking registration start (bookingopeningtime).
                 $serviceperiodstart = $settings->bookingopeningtime ?? $item['coursestarttime'];
-                $serviceperiodend = $settings->bookingclosingtime ?? $item['courseendtime'];
             }
 
             // Make sure we have a valid cost center.
@@ -366,12 +365,15 @@ class service_provider implements \local_shopping_cart\local\callback\service_pr
                 booking::get_value_of_json_by_key($bookingid, 'disablecancel')) {
                 $allowedtocancel = false;
             }
+            /* IMPORTANT: We had to remove this check as it has to be possible to override this
+            by setting a canceluntil date in shopping_cart_history table directly. */
             // Check if the option has its own canceluntil date and if it has already passed.
-            $now = time();
+            // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+            /* $now = time();
             $canceluntil = booking_option::get_value_of_json_by_key($itemid, 'canceluntil');
             if (!empty($canceluntil) && $now > $canceluntil) {
                 $allowedtocancel = false;
-            }
+            } */
         }
         return $allowedtocancel;
     }

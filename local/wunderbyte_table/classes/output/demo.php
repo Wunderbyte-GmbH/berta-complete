@@ -143,6 +143,7 @@ class demo implements renderable, templatable {
 
         // When true and action buttons are present, checkboxes will be rendered to every line / record.
         $table->addcheckboxes = true;
+        // $table->sortablerows = true;
 
         // Add action buttons to bottom of table. Demo of all defined types.
         // Define if it triggers a modal, if records need to be selected
@@ -312,16 +313,18 @@ class demo implements renderable, templatable {
         ];
 
         // Way to sort by default for more than one columns.
-        $table->set_sortdata([
-            [
-                'sortby' => 'username',
-                'sortorder' => wunderbyte_table::SORTORDER_ASC,
-            ],
-            [
-                'sortby' => 'firstname',
-                'sortorder' => wunderbyte_table::SORTORDER_DESC,
-            ],
-        ]);
+        // $table->set_sortdata([
+        //     [
+        //         'sortby' => 'username',
+        //         'sortorder' => wunderbyte_table::SORTORDER_ASC,
+        //     ],
+        //     [
+        //         'sortby' => 'firstname',
+        //         'sortorder' => wunderbyte_table::SORTORDER_DESC,
+        //     ],
+        // ]);
+        $table->sort_default_column = 'username';
+        $table->sort_default_order = SORT_ASC; // Or SORT_DESC.
 
         // Work out the sql for the table.
         $table->set_filter_sql('*', "(SELECT * FROM {user} ORDER BY id ASC LIMIT 112 ) as s1", '1=1', '');
@@ -553,6 +556,8 @@ class demo implements renderable, templatable {
         $table->showdownloadbutton = true;
         $table->showreloadbutton = true;
         $table->showrowcountselect = true;
+
+        // $table->hide_filter();
 
         // To lazy load wunderbyte table (eg. for loading in tabs or modals)
         // you need to call $table->lazyout() instead of $table->out.

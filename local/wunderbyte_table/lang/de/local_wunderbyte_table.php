@@ -36,6 +36,7 @@ $string['orderdown'] = "Von Z nach A sortiert";
 $string['noentriesfound'] = "Keine Einträge gefunden";
 $string['couldnotloaddata'] = "Konnte keine Daten laden";
 
+$string['customizewbtable'] = 'Wunderbyte Table anpassen';
 $string['filter'] = 'Tabelle filtern';
 $string['reload'] = "Tabelle neu laden";
 $string['edittable'] = "Editieren";
@@ -104,7 +105,6 @@ $string['action_executed'] = 'Aktion ausgeführt';
 $string['action_executed_desc'] = 'Die NutzerIn hat eine Aktion "{$a->methodname}" in der folgenden Tabelle ausgeführt: "{$a->tablename}"';
 
 // Settings.
-$string['savesettingstodb'] = 'Speichere Wunderbyte Table-Einstellungen in der Datenbank (experimentell)';
 $string['logfiltercaches'] = 'Debug-Feature: Speichere Query-Hashes in der DB. Das hat negative Auswirkugen auf die Performance (experimentell)';
 $string['allowsearchincolumns'] = 'Erlaube Suche in Spalten mittels ":" (experimentell)';
 
@@ -135,15 +135,33 @@ $string['from22to23'] = "22:00 - 23:00";
 $string['from23to24'] = "23:00 - 24:00";
 
 // Edit filter.
+$string['wbtablefiltersettingsheader'] = 'Filter anpassen';
+$string['wbtabletablesettingsheader'] = 'Weitere Einstellungen';
 $string['filterinactive'] = 'Verberge den Filter';
 $string['showfilter'] = 'Zeige diesen Filter';
 $string['editfiltername'] = 'Bearbeite den Filternamen';
 $string['allowedittable'] = 'Bearbeite Tabelleneinstellungen';
+$string['showdownloadbutton'] = 'Download-Button anzeigen';
+$string['showreloadbutton'] = 'Reload-Button anzeigen';
+$string['showcountlabel'] = 'Anzahl der gefundenen Einträge anzeigen';
+$string['stickyheader'] = 'Header fixieren (sticky header)';
+$string['showrowcountselect'] = 'Dropdown für Anzahl der anzuzeigenden Zeilen anzeigen';
+$string['placebuttonandpageelementsontop'] = 'Buttons und Elemente oben statt unten anzeigen';
+$string['tableheight'] = 'Tabellen-Höhe';
+$string['pagesize'] = 'Anzahl der Einträge pro Seite';
+$string['addcheckboxes'] = 'Für jede Zeile eine Checkbox anzeigen';
+$string['filteronloadinactive'] = 'Filter standardmäßig zugeklappt';
+$string['infinitescroll'] = 'Dynamisches Weiterscrollen aktivieren (infinite scrolling)';
 
 $string['datepicker'] = 'Datumsfilter';
 $string['hourlist'] = 'Stundenlistenfilter';
 $string['standardfilter'] = 'Standardfilter';
 $string['weekdays'] = 'Wochentagefilter';
+
+$string['tableheadersortableitem'] = '<i class="fa fa-arrows" aria-label="Sortieren"></i>';
+
+// Errors.
+$string['valuehastobeint'] = "Wert muss eine Zahl sein";
 
 // Bewlow this line, there are only strings for the demo site.
 // Action Buttons demo names.

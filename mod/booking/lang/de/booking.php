@@ -31,6 +31,8 @@ $string['age'] = 'Alter';
 $string['allowupdatedays'] = 'Tage vor Referenzdatum';
 $string['areyousure:book'] = 'Nochmal klicken, um die Buchung zu bestätigen';
 $string['areyousure:cancel'] = 'Nochmal klicken, um die Buchung zu stornieren';
+$string['assesstimestart'] = 'Start der Bewertungsperiode';
+$string['assesstimefinish'] = 'Ende der Bewertungsperiode';
 $string['assignteachers'] = 'Lehrer:innen zuweisen:';
 $string['alreadypassed'] = 'Bereits vergangen';
 $string['bookingopeningtime'] = 'Buchbar ab';
@@ -67,9 +69,19 @@ $string['deductionnotpossible'] = 'Da alle Trainer:innen bei diesem Termin anwes
 $string['defaultoptionsort'] = 'Standardsortierung nach Spalte';
 $string['doyouwanttobook'] = 'Wollen Sie <b>{$a}</b> buchen?';
 $string['from'] = 'Ab';
+$string['generalsettings'] = 'Allgemeine Einstellungen';
 $string['gotomanageresponses'] = '&lt;&lt; Buchungen verwalten';
 $string['gotomoodlecourse'] = 'Zum Moodle-Kurs';
 $string['limitfactor'] = 'Buchungslimit-Faktor';
+$string['maxperuserdontcountpassed'] = 'Max. Anz. Buchungen: Vergangene ignorieren';
+$string['maxperuserdontcountpassed_desc'] = 'Buchungen von Buchungsoptionen, die bereits vergangen sind, bei der Berechnung
+der maximalen Anzahl an Buchungen nicht mitzählen';
+$string['maxperuserdontcountcompleted'] = 'Max. Anz. Buchungen: Abgeschlossene ignorieren';
+$string['maxperuserdontcountcompleted_desc'] = 'Abgeschlossene Buchungen und Teilnehmer:innen mit Präsenzstatus "Teilgenommen" oder "Abgeschlossen"
+bei der Berechnung der maximalen Anzahl an Buchungen nicht mitzählen';
+$string['maxperuserdontcountnoshow'] = 'Max. Anz. Buchungen: Abwesende ignorieren';
+$string['maxperuserdontcountnoshow_desc'] = 'Abwesende Teilnehmer:innen mit Präsenzstatus "Nicht aufgetaucht"
+bei der Berechnung der maximalen Anzahl an Buchungen nicht mitzählen';
 $string['messageprovider:bookingconfirmation'] = "Buchungsbestätigungen";
 $string['name'] = 'Name';
 $string['noselection'] = 'Keine Auswahl';
@@ -648,7 +660,9 @@ $string['lblname'] = 'Bezeichnung für: Name';
 $string['lblnumofusers'] = 'Bezeichnung für: Nutzer:innenanzahl';
 $string['lblsurname'] = 'Bezeichnung für: Nachname';
 $string['maxperuser'] = 'Maximale Anzahl an Buchungen pro User';
-$string['maxperuser_help'] = 'Die maximale Anzahl an Buchungen, die ein/e Nutzer/in auf einmal buchen kann. Nach dem Ende des gebuchten Kurses, zählt dieser nicht mehr zum Buchungslimit.';
+$string['maxperuser_help'] = 'Die maximale Anzahl an Buchungen, die ein/e Nutzer/in auf einmal buchen kann.
+<b>Achtung:</b> In den Booking-Plugin-Einstellungen können Sie auswählen, ob Nutzer:innen, die teilgenommen
+oder abgeschlossen haben und ob Buchungsoptionen, die bereits vorbei sind, mitgezählt werden sollen oder nicht.';
 $string['notificationtext'] = 'Benachrichtigungstext';
 $string['numgenerator'] = 'Automatische Seitennummerierung aktivieren?';
 $string['paginationnum'] = 'Anzahl der Einträge pro Seite';
@@ -982,6 +996,7 @@ $string['transferoptionsuccess'] = 'Die Buchungsoption und die registrierten Nut
 $string['transferproblem'] = 'Die folgenden Nutzer:innen konnten aufgrund einer limitierten Anzahl an Plätzen der Buchungsoption oder aufgrund individueller Limitierungen seitens des/der Nutzer/in nicht umgebucht werden: {$a}';
 $string['userssuccessfullenrolled'] = 'Alle Nutzer:innen wurden erfolgreich eingeschrieben!';
 $string['userssuccessfullybooked'] = 'Alle Nutzer:innen wurden erfolgreich in die andere Buchungsoption eingeschrieben.';
+$string['sucessfullybooked'] = 'Erfolgreich gebucht';
 $string['waitinglistusers'] = 'Nutzer:innen auf der Warteliste';
 $string['withselected'] = 'Ausgewählte Nutzer:innen';
 $string['yes'] = 'Ja';
@@ -1151,7 +1166,7 @@ $string['signincustfields_desc'] = 'Wählen Sie die Profilfelder, die auf der Un
 $string['showcustomfields'] = 'Anzuzeigende benutzerdefnierte Buchungsoptionsfelder';
 $string['showcustomfields_desc'] = 'Wählen Sie die benutzerdefinierte Buchungsoptionfelder, die auf der Unterschriftenliste abgedruckt werden sollen';
 $string['alloptionsinreport'] = 'Report über alle Buchungen einer Instanz' . $string['badge:pro'];
-$string['alloptionsinreportdesc'] = 'Der Report einer Buchungsoption beinhaltet alle Antworten der ganzen Instanz';
+$string['alloptionsinreportdesc'] = 'Der Report einer Buchungsoption beinhaltet alle Buchungen der ganzen Instanz';
 
 $string['showlistoncoursepage'] = 'Extra-Info auf Kursseite anzeigen';
 $string['showlistoncoursepage_help'] = 'Wenn Sie diese Einstellung aktivieren, werden der Kursname, eine Kurzinfo
@@ -1180,6 +1195,12 @@ $string['bookingplaceslowpercentage'] = 'Buchungsplätze: Prozentsatz für "Nur 
 $string['bookingplaceslowpercentagedesc'] = 'Wenn die Anzahl verfügbarer Buchungsplätze diesen Prozentsatz erreicht oder unter diesen Prozentsatz sinkt, wird eine Nachricht angezeigt, dass nur noch wenige Plätze verfügbar sind.';
 $string['waitinglistlowpercentage'] = 'Warteliste: Prozentsatz für "Nur noch wenige Plätze verfügbar"-Nachricht';
 $string['waitinglistlowpercentagedesc'] = 'Wenn die Anzahl verfügbarer Wartelistenplätze diesen Prozentsatz erreicht oder unter diesen Prozentsatz sinkt, wird eine Nachricht angezeigt, dass nur noch wenige Plätze verfügbar sind.';
+
+$string['waitinglistshowplaceonwaitinglist'] = 'Zeige Platz auf der Warteliste.';
+$string['waitinglistshowplaceonwaitinglist_info'] = 'Warteliste: Zeige den Platz der NutzerIn auf der Warteliste an.';
+
+$string['yourplaceonwaitinglist'] = 'Sie sind auf Platz {$a} auf der Warteliste';
+
 $string['waitinglistlowmessage'] = 'Nur noch wenige Wartelistenplätze!';
 $string['waitinglistenoughmessage'] = 'Noch Wartelistenplätze verfügbar.';
 $string['waitinglistfullmessage'] = 'Warteliste ist voll.';
@@ -1362,7 +1383,8 @@ $string['linknotvalid'] = 'Dieser Link / dieses Event ist derzeit nicht verfügb
 Bitte probieren Sie es kurz vor Beginn noch einmal, wenn Sie dieses Event gebucht haben.';
 
 // Booking_utils.php.
-$string['linknotavailableyet'] = 'Der Link auf die Konferenz ist nur zwischen 15 Minuten vor dem Meeting und dem Enddatum hier verfügbar.';
+$string['linknotavailableyet'] = 'Der Link zum Online-Meeting-Raum ist erst 15 Minuten vor dem Meeting sichtbar
+und verschwindet nach Ende des Meetings wieder.';
 $string['changeinfochanged'] = ' hat sich geändert:';
 $string['changeinfoadded'] = ' wurde hinzugefügt:';
 $string['changeinfodeleted'] = ' wurde gelöscht:';
@@ -1566,6 +1588,12 @@ $string['error:reasontoolong'] = 'Grund ist zu lange, geben Sie einen kürzeren 
 $string['error:reasonforsubstituteteacher'] = 'Geben Sie einen Grund für die Vertretung an.';
 $string['error:reasonfordeduction'] = 'Geben Sie einen Grund für den Abzug an.';
 
+$string['confirmbooking'] = 'Bestätigen der Buchung';
+$string['confirmbookinglong'] = 'Wollen Sie diese Buchung wirklich bestätigen?';
+
+$string['deletebooking'] = 'Buchung löschen';
+$string['deletebookinglong'] = 'Wollen Sie diese Buchung wirklich löschen?';
+
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Trainer:innen-Gesamtbericht';
 $string['error:invalidcmid'] = 'Der Bericht kann nicht geöffnet werden, weil keine gültige Kursmodul-ID (cmid) übergeben wurde. Die cmid muss auf eine Buchungsinstanz verweisen!';
@@ -1619,6 +1647,7 @@ $string['howmanyusers'] = 'Beschränkungen';
 $string['recurringoptions'] = 'Wiederkehrende Optionen';
 $string['bookusers'] = 'Feld für den Import, um NutzerInnen zu buchen';
 $string['timemodified'] = 'Bearbeitungszeit';
+$string['waitforconfirmation'] = 'Buchen nur nach Bestätigung';
 
 // Tasks.
 $string['task_adhoc_reset_optiondates_for_semester'] = 'Adhoc task: Termine zurücksetzen und neu erstellen';
@@ -1667,6 +1696,7 @@ $string['bo_cond_bookingpolicy'] = 'Buchungsbedingungen';
 $string['bo_cond_notifymelist'] = 'Benachrichtigungsliste';
 $string['bo_cond_max_number_of_bookings'] = 'max_number_of_bookings: Maximum an Nutzer:innen erreicht, die dieser User buchen darf';
 $string['bo_cond_onwaitinglist'] = 'onwaitinglist: Auf Warteliste';
+$string['bo_cond_askforconfirmation'] = 'askforconfirmation: Manuelle Bestätigung der Buchung';
 $string['bo_cond_previouslybooked'] = 'Benutzer:in hat früher eine bestimmte Option gebucht';
 $string['bo_cond_enrolledincourse'] = 'Benutzer:in ist in bestimmte(n) Kurs(e) eingeschrieben';
 $string['bo_cond_priceisset'] = 'priceisset: Preis ist vorhanden';
@@ -1767,6 +1797,11 @@ $string['bo_cond_onnotifylist_available'] = 'Buchen';
 $string['bo_cond_onnotifylist_full_available'] = 'Buchen möglich';
 $string['bo_cond_onnotifylist_not_available'] = 'Ausgebucht - Sie sind auf der Benachrichtigungsliste';
 $string['bo_cond_onnotifylist_full_not_available'] = 'Ausgebucht - Nutzer:in ist auf der Benachrichtigungliste';
+
+$string['bo_cond_askforconfirmation_available'] = 'Buchen';
+$string['bo_cond_askforconfirmation_full_available'] = 'Buchen möglich';
+$string['bo_cond_askforconfirmation_not_available'] = 'Buchen - auf Warteliste';
+$string['bo_cond_askforconfirmation_full_not_available'] = 'Buchen - auf Warteliste';
 
 $string['bo_cond_onwaitinglist_available'] = 'Buchen';
 $string['bo_cond_onwaitinglist_full_available'] = 'Buchen möglich';

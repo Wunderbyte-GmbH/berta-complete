@@ -84,11 +84,6 @@ class filter {
             return;
         }
 
-        $filterclasses = core_component::get_component_classes_in_namespace(
-            "local_wunderbyte_table",
-            'filters\types'
-        );
-
         // Here, we create the filter first like this:
         // For every field we want to filter for, we look in our rawdata...
         // ... to fetch all the available values once.
@@ -99,6 +94,11 @@ class filter {
 
             // We won't generate a filter for the id column, but it will be present because we need it as dataset.
             if (strtolower($key) == 'id') {
+
+                // If the id checkbox is not checked, we don't show the filter at all.
+                if (empty($value[$key . '_wb_checked'])) {
+                    return;
+                }
                 continue;
             }
 
@@ -207,9 +207,21 @@ class filter {
         $sql = " SELECT $key, COUNT($key)
                 FROM {$table->sql->from}
                 WHERE {$table->sql->where} AND $key IS NOT NULL
-                GROUP BY $key ";
+                GROUP BY $key ORDER BY $key ASC";
 
         $records = $DB->get_records_sql($sql, $table->sql->params);
+
+        if (is_array($records)) {
+            // Records ares sorted correctly, so just want to obmit all empty strings.
+            // We can break as soon as the value is not empty.
+            foreach ($records as $k => $v) {
+                if ($v->{$key} === '') {
+                    unset($records[$k]);
+                } else {
+                    break;
+                }
+            }
+        }
 
         // If there are only empty strings, we don't want the filter to show.
         if (!$records
@@ -293,7 +305,7 @@ class filter {
      * Save settings of Filter.
      * @param wunderbyte_table $table
      * @param string $cachekey
-     * @param array $filtersettings
+     * @param array $tablesettings
      * @param bool $onlyinsert
      * @return void
      * @throws coding_exception
@@ -301,7 +313,7 @@ class filter {
      */
     public static function save_settings(wunderbyte_table $table,
                                         string $cachekey,
-                                        array $filtersettings,
+                                        array $tablesettings,
                                         bool $onlyinsert = true) {
 
         global $USER, $DB;
@@ -317,7 +329,7 @@ class filter {
                 'userid' => 0,
             ])) {
                 $data->timemodified = $now;
-                $data->jsonstring = json_encode($filtersettings);
+                $data->jsonstring = json_encode($tablesettings);
 
                 $DB->update_record('local_wunderbyte_table', $data);
                 return;
@@ -331,7 +343,7 @@ class filter {
             'idstring' => $table->idstring,
             'userid' => 0,
             'page' => $table->context->id,
-            'jsonstring' => json_encode($filtersettings),
+            'jsonstring' => json_encode($tablesettings),
             'sql' => $sql,
             'usermodified' => $USER->id,
             'timecreated' => $now,

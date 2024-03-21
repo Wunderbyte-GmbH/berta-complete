@@ -609,6 +609,11 @@ class booking_option {
 
         $optionsettings = singleton_service::get_instance_of_booking_option_settings($this->optionid);
 
+        // If waitforconfirmation is turned on, we will never sync waitinglist (we do it manually).
+        if (!empty($optionsettings->waitforconfirmation)) {
+            $syncwaitinglist = false;
+        }
+
         $results = $DB->get_records('booking_answers',
                 ['userid' => $userid, 'optionid' => $this->optionid, 'completed' => 0]);
 
@@ -1002,8 +1007,14 @@ class booking_option {
                     // Else, we might move from waitinglist to booked, we just continue.
                     break;
                 case MOD_BOOKING_STATUSPARAM_NOTIFYMELIST:
-                    // If we have a notification...
-                    // ... we override it here, because all alternatives are higher.
+                    // If we are not yet booked and we need manual confirmation...
+                    // ... We switch booking param to waitinglist.
+                    if (!empty($this->settings->waitforconfirmation)) {
+
+                        $waitinglist = MOD_BOOKING_STATUSPARAM_WAITINGLIST;
+
+                    }
+
                     break;
             }
             $currentanswerid = $currentanswer->baid;
@@ -1011,6 +1022,12 @@ class booking_option {
         } else {
             $currentanswerid = null;
             $timecreated = null;
+
+            if ($waitinglist === MOD_BOOKING_STATUSPARAM_BOOKED
+                && !empty($this->settings->waitforconfirmation)) {
+
+                $waitinglist = MOD_BOOKING_STATUSPARAM_WAITINGLIST;
+            }
         }
 
         self::write_user_answer_to_db($this->booking->id,
@@ -1657,10 +1674,14 @@ class booking_option {
         global $DB;
 
         foreach ($allselectedusers as $ui) {
-            $userdata = $DB->get_record('booking_answers',
-                    ['optionid' => $this->optionid, 'userid' => $ui]);
-            $userdata->status = $presencestatus;
 
+            $userdata = $DB->get_record_sql(
+                "SELECT *
+                FROM {booking_answers}
+                WHERE optionid = :optionid AND userid = :userid AND waitinglist < 2",
+                ['optionid' => $this->optionid, 'userid' => $ui]);
+
+            $userdata->status = $presencestatus;
             $DB->update_record('booking_answers', $userdata);
         }
 
@@ -1706,17 +1727,21 @@ class booking_option {
         // Therefore, we take the one array which actually is present.
         if ($bookingstatus = reset($bookingstatus)) {
             if (isset($bookingstatus['fullybooked']) && !$bookingstatus['fullybooked']) {
-                return MOD_BOOKING_STATUSPARAM_BOOKED;
+
+                $status = MOD_BOOKING_STATUSPARAM_BOOKED;
+
             } else if (isset($bookingstatus['freeonwaitinglist']) && $bookingstatus['freeonwaitinglist'] > 0) {
-                return MOD_BOOKING_STATUSPARAM_WAITINGLIST;
+                $status = MOD_BOOKING_STATUSPARAM_WAITINGLIST;
             } else {
                 if ($allowoverbooking) {
-                    return MOD_BOOKING_STATUSPARAM_BOOKED;
+                    $status = MOD_BOOKING_STATUSPARAM_BOOKED;
                 } else {
-                    return false;
+                    $status = false;
                 }
             }
         }
+
+        return $status;
     }
 
     /**
@@ -2377,12 +2402,14 @@ class booking_option {
             $descriptionparam = 0,
             $forbookeduser = false) {
 
+        // At first, we handle special meeting fields.
+        // The regex will match ZoomMeeting, BigBlueButton-Meeting, Teams meeting etc.
+        if (preg_match('/^((zoom)|(big.*blue.*button)|(teams)).*meeting$/i', $field->cfgname)) {
+            // If the session is not yet about to begin, we show placeholder.
+            return $this->render_meeting_fields($sessionid, $field, $descriptionparam, $forbookeduser);
+        }
+
         switch ($field->cfgname) {
-            case 'zoommeeting':
-            case 'bigbluebuttonmeeting':
-            case 'teamsmeeting':
-                // If the session is not yet about to begin, we show placeholder.
-                return $this->render_meeting_fields($sessionid, $field, $descriptionparam, $forbookeduser);
             case 'addcomment':
                 return [
                     'name' => "",
@@ -2432,7 +2459,8 @@ class booking_option {
                     // User is booked and event open, we return the button with the link to access, this is for the website.
                     return [
                             'name' => null,
-                            'value' => "<a href=$field->value class='btn btn-info'>$field->cfgname</a>",
+                            'value' => "<a href=$field->value class='btn btn-secondary booking-meetinglink-btn'>"
+                                . $field->cfgname . "</a>",
                     ];
                 };
             case MOD_BOOKING_DESCRIPTION_CALENDAR:
@@ -2452,7 +2480,8 @@ class booking_option {
 
                     return [
                             'name' => null,
-                            'value' => "<a href=$encodedlink class='btn btn-info'>$field->cfgname</a>",
+                            'value' => "<a href=$encodedlink class='btn btn-secondary booking-meetinglink-btn'>" .
+                                $field->cfgname . "</a>",
                     ];
                 } else {
                     return [];
@@ -2793,6 +2822,9 @@ class booking_option {
         // When we set back the booking_answers...
         // ... we have to make sure it's also deleted in the singleton service.
         singleton_service::destroy_booking_answers($optionid);
+
+        // We also need to destroy the booked_user_information.
+        cache_helper::purge_by_event('setbackbookedusertable');
     }
 
     /**

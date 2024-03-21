@@ -31,6 +31,8 @@ $string['age'] = 'Age';
 $string['allowupdatedays'] = 'Days before reference date';
 $string['areyousure:book'] = 'Click again to confirm booking';
 $string['areyousure:cancel'] = 'Click again to confirm cancellation';
+$string['assesstimestart'] = 'Start of the assessment period';
+$string['assesstimefinish'] = 'End of the assessment period';
 $string['assignteachers'] = 'Assign teachers:';
 $string['alreadypassed'] = 'Already passed';
 $string['bookingopeningtime'] = 'Bookable from';
@@ -66,9 +68,19 @@ $string['deductionnotpossible'] = 'All teachers were present at this date. So no
 $string['defaultoptionsort'] = 'Default sorting by column';
 $string['doyouwanttobook'] = 'Do you want to book <b>{$a}</b>?';
 $string['from'] = 'From';
+$string['generalsettings'] = 'General settings';
 $string['gotomanageresponses'] = '&lt;&lt; Manage bookings';
 $string['gotomoodlecourse'] = 'Go to Moodle course';
 $string['limitfactor'] = 'Booking limit factor';
+$string['maxperuserdontcountpassed'] = 'Max. number of bookings: Ignore courses passed';
+$string['maxperuserdontcountpassed_desc'] = 'When calculating the maximum number of bookings per user per instance,
+do not count booking options that have already passed';
+$string['maxperuserdontcountcompleted'] = 'Max. number of bookings: Ignore completed';
+$string['maxperuserdontcountcompleted_desc'] = 'Do not count bookings that have been marked as "completed" or that
+have a presence status "Attending" or "Complete" when calculating the maximum number of bookings per user per instance';
+$string['maxperuserdontcountnoshow'] = 'Max. number of bookings: Ignore users who did not show up';
+$string['maxperuserdontcountnoshow_desc'] = 'Do not count bookings that have been marked as "No show"
+when calculating the maximum number of bookings per user per instance';
 $string['messageprovider:bookingconfirmation'] = "Booking confirmations";
 $string['name'] = 'Name';
 $string['noselection'] = 'No selection';
@@ -654,7 +666,9 @@ $string['lblname'] = 'Name of label: Name';
 $string['lblnumofusers'] = 'Name of label: Num. of users';
 $string['lblsurname'] = 'Name of label: Surname';
 $string['maxperuser'] = 'Max current bookings per user';
-$string['maxperuser_help'] = 'The maximum number of bookings an individual user can make in this activity at once. After an event end time has passed, it is no longer counted against this limit.';
+$string['maxperuser_help'] = 'The maximum number of bookings an individual user can make in this activity at once.
+<b>Attention:</b> In the Booking plugin settings, you can choose if users who completed or attended and booking options
+that have already passed should be counted or not counted to determine the maximum number of bookings a user can book within this instance.';
 $string['notificationtext'] = 'Notification message';
 $string['numgenerator'] = 'Enable rec. number generation?';
 $string['paginationnum'] = "N. of records - pagination";
@@ -992,6 +1006,7 @@ $string['toomuchusersbooked'] = 'The max number of users you can book is: {$a}';
 $string['userid'] = 'UserID';
 $string['userssuccessfullenrolled'] = 'All users have been enrolled!';
 $string['userssuccessfullybooked'] = 'All users have been booked to the other booking option.';
+$string['sucessfullybooked'] = 'Sucessfully booked';
 $string['waitinglistusers'] = 'Users on waiting list';
 $string['withselected'] = 'With selected users:';
 $string['editotherbooking'] = 'Other booking rules';
@@ -1190,7 +1205,7 @@ $string['signincustfields_desc'] = 'Select the custom profiles fields to be show
 $string['showcustomfields'] = 'Custom booking option fields';
 $string['showcustomfields_desc'] = 'Select the custom booking option fields to be shown on the sign-in sheet';
 $string['alloptionsinreport'] = 'One report for a booking activity' . $string['badge:pro'];
-$string['alloptionsinreportdesc'] = 'The report of one booking activity will include all the answers of all booking options within this activity.';
+$string['alloptionsinreportdesc'] = 'The report of one booking option will include all the bookings of all booking options within this instance.';
 
 $string['showlistoncoursepage'] = 'Show extra information on course page';
 $string['showlistoncoursepage_help'] = 'If you activate this setting, the course name, a short info and a button
@@ -1219,6 +1234,12 @@ $string['bookingplaceslowpercentage'] = 'Percentage for booking places low messa
 $string['bookingplaceslowpercentagedesc'] = 'If the available booking places reach or get below this percentage a booking places low message will be shown.';
 $string['waitinglistlowpercentage'] = 'Percentage for waiting list low message';
 $string['waitinglistlowpercentagedesc'] = 'If the available places on the waiting list reach or get below this percentage a waiting list low message will be shown.';
+
+$string['waitinglistshowplaceonwaitinglist'] = 'Show place on waitinglist.';
+$string['waitinglistshowplaceonwaitinglist_info'] = 'Waitinglist: Shows the exact place of the user on the waitinglist.';
+
+$string['yourplaceonwaitinglist'] = 'You are on place {$a} on the waitinglist';
+
 $string['waitinglistlowmessage'] = 'Only a few waiting list places left!';
 $string['waitinglistenoughmessage'] = 'Still enough waiting list places.';
 $string['waitinglistfullmessage'] = 'Waiting list full.';
@@ -1391,6 +1412,31 @@ $string['privacy:metadata:booking_userevents:optionid'] = 'ID of booking option 
 $string['privacy:metadata:booking_userevents:optiondateid'] = 'ID of optiondate (session) for user event';
 $string['privacy:metadata:booking_userevents:eventid'] = 'ID of event in events table';
 
+$string['privacy:metadata:booking_optiondates_teachers'] = 'Track teachers for each session.';
+$string['privacy:metadata:booking_optiondates_teachers:optiondateid'] = 'ID of the option date';
+$string['privacy:metadata:booking_optiondates_teachers:userid'] = 'The userid of the teacher.';
+
+$string['privacy:metadata:booking_subbooking_answers'] = 'Stores the anwers (the bookings) of a user for a particular subbooking.';
+$string['privacy:metadata:booking_subbooking_answers:itemid'] = 'itemid can be the same as sboptionid, but there are some types (eg. timeslots which provide slots) where one sboptionid provides a lot of itemids.';
+$string['privacy:metadata:booking_subbooking_answers:optionid'] = 'The option ID';
+$string['privacy:metadata:booking_subbooking_answers:sboptionid'] = 'id of the booked subbooking';
+$string['privacy:metadata:booking_subbooking_answers:userid'] = 'Userid of the booked user.';
+$string['privacy:metadata:booking_subbooking_answers:usermodified'] = 'The user that modified';
+$string['privacy:metadata:booking_subbooking_answers:json'] = 'supplementary data if necessary';
+$string['privacy:metadata:booking_subbooking_answers:timestart'] = 'Timestamp for start time of this booking';
+$string['privacy:metadata:booking_subbooking_answers:timeend'] = 'Timestamp for end time of this booking';
+$string['privacy:metadata:booking_subbooking_answers:status'] = 'The bookings status, as in booked, waiting list, in the shopping cart, on a notify list or deleted';
+$string['privacy:metadata:booking_subbooking_answers:timecreated'] = 'The time created';
+$string['privacy:metadata:booking_subbooking_answers:timemodified'] = 'The time last modified';
+
+$string['privacy:metadata:booking_odt_deductions'] = 'This table is used to log if we want to deduct a part of a teachers salary if (s)he has missing hours.';
+$string['privacy:metadata:booking_odt_deductions:optiondateid'] = 'The option date ID';
+$string['privacy:metadata:booking_odt_deductions:userid'] = 'Userid of the teacher who gets a deduction for this option date.';
+$string['privacy:metadata:booking_odt_deductions:reason'] = 'Reason for the deduction.';
+$string['privacy:metadata:booking_odt_deductions:usermodified'] = 'The user that modified';
+$string['privacy:metadata:booking_odt_deductions:timecreated'] = 'The time created';
+$string['privacy:metadata:booking_odt_deductions:timemodified'] = 'The time last modified';
+
 // Calendar.php.
 $string['usercalendarentry'] = 'You are booked for <a href="{$a}">this session</a>.';
 $string['bookingoptioncalendarentry'] = '<a href="{$a}" class="btn btn-primary">Book now...</a>';
@@ -1460,7 +1506,8 @@ $string['linknotvalid'] = 'This link or meeting is not accessible.
 If it is a meeting you have booked, please check again, shortly before start.';
 
 // Booking_utils.php.
-$string['linknotavailableyet'] = "The link to access the meeting is available only 15 minutes before the start until the end of the session.";
+$string['linknotavailableyet'] = "The link to access the meeting is available only 15 minutes before the start
+until the end of the session.";
 $string['changeinfochanged'] = ' has changed:';
 $string['changeinfoadded'] = ' has been added:';
 $string['changeinfodeleted'] = ' has been deleted:';
@@ -1664,6 +1711,12 @@ $string['error:reasontoolong'] = 'Reason is too long, enter a shorter text.';
 $string['error:reasonforsubstituteteacher'] = 'Enter a reason for the substitute teacher(s).';
 $string['error:reasonfordeduction'] = 'Enter a reason for the deduction.';
 
+$string['confirmbooking'] = 'Confirmation of this booking';
+$string['confirmbookinglong'] = 'Do you really want to confirm this booking?';
+
+$string['confirmbooking'] = 'Delete this booking';
+$string['confirmbookinglong'] = 'Do you really want to delete this booking?';
+
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Teachers report';
 $string['error:invalidcmid'] = 'The report cannot be opened because no valid course module ID (cmid) was provided. It needs to be the cmid of a booking instance!';
@@ -1717,6 +1770,7 @@ $string['howmanyusers'] = 'Book other users limit';
 $string['recurringoptions'] = 'Recurring booking options';
 $string['bookusers'] = 'For Import, to book users directly';
 $string['timemodified'] = 'Time modified';
+$string['waitforconfirmation'] = 'Book only after confirmation';
 
 // Tasks.
 $string['task_adhoc_reset_optiondates_for_semester'] = 'Adhoc task: Reset and generate new optiondates for semester';
@@ -1766,6 +1820,7 @@ $string['bo_cond_bookingpolicy'] = 'Booking policy';
 $string['bo_cond_notifymelist'] = 'Notify list';
 $string['bo_cond_max_number_of_bookings'] = 'max_number_of_bookings: Maximum number of bookings per user reached';
 $string['bo_cond_onwaitinglist'] = 'onwaitinglist: User is on waiting list';
+$string['bo_cond_askforconfirmation'] = 'askforconfirmation: Manually confirm booking';
 $string['bo_cond_previouslybooked'] = 'User has previously booked a certain option';
 $string['bo_cond_enrolledincourse'] = 'User is enrolled in certain course(s)';
 $string['bo_cond_priceisset'] = 'priceisset: Price is set';
@@ -1823,6 +1878,11 @@ $string['bo_cond_onnotifylist_available'] = 'Book it';
 $string['bo_cond_onnotifylist_full_available'] = 'Booking is possible';
 $string['bo_cond_onnotifylist_not_available'] = 'Max number of bookings reached';
 $string['bo_cond_onnotifylist_full_not_available'] = 'User has reached the max number of bookings';
+
+$string['bo_cond_askforconfirmation_available'] = 'Book it';
+$string['bo_cond_askforconfirmation_full_available'] = 'Booking is possible';
+$string['bo_cond_askforconfirmation_not_available'] = 'Book it - on waitinglist';
+$string['bo_cond_askforconfirmation_full_not_available'] = 'Book it - on waitinglist';
 
 $string['bo_cond_onwaitinglist_available'] = 'Book it';
 $string['bo_cond_onwaitinglist_full_available'] = 'Booking is possible';

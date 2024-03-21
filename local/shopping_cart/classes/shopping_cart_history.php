@@ -24,7 +24,9 @@
 
 namespace local_shopping_cart;
 
+use coding_exception;
 use context_system;
+use dml_exception;
 use Exception;
 use local_shopping_cart\event\payment_added;
 use moodle_exception;
@@ -735,16 +737,13 @@ class shopping_cart_history {
      * Return an item for shopping card history table via the historyid.
      *
      * @param int $historyid
-     * @param int $itemid
-     * @param string $area
-     * @param int $userid
      * @return bool|stdClass
      */
-    public static function return_item_from_history(int $historyid, int $itemid, string $area, int $userid) {
+    public static function return_item_from_history(int $historyid) {
         global $DB;
 
         return $DB->get_record('local_shopping_cart_history',
-            ['id' => $historyid, 'itemid' => $itemid, 'area' => $area, 'userid' => $userid]);
+            ['id' => $historyid]);
     }
 
     /**
@@ -767,5 +766,103 @@ class shopping_cart_history {
 
         return $DB->get_records('local_shopping_cart_history',
             ['itemid' => $itemid, 'componentname' => $component, 'area' => $area, 'userid' => $userid]);
+    }
+
+    /**
+     * Marks an item for rebooking.
+     * @param int $historyid
+     * @param int $userid
+     * @param bool $remove can be set to true, if we already know that we remove
+     * @return array
+     */
+    public static function toggle_mark_for_rebooking(int $historyid, int $userid, bool $remove = null): array {
+
+        $userid = shopping_cart::set_user($userid);
+
+        $cachekey = 'rebook_userid_' . $userid;
+        $cache = \cache::make('local_shopping_cart', 'cacherebooking');
+
+        $marked = 1;
+        // First, we see if we have sth in the cache.
+        if ((($itemstorebook = $cache->get($cachekey))
+            && is_array($itemstorebook)) || $remove) {
+
+            if (in_array($historyid, $itemstorebook) || $remove) {
+                $itemstorebook = array_filter($itemstorebook, fn($a) => $a != $historyid);
+                $marked = 0;
+                shopping_cart::delete_item_from_cart('local_shopping_cart', 'rebookitem', $historyid, $userid);
+            } else {
+                // If so, decide if a add or remove.
+                $itemstorebook[] = $historyid;
+            }
+        } else {
+            $itemstorebook = [$historyid];
+        }
+
+        $cache->set($cachekey, $itemstorebook);
+
+        if (!empty($marked) && empty($remove)) {
+            // Before we add the item to the cart, let's make sure there is no booking fee currently applied.
+
+            shopping_cart_rebookingcredit::delete_booking_fee($userid);
+
+            shopping_cart::add_item_to_cart('local_shopping_cart', 'rebookitem', $historyid, $userid);
+        }
+
+        // Else we return the toggled value.
+        return ['marked' => $marked];
+    }
+
+    /**
+     * Return true or false, depending on item.
+     * @param int $historyid
+     * @param mixed $userid
+     * @return true
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function is_marked_for_rebooking(int $historyid, $userid) {
+
+        $cachekey = 'rebook_userid_' . $userid;
+        $cache = \cache::make('local_shopping_cart', 'cacherebooking');
+
+        if (($markeditems = $cache->get($cachekey))
+            && is_array($markeditems)
+            && in_array($historyid, $markeditems)) {
+            return true;
+        }
+
+        return false;
+
+    }
+
+    /**
+     * Gets list of items to rebook.
+     * @param mixed $userid
+     * @return array|void
+     * @throws coding_exception
+     */
+    public static function return_list_of_items_to_rebook($userid) {
+
+        global $DB;
+
+        $cachekey = 'rebook_userid_' . $userid;
+        $cache = \cache::make('local_shopping_cart', 'cacherebooking');
+
+        if (($markeditems = $cache->get($cachekey))
+            && is_array($markeditems)) {
+
+            list($inorequal, $params) = $DB->get_in_or_equal($markeditems, SQL_PARAMS_NAMED);
+            $sql = "SELECT *
+                    FROM {local_shopping_cart_history}
+                    WHERE id $inorequal";
+
+            $records = $DB->get_record_sql($sql, $params);
+
+            return $records;
+        } else {
+            return [];
+        }
+
     }
 }

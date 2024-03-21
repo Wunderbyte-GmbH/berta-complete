@@ -30,13 +30,20 @@ $string['modulename'] = 'Shopping Cart';
 
 // General strings.
 $string['addtocart'] = 'Add to cart';
+$string['allowrebooking'] = 'Allow rebooking';
+$string['allowrebooking_desc'] = 'Allow users to rebook already bought items.
+They can be marked for rebooking and will be added to the shopping cart with a negative price.
+When rebooking, they will be cancelled and another item will be bought at the same time.
+The overall price of the rebooking must not be negative.';
 $string['allowrebookingcredit'] = 'Rebooking credit';
 $string['allowrebookingcredit_desc'] = 'If you activate rebooking credit, a user will get refunded the cancelation and booking fee
 if (s)he cancels an item within the cancelation period and books another item.';
 $string['cash'] = 'Cash';
 $string['choose...'] = 'Choose...';
 $string['mycart'] = 'My Cart';
+$string['nolimit'] = 'No limit';
 $string['optioncancelled'] = 'Booking option cancelled';
+$string['rebooking'] = 'Rebooking';
 $string['rebookingcredit'] = 'Rebooking credit';
 $string['sendpaymentbutton'] = 'Checkout';
 $string['showorderid'] = 'Show Order-ID...';
@@ -227,6 +234,9 @@ $string['cancelsuccess'] = 'Successfully canceled';
 $string['applytocomponent'] = 'Cancel without callback to plugin';
 $string['applytocomponent_desc'] = 'With this setting unchecked, you can cancel eg a double booking without unenroling a buyer from the bought course.';
 
+$string['markforrebooking'] = 'Rebook to another course';
+$string['markedforrebooking'] = 'Marked for rebooking';
+
 $string['youcancanceluntil'] = 'You can cancel until {$a}.';
 $string['youcannotcancelanymore'] = 'No cancelation possible.';
 
@@ -287,8 +297,8 @@ $string['confirmpaidbackbody'] =
  'Do you really want to confirm that you have paid back the user her credit? This will set her credit to 0.';
 $string['confirmpaidback'] = 'Confirm';
 
-$string['confirmzeropricecheckouttitle'] = 'Pay with your credits';
-$string['confirmzeropricecheckoutbody'] = 'You have enough credits to pay fully for your purchase. Do you want to proceed?';
+$string['confirmzeropricecheckouttitle'] = 'Book now';
+$string['confirmzeropricecheckoutbody'] = 'You do not have to pay anything. Do you want to proceed and book?';
 $string['confirmzeropricecheckout'] = 'Confirm';
 
 $string['deletecreditcash'] = 'Refunded with cash';
@@ -337,6 +347,9 @@ $string['titledailysums:all'] = 'All revenues';
 $string['titledailysums:total'] = 'Total revenue';
 $string['titledailysums:current'] = 'Current cashier';
 $string['dailysums:downloadpdf'] = 'Download daily sums as PDF';
+$string['downloadcashreportlimit'] = 'Download limit';
+$string['downloadcashreportlimitdesc'] = 'Enter the max. number of rows for cash report download.
+By limiting, you can fix troubles with too large amounts of data.';
 
 // Report headers.
 $string['timecreated'] = 'Created';
@@ -446,7 +459,8 @@ $string['payment_added'] = 'User has started a payment transaction';
 $string['payment_added_log'] = 'User with the userid {$a->userid} has started a payment with the identifier {$a->identifier} for item {$a->itemid} {$a->component} for the user with the id {$a->relateduserid}';
 
 // Caches.
-$string['cachedef_schistory'] = 'Cache is used to store shopping cart items for users';
+$string['cachedef_schistory'] = 'Shopping cart items cache (shopping cart history cache)';
+$string['cachedef_cacherebooking'] = 'Rebooking cache';
 
 // Cashier manual rebook.
 $string['annotation'] = 'Annotation';
@@ -478,3 +492,71 @@ $string['history'] = "Purchases";
 $string['ledger'] = "Ledger";
 $string['credits'] = "Credits";
 
+// GDPR.
+$string['privacy:metadata:local_shopping_cart_history'] = 'Shopping Cart History';
+$string['privacy:metadata:local_shopping_cart_history:userid'] = 'Userid of the user who optained something.';
+$string['privacy:metadata:local_shopping_cart_history:itemid'] = 'Id of the item bought.';
+$string['privacy:metadata:local_shopping_cart_history:itemname'] = 'Name of the item bought';
+$string['privacy:metadata:local_shopping_cart_history:price'] = 'Item price.';
+$string['privacy:metadata:local_shopping_cart_history:tax'] = 'Tax applied to this item';
+$string['privacy:metadata:local_shopping_cart_history:taxpercentage'] = 'Tax applied to this item price in percent float';
+$string['privacy:metadata:local_shopping_cart_history:fee'] = 'Fees are only saved during cancelation';
+$string['privacy:metadata:local_shopping_cart_history:taxcategory'] = 'Tax category defined for this item.';
+$string['privacy:metadata:local_shopping_cart_history:discount'] = 'Applied discount.';
+$string['privacy:metadata:local_shopping_cart_history:credits'] = 'Credits used for payment.';
+$string['privacy:metadata:local_shopping_cart_history:currency'] = 'Currency in which it was paid.';
+$string['privacy:metadata:local_shopping_cart_history:componentname'] = 'Component which provided the item.';
+$string['privacy:metadata:local_shopping_cart_history:identifier'] = 'Identifier of the cart checkout process.';
+$string['privacy:metadata:local_shopping_cart_history:payment'] = 'Type of payment.';
+$string['privacy:metadata:local_shopping_cart_history:paymentstatus'] = 'Was the transaction successful or not?';
+$string['privacy:metadata:local_shopping_cart_history:usermodified'] = 'The user who effected the transaction.';
+$string['privacy:metadata:local_shopping_cart_history:timecreated'] = 'Time this entry was created.';
+$string['privacy:metadata:local_shopping_cart_history:timemodified'] = 'Time this entry was modified.';
+$string['privacy:metadata:local_shopping_cart_history:canceluntil'] = 'Time until cancel.';
+$string['privacy:metadata:local_shopping_cart_history:serviceperiodstart'] = 'The period over which an item is consumed';
+$string['privacy:metadata:local_shopping_cart_history:serviceperiodend'] = 'The period over which an item is consumed';
+$string['privacy:metadata:local_shopping_cart_history:area'] = 'One component can provide different areas with independent ids.';
+$string['privacy:metadata:local_shopping_cart_history:usecredit'] = 'Store if credits have been used for the payment of this item.';
+$string['privacy:metadata:local_shopping_cart_history:costcenter'] = 'The cost center of the bought item if provided by the item plugin.';
+$string['privacy:metadata:local_shopping_cart_history:balance'] = 'Balance after this booking.';
+$string['privacy:metadata:local_shopping_cart_history:annotiation'] = 'Annotation or OrderID.';
+$string['privacy:metadata:local_shopping_cart_history:invoiceid'] = 'Invoice ID from the invoicing platform';
+
+$string['privacy:metadata:local_shopping_cart_credits'] = 'Shopping Cart Credits';
+$string['privacy:metadata:local_shopping_cart_credits:userid'] = 'Userid of the concerned user.';
+$string['privacy:metadata:local_shopping_cart_credits:credits'] = 'Credits.';
+$string['privacy:metadata:local_shopping_cart_credits:currency'] = 'Currency in which it was paid.';
+$string['privacy:metadata:local_shopping_cart_credits:balance'] = 'Balance after this booking.';
+$string['privacy:metadata:local_shopping_cart_credits:usermodified'] = 'The user who effected the transaction.';
+$string['privacy:metadata:local_shopping_cart_credits:timecreated'] = 'Time this entry was created.';
+$string['privacy:metadata:local_shopping_cart_credits:timemodified'] = 'Time this entry was modified.';
+
+$string['privacy:metadata:local_shopping_cart_ledger'] = 'This ledger only supports insert and works as a reliable record of all payments.';
+$string['privacy:metadata:local_shopping_cart_ledger:userid'] = 'Id of the user who bought the item.';
+$string['privacy:metadata:local_shopping_cart_ledger:itemid'] = 'Id of the bought item.';
+$string['privacy:metadata:local_shopping_cart_ledger:itemname'] = 'Name of the item bought';
+$string['privacy:metadata:local_shopping_cart_ledger:price'] = 'The actually paid price of the item';
+$string['privacy:metadata:local_shopping_cart_ledger:tax'] = 'Tax applied to this item';
+$string['privacy:metadata:local_shopping_cart_ledger:taxpercentage'] = 'Tax applied to this item price in percent float';
+$string['privacy:metadata:local_shopping_cart_ledger:taxcategory'] = 'Tax category defined for this item.';
+$string['privacy:metadata:local_shopping_cart_ledger:discount'] = 'Given discount in absolute amount.';
+$string['privacy:metadata:local_shopping_cart_ledger:credits'] = 'Credits used for payment.';
+$string['privacy:metadata:local_shopping_cart_ledger:fee'] = 'Fees are only saved during cancelation, when price goes back to the user, but a cancelation fee is kept.';
+$string['privacy:metadata:local_shopping_cart_ledger:currency'] = 'Currency which was used to pay this item.';
+$string['privacy:metadata:local_shopping_cart_ledger:componentname'] = 'Name of the component which provided the item, like mod_booking.';
+$string['privacy:metadata:local_shopping_cart_ledger:costcenter'] = 'The cost center of the bought item if provided by the item plugin.';
+$string['privacy:metadata:local_shopping_cart_ledger:identifier'] = 'The identifier is used during checkout to identify a whole cart.';
+$string['privacy:metadata:local_shopping_cart_ledger:payment'] = 'The type of payment.';
+$string['privacy:metadata:local_shopping_cart_ledger:paymentstatus'] = 'Was the transaction successful or not?';
+$string['privacy:metadata:local_shopping_cart_ledger:accountid'] = 'Id of the moodle payment account used.';
+$string['privacy:metadata:local_shopping_cart_ledger:usermodified'] = 'Which user actually effectuated the transaction';
+$string['privacy:metadata:local_shopping_cart_ledger:timemodified'] = 'The time modified';
+$string['privacy:metadata:local_shopping_cart_ledger:timecreated'] = 'The time created';
+$string['privacy:metadata:local_shopping_cart_ledger:canceluntil'] = 'The cancel until time';
+$string['privacy:metadata:local_shopping_cart_ledger:area'] = 'One component can provide different areas with independent ids.';
+$string['privacy:metadata:local_shopping_cart_ledger:annotation'] = 'Annotation or OrderID.';
+
+$string['privacy:metadata:local_shopping_cart_invoices'] = 'Table for issued invoices';
+$string['privacy:metadata:local_shopping_cart_invoices:identifier'] = 'Reference to local_shopping_cart_ledger';
+$string['privacy:metadata:local_shopping_cart_invoices:timecreated'] = 'Timestamp when the record was created';
+$string['privacy:metadata:local_shopping_cart_invoices:invoiceid'] = 'Invoice ID from the invoicing platform';

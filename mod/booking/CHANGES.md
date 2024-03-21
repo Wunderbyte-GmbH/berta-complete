@@ -1,3 +1,31 @@
+## Version 8.1.40 (2024031801)
+* Bugfix: If shoppingcarthistory already has a canceluntil date set it may not be overriden by the option's canceluntil date again!
+
+## Version 8.1.39 (2024031800)
+* Improvement: Make save and cancel buttons in edit forms sticky at bottom.
+
+## Version 8.1.38 (2024031400)
+* Improvement: Accelerate view page via lazy loading.
+* Improvement: Meeting link buttons should have secondary color.
+* Bugfix: Service period currently always needs to be courseendtime.
+* Bugfix: Accelerate slow teacher page.
+* Bugfix: don't render all tables to show teacher page.
+
+## Version 8.1.37 (2024031300)
+* Bugfix: Fix privacy provider.
+* Bugfix: Fix special fields for optiondates (Teams meeting, Zoom meeting...).
+* Improvement: Several improvements for sign-in sheet, including better display of e-mail addresses and line breaks for too long titles.
+* Improvement: Better debugging for errors with availability json.
+* Improvement: Setting to not count users with presence status "no show" for max. number of bookings per instance.
+
+## Version 8.1.36 (2024031200)
+* Improvement: New settings for max. per user and improvements to general settings.
+* Tests: New phpunit tests for reminder mails and teacher reminders.
+
+## Version 8.1.35 (2024031100)
+* Bugfix: No need to destroy singleton when creating new booking instances.
+* Bugfix: Add missing strings (assesstimestart, assesstimefinish).
+
 ## Version 8.1.34 (2024030801)
 * Improvement: Only use cached data for enrolled in course check.
 * Improvement: Make sure calendar events are always stored as optiondates.
