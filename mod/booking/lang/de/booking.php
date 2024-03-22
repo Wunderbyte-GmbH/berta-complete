@@ -1124,6 +1124,8 @@ $string['addcomment'] = 'Kommentar hinzufügen...';
 
 // File: settings.php.
 $string['bookingsettings'] = 'Buchung: Einstellungen';
+$string['bookingdebugmode'] = 'Booking-Debug-Modus';
+$string['bookingdebugmode_desc'] = 'Der Booking-Debug-Modus sollte nur von Entwickler:innen aktiviert werden.';
 $string['globalcurrency'] = 'Währung';
 $string['globalcurrencydesc'] = 'Wählen Sie die Währung für Preise von Buchungsoptionen aus';
 $string['globalmailtemplates'] = 'Globale Mailvorlagen ' . $string['badge:pro'];
@@ -1593,6 +1595,8 @@ $string['confirmbookinglong'] = 'Wollen Sie diese Buchung wirklich bestätigen?'
 
 $string['deletebooking'] = 'Buchung löschen';
 $string['deletebookinglong'] = 'Wollen Sie diese Buchung wirklich löschen?';
+
+$string['successfullysorted'] = 'Erfolgreich sortiert';
 
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Trainer:innen-Gesamtbericht';

@@ -1160,6 +1160,8 @@ $string['linkgotobookingoption'] = 'Go to booked option: {$a}</a>';
 
 // File: settings.php.
 $string['bookingsettings'] = 'Booking: Main settings';
+$string['bookingdebugmode'] = 'Booking debug mode';
+$string['bookingdebugmode_desc'] = 'Booking debug mode should only be activated by developers.';
 $string['globalcurrency'] = 'Currency';
 $string['globalcurrencydesc'] = 'Choose the currency for booking option prices';
 $string['globalmailtemplates'] = 'Global mail templates ' . $string['badge:pro'];
@@ -1714,8 +1716,10 @@ $string['error:reasonfordeduction'] = 'Enter a reason for the deduction.';
 $string['confirmbooking'] = 'Confirmation of this booking';
 $string['confirmbookinglong'] = 'Do you really want to confirm this booking?';
 
-$string['confirmbooking'] = 'Delete this booking';
-$string['confirmbookinglong'] = 'Do you really want to delete this booking?';
+$string['deletebooking'] = 'Delete this booking';
+$string['deletebookinglong'] = 'Do you really want to delete this booking?';
+
+$string['successfullysorted'] = 'Successfully sorted';
 
 // Teachers_instance_report.php.
 $string['teachers_instance_report'] = 'Teachers report';
