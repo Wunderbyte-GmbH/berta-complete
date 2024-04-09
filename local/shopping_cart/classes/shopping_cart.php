@@ -1023,6 +1023,15 @@ class shopping_cart {
                     // Make sure we can pass on a valid value.
                     $item['discount'] = $item['discount'] ?? 0;
 
+                    if (($item['componentname'] === 'local_shopping_cart')
+                        && ($item['area'] === 'rebookitem')) {
+
+                            $historyitem = shopping_cart_history::return_item_from_history($item['itemid']);
+
+                            $item['schistoryid'] = $item['itemid'];
+                            $item['itemid'] = $historyitem->itemid;
+                    }
+
                     shopping_cart_history::create_entry_in_history(
                             $userid,
                             $item['itemid'],
@@ -1043,7 +1052,8 @@ class shopping_cart {
                             $item['taxcategory'] ?? null,
                             $item['costcenter'] ?? null,
                             $annotation ?? '',
-                            $USER->id
+                            $USER->id,
+                            $item['schistoryid'] ?? null,
                     );
                 }
             }
@@ -1129,6 +1139,18 @@ class shopping_cart {
                     'credit' => 0,
                 ];
             }
+        }
+
+        // At this point, we need a fallback when the historyid is empty.
+        // This happens typically when the cancel comes from outside shopping.
+        // We then just take the newest matching purchase.
+        if (empty($historyid)) {
+            $record = shopping_cart_history::get_most_recent_historyitem(
+                $componentname,
+                $area,
+                $itemid,
+                $userid);
+            $historyid = empty($record) ? 0 : $record->id;
         }
 
         // Check if cancelation is still within the allowed period set in shopping_cart_history.
@@ -1279,8 +1301,6 @@ class shopping_cart {
      */
     public static function allowed_to_cancel(int $historyid, int $itemid, string $area, int $userid): bool {
 
-        $context = context_system::instance();
-
         if (!$item = shopping_cart_history::return_item_from_history($historyid)) {
             return false;
         }
@@ -1290,12 +1310,26 @@ class shopping_cart {
             return false;
         }
 
+        return self::allowed_to_cancel_for_item($item, $area);
+    }
+
+    /**
+     * This function does not need the historyid but justs the component relevant settings.
+     * @param stdClass $item
+     * @param string $area
+     * @return bool
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    public static function allowed_to_cancel_for_item(stdClass $item, string $area) {
+        $context = context_system::instance();
+
         // Cashier can always cancel but if it's no cashier...
         if (!has_capability('local/shopping_cart:cashier', $context)) {
             // ...then we have to check, if the item itself allows cancellation.
             $providerclass = static::get_service_provider_classname($item->componentname);
             try {
-                $itemallowedtocancel = component_class_callback($providerclass, 'allowed_to_cancel', [$area, $itemid]);
+                $itemallowedtocancel = component_class_callback($providerclass, 'allowed_to_cancel', [$area, $item->itemid]);
             } catch (Exception $e) {
                 $itemallowedtocancel = false;
             }
@@ -1319,6 +1353,8 @@ class shopping_cart {
 
         return true;
     }
+
+
 
     /**
      *
@@ -1436,6 +1472,7 @@ class shopping_cart {
                     'accountid' => $record->accountid ?? null,
                     'usermodified' => $record->usermodified, // Not nullable.
                     'area' => $record->area ?? null,
+                    'schistoryid' => $record->schistoryid ?? null,
                 ]))) {
                     // We only insert if entry does not exist yet.
                     $id = $DB->insert_record('local_shopping_cart_ledger', $record);
@@ -1452,6 +1489,7 @@ class shopping_cart {
                 $record->payment = LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS;
                 $record->gateway = null;
                 $record->orderid = null;
+                $record->schistoryid = null;
                 $id = $DB->insert_record('local_shopping_cart_ledger', $record);
                 cache_helper::purge_by_event('setbackcachedcashreport');
                 break;
@@ -1650,22 +1688,6 @@ class shopping_cart {
             'warnings' => count($list) > 100 ? get_string('toomanyuserstoshow', 'core', '> 100') : '',
             'list' => count($list) > 100 ? [] : $list,
         ];
-    }
-
-    /**
-     * Helper function to get the latest used currency from history.
-     * @return string the currency string, e.g. "EUR"
-     */
-    public static function get_latest_currency_from_history(): string {
-        global $DB;
-
-        if ($currency = $DB->get_field_sql("SELECT currency
-            FROM {local_shopping_cart_history}
-            ORDER BY id DESC
-            LIMIT 1")) {
-            return $currency;
-        }
-        return "";
     }
 
     /**
@@ -1922,6 +1944,25 @@ class shopping_cart {
 
         $commaseparator = current_language() == 'de' ? ',' : '.';
 
+        // Get the current date and daily sums date.
+        $now = time();
+        $dailysumstimestamp = strtotime($date);
+        switch (current_language()) {
+            case 'de':
+                $currentdate = date('d.m.Y', $now);
+                $dailysumsdate = date('d.m.Y', $dailysumstimestamp);
+                break;
+            default:
+                $currentdate = date('M d, Y', $now);
+                $dailysumsdate = date('M d, Y', $dailysumstimestamp);
+                break;
+        }
+
+        $dailysumsdata['date'] = $dailysumsdate; // Date.
+        $dailysumsdata['printdate'] = $currentdate; // Actual date of today, might be needed in PDF.
+        $dailysumsdata['currency'] = get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR';
+        $dailysumsdata['title'] = get_string('titledailysums', 'local_shopping_cart');
+
         // SQL to get daily sums.
         $dailysumssql = "SELECT payment, sum(price) dailysum
             FROM {local_shopping_cart_ledger}
@@ -1941,48 +1982,49 @@ class shopping_cart {
         $total = 0.0;
         foreach ($dailysumsfromdb as $dailysumrecord) {
             $add = true;
+            $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
             switch ($dailysumrecord->payment) {
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_ONLINE:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodonline', 'local_shopping_cart');
+                    $dailysumsdata['online'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcashier', 'local_shopping_cart');
+                    $dailysumsdata['cashier'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH:
                     // Will be a negative number, so we can still use "+=".
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcreditspaidbackcash', 'local_shopping_cart');
+                    $dailysumsdata['creditspaidbackcash'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_TRANSFER:
                     // Will be a negative number, so we can still use "+=".
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcreditspaidbacktransfer', 'local_shopping_cart');
+                    $dailysumsdata['creditspaidbacktransfer'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_CASH:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:cash', 'local_shopping_cart');
+                    $dailysumsdata['cash'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_CREDITCARD:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:creditcard', 'local_shopping_cart');
+                    $dailysumsdata['creditcard'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_DEBITCARD:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:debitcard', 'local_shopping_cart');
+                    $dailysumsdata['debitcard'] = $dailysumrecord->dailysumformatted;
                     break;
                 case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_MANUAL:
                     $total += (float)$dailysumrecord->dailysum;
-                    $dailysumrecord->dailysumformatted = number_format((float)$dailysumrecord->dailysum, 2, $commaseparator, '');
                     $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:manual', 'local_shopping_cart');
+                    $dailysumsdata['manual'] = $dailysumrecord->dailysumformatted;
                     break;
                 default:
                     $add = false;
@@ -2019,27 +2061,35 @@ class shopping_cart {
                 switch ($dailysumrecord->payment) {
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_ONLINE:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodonline', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:online'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcashier', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:cashier'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcreditspaidbackcash', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:creditspaidbackcash'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_TRANSFER:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcreditspaidbacktransfer', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:creditspaidbacktransfer'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_CASH:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:cash', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:cash'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_CREDITCARD:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:creditcard', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:creditcard'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_DEBITCARD:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:debitcard', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:debitcard'] = $dailysumrecord->dailysumformatted;
                         break;
                     case LOCAL_SHOPPING_CART_PAYMENT_METHOD_CASHIER_MANUAL:
                         $dailysumrecord->paymentmethod = get_string('paymentmethodcashier:manual', 'local_shopping_cart');
+                        $dailysumsdata['currentcashier:manual'] = $dailysumrecord->dailysumformatted;
                         break;
                     default:
                         $add = false;
@@ -2061,20 +2111,9 @@ class shopping_cart {
             $dailysumsdata['dailysums:exist'] = true;
         }
 
-        // Transform date to German format if current language is German.
-        if (current_language() == 'de') {
-            list($year, $month, $day) = explode('-', $date);
-            $dailysumsdata['date'] = $day . '.' . $month . '.' . $year;
-        } else {
-            $dailysumsdata['date'] = $date;
-        }
-
         if (!empty($selectorformoutput)) {
             $dailysumsdata['selectorform'] = $selectorformoutput;
         }
-
-        // Add currency.
-        $dailysumsdata['currency'] = get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR';
 
         // Add download URL.
         if (!empty($date)) {

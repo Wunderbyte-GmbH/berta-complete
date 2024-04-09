@@ -24,6 +24,10 @@
 
 namespace local_shopping_cart;
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../lib.php');
+
 use coding_exception;
 use context_system;
 use dml_exception;
@@ -276,6 +280,8 @@ class shopping_cart_history {
 
                 if ($id = $DB->insert_record('local_shopping_cart_history', $data)) {
                     // We also need to insert the record into the ledger table.
+                    // We only write the old schistoryid, if we have it.
+                    $data->schistoryid = $data->schistoryid ?? $id;
                     shopping_cart::add_record_to_ledger_table($data);
                     $success = true;
 
@@ -307,7 +313,6 @@ class shopping_cart_history {
     /**
      * Add new entry to shopping_cart_history.
      * Use this if you add data manually, to check for validity.
-     *
      * @param int $userid
      * @param int $itemid
      * @param string $itemname
@@ -320,15 +325,18 @@ class shopping_cart_history {
      * @param string $payment
      * @param int $paymentstatus
      * @param int|null $canceluntil
-     * @param int|null $serviceperiodstart
-     * @param int|null $serviceperiodend
+     * @param int $serviceperiodstart
+     * @param int $serviceperiodend
      * @param float|null $tax
      * @param float|null $taxpercentage
      * @param string|null $taxcategory
      * @param string|null $costcenter
      * @param string|null $annotation
      * @param int|null $usermodified
-     * @return void
+     * @param int|null $schistoryid
+     * @return bool
+     * @throws dml_exception
+     * @throws coding_exception
      */
     public static function create_entry_in_history(
             int $userid,
@@ -350,7 +358,8 @@ class shopping_cart_history {
             string $taxcategory = null,
             string $costcenter = null,
             string $annotation = null,
-            int $usermodified = null
+            int $usermodified = null,
+            int $schistoryid = null
     ) {
 
         global $USER;
@@ -380,6 +389,7 @@ class shopping_cart_history {
         $data->taxcategory = $taxcategory;
         $data->costcenter = $costcenter;
         $data->annotation = $annotation;
+        $data->schistoryid = $schistoryid;
 
         return self::write_to_db($data);
     }
@@ -565,6 +575,17 @@ class shopping_cart_history {
             $record->paymentstatus = LOCAL_SHOPPING_CART_PAYMENT_SUCCESS;
             $record->timemodified = $now;
 
+            if ($record->componentname === 'local_shopping_cart'
+                && $record->area === 'rebookitem') {
+
+                $historyitem = self::return_item_from_history($record->itemid);
+                // We switch the id of the item at this latest possible moment.
+                $record->itemid = $historyitem->itemid;
+                $record->schistoryid = $historyitem->id;
+            } else {
+                $record->schistoryid = $record->id;
+            }
+
             if (!$DB->update_record('local_shopping_cart_history', $record)) {
                 $success = false;
             } else {
@@ -744,6 +765,34 @@ class shopping_cart_history {
 
         return $DB->get_record('local_shopping_cart_history',
             ['id' => $historyid]);
+    }
+
+    /**
+     * Returns the most recent uncancelled history item.
+     * @param string $componentname
+     * @param string $area
+     * @param int $itemid
+     * @param int $userid
+     * @return stdClass
+     * @throws dml_exception
+     */
+    public static function get_most_recent_historyitem(string $componentname, string $area, int $itemid, int $userid) {
+        global $DB;
+
+        $record = $DB->get_record('local_shopping_cart_history',
+            [
+                'componentname' => $componentname,
+                'area' => $area,
+                'itemid' => $itemid,
+                'userid' => $userid,
+                'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_SUCCESS,
+            ]);
+
+        if (!empty($record)) {
+            return $record;
+        }
+
+        return (object)[];
     }
 
     /**
