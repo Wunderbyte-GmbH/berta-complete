@@ -72,12 +72,12 @@ class tablesettings {
         }
 
         $table->showdownloadbutton = $settingsobject->general->showdownloadbutton;
+        $table->applyfilterondownload = $settingsobject->general->applyfilterondownload;
         $table->showreloadbutton = $settingsobject->general->showreloadbutton;
         $table->showcountlabel = $settingsobject->general->showcountlabel;
         $table->showrowcountselect = $settingsobject->general->showrowcountselect;
         $table->stickyheader = $settingsobject->general->stickyheader;
         $table->addcheckboxes = $settingsobject->general->addcheckboxes;
-        $table->tableheight = $settingsobject->general->tableheight;
         $table->pagesize = $settingsobject->general->pagesize;
         $table->filteronloadinactive = $settingsobject->general->filteronloadinactive;
         $table->placebuttonandpageelementsontop = $settingsobject->general->placebuttonandpageelementsontop;
@@ -146,6 +146,12 @@ class tablesettings {
 
         $mform->addElement('advcheckbox', 'gs_wb_showdownloadbutton', get_string('showdownloadbutton', 'local_wunderbyte_table'));
 
+        $mform->addElement(
+            'advcheckbox',
+            'gs_wb_applyfilterondownload',
+            get_string('applyfilterondownload', 'local_wunderbyte_table')
+        );
+
         $mform->addElement('advcheckbox', 'gs_wb_showreloadbutton', get_string('showreloadbutton', 'local_wunderbyte_table'));
 
         $mform->addElement('advcheckbox', 'gs_wb_showcountlabel', get_string('showcountlabel', 'local_wunderbyte_table'));
@@ -161,9 +167,6 @@ class tablesettings {
 
         $mform->addElement('advcheckbox', 'gs_wb_filteronloadinactive',
             get_string('filteronloadinactive', 'local_wunderbyte_table'));
-
-        $mform->addElement('text', 'gs_wb_tableheight', get_string('tableheight', 'local_wunderbyte_table'));
-        $mform->setType('tableheight', PARAM_INT);
 
         $mform->addElement('text', 'gs_wb_pagesize', get_string('pagesize', 'local_wunderbyte_table'));
         $mform->setType('pagesize', PARAM_INT);
@@ -191,6 +194,8 @@ class tablesettings {
 
         $data->gs_wb_showdownloadbutton = $ts->general->showdownloadbutton ?? ($table->showdownloadbutton ? 1 : 0);
 
+        $data->gs_wb_applyfilterondownload = $ts->general->applyfilterondownload ?? ($table->applyfilterondownload ? 1 : 0);
+
         $data->gs_wb_showreloadbutton = $ts->general->showreloadbutton ?? ($table->showreloadbutton ? 1 : 0);
 
         $data->gs_wb_showcountlabel = $ts->general->showcountlabel ?? ($table->showcountlabel ? 1 : 0);
@@ -205,8 +210,6 @@ class tablesettings {
 
         $data->gs_wb_placebuttonandpageelementsontop
             = $ts->general->placebuttonandpageelementsontop ?? ($table->placebuttonandpageelementsontop ? 1 : 0);
-
-        $data->gs_wb_tableheight = $ts->general->tableheight ?? $table->tableheight;
 
         $data->gs_wb_pagesize = $ts->general->pagesize ?? $table->pagesize;
 

@@ -132,6 +132,13 @@ class table implements renderable, templatable {
     private $showdownloadbutton = true;
 
     /**
+     * Applyfilterondownload.
+     *
+     * @var bool
+     */
+    private $applyfilterondownload = false;
+
+    /**
      * Countlabel.
      *
      * @var bool
@@ -205,7 +212,7 @@ class table implements renderable, templatable {
     /**
      * Number of rows diplayed per page in table.
      *
-     * @var boolean
+     * @var bool
      */
     public $showrowcountselect = false;
 
@@ -261,6 +268,7 @@ class table implements renderable, templatable {
         $this->printoptions = $this->return_dataformat_selector();
 
         $this->showdownloadbutton = $table->showdownloadbutton;
+        $this->applyfilterondownload = $table->applyfilterondownload;
         $this->showreloadbutton = $table->showreloadbutton;
 
         if (get_config('local_wunderbyte_table', 'allowedittable')
@@ -586,6 +594,7 @@ class table implements renderable, templatable {
             'errormessage' => !empty($this->errormessage) ? $this->errormessage : false,
             'showrowcountselect' => $this->showcountselect(),
             'displayelementsontop' => $this->placebuttonandpageelementsontop ?? null,
+            'showspinner' => true,
             ];
 
         // Only if we want to show the searchfield, we actually add the key.
@@ -635,6 +644,9 @@ class table implements renderable, templatable {
         if ($this->showdownloadbutton) {
             $data['print'] = true;
             $data['printoptions'] = $this->printoptions;
+            if (!empty($this->applyfilterondownload)) {
+                $data['applyfilterondownload'] = "1";
+            }
         }
 
         if (!empty($this->categories)) {
