@@ -72,19 +72,12 @@
     {{> core/moremenu}}
 </nav>
 {{/menubar}}
-<nav class="navbar fixed-top {{!navbarcolorclasses}} navbar-expand{{#bottombar.drawer}} smartmenu-bottom-navigation {{/bottombar.drawer}}" aria-label="{{#str}}sitemenubar, admin{{/str}}">
+<nav class="navbar {{!navbarcolorclasses}} navbar-expand{{#bottombar.drawer}} smartmenu-bottom-navigation {{/bottombar.drawer}}" aria-label="{{#str}}sitemenubar, admin{{/str}}">
 
     <div class="navbar-row navbar-dark bg-blue d-flex flex-row">
 
-    {{^bottombar.drawer}}
-    <button class="navbar-toggler aabtn d-block d-md-none px-1 my-1 border-0" data-toggler="drawers" data-action="toggle" data-target="theme_boost-drawers-primary">
-        <span class="navbar-toggler-icon"></span>
-        <span class="sr-only">{{#str}}sidepanel, core{{/str}}</span>
-    </button>
-    {{/bottombar.drawer}}
-
     <a href="{{#alternativelogolinkurl}}{{{alternativelogolinkurl}}}{{/alternativelogolinkurl}}{{^alternativelogolinkurl}}{{{ config.homeurl }}}{{/alternativelogolinkurl}}" class="navbar-brand align-items-center m-0 mr-4 p-0 aabtn {{#bottombar.drawer}} d-flex {{/bottombar.drawer}} {{^bottombar.drawer}} d-none d-md-flex {{/bottombar.drawer}} ">
-        <img src="{{output.get_compact_logo_url}}" class="logo mr-1" alt="{{sitename}}">
+        <img src="{{output.get_logo_url_plain}}" class="logo mr-1" alt="{{sitename}}">
     </a>
 
     <ul class="navbar-nav d-none d-md-flex my-1 px-1">
@@ -93,10 +86,6 @@
     </ul>
 
     <div id="usernavigation" class="navbar-nav ml-auto mr-2">
-        {{#langmenu}}
-            {{> theme_boost/language_menu }}
-            <div class="divider border-left h-75 align-self-center mx-1"></div>
-        {{/langmenu}}
         {{{ output.navbar_plugin_output }}}
         <div class="d-flex align-items-stretch usermenu-container" data-region="usermenu">
             {{#usermenu}}
@@ -104,6 +93,10 @@
             {{/usermenu}}
         </div>
         {{{ output.edit_switch }}}
+        {{#langmenu}}
+            {{> theme_boost/language_menu }}
+            <div class="divider border-left h-75 align-self-center mx-1"></div>
+        {{/langmenu}}
 
         {{^userisediting}}
             {{#regions.offcanvas.hasblocks}}
@@ -147,20 +140,39 @@
     </div>
 
     </div>
-    <div class="navbar-row navbar-light bg-white d-flex flex-row">
-        <div class="navbar-brand d-none d-md-flex align-items-center m-0 mr-4 p-0 aabtn">
+    <div id="lexa-navbar-scrolled" class="navbar-row navbar-light bg-white lexa-nav-second-row">
+        <div id="lexa-navbar-brand" class="navbar-brand align-items-center m-0 p-0 aabtn">
             <img src="{{output.get_compact_second_logo_url}}" class="logo mr-1" alt="{{sitename}}">
         </div>
 
         {{#primarymoremenu}}
-        <div class="primary-navigation">
+        <div class="primary-navigation d-none d-md-flex">
             {{> core/moremenu}}
         </div>
         {{/primarymoremenu}}
 
-        {{# output.search_box }}
-            {{{ output.search_box }}}
-        {{/output.search_box}}
+        <div>
+            {{# output.search_box }}
+                {{{ output.search_box }}}
+            {{/output.search_box}}
+            <div id="lexa-navbar-scrolled-only" class="navbar-nav ml-auto mr-2 d-none">
+                {{{ output.navbar_plugin_output }}}
+                <div class="d-none d-md-flex align-items-stretch usermenu-container" data-region="usermenu">
+                {{#usermenu}}
+                    {{> core/user_menu }}
+                {{/usermenu}}
+                </div>
+                <div class="d-none d-md-flex">
+                    {{{ output.edit_switch }}}
+                </div>
+            </div>
+        </div>
+        {{^bottombar.drawer}}
+        <button class="navbar-toggler aabtn d-block d-md-none px-3 my-1 border-0" data-toggler="drawers" data-action="toggle" data-target="theme_boost-drawers-primary">
+            <span class="navbar-toggler-icon"></span>
+            <span class="sr-only">{{#str}}sidepanel, core{{/str}}</span>
+        </button>
+        {{/bottombar.drawer}}
     </div>
 </nav>
 

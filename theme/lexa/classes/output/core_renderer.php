@@ -25,7 +25,21 @@
 
 namespace theme_lexa\output;
 
-class core_renderer extends \theme_boost\output\core_renderer {
+/**
+ * Core renderer.
+ */
+class core_renderer extends \theme_boost_union\output\core_renderer {
+    /**
+     * Return the height of a single row of the header.
+     *
+     * @return int Header row height.
+     */
+    public function get_header_height() {
+        // Navbar height divided by two as there are two rows.
+        // Todo, can be a setting if needed etc.
+        return 60;
+    }
+
     /**
      * Return the site's logo URL, if any.
      *
@@ -34,6 +48,17 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * @return moodle_url|false
      */
     public function get_logo_url($maxwidth = null, $maxheight = 200) {
+        return $this->image_url('UniVie_Logo_blue', 'theme_lexa');
+    }
+
+    /**
+     * Return the site's logo URL, if any.
+     *
+     * @param int $maxwidth The maximum width, or null when the maximum width does not matter.
+     * @param int $maxheight The maximum height, or null when the maximum height does not matter.
+     * @return moodle_url|false
+     */
+    public function get_logo_url_plain($maxwidth = null, $maxheight = 200) {
         return $this->image_url('UniVie_Logo_white', 'theme_lexa');
     }
 
@@ -45,7 +70,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
      * @return moodle_url|false
      */
     public function get_compact_logo_url($maxwidth = 300, $maxheight = 300) {
-        return $this->image_url('UniVie_Logo_white', 'theme_lexa');
+        return $this->image_url('UniVie_Logo_blue', 'theme_lexa');
     }
 
     /**
@@ -59,6 +84,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         return $this->image_url('LeXA_Logo_blue_one_line', 'theme_lexa');
     }
 
+    /**
+     * Get the mod booking codes.
+     *
+     * @return string Markup if any.
+     */
     public function get_modbookingcodes() {
         if ($this->page->pagelayout == 'mycourses') {
             $toolbox = \theme_lexa\toolbox::get_instance();
@@ -70,6 +100,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         return '';
     }
 
+    /**
+     * Get the footer course offerings.
+     *
+     * @return string Markup if any.
+     */
     public function render_footercourseofferings() {
         $toolbox = \theme_lexa\toolbox::get_instance();
         $courseofferings = $toolbox->get_setting('footercourseofferings');
@@ -78,6 +113,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
     }
 
+    /**
+     * Get the footer communities.
+     *
+     * @return string Markup if any.
+     */
     public function render_footercommunities() {
         $toolbox = \theme_lexa\toolbox::get_instance();
         $communities = $toolbox->get_setting('footercommunities');
@@ -86,6 +126,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
     }
 
+    /**
+     * Get the footer contact us.
+     *
+     * @return string Markup if any.
+     */
     public function render_footercontactus() {
         $toolbox = \theme_lexa\toolbox::get_instance();
         $contactus = $toolbox->get_setting('footercontactus');
@@ -94,6 +139,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
     }
 
+    /**
+     * Get the footer social.
+     *
+     * @return string Markup if any.
+     */
     public function render_footersocial() {
         $toolbox = \theme_lexa\toolbox::get_instance();
         $contactus = $toolbox->get_setting('footersocial');
@@ -102,6 +152,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
     }
 
+    /**
+     * Get the footer list.
+     *
+     * @return string Markup if any.
+     */
     private function render_footerlist($text, $toolbox, $targetblank = false) {
         $items = $toolbox->convert_text_to_items($text, current_language());
         if (!empty($items)) {

@@ -91,7 +91,7 @@
         <div class="card-group">
             <div class="card">
                 <div class="card-header">
-                    <img src="{{output.get_compact_logo_url}}" class="logo img-fluid" alt="{{sitename}}">
+                    <img src="{{output.get_logo_url_plain}}" class="logo img-fluid" alt="{{sitename}}">
                 </div>
             </div>
             <div class="card">
@@ -154,6 +154,9 @@
     </div>
 </footer>
 {{#js}}
+require(['theme_lexa/header'], function(Header) {
+    Header.init({{output.get_header_height}});
+});
 require(['theme_boost/footer-popover'], function(FooterPopover) {
     FooterPopover.init();
 });
