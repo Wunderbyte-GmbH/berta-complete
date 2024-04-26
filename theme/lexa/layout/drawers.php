@@ -128,7 +128,7 @@ if ($PAGE->has_secondary_navigation()) {
 
 // Load the navigation from boost_union primary navigation, the extended version of core primary navigation.
 // It includes the smart menus and menu items, for multiple locations.
-$primary = new theme_boost_union\output\navigation\primary($PAGE);
+$primary = new theme_lexa\output\navigation\primary($PAGE);
 $renderer = $PAGE->get_renderer('core');
 $primarymenu = $primary->export_for_template($renderer);
 
@@ -146,6 +146,10 @@ require_once($CFG->dirroot . '/theme/boost_union/layout/includes/courseindex.php
 $buildregionmainsettings = !$PAGE->include_region_main_settings_in_header_actions() && !$PAGE->has_secondary_navigation();
 // If the settings menu will be included in the header then don't add it here.
 $regionmainsettingsmenu = $buildregionmainsettings ? $OUTPUT->region_main_settings_menu() : false;
+
+if (!isloggedin() || isguestuser()) {
+    $extraclasses[] = 'notloggedin';
+}
 
 $bodyattributes = $OUTPUT->body_attributes($extraclasses); // In the original layout file, this line is place more above,
                                                            // but we amended $extraclasses and had to move it.

@@ -66,6 +66,53 @@
         flex-flow: inherit;
     }
 
+    #lexa-npo > div {
+        border-right: 1px solid $border-color;
+    }
+
+    .count-container {
+        border-radius: 90px;
+        font-size: 0.55rem;
+        left: 18px;
+        line-height: 0.5rem;
+        padding: 3px;
+        right: auto;
+        top: 6px;
+    }
+
+    .usermenu {
+        display: flex;
+        #user-menu-toggle {
+            padding-left: 0.25rem;
+            padding-right: 0.25rem;
+        }
+        .userinitials {
+            margin-right: 0;
+        }
+        .lexauserdetails {
+            font-size: 0.8rem;
+            margin-left: $spacer * 0.25;
+            text-align: left;
+            .lexauserrole {
+                opacity: 0.8;
+            }
+        }
+        .dropdown-toggle::after {
+            display: none;
+        }
+        .login {
+            align-items: center;
+            display: flex;
+        }
+    }
+    #usernavigation {
+        .usermenu {
+            .login {
+                color: $white;
+            }
+        }
+    }
+
     .lexa-nav-second-row {
         display: flex;
         justify-content: space-between;
@@ -76,7 +123,7 @@
     }
 
     .popover-region-container {
-        top: var(--lexa-navbar-pos);
+        top: 46px;
     }
 
     .editmode-switch-form {
@@ -89,7 +136,13 @@
     }
 }
 
-
+body.notloggedin {
+    #usernavigation {
+        .usermenu-container {
+            height: 100%;
+        }
+    }
+}
 
 @include media-breakpoint-up(lg) {
     .drawer-left,

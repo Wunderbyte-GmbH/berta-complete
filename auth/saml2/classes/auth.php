@@ -64,13 +64,34 @@ class auth extends \auth_plugin_base {
     private $defaultidp;
 
     /**
+     * @var string SP name
+     */
+    public $spname;
+
+    /**
+     * @var string Contents of certificate .pem file
+     */
+    public $certpem;
+
+    /**
+     * @var string Contents of certificate .crt file
+     */
+    public $certcrt;
+
+    /**
+     * @var idp_data[] List of metadata for IdPs
+     */
+    public $metadatalist;
+
+
+    /**
      * @var array $defaults The config defaults
      */
     public $defaults = [
         'idpname'            => '',
         'idpdefaultname'     => '', // Set in constructor.
         'idpmetadata'        => '',
-        'debug'              => 0,
+        'debug'              => null,
         'duallogin'          => saml2_settings::OPTION_DUAL_LOGIN_YES,
         'autologin'          => saml2_settings::OPTION_AUTO_LOGIN_NO,
         'autologincookie'    => '',

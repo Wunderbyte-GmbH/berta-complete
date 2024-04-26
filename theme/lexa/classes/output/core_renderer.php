@@ -30,6 +30,22 @@ namespace theme_lexa\output;
  */
 class core_renderer extends \theme_boost_union\output\core_renderer {
     /**
+     * Returns the CSS classes to apply to the body tag.
+     *
+     * @since Moodle 2.5.1 2.6
+     * @param array $additionalclasses Any additional classes to apply.
+     * @return string
+     */
+    public function body_css_classes(array $additionalclasses = array()) {
+        if ($this->page->pagelayout == 'frontpage') {
+            $bodyclasses = str_replace('limitedwidth', '', $this->page->bodyclasses);
+        } else {
+            $bodyclasses = $this->page->bodyclasses;
+        }
+        return $bodyclasses . ' ' . implode(' ', $additionalclasses);
+    }
+
+    /**
      * Return the height of a single row of the header.
      *
      * @return int Header row height.
@@ -92,7 +108,7 @@ class core_renderer extends \theme_boost_union\output\core_renderer {
      * @return string HTML for the navbar
      */
     public function navbar_plugin_output() {
-        return '<span id="lexa-npo" class="d-flex">' . parent::navbar_plugin_output() . '</span>';
+        return '<span id="lexa-npo" class="d-flex h-100 align-items-center">' . parent::navbar_plugin_output() . '</span>';
     }
 
     /**
