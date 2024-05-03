@@ -47,6 +47,9 @@ $string['rebooking'] = 'Rebooking';
 $string['rebookingcredit'] = 'Rebooking credit';
 $string['sendpaymentbutton'] = 'Checkout';
 $string['showorderid'] = 'Show Order-ID...';
+$string['testing:title'] = 'Shopping cart demo';
+$string['testing:description'] = 'Here you can test your shopping cart by adding test items to the cart.';
+$string['testing:item'] = 'Test item';
 
 // Settings.
 $string['maxitems'] = 'Max. items in the shopping cart';
@@ -565,3 +568,27 @@ $string['privacy:metadata:local_shopping_cart_invoices'] = 'Table for issued inv
 $string['privacy:metadata:local_shopping_cart_invoices:identifier'] = 'Reference to local_shopping_cart_ledger';
 $string['privacy:metadata:local_shopping_cart_invoices:timecreated'] = 'Timestamp when the record was created';
 $string['privacy:metadata:local_shopping_cart_invoices:invoiceid'] = 'Invoice ID from the invoicing platform';
+
+// Shopping cart handler.
+$string['allowinstallment'] = 'Allow installments';
+$string['allowinstallment_help'] = 'With installments, only a portion of the total amount needs to be paid initially.';
+$string['useinstallments'] = "Use installment payments";
+$string['ledgerinstallment'] = 'The following installment payment as registered: Number {$a->id}, due date {$a->date}';
+
+$string['numberofpayments'] = 'Number of Payments';
+$string['numberofpayments_help'] = 'This number refers to the required payments AFTER the first payment.';
+$string['duedate'] = 'Final payment date';
+$string['duedate_help'] = 'The full amount must be paid by this date. If the date is 100 days in the future
+and two installment payments are set, half of the remaining amount must be paid after 50 days following the
+first payment, and the rest after 100 days.';
+$string['duedatevariable'] = 'Days after initial purchase';
+$string['duedatevariable_help'] = 'Enter the number of days after initial purchase';
+$string['on'] = "on";
+$string['furtherpayments'] = 'Further payments';
+$string['insteadof'] = "instead of";
+$string['for'] = "for";
+$string['downpayment'] = "Down payment";
+$string['downpayment_help'] = 'This amount must be paid initially. The remaining sum can be paid later.';
+$string['installments'] = "Installments";
+$string['installment'] = "Installment";
+$string['incorrectnumberofpayments'] = 'Price needs to be divisble by number of payments without a remainder';

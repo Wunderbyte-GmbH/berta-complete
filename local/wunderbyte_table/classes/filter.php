@@ -26,6 +26,9 @@ namespace local_wunderbyte_table;
 
 use coding_exception;
 use core_component;
+use core_date;
+use DateTime;
+use DateTimeZone;
 use dml_exception;
 use stdClass;
 
@@ -326,7 +329,7 @@ class filter {
             if ($data = $DB->get_record('local_wunderbyte_table', [
                 'hash' => $cachekey,
                 'userid' => 0,
-            ])) {
+            ], 'id, timemodified, jsonstring')) {
                 $data->timemodified = $now;
                 $data->jsonstring = json_encode($tablesettings);
 
@@ -341,13 +344,30 @@ class filter {
             'tablehash' => $table->tablecachehash,
             'idstring' => $table->idstring,
             'userid' => 0,
-            'page' => $table->context->id,
-            'jsonstring' => json_encode($tablesettings),
-            'sql' => $sql,
-            'usermodified' => $USER->id,
+            'page' => (string)$table->context->id,
+            'jsonstring' => (string) json_encode($tablesettings),
+            '\'sql\'' => $sql, // SQL is a reserved keyword in MariaDB, so use quotes.
+            'usermodified' => (int)$USER->id,
             'timecreated' => $now,
             'timemodified' => $now,
         ];
         $DB->insert_record('local_wunderbyte_table', $data);
+    }
+
+    /**
+     * Returns the timezone detla between usertime & gmt.
+     * @return int
+     */
+    public static function get_timezone_offset() {
+
+        $now = new DateTime("now", new DateTimeZone('GMT'));
+        $gmttime = $now->format('h');
+
+        $now = new DateTime("now", core_date::get_user_timezone_object());
+        $userhour = $now->format('h');
+
+        $delta = $gmttime - $userhour;
+
+        return $delta;
     }
 }

@@ -367,6 +367,9 @@ $string['paymentstatus'] = 'Status';
 $string['gateway'] = 'Gateway';
 $string['orderid'] = 'OrderID';
 $string['usermodified'] = 'Bearbeitet von';
+$string['testing:title'] = 'Warenkorb-Demo';
+$string['testing:description'] = 'Hier können Sie Test-Items zum Warenkorb hinzufügen, um das Warenkorb-Plugin zu testen.';
+$string['testing:item'] = 'Test-Item';
 
 // Payment methods.
 $string['paymentmethod'] = 'Bezahlmethode';
@@ -490,3 +493,28 @@ $string['erpnext'] = 'ERPNext';
 $string['history'] = "Käufe";
 $string['ledger'] = "Zahlungsjournal";
 $string['credits'] = "Guthaben";
+
+// Handler.
+$string['allowinstallment'] = 'Erlaube Ratenzahlungen';
+$string['allowinstallment_help'] = 'Bei Ratenzahlungen muss zuerst nur ein Teil des Gesamtbetrags überwiesen werden.';
+$string['useinstallments'] = "Ratenzahlungen aktivieren";
+$string['ledgerinstallment'] = 'Folgende Ratenzahlung wurde geleistet: Zahlung Nummer {$a->id}, Fälligkeit {$a->date}';
+
+$string['numberofpayments'] = 'Anzahl der Zahlungen';
+$string['numberofpayments_help'] = 'Anzahl notwendiger Zahlungen NACH der ersten Zahlung.';
+$string['duedate'] = 'Letztes Zahlungsdatum';
+$string['duedate_help'] = 'An diesem Datum muss der volle Betrag überwiesen werden.
+Liegt das Datum 100 Tage in der Zukunft und es sind zwei Teilzalungen eingestellt,
+muss - nach der ersten Zahlung - die Hälfte des offenen Betrags nach 50 Tagen
+und der Rest nach 100 Tagen bezahlt werden.';
+$string['on'] = "am";
+$string['furtherpayments'] = 'Weitere Zahlungen';
+$string['insteadof'] = "anstatt";
+$string['for'] = "für";
+$string['downpayment'] = "Anzahlung";
+$string['downpayment_help'] = 'Dieser Betrag muss am Anfang überweisen werden. Die Restsumme erst später.';
+$string['installments'] = "Ratenzahlungen";
+$string['installment'] = "Ratenzahlung";
+$string['duedatevariable'] = 'Fällig N Tage nach erster Anzahlung';
+$string['duedatevariable_help'] = 'Anzahl Tage NACH der ersten Anzahlung nach denen der volle Betrag überwiesen worden sein muss.';
+$string['incorrectnumberofpayments'] = 'Preis muss ohne Restbetrag durch die Anzahl der Zahlungen teilbar sein.';
