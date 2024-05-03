@@ -24,7 +24,8 @@
 
 namespace mod_booking\option\fields;
 
-use mod_booking\option\fields_info;
+use local_shopping_cart\shopping_cart_handler;
+use mod_booking\booking_option_settings;
 use mod_booking\option\field_base;
 use MoodleQuickForm;
 use stdClass;
@@ -36,13 +37,13 @@ use stdClass;
  * @author Georg Maißer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class shorturl extends field_base {
+class shoppingcart extends field_base {
 
     /**
      * This ID is used for sorting execution.
      * @var int
      */
-    public static $id = MOD_BOOKING_OPTION_FIELD_SHORTURL;
+    public static $id = MOD_BOOKING_OPTION_FIELD_SHOPPPINGCART;
 
     /**
      * Some fields are saved with the booking option...
@@ -50,13 +51,14 @@ class shorturl extends field_base {
      * Some can be saved only post save (when they need the option id).
      * @var int
      */
-    public static $save = MOD_BOOKING_EXECUTION_NORMAL;
+    public static $save = MOD_BOOKING_EXECUTION_POSTSAVE;
 
     /**
      * This identifies the header under which this particular field should be displayed.
      * @var string
      */
-    public static $header = MOD_BOOKING_HEADER_ADVANCEDOPTIONS;
+    public static $header = MOD_BOOKING_HEADER_GENERAL;
+
     /**
      * An int value to define if this field is standard or used in a different context.
      * @var array
@@ -90,7 +92,12 @@ class shorturl extends field_base {
         int $updateparam,
         $returnvalue = null): string {
 
-        return parent::prepare_save_field($formdata, $newoption, $updateparam, '');
+        if (class_exists('local_shopping_cart\shopping_cart_handler')) {
+
+            // We only run this line to make sure we have the constants.
+            $schhandler = new shopping_cart_handler('mod_booking', 'option');
+        }
+        return '';
     }
 
     /**
@@ -102,12 +109,65 @@ class shorturl extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        // Standardfunctionality to add a header to the mform (only if its not yet there).
-        fields_info::add_header_to_mform($mform, self::$header);
+        if (class_exists('local_shopping_cart\shopping_cart_handler')) {
 
-        $mform->addElement('text', 'shorturl', get_string('shorturl', 'mod_booking'),
-                ['size' => '1333']);
-        $mform->setType('shorturl', PARAM_TEXT);
-        $mform->disabledIf('shorturl', 'optionid', 'eq', -1);
+            // We only run this line to make sure we have the constants.
+            $schhandler = new shopping_cart_handler('mod_booking', 'option');
+
+            $schhandler->definition($mform, $formdata);
+        }
+    }
+
+    /**
+     * This function adds error keys for form validation.
+     * @param array $data
+     * @param array $files
+     * @param array $errors
+     * @return void
+     */
+    public static function validation(array $data, array $files, array &$errors) {
+        if (class_exists('local_shopping_cart\shopping_cart_handler')) {
+
+            // We only run this line to make sure we have the constants.
+            $schhandler = new shopping_cart_handler('mod_booking', 'option');
+
+            $schhandler->validation($data, $errors);
+        }
+    }
+
+    /**
+     * The save data function is very specific only for those values that should be saved...
+     * ... after saving the option. This is so, when we need an option id for saving (because of other table).
+     * @param stdClass $formdata
+     * @param stdClass $option
+     * @param int $index
+     * @return void
+     * @throws \dml_exception
+     */
+    public static function save_data(stdClass &$formdata, stdClass &$option, int $index = 0) {
+
+        if (class_exists('local_shopping_cart\shopping_cart_handler')) {
+
+            // We only run this line to make sure we have the constants.
+            $schhandler = new shopping_cart_handler('mod_booking', 'option');
+            $schhandler->save_data($formdata, $option);
+        }
+    }
+
+    /**
+     * Standard function to transfer stored value to form.
+     * @param stdClass $data
+     * @param booking_option_settings $settings
+     * @return void
+     * @throws dml_exception
+     */
+    public static function set_data(stdClass &$data, booking_option_settings $settings) {
+
+        if (class_exists('local_shopping_cart\shopping_cart_handler')) {
+
+            // We only run this line to make sure we have the constants.
+            $schhandler = new shopping_cart_handler('mod_booking', 'option', $data->id);
+            $schhandler->set_data($data);
+        }
     }
 }

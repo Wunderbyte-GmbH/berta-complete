@@ -39,13 +39,6 @@ use moodle_exception;
 use MoodleQuickForm;
 use stdClass;
 
-define('MOD_BOOKING_MAX_CUSTOM_FIELDS', 3);
-define('MOD_BOOKING_FORM_OPTIONDATEID', 'optiondateid_');
-define('MOD_BOOKING_FORM_DAYSTONOTIFY', 'daystonotify_');
-define('MOD_BOOKING_FORM_COURSESTARTTIME', 'coursestarttime_');
-define('MOD_BOOKING_FORM_COURSEENDTIME', 'courseendtime_');
-define('MOD_BOOKING_FORM_DELETEDATE', 'deletedate_');
-
 /**
  * Class to handle dates
  *
@@ -379,13 +372,17 @@ class dates {
 
                     $erhandler = new entitiesrelation_handler('mod_booking', 'optiondate');
 
+                    // By default, we use the same entity as the main entity.
+                    // This is helpful, when we recreate optiondate series for example.
+                    $key = LOCAL_ENTITIES_FORM_ENTITYID . 0;
+                    $entityid = $defaultvalues->{$key} ?? 0;
+
                     // If we fetch sessions from DB, we also have to load entities from DB.
                     if (empty($defaultvalues->addoptiondateseries) && !empty($session->optiondateid)) {
-                        $entityid = $erhandler->get_entityid_by_instanceid($session->optiondateid) ?? 0;
-                    } else {
-                        // Else we recreate optiondate series, so use the main entity of the option.
-                        $key = LOCAL_ENTITIES_FORM_ENTITYID . 0;
-                        $entityid = $defaultvalues->{$key} ?? 0;
+                        $existingentityidofoptiondate = $erhandler->get_entityid_by_instanceid($session->optiondateid);
+                        if (!empty($existingentityidofoptiondate)) {
+                            $entityid = $existingentityidofoptiondate;
+                        }
                     }
 
                     $key = LOCAL_ENTITIES_FORM_ENTITYID . $idx;
@@ -432,7 +429,24 @@ class dates {
 
         if (!$optiondates = preg_grep('/^optiondateid_/', array_keys($formvalues))) {
             // For performance.
-            return [[], 0];
+
+            // There might be one more way data is submitted.
+            if (!empty($formvalues["coursestarttime"]) && !empty($formvalues["courseendtime"])) {
+                $dates[] = [
+                    'id' => 0,
+                    'index' => 0,
+                    'optiondateid' => 0,
+                    'coursestarttime' => $formvalues["coursestarttime"],
+                    'courseendtime' => $formvalues["courseendtime"],
+                    'daystonotify' => 0,
+                    'entityid' => 0,
+                    'entityarea' => 0,
+                    'customfields' => [],
+                ];
+                $highesindex = 0;
+            } else {
+                return [[], 0];
+            }
         }
 
         foreach ($optiondates as $optiondate) {

@@ -128,7 +128,8 @@ class booking_answers {
                 ba.completed,
                 ba.timemodified,
                 ba.optionid,
-                ba.timecreated
+                ba.timecreated,
+                ba.json
             FROM {booking_answers} ba
             WHERE ba.optionid = :optionid
             AND ba.waitinglist < 5
@@ -297,6 +298,16 @@ class booking_answers {
 
         // First check list of booked users.
         if (isset($this->usersonlist[$userid]) && $this->usersonlist[$userid]->waitinglist == MOD_BOOKING_STATUSPARAM_BOOKED) {
+
+            $answer = $this->usersonlist[$userid];
+            if (!empty($answer->json)) {
+                $jsonobject = json_decode($answer->json);
+
+                if (!empty($jsonobject->paidwithcredits)) {
+                    $returnarray['paidwithcredits'] = true;
+                }
+            }
+
             $returnarray = ['iambooked' => $returnarray];
         } else if (isset($this->usersreserved[$userid])
             && $this->usersreserved[$userid]->waitinglist == MOD_BOOKING_STATUSPARAM_RESERVED) {
@@ -543,7 +554,15 @@ class booking_answers {
     public static function return_sql_for_booked_users(int $optionid, int $statusparam) {
 
         $fields = 's1.*';
-        $from = " (SELECT ba.id, u.id as userid, u.firstname, u.lastname, u.email, ba.timemodified, ba.timecreated, ba.optionid
+        $from = " (SELECT ba.id,
+                          u.id as userid,
+                          u.firstname,
+                          u.lastname,
+                          u.email,
+                          ba.timemodified,
+                          ba.timecreated,
+                          ba.optionid,
+                          ba.json
                     FROM {booking_answers} ba
                     JOIN {user} u ON ba.userid = u.id
                     WHERE ba.optionid=:optionid AND ba.waitinglist=:statusparam

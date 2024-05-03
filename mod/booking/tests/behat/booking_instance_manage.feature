@@ -1,4 +1,4 @@
-@mod @mod_booking @booking_add_and_book_option
+@mod @mod_booking @booking_instance_manage
 Feature: In a course add a booking instance and manage it
   As an administrator or a teacher
   I need to add booking instance and configure it
@@ -23,7 +23,7 @@ Feature: In a course add a booking instance and manage it
   @javascript
   Scenario: Booking: Create instance as teacher
     Given I log in as "teacher1"
-    And I change viewport size to "1366x5000"
+    And I change viewport size to "1366x7000"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Booking" to section "0"
     And I set the following fields to these values:
@@ -35,6 +35,24 @@ Feature: In a course add a booking instance and manage it
       | Default view for booking options | All booking options                                    |
     And I press "Save and return to course"
     Then I should see "Test booking"
+
+  @javascript
+  Scenario: Booking: Create instance template as admin verify and delete it
+    Given the following "activities" exist:
+      | activity | course | name       | intro                  | bookingmanager | eventtype | duration | pollurl          | whichview  | copymail | bookingpolicy    |
+      | booking  | C1     | My booking | My booking description | teacher1       | Webinar   | 10       | https://pool.loc | showactive | 1        | Confirm booking! |
+    And I am on the "My booking" Activity page logged in as admin
+    ## Create booking instance template
+    And I click on "More" "link" in the ".secondary-navigation .dropdownmoremenu" "css_element"
+    And I click on "Add booking instance to template" "link" in the "[data-key=\"nav_saveinstanceastemplate\"]" "css_element"
+    And I set the field "Name" to "InstanceTemplate"
+    And I press "Save changes"
+    And I should see "This booking instance was sucesfully saved as template."
+    When I visit "/mod/booking/instancetemplatessettings.php"
+    Then I should see "InstanceTemplate" in the "#instancetemplatessettings_r0" "css_element"
+    And I click on "Delete" "button" in the "#instancetemplatessettings_r0" "css_element"
+    And I should see "Template was deleted!"
+    And I should not see "InstanceTemplate"
 
   @javascript
   Scenario: Booking: Create instance template as teacher and apply it

@@ -69,6 +69,16 @@ class send_mail implements booking_rule_action {
         $this->rulejson = $json;
         $jsonobject = json_decode($json);
         $actiondata = $jsonobject->actiondata;
+
+        if (!empty($jsonobject->datafromevent)) {
+            $datafromevent = $jsonobject->datafromevent;
+            /* If the template contains the {eventdescription} placeholder,
+            we replace it here, because we have the eventdescription in the $datafromevent
+            which is part of the JSON. */
+            $actiondata->template = str_replace('{eventdescription}', $datafromevent->eventdescription ?? "",
+                $actiondata->template);
+        }
+
         $this->subject = $actiondata->subject;
         $this->template = $actiondata->template;
     }
@@ -91,6 +101,7 @@ class send_mail implements booking_rule_action {
         $mform->addElement('editor', 'action_send_mail_template',
             get_string('message'), ['rows' => 15], ['subdirs' => 0, 'maxfiles' => 0, 'context' => null]);
 
+        // Placeholders info text.
         $placeholders = placeholders_info::return_list_of_placeholders();
         $mform->addElement('html', get_string('helptext:placeholders', 'mod_booking', $placeholders));
 
@@ -103,6 +114,15 @@ class send_mail implements booking_rule_action {
      */
     public function get_name_of_action($localized = true) {
         return get_string('send_mail', 'mod_booking');
+    }
+
+    /**
+     * Is the booking rule action compatible with the current form data?
+     * @param array $ajaxformdata the ajax form data entered by the user
+     * @return bool true if compatible, else false
+     */
+    public function is_compatible_with_ajaxformdata(array $ajaxformdata = []) {
+        return true;
     }
 
     /**

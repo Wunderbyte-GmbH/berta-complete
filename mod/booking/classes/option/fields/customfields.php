@@ -28,8 +28,10 @@ use mod_booking\booking_option_settings;
 use mod_booking\customfield\booking_handler;
 use mod_booking\option\field_base;
 use context_module;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
+use moodle_exception;
 
 /**
  * Class to handle one property of the booking_option_settings class.
@@ -106,13 +108,20 @@ class customfields extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        $optionid = $formdata['id'];
+        $optionid = $formdata['id'] ?? $formdata['optionid'];
 
-        $contextid = context_module::instance($formdata['cmid'])->id;
+        if (!empty($formdata['cmid'])) {
+            $context = context_module::instance($formdata['cmid']);
+        } else if (!empty($optionid)) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+            $context = context_module::instance($settings->cmid);
+        } else {
+            throw new moodle_exception('customfields.php: missing context in function instance_form_definition');
+        }
 
         // Add custom fields.
         $handler = booking_handler::create();
-        $handler->instance_form_definition($mform, $optionid, null, null, $contextid);
+        $handler->instance_form_definition($mform, $optionid, null, null, $context->id);
     }
 
     /**
@@ -176,6 +185,7 @@ class customfields extends field_base {
         $fields = $handler->get_fields();
 
         $returnarray = array_map(fn($a) => [
+            'id' => $a->get('id'),
             'shortname' => $a->get('shortname'),
             'name' => $a->get('name'),
             'checked' => 1,

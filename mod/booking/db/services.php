@@ -26,20 +26,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'mod_booking_enrol_user' => [
-        'classname' => 'mod_booking\external\enrol_user',
-        'description' => 'Enrol user via AJAX',
-        'type' => 'write',
-        'ajax' => true,
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'],
-    ],
-    'mod_booking_unenrol_user' => [
-        'classname' => 'mod_booking\external\unenrol_user',
-        'description' => 'Unenrol user via AJAX',
-        'type' => 'write',
-        'ajax' => true,
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'],
-    ],
     'mod_booking_update_bookingnotes' => [
         'classname' => 'mod_booking\external\update_bookingnotes',
         'description' => 'Update the booking notes via AJAX',
@@ -135,6 +121,13 @@ $functions = [
     'mod_booking_search_teachers' => [
         'classname' => 'mod_booking\external\search_teachers',
         'description' => 'Search a list of booking teachers',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => 1,
+    ],
+    'mod_booking_search_courses' => [
+        'classname' => 'mod_booking\external\search_courses',
+        'description' => 'Search a list of courses',
         'type' => 'read',
         'capabilities' => '',
         'ajax' => 1,

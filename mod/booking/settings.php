@@ -42,6 +42,7 @@ $ADMIN->add('modbookingfolder',
 
 $ADMIN->add('modbookingfolder',
 new admin_externalpage('modbookingoptionformconfig',
+        get_string('booking', 'mod_booking') . ": " .
         get_string('optionformconfig', 'mod_booking'),
         new moodle_url('/mod/booking/optionformconfig.php', [
             'cmid' => 0,
@@ -185,6 +186,11 @@ if ($ADMIN->fulltree) {
         new admin_setting_configcheckbox('booking/alloptionsinreport',
                 get_string('alloptionsinreport', 'mod_booking'),
                 get_string('alloptionsinreportdesc', 'mod_booking'), 0));
+
+    $settings->add(
+        new admin_setting_configcheckbox('booking/responsiblecontactcanedit',
+            get_string('responsiblecontactcanedit', 'mod_booking'),
+            get_string('responsiblecontactcanedit_desc', 'mod_booking'), 0));
 
     $settings->add(
         new admin_setting_configcheckbox('booking/maxperuserdontcountpassed',
@@ -468,10 +474,27 @@ if ($ADMIN->fulltree) {
         new admin_setting_configcheckbox('booking/duplicationrestoreentities',
                 get_string('duplicationrestoreentities', 'mod_booking'), '', 1));
 
-    if (wb_payment::pro_version_is_activated()) {
+    if ($proversion) {
         $settings->add(
             new admin_setting_configcheckbox('booking/duplicationrestoresubbookings',
                     get_string('duplicationrestoresubbookings', 'mod_booking'), '', 1));
+    }
+
+    if ($proversion) {
+        $settings->add(
+            new admin_setting_heading('duplicationrestoreoption',
+                get_string('duplicationrestoreoption', 'mod_booking'),
+                get_string('duplicationrestoreoption_desc', 'mod_booking')));
+        $settings->add(
+            new admin_setting_configcheckbox('booking/duplicatemoodlecourses',
+                    get_string('duplicatemoodlecourses', 'mod_booking'),
+                    get_string('duplicatemoodlecourses_desc', 'mod_booking'), 0));
+    } else {
+        $settings->add(
+            new admin_setting_heading('duplicationrestoreoption',
+                get_string('duplicationrestoreoption', 'mod_booking'),
+                get_string('duplicationrestoreoption_desc', 'mod_booking') . " " .
+                    get_string('infotext:prolicensenecessary', 'mod_booking')));
     }
 
     $settings->add(
@@ -624,18 +647,17 @@ if ($ADMIN->fulltree) {
         new admin_setting_configcheckbox('booking/dontaddpersonalevents',
                 get_string('dontaddpersonalevents', 'mod_booking'),
                 get_string('dontaddpersonaleventsdesc', 'mod_booking'), 0));
-                $settings->add(
-            new admin_setting_configcheckbox('booking/attachical',
-                    get_string('attachical', 'mod_booking'),
-                    get_string('attachicaldesc', 'mod_booking'), 0));
+
     $settings->add(
-            new admin_setting_configcheckbox('booking/attachicalsessions',
-                    get_string('attachicalsess', 'mod_booking'),
-                    get_string('attachicalsessdesc', 'mod_booking'), 1));
+            new admin_setting_configcheckbox('booking/attachical',
+                    get_string('attachicalfile', 'mod_booking'),
+                    get_string('attachicalfile_desc', 'mod_booking'), 1));
+
     $settings->add(
             new admin_setting_configcheckbox('booking/icalcancel',
                     get_string('icalcancel', 'mod_booking'),
                     get_string('icalcanceldesc', 'mod_booking'), 1));
+
     $options = [1 => get_string('courseurl', 'mod_booking'),
                 2 => get_string('location', 'mod_booking'),
                 3 => get_string('institution', 'mod_booking'), 4 => get_string('address'),

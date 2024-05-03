@@ -315,14 +315,14 @@ class booking_bookit {
 
             } else if ($id === MOD_BOOKING_BO_COND_CONFIRMBOOKWITHCREDITS) {
 
-                // Make sure cache is not blocking anymore.
-                $cache = cache::make('mod_booking', 'confirmbooking');
-                $cachekey = $userid . "_" . $settings->id . '_bookwithcredits';
-                $cache->delete($cachekey);
+                 // Make sure cache is not blocking anymore.
+                 $cache = cache::make('mod_booking', 'confirmbooking');
+                 $cachekey = $userid . "_" . $settings->id . '_bookwithcredits';
 
                 // Now, before actually booking, we also need to subtract the credit from the concerned user.
                 // Get the used custom profile field.
                 if (!$profilefield = get_config('booking', 'bookwithcreditsprofilefield')) {
+                    $cache->delete($cachekey);
                     throw new moodle_exception('nocreditsfielddefined', 'mod_booking');
                 }
 
@@ -330,9 +330,11 @@ class booking_bookit {
                     $user = singleton_service::get_instance_of_user($userid);
                 } else {
                     $user = $USER;
+                    profile_load_custom_fields($user);
                 }
 
                 if ($user->profile[$profilefield] < $settings->credits) {
+                    $cache->delete($cachekey);
                     throw new moodle_exception('notenoughcredits', 'mod_booking');
                 }
 
@@ -546,12 +548,12 @@ class booking_bookit {
         // Now we reserve the place for the user.
         switch ($status) {
             case MOD_BOOKING_STATUSPARAM_BOOKED:
-                if (!$bookingoption->user_submit_response($user, 0, 0, false, MOD_BOOKING_VERIFIED)) {
+                if (!$bookingoption->user_submit_response($user, 0, 0, 0, MOD_BOOKING_VERIFIED)) {
                     return [];
                 }
                 break;
             case MOD_BOOKING_STATUSPARAM_RESERVED:
-                if (!$bookingoption->user_submit_response($user, 0, 0, true, MOD_BOOKING_VERIFIED)) {
+                if (!$bookingoption->user_submit_response($user, 0, 0, 1, MOD_BOOKING_VERIFIED)) {
                     return [];
                 }
                 break;

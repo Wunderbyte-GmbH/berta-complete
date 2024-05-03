@@ -160,7 +160,15 @@ class fields_info {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata) {
 
-        $context = context_module::instance($formdata['cmid']);
+        if (!empty($formdata['cmid'])) {
+            $context = context_module::instance($formdata['cmid']);
+        } else if (!empty($formdata['optionid'])) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($formdata['optionid']);
+            $context = context_module::instance($settings->cmid);
+        } else {
+            throw new moodle_exception('fields_info.php: missing context in function instance_form_definition');
+        }
+
         $classes = self::get_field_classes($context->id);
 
         foreach ($classes as $classname) {
@@ -237,7 +245,8 @@ class fields_info {
             $settings = new booking_option_settings(0);
         }
 
-        $context = context_module::instance($data->cmid);
+        $cmid = $data->cmid ?? $settings->cmid ?? 0;
+        $context = context_module::instance($cmid);
         $classes = self::get_field_classes($context->id);
 
         try {
@@ -269,7 +278,14 @@ class fields_info {
      */
     public static function definition_after_data(MoodleQuickForm &$mform, array &$formdata) {
 
-        $context = context_module::instance($formdata['cmid']);
+        if (!empty($formdata['cmid'])) {
+            $context = context_module::instance($formdata['cmid']);
+        } else if (!empty($formdata['optionid'])) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($formdata['optionid']);
+            $context = context_module::instance($settings->cmid);
+        } else {
+            throw new moodle_exception('formconfig.php: missing context in function instance_form_definition');
+        }
         $classes = self::get_field_classes($context->id);
 
         foreach ($classes as $classname) {
@@ -308,18 +324,20 @@ class fields_info {
 
             // We might only want postsave classes.
             if ($save === MOD_BOOKING_EXECUTION_POSTSAVE) {
-                if ($classname::$save !== MOD_BOOKING_EXECUTION_POSTSAVE) {
+                if (!class_exists($classname) || $classname::$save !== MOD_BOOKING_EXECUTION_POSTSAVE) {
                     continue;
                 }
             }
             // We might only want only normal save classes.
             if ($save === MOD_BOOKING_EXECUTION_NORMAL) {
-                if ($classname::$save !== MOD_BOOKING_EXECUTION_NORMAL) {
+                if (!class_exists($classname) || $classname::$save !== MOD_BOOKING_EXECUTION_NORMAL) {
                     continue;
                 }
             }
             if (!empty($field->necessary) || !empty($field->checked)) {
-                $classes[$classname::$id] = $classname;
+                if (class_exists($classname)) {
+                    $classes[$classname::$id] = $classname;
+                }
             }
         }
 

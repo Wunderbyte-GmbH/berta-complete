@@ -87,9 +87,23 @@ class askforconfirmation implements bo_condition {
         $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
         $bookinginformation = $bookinganswer->return_all_booking_information($userid);
 
+        // The following conditions have to be met.
+        // - User must not be on waitinglist
+        // - AND: Ask for confirmation must be turned on.
+        // - OR: A price is set and it's fully booked already.
         if (!isset($bookinginformation['onwaitinglist'])
-            && !empty($settings->waitforconfirmation)) {
-            $isavailable = false;
+            && (!empty($settings->waitforconfirmation)
+            || (!empty($settings->jsonobject->useprice))
+                && (isset($bookinginformation['notbooked']['fullybooked']) &&
+                $bookinginformation['notbooked']['fullybooked'] === true
+                && ($settings->maxoverbooking > count($bookinganswer->usersonwaitinglist))))) {
+
+            if (!empty(get_config('booking', 'allowoverbooking'))
+                && has_capability('mod/booking:canoverbook', context_system::instance())) {
+                $isavailable = true;
+            } else {
+                $isavailable = false;
+            }
         }
 
         if ($not) {

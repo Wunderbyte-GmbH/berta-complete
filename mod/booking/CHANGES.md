@@ -1,3 +1,128 @@
+## Version 8.2.8 (2024042900)
+* Bugfix: Cashiers can still overbook when waitinglist is full
+
+## Version 8.2.7 (2024042600)
+* Improvement: Clean up ical settings and remove deprecated handling of options with single-session.
+* Improvement: Mark invisible optiondates in entity calendar (gray and with [invisible] prefix).
+* Improvement: Make sure that only authorized users (with capability booking:canseeinvisibleoptions) are able to see invisible options in entity calendar.
+* Improvement: Create method to destroy instance of user object (because of fails in phpunit tests).
+* Improvement: Make sure entities are restored for optiondates when duplicating courses and kept when recreating new date series.
+* Improvement: Always show title with prefix.
+* Bugfix: Move context_system to context_module.
+* Bugfix: Fix customform.
+* Bugfix: Fix possible problem with missing titleprefix.
+* Bugfix: Fix validation of course category when creating new Moodle course together with booking option.
+* Bugfix: Fix credits when there is also a price.
+* Bugfix: Fix deprecation warning.
+
+## Version 8.2.6 (2024042200)
+* Improvement: New php unit tests and behat tests and improvements for existing ones.
+* Improvement: Add book anyone capability.
+* Bugfix: Fix missing $bookingsettings in function after_successful_booking_routine of class booking_option.
+
+## Version 8.2.5 (2024041700)
+* New feature: Shortcode [courselist cmid=23]
+* Bugfix: feature addtogroup working now
+* Improvement: Add a lot of new phpunit tests
+
+## Version 8.2.4 (2024041100)
+* Improvement: Migrate placeholders in message controller to new placeholder classes.
+* Improvement: Separate string params from placeholder param {changes}.
+* Bugfix: Profile picture is destroyed by format_text so do not use it in placeholders_info but only directly where we need it.
+* Bugfix: Try to fix strings for AMOS.
+* Bugfix: Add missing !empty check for datafromevent property.
+
+## Version 8.2.3 (2024041000)
+* New feature: Show attachments right within booking options.
+* New feature: New setting to also duplicate Moodle course when a booking option gets duplicated.
+* New feature: Send copies of mails for custom messages or for bulk custom messages via booking rules.
+* New feature: Context-based booking rules (e.g. rules for a specific Booking instance).
+* Improvement: New event custom_message_sent.
+* Improvement: New booking rule action send_copy_of_mail.
+* Improvement: Allow search for ID without pattern matching. (Will also work with numeric last names in behat tests.)
+* Improvement: Allow search for full course id and booking option id in autocompletes.
+* Improvement: Purge bookingoptionstable cache when encodedtables are purged.
+* Improvement: New send_copy_of_mail action will only be shown for compatible events.
+* Improvement: Fix eventlog to better reflect booking of other users.
+* Improvement: Allow waitinglist for paid options.
+* Improvement: Get rid of outdated shorturl field.
+* Improvement: Several improvements and fixes for the new placeholders.
+* Improvement: Possibility to confirm users which are on waitinglist with price.
+* Improvement: Show hint for new placeholder {eventdescription} and show optionid in event description.
+* Bugfix: Some small bugs in editteachersforoptiondate form.
+* Bugfix: Report.php (user bookings page) cannot use the same pagination value that is used for Booking view - fixes #439.
+* Bugfix: Possible bugfix for strange nullpointer bug on name property of module.
+* Bugfix: Avoid error if class does not exist in fields_info.php.
+* Bugfix: Bugfixes for waitinglist with price.
+* Bugfix: Nullpointer bug in notifymelist.
+* Bugfix: Fix Exception - Warning: Undefined array key "freeonwaitinglist".
+* Bugfix: Fix is_available of fullybooked.php.
+
+## Version 8.2.2 (2024040200)
+* New feature: New setting to allow responsible contacts to edit booking options.
+* Improvement: Issue #407 blocks booking via moodle capability
+* Improvement: Add cancel for bought items.
+* Improvement: Allow Filter a users bookingoption for more than one booking status param
+* Improvement: Better way to check for price.
+* Improvement: Apply rules again after every time a user has booked (only for option & userid).
+* Improvement: Make bookit button accessible via TAB - fixes #436.
+* Bugfix: Cancel myself not shown on reserved items.
+* Bugfix: Description is actually a necessary field
+* Bugfix: Several fixes for missing cmid in formdata when creating context_module.
+* Bugfix: Add missing empty check for capability string identifier.
+* Bugfix: Fix some minor errors in subbookings - fixes #356.
+* Bugfix: Debug Booking rules.
+* Bugfix: Fix error "ERROR:  column u.userid does not exist" which affects booking rules #445.
+* Bugfix: Fix CSV import for entities.
+* Bugfix: In confirmcancel we need to check useprice from JSON. (Price item check is legacy.)
+* Bugfix: Switch from counting priceitems to just check useprice.
+
+## Version 8.2.1 (2024032700)
+* Improvement: Show which form currently overrides the standard form definition on edit.
+* Improvement: Usability improvements for option form config with and without PRO license.
+* Improvement: Allow csv import with column username.
+* Improvement: Add capability to edit option form config (mod/booking:editoptionformconfig).
+* Improvement: Add more rights to manager role (manager should have the same rights as enrolled teacher).
+* Bugfix: Add enrolmentstatus field again.
+* Test: New behat tests for Booking rules.
+
+## Version 8.2.0 (2024032500)
+* New feature: Config Dashboard implementation.
+* New feature: Add manually managed waitinglist.
+* Improvement: New Webservice to save config forms - unfinished.
+* Improvement: Adjust incompatibilities of option form fields.
+* Improvement: Better treatment auf where array values.
+* Improvement: Support for new configurable Wunderbyte Table filters.
+* Improvement: Move to contextids instead of coursecategoryids.
+* Improvement: Use capabilities to adjust option form.
+* Improvement: Get rid of old expertform mode.
+* Improvement: Issue #407 blocks booking via moodle capability.
+* Improvement: Make config sortable & add delete functionality.
+* Improvement: Add possibility to turn off single customfields.
+* Improvement: Use new WB Table functionality for using filters.
+* Improvement: Add optionformconfig to context 1 (systemwide).
+* Improvement: Allow cachier to book users from waitinglist, if it's a "confirm waitinglist" setting.
+* Improvement: New booked users information with wb table.
+* Improvement: More efficient handling of actions.
+* Improvement: Show booked users only if there are some.
+* Improvement: Add edit component to tables.
+* Improvement: New setting for Booking debug mode.
+* Improvement: Add debug event for send_mail_by_rule_adhoc.
+* Improvement: New language strings.
+* Bugfix: Fix deprecation warning for usort.
+* Bugfix: Make sure html tags won't destroy the functionality.
+* Bugfix: Implement new WB Table API.
+* Bugfix: Drag & drop only for waitinglist.
+* Bugfix: Fix errors in datepickers.
+* Bugfix: Crucial Bugfix for booking process.
+* Bugfix: Fix askforconfirmation booking button.
+* Bugfix: Confusion between optionid & id.
+* Bugfix: Fix option config form.
+* Bugfix: Add missing cache definitions.
+* Bugfix: Fix #447.
+* Bugfix: Don't try to create event if optiondatesid is 0.
+* Bugfix: Only access waitforconfirmation if it is set.
+
 ## Version 8.1.40 (2024031801)
 * Bugfix: If shoppingcarthistory already has a canceluntil date set it may not be overriden by the option's canceluntil date again!
 

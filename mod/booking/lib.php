@@ -102,12 +102,12 @@ define('MOD_BOOKING_MSGCONTRPARAM_VIEW_CONFIRMATION', 4);
 define('MOD_BOOKING_BO_COND_ISLOGGEDINPRICE', 190);
 define('MOD_BOOKING_BO_COND_ISLOGGEDIN', 180);
 define('MOD_BOOKING_BO_COND_CONFIRMCANCEL', 170);
-define('MOD_BOOKING_BO_COND_CANCELMYSELF', 105);
 define('MOD_BOOKING_BO_COND_ALREADYBOOKED', 150);
 define('MOD_BOOKING_BO_COND_ALREADYRESERVED', 140);
 define('MOD_BOOKING_BO_COND_ISCANCELLED', 130);
 define('MOD_BOOKING_BO_COND_ISBOOKABLE', 120);
 define('MOD_BOOKING_BO_COND_ONWAITINGLIST', 110);
+define('MOD_BOOKING_BO_COND_CANCELMYSELF', 105);
 define('MOD_BOOKING_BO_COND_NOTIFYMELIST', 100);
 define('MOD_BOOKING_BO_COND_ALLOWEDTOBOOKININSTANCE', 95); // We might want to moove this up?
 define('MOD_BOOKING_BO_COND_FULLYBOOKED', 90);
@@ -197,8 +197,10 @@ define('MOD_BOOKING_OPTION_FIELD_MAXOVERBOOKING', 150);
 define('MOD_BOOKING_OPTION_FIELD_MINANSWERS', 160);
 define('MOD_BOOKING_OPTION_FIELD_POLLURL', 170);
 define('MOD_BOOKING_OPTION_FIELD_COURSEID', 180); // Course to enrol to.
+define('MOD_BOOKING_OPTION_FIELD_ENROLMENTSTATUS', 185);
 define('MOD_BOOKING_OPTION_FIELD_ADDTOGROUP', 190);
 define('MOD_BOOKING_OPTION_FIELD_ENTITIES', 200);
+define('MOD_BOOKING_OPTION_FIELD_SHOPPPINGCART', 205);
 define('MOD_BOOKING_OPTION_FIELD_OPTIONDATES', 210);
 define('MOD_BOOKING_OPTION_FIELD_COURSESTARTTIME', 220); // Replaced with optiondates class.
 define('MOD_BOOKING_OPTION_FIELD_COURSEENDTIME', 230); // Replaced with optiondates class.
@@ -225,7 +227,6 @@ define('MOD_BOOKING_OPTION_FIELD_WAITFORCONFIRMATION', 425);
 define('MOD_BOOKING_OPTION_FIELD_ATTACHMENT', 430);
 define('MOD_BOOKING_OPTION_FIELD_NOTIFICATIONTEXT', 440);
 define('MOD_BOOKING_OPTION_FIELD_REMOVEAFTERMINUTES', 450);
-define('MOD_BOOKING_OPTION_FIELD_SHORTURL', 460);
 define('MOD_BOOKING_OPTION_FIELD_HOWMANYUSERS', 470);
 define('MOD_BOOKING_OPTION_FIELD_BEFOREBOOKEDTEXT', 480);
 define('MOD_BOOKING_OPTION_FIELD_BEFORECOMPLETEDTEXT', 490);
@@ -257,6 +258,13 @@ define('MOD_BOOKING_HEADER_AVAILABILITY', 'availabilityconditionsheader');
 define('MOD_BOOKING_HEADER_SUBBOOKINGS', 'bookingsubbookingsheader');
 define('MOD_BOOKING_HEADER_CUSTOMFIELDS', 'category_'); // There can be multiple headers, with custom names.
 define('MOD_BOOKING_HEADER_TEMPLATESAVE', 'templateheader');
+
+define('MOD_BOOKING_MAX_CUSTOM_FIELDS', 3);
+define('MOD_BOOKING_FORM_OPTIONDATEID', 'optiondateid_');
+define('MOD_BOOKING_FORM_DAYSTONOTIFY', 'daystonotify_');
+define('MOD_BOOKING_FORM_COURSESTARTTIME', 'coursestarttime_');
+define('MOD_BOOKING_FORM_COURSEENDTIME', 'courseendtime_');
+define('MOD_BOOKING_FORM_DELETEDATE', 'deletedate_');
 
 /**
  * Booking get coursemodule info.
@@ -773,17 +781,26 @@ function booking_update_instance($booking) {
     $arr = [];
     core_tag_tag::set_item_tags('mod_booking', 'booking', $booking->id, $context, $booking->tags);
 
-    file_save_draft_area_files($booking->signinlogoheader, $context->id, 'mod_booking',
+    if (!empty($booking->signinlogoheader)) {
+        file_save_draft_area_files($booking->signinlogoheader, $context->id, 'mod_booking',
             'signinlogoheader', $booking->id, ['subdirs' => false, 'maxfiles' => 1]);
+    }
 
-    file_save_draft_area_files($booking->signinlogofooter, $context->id, 'mod_booking',
+    if (!empty($booking->signinlogofooter)) {
+        file_save_draft_area_files($booking->signinlogofooter, $context->id, 'mod_booking',
             'signinlogofooter', $booking->id, ['subdirs' => false, 'maxfiles' => 1]);
+    }
 
-    file_save_draft_area_files($booking->myfilemanager, $context->id, 'mod_booking',
+    if (!empty($booking->myfilemanager)) {
+        file_save_draft_area_files($booking->myfilemanager, $context->id, 'mod_booking',
             'myfilemanager', $booking->id, ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 50]);
 
-    file_save_draft_area_files($booking->bookingimages, $context->id, 'mod_booking',
+    }
+
+    if (!empty($booking->bookingimages)) {
+        file_save_draft_area_files($booking->bookingimages, $context->id, 'mod_booking',
             'bookingimages', $booking->id, ['subdirs' => 0, 'maxbytes' => 0, 'maxfiles' => 500]);
+    }
 
     if (empty($booking->timerestrict)) {
         $booking->timeopen = 0;
@@ -810,13 +827,13 @@ function booking_update_instance($booking) {
     $booking->bookedtext = $booking->bookedtext['text'];
     $booking->waitingtext = $booking->waitingtext['text'];
     $booking->notifyemail = $booking->notifyemail['text'];
-    $booking->notifyemailteachers = $booking->notifyemailteachers['text'];
+    $booking->notifyemailteachers = $booking->notifyemailteachers['text'] ?? '';
     $booking->statuschangetext = $booking->statuschangetext['text'];
     $booking->deletedtext = $booking->deletedtext['text'];
-    $booking->bookingchangedtext = $booking->bookingchangedtext['text'];
+    $booking->bookingchangedtext = $booking->bookingchangedtext['text'] ?? '';
     $booking->pollurltext = $booking->pollurltext['text'];
     $booking->pollurlteacherstext = $booking->pollurlteacherstext['text'];
-    $booking->activitycompletiontext = $booking->activitycompletiontext['text'];
+    $booking->activitycompletiontext = $booking->activitycompletiontext['text'] ?? '';
     $booking->userleave = $booking->userleave['text'];
 
     // Get JSON from bookingsettings.
@@ -1008,6 +1025,12 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
             $navref->add(get_string('optionformconfig', 'mod_booking') . " ($bookingsettings->name)",
                     new moodle_url('/mod/booking/optionformconfig.php', ['cmid' => $cm->id]),
                     navigation_node::TYPE_CUSTOM, null, 'nav_optionformconfig');
+
+            if (has_capability('mod/booking:editbookingrules', $context)) {
+                $navref->add(get_string('bookingrules', 'mod_booking') . " ($bookingsettings->name)",
+                    new moodle_url('/mod/booking/edit_rules.php', ['cmid' => $cm->id]),
+                    navigation_node::TYPE_CUSTOM, null, 'nav_editbookingrules');
+            }
         }
     }
 
@@ -1159,6 +1182,9 @@ function booking_check_if_teacher($optionoroptionid = null) {
         }
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         if (in_array($USER->id, $settings->teacherids)) {
+            return true;
+        } else if (get_config('booking', 'responsiblecontactcanedit')
+            && $settings->responsiblecontact == $USER->id) {
             return true;
         } else {
             return false;
@@ -1419,7 +1445,7 @@ function booking_grade_item_update($booking, $grades = null) {
         require_once($CFG->libdir . '/gradelib.php');
     }
 
-    $params = ['itemname' => $booking->name, 'idnumber' => $booking->cmidnumber];
+    $params = ['itemname' => $booking->name, 'idnumber' => $booking->cmidnumber ?? ''];
 
     if (!$booking->assessed || $booking->scale == 0) {
         $params['gradetype'] = GRADE_TYPE_NONE;

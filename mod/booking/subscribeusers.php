@@ -130,7 +130,16 @@ if (!$agree && empty($formsubmitted) && (!empty($bookingoption->booking->setting
             if (has_capability('mod/booking:subscribeusers', $context) || (booking_check_if_teacher(
                     $bookingoption->option))) {
                 foreach ($users as $user) {
-                    if (!$bookingoption->user_submit_response($user, 0, 0, false, MOD_BOOKING_VERIFIED)) {
+
+                    // If there is a price on the booking option, we don't want to subscribe the user directly.
+                    if (class_exists('local_shopping_cart\shopping_cart')
+                        && !empty($optionsettings->jsonobject->useprice)) {
+                        $status = 3; // This added without confirmation.
+                    } else {
+                        $status = 0;
+                    }
+
+                    if (!$bookingoption->user_submit_response($user, 0, 0, $status, MOD_BOOKING_VERIFIED)) {
                         $subscribesuccess = false;
                         $notsubscribedusers[] = $user;
                     }
@@ -248,7 +257,7 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($optionsettings->get_title_with_prefix()), 3, 'helptitle', 'uniqueid');
 
 // Switch to turn booking of anyone ON or OFF.
-if (is_siteadmin() && $bookanyone) {
+if (has_capability('mod/booking:bookanyone', $context) && $bookanyone) {
     set_user_preference('bookanyone', '1');
     // Show button to turn it off again.
     $url = new moodle_url('/mod/booking/subscribeusers.php', ['id' => $id,

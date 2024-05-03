@@ -31,6 +31,8 @@ use mod_booking\booking_option;
 use mod_booking\price;
 use mod_booking\semester;
 use mod_booking\customfield\booking_handler;
+use mod_booking\booking_campaigns\campaigns_info;
+use mod_booking\singleton_service;
 
 /**
  * Class to handle module booking data generator
@@ -122,15 +124,7 @@ class mod_booking_generator extends testing_module_generator {
                     'text must be present in phpunit_util::create_option() $record');
         }
 
-        if (!isset($record['courseid'])) {
-            throw new coding_exception(
-                    'courseid must be present in phpunit_util::create_option() $record');
-        }
-
-        $cmb1 = get_coursemodule_from_instance('booking', $record['bookingid'], $record['courseid']);
-        if (!$context = context_module::instance($cmb1->id)) {
-            throw new moodle_exception('badcontext');
-        }
+        $booking = singleton_service::get_instance_of_booking_by_bookingid($record['bookingid']);
 
         // Increment the forum subscription count.
         $this->bookingoptions++;
@@ -139,8 +133,10 @@ class mod_booking_generator extends testing_module_generator {
 
         // Finalizing object with required properties.
         $record->id = 0;
-        $record->cmid = $cmb1->id;
+        $record->cmid = $booking->cmid;
         $record->identifier = booking_option::create_truly_unique_option_identifier();
+
+        $context = context_module::instance($record->cmid);
 
         $record->addtocalendar = !empty($record->addtocalendar) ? $record->addtocalendar : 0;
         $record->maxanswers = !empty($record->maxanswers) ? $record->maxanswers : 0;
@@ -150,7 +146,7 @@ class mod_booking_generator extends testing_module_generator {
             $teacherarr = explode(',', $record->teachersforoption);
             $record->teachersforoption = [];
             foreach ($teacherarr as $teacher) {
-                $record->teachersforoption[] = $this->get_user($teacher);
+                $record->teachersforoption[] = $this->get_user(trim($teacher));
             }
         }
 
@@ -177,9 +173,6 @@ class mod_booking_generator extends testing_module_generator {
         // Create / save booking option(s).
         if ($record->id = booking_option::update($record, $context)) {
             $record->optionid = $record->id;
-            // Save customfield data to option (the id key has to be set to option id).
-            $handler = booking_handler::create();
-            $handler->instance_form_save($record, $record->optionid == -1);
         }
 
         return $record;
@@ -208,15 +201,22 @@ class mod_booking_generator extends testing_module_generator {
      * @return stdClass the booking campaign object
      */
     public function create_campaign($record = null) {
-        global $DB;
+
+        $record = array_merge($record, json_decode($record['json'], true));
 
         $record = (object) $record;
 
-        $record->id = $DB->insert_record('booking_campaigns', $record);
+        if ((int) $record->type == 0) {
+            $record->bookingcampaigntype = 'campaign_customfield';
+        } else {
+            $record->bookingcampaigntype = 'campaign_blockbooking';
+        }
 
-        return $record;
+        campaigns_info::save_booking_campaign($record);
+        $camp = campaigns_info::get_campaign_by_name($record->name);
+
+        return $camp;
     }
-
 
     /**
      * Function to create a dummy semester option.
@@ -230,6 +230,46 @@ class mod_booking_generator extends testing_module_generator {
         $record = (object) $record;
 
         $record->id = $DB->insert_record('booking_semesters', $record);
+
+        return $record;
+    }
+
+    /**
+     * Function to create a dummy rule for bookings.
+     *
+     * @param array|stdClass $ruledraft
+     * @return stdClass the booking rule object
+     */
+    public function create_rule($ruledraft = null) {
+        global $DB;
+
+        $ruledraft = (object) $ruledraft;
+
+        $record = new stdClass;
+        $record->bookingid = isset($ruledraft->bookingid) ? $ruledraft->bookingid : 0;
+        $record->contextid = isset($ruledraft->contextid) ? $ruledraft->contextid : 1;
+        $record->rulename = $ruledraft->rulename;
+        $record->eventname = '';
+
+        $ruleobject = new stdClass;
+        $ruleobject->conditionname = $ruledraft->conditionname;
+        $ruleobject->conditiondata = isset($ruledraft->conditiondata) ? json_decode($ruledraft->conditiondata) : '';
+        $ruleobject->name = $ruledraft->name;
+        $ruleobject->actionname = $ruledraft->actionname;
+        $ruleobject->actiondata = json_decode($ruledraft->actiondata);
+        $ruleobject->rulename = $ruledraft->rulename;
+        $ruleobject->ruledata = json_decode($ruledraft->ruledata);
+
+        // Setup event name if provided explicitly or from ruledata if provided.
+        if (!empty($ruledraft->eventname)) {
+            $record->eventname = $ruledraft->eventname;
+        } else if (!empty($ruleobject->ruledata->boevent)) {
+            $record->eventname = $ruleobject->ruledata->boevent;
+        }
+
+        $record->rulejson = json_encode($ruleobject);
+
+        $record->id = $DB->insert_record('booking_rules', $record);
 
         return $record;
     }

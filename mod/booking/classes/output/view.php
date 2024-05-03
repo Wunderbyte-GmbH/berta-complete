@@ -371,7 +371,7 @@ class view implements renderable, templatable {
 
         list($fields, $from, $where, $params, $filter) =
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [],
-                $wherearray, null, MOD_BOOKING_STATUSPARAM_BOOKED, $additionalwhere);
+                $wherearray, null, [MOD_BOOKING_STATUSPARAM_BOOKED], $additionalwhere);
 
         // Timenow is today at at 00.00.
         // The test is on courseendtime, if it has finished not already yesterday.
@@ -833,6 +833,9 @@ class view implements renderable, templatable {
         if (in_array('statusdescription', $optionsfields)) {
             $cardbody[] = 'statusdescription';
         }
+        if (in_array('attachment', $optionsfields)) {
+            $cardbody[] = 'attachment';
+        }
 
         $wbtable->add_subcolumns('cardbody', $cardbody);
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnkeyclass' => 'd-none']);
@@ -846,6 +849,10 @@ class view implements renderable, templatable {
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'h5'], ['text']);
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['description']);
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['statusdescription']);
+        if (in_array('attachment', $optionsfields)) {
+            $wbtable->add_classes_to_subcolumns('cardbody',
+                ['columnvalueclass' => 'd-block pt-1'], ['attachment']);
+        }
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnalt' => get_string('teacher', 'mod_booking')], ['teacher']);
 
         // 2. Cardlist.
@@ -1004,6 +1011,9 @@ class view implements renderable, templatable {
         }
         if (in_array('description', $optionsfields)) {
             $columnsleftside[] = 'description';
+        }
+        if (in_array('attachment', $optionsfields)) {
+            $columnsleftside[] = 'attachment';
         }
 
         $wbtable->add_subcolumns('leftside', $columnsleftside);

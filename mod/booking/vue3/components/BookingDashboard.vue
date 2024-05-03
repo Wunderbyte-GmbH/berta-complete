@@ -5,7 +5,6 @@
       :tabs="tabsstored"
       @filteredTabs="updateFilteredTabs"
     />
-
     <div class="overflow-tabs-container">
       <div>
         <div
@@ -36,7 +35,7 @@
       </div>
       <!-- Confirmation dialog -->
       <div v-if="showConfirmationModal">
-        <ConfirmationModal 
+        <ConfirmationModal
           :show-confirmation-modal="showConfirmationModal"
           :strings="store.state.strings"
           @confirmBack="confirmBack"
@@ -51,20 +50,20 @@
         v-if="content"
         class="content-container"
       >
-        <TabInformation 
+        <TabInformation
           :content="content"
           :strings="store.state.strings"
         />
         <BookingStats :bookingstats="content" />
-        <CapabilityButtons 
-          :configlist="configlist" 
+        <CapabilityButtons
+          :configlist="configlist"
           :active-tab="activeTab"
           :changes-made="changesMade"
           @capabilityClicked="handleCapabilityClicked"
-          @checkAll="handleCheckAll" 
-          @restoreConfig="changeTab"
+          @checkAll="handleCheckAll"
+          @restoreConfig="handleRestoreConfig"
         />
-        <CapabilityOptions 
+        <CapabilityOptions
           :selectedcapability="selectedCapability"
           :check="check"
           @changesMade="handleChangesMade"
@@ -137,6 +136,15 @@
         contextid : findElementById(tabs.value, indexTab.value),
       });
     }
+  }
+  async function handleRestoreConfig(index) {
+    indexTab.value = index
+    activeTab.value = indexTab.value;
+    selectedCapability.value = null
+    configlist.value = await store.dispatch('fetchTab', {
+      coursecategoryid: indexTab.value,
+      contextid : findElementById(tabs.value, indexTab.value),
+    });
   }
 
   const confirmBack = async(confirmation) => {

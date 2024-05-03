@@ -18,14 +18,14 @@
  * Handle fields for booking option.
  *
  * @package mod_booking
- * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
+ * @copyright 2024 Wunderbyte GmbH <info@wunderbyte.at>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_booking\placeholders\placeholders;
 
 use mod_booking\placeholders\placeholders_info;
-use mod_booking\singleton_service;
+use context_user;
 use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
@@ -36,10 +36,10 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * Control and manage placeholders for booking instances, options and mails.
  *
  * @copyright Wunderbyte GmbH <info@wunderbyte.at>
- * @author Georg Maißer
+ * @author Bernhard Fischer-Sengseis
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class shorturl {
+class profilepicture {
 
     /**
      * Function which takes a text, replaces the placeholders...
@@ -62,7 +62,7 @@ class shorturl {
 
         $classname = substr(strrchr(get_called_class(), '\\'), 1);
 
-        if (!empty($optionid)) {
+        if (!empty($userid)) {
 
             // The cachekey depends on the kind of placeholder and it's ttl.
             // If it's the same for all users, we don't use userid.
@@ -73,19 +73,36 @@ class shorturl {
                 return placeholders_info::$placeholders[$cachekey];
             }
 
-            $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
-            $value = $settings->shorturl;
-
-            // Save the value to profit from singleton.
-            placeholders_info::$placeholders[$cachekey] = $value;
-
+            // Add a param for the user profile picture so we can show it in e-mails.
+            if ($usercontext = context_user::instance($userid, IGNORE_MISSING)) {
+                $fs = get_file_storage();
+                $files = $fs->get_area_files($usercontext->id, 'user', 'icon');
+                $picturefile = null;
+                foreach ($files as $file) {
+                    $filenamewithoutextension = explode('.', $file->get_filename())[0];
+                    if ($filenamewithoutextension === 'f1') {
+                        $picturefile = $file;
+                        // We found it, so break the loop.
+                        break;
+                    }
+                }
+                if ($picturefile) {
+                    // Retrieve the image contents and encode them as base64.
+                    $picturedata = $picturefile->get_content();
+                    $picturebase64 = base64_encode($picturedata);
+                    // Now load the HTML of the image into the profilepicture param.
+                    $value = '<img src="data:image/image;base64,' . $picturebase64 . '" />';
+                } else {
+                    $value = '';
+                }
+            }
         } else {
             throw new moodle_exception(
                 'paramnotpresent',
                 'mod_booking',
                 '',
                 '',
-                "You can't use param {{$classname}} without providing an option id.");
+                "You can't use param {{$classname}} without providing a user id.");
         }
 
         return $value;

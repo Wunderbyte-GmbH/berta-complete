@@ -25,6 +25,7 @@
 namespace mod_booking;
 
 use cache_helper;
+use context_module;
 use course_modinfo;
 use html_writer;
 use local_entities\local\entities\entitydate;
@@ -181,7 +182,9 @@ class booking {
 
         $values = explode(' ', $query);
 
-        $fullsql = $DB->sql_concat('u.firstname', '\'\'', 'u.lastname', '\'\'', 'u.email');
+        $fullsql = $DB->sql_concat(
+            '\' \'', 'u.id', '\' \'', 'u.firstname', '\' \'', 'u.lastname', '\' \'', 'u.email', '\' \''
+        );
 
         $sql = "SELECT * FROM (
                     SELECT u.id, u.firstname, u.lastname, u.email, $fullsql AS fulltextstring
@@ -198,7 +201,8 @@ class booking {
 
                 $sql .= $firstrun ? ' WHERE ' : ' AND ';
                 $sql .= " " . $DB->sql_like('fulltextstring', ':param' . $counter, false) . " ";
-                $params['param' . $counter] = "%$value%";
+                // If it's numeric, we search for the full number - so we need to add blanks.
+                $params['param' . $counter] = is_numeric($value) ? "% $value %" : "%$value%";
                 $firstrun = false;
                 $counter++;
             }
@@ -228,6 +232,90 @@ class booking {
         return [
                 'warnings' => count($list) > 100 ? get_string('toomanyuserstoshow', 'core', '> 100') : '',
                 'list' => count($list) > 100 ? [] : $list,
+        ];
+    }
+
+    /**
+     * Function to lazyload courses list for autocomplete.
+     *
+     * @param string $query
+     * @return array
+     */
+    public static function load_courses(string $query) {
+        global $DB;
+
+        $totalcount = 1;
+
+        $allcourses = get_courses_search([], 'c.fullname ASC', 0, 9999999,
+            $totalcount, ['enrol/manual:enrol']);
+        $allcourseids = [];
+        foreach ($allcourses as $id => $courseobject) {
+            $allcourseids[] = $id;
+        }
+        list($incourseids, $inparams) = $DB->get_in_or_equal($allcourseids, SQL_PARAMS_NAMED, 'inparam');
+
+        $values = explode(' ', $query);
+
+        $fullsql = $DB->sql_concat('\' \'', 'c.id', '\' \'', 'c.shortname', '\' \'', 'c.fullname', '\' \'');
+
+        $sql = "SELECT * FROM (
+                    SELECT c.id, c.shortname, c.fullname, $fullsql AS fulltextstring
+                    FROM {course} c
+                    WHERE c.visible = 1 AND c.id $incourseids
+                ) AS fulltexttable";
+        // Check for c.visible = 1 is important, so we do not load any inivisble courses!
+        $params = $inparams;
+        if (!empty($query)) {
+            // We search for every word extra to get better results.
+            $firstrun = true;
+            $counter = 1;
+            foreach ($values as $value) {
+
+                $sql .= $firstrun ? ' WHERE ' : ' AND ';
+                $sql .= " " . $DB->sql_like('fulltextstring', ':param' . $counter, false) . " ";
+                // If it's numeric, we search for the full number - so we need to add blanks.
+                $params['param' . $counter] = is_numeric($value) ? "% $value %" : "%$value%";
+                $firstrun = false;
+                $counter++;
+            }
+        }
+
+        // We don't return more than 100 records, so we don't need to fetch more from db.
+        $sql .= " limit 102";
+
+        $rs = $DB->get_recordset_sql($sql, $params);
+        $count = 0;
+        $coursearray = [];
+
+        foreach ($rs as $record) {
+            $course = (object)[
+                    'id' => $record->id,
+                    'shortname' => $record->shortname,
+                    'fullname' => $record->fullname,
+            ];
+
+            $count++;
+            $coursearray[$record->id] = $course;
+        }
+
+        // 0 ... No course has been selected.
+        $coursearray[0] = (object)[
+            'id' => 0,
+            'shortname' => get_string('nocourseselected', 'mod_booking'),
+            'fullname' => get_string('nocourseselected', 'mod_booking'),
+        ];
+        // Minus 1 means, a new course will be created.
+        $coursearray[-1] = (object)[
+            'id' => -1,
+            'shortname' => get_string('newcourse', 'mod_booking'),
+            'fullname' => get_string('newcourse', 'mod_booking'),
+        ];
+
+        $rs->close();
+
+        return [
+                'warnings' => count($coursearray) > 100 ? get_string('toomanytoshow', 'mod_booking') : '',
+                'list' => count($coursearray) > 100 ? [] : $coursearray,
         ];
     }
 
@@ -655,6 +743,10 @@ class booking {
                     $headers[] = get_string('responsiblecontact', 'mod_booking');
                     $columns[] = 'responsiblecontact';
                     break;
+                case 'attachment':
+                    $headers[] = get_string('bookingattachment', 'mod_booking');
+                    $columns[] = 'attachment';
+                    break;
                 case 'showdates':
                     $headers[] = get_string('dates', 'mod_booking');
                     $columns[] = 'showdates';
@@ -925,7 +1017,7 @@ class booking {
      * @param array $filterarray
      * @param array $wherearray
      * @param ?int $userid
-     * @param int $bookingparam
+     * @param array $bookingparams
      * @param string $additionalwhere
      * @param string $innerfrom
      * @return array
@@ -938,7 +1030,7 @@ class booking {
                                                 $filterarray = [],
                                                 $wherearray = [],
                                                 $userid = null,
-                                                $bookingparam = MOD_BOOKING_STATUSPARAM_BOOKED,
+                                                $bookingparams = [MOD_BOOKING_STATUSPARAM_BOOKED],
                                                 $additionalwhere = '',
                                                 $innerfrom = '') {
 
@@ -980,16 +1072,20 @@ class booking {
         }
         // Add where condition for userid.
         if ($userid !== null) {
+
+            list($inorequal, $inparams) = $DB->get_in_or_equal($bookingparams, SQL_PARAMS_NAMED);
+
             $innerfrom .= " JOIN {booking_answers} ba
                           ON ba.optionid=bo.id ";
 
             $outerfrom .= ", ba.waitinglist, ba.userid as bookeduserid ";
-            $where .= " AND waitinglist=:bookingparam
+            $where .= " AND waitinglist $inorequal
                         AND bookeduserid=:bookeduserid ";
             $groupby .= " , ba.waitinglist, ba.userid ";
 
             $params['bookeduserid'] = $userid;
-            $params['bookingparam'] = $bookingparam;
+
+            $params = array_merge($params, $inparams);
         }
 
         // Instead of "where" we return "filter". This is to support the filter functionality of wunderbyte table.
@@ -1136,10 +1232,12 @@ class booking {
      * @param int $limitnum
      * @param string $searchtext
      * @param string $fields
+     * @param array $booked
      * @return void
      */
     public function get_my_options_sql($limitfrom = 0, $limitnum = 0, $searchtext = '',
-        $fields = "bo.*") {
+        $fields = "bo.*",
+        $booked = [MOD_BOOKING_STATUSPARAM_BOOKED]) {
 
         global $DB, $USER;
 
@@ -1150,19 +1248,22 @@ class booking {
         $search = $rsearch['query'];
         $params = array_merge(['bookingid' => $this->id,
                                     'userid' => $USER->id,
-                                    'booked' => MOD_BOOKING_STATUSPARAM_BOOKED,
                                 ], $rsearch['params']);
 
         if ($limitnum != 0) {
             $limit = " LIMIT {$limitfrom} OFFSET {$limitnum}";
         }
 
+        list($inorequal, $inparams) = $DB->get_in_or_equal($booked, SQL_PARAMS_NAMED);
+
+        $params = array_merge($params, $inparams);
+
         $from = "{booking_options} bo
                 JOIN {booking_answers} ba
                 ON ba.optionid=bo.id";
         $where = "bo.bookingid = :bookingid
                   AND ba.userid = :userid
-                  AND ba.waitinglist = :booked {$search}";
+                  AND ba.waitinglist = $inorequal {$search}";
         if (strlen($searchtext) !== 0) {
             $from .= "
                 JOIN {customfield_data} cfd
@@ -1270,15 +1371,30 @@ class booking {
                 'userid' => $USER->id,
             ]);
 
+            // Invisible options should be in a light gray.
+            $isinvisible = !empty($optionsettings->invisible) ? true : false;
+
+            // If the option is invisible and the user has no right to see it, we continue.
+            if ($isinvisible && !has_capability('mod/booking:canseeinvisibleoptions',
+                context_module::instance($optionsettings->cmid))) {
+                continue;
+            }
+
+            $bgcolor = $isinvisible ? "#808080" : "#4285F4";
+            $optiontitle = $optionsettings->get_title_with_prefix();
+            if ($isinvisible) {
+                // Show [invisible] prefix icon before title.
+                $optiontitle = "[" . get_string('invisible', 'mod_booking') . "] " . $optiontitle;
+            }
+
             $newentittydate = new entitydate(
                 $record->instanceid,
                 'mod_booking',
                 $record->area,
-                $optionsettings->get_title_with_prefix(),
+                $optiontitle,
                 $record->coursestarttime,
                 $record->courseendtime,
-                1,
-                $link);
+                1, $link, $bgcolor);
 
             $returnarray[] = $newentittydate;
         }

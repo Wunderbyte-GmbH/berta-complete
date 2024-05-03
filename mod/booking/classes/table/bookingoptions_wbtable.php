@@ -480,10 +480,12 @@ class bookingoptions_wbtable extends wunderbyte_table {
         $answersobject = singleton_service::get_instance_of_booking_answers($settings);
         $status = $answersobject->user_status($USER->id);
 
+        $context = context_module::instance($settings->cmid);
+
         $isteacherofthisoption = booking_check_if_teacher($values);
         if (!empty($settings->courseid) && (
             $status == MOD_BOOKING_STATUSPARAM_BOOKED ||
-            has_capability('mod/booking:updatebooking', context_system::instance()) ||
+            has_capability('mod/booking:updatebooking', $context) ||
             $isteacherofthisoption)) {
             // The link will be shown to everyone who...
             // ...has booked this option.
@@ -1002,5 +1004,17 @@ class bookingoptions_wbtable extends wunderbyte_table {
             $ret = get_string('bookingclosingtime', 'mod_booking') . ": " . $renderedbookingclosingtime;
         }
         return $ret;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * "attachment" value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string a string containing a link to the attachment
+     * @throws coding_exception
+     */
+    public function col_attachment($values) {
+        return booking_option::render_attachments($values->id, 'mod-booking-option-attachments mb-2');
     }
 }
