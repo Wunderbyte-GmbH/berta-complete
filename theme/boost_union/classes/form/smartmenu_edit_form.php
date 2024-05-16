@@ -77,6 +77,7 @@ class smartmenu_edit_form extends \moodleform {
                 $locationtypes);
         $mform->addHelpButton('location', 'smartmenusmenulocation', 'theme_boost_union');
         $location->setMultiple(true);
+        $mform->addRule('location', get_string('required'), 'required');
 
         // Add mode as select element.
         $modeoptions = [
@@ -188,7 +189,9 @@ class smartmenu_edit_form extends \moodleform {
         $rolelist = role_get_names(\context_system::instance());
         $roleoptions = [];
         foreach ($rolelist as $role) {
-            $roleoptions[$role->id] = $role->localname;
+            if ($role->archetype !== 'frontpage') { // Frontpage roles are not supported in the menus restriction.
+                $roleoptions[$role->id] = $role->localname;
+            }
         }
         $byroleswidget = $mform->addElement('autocomplete', 'roles', get_string('smartmenusbyrole', 'theme_boost_union'),
                 $roleoptions);
@@ -318,6 +321,11 @@ class smartmenu_edit_form extends \moodleform {
             if (empty($data['cardoverflowbehavior'])) {
                 $errors['cardoverflowbehavior'] = get_string('required');
             }
+        }
+
+        // Validate the smart menu location is filled.
+        if (empty($data['location'])) {
+            $errors['location'] = get_string('required');
         }
 
         // Return errors.

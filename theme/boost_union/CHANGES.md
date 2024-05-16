@@ -4,6 +4,16 @@ moodle-theme_boost_union
 Changes
 -------
 
+### v4.3-r13
+
+* 2024-05-13 - Improvement: Suppress icons in footer, resolves #649
+* 2024-05-13 - Bugfix: Make the "More menu behavior" setting in smart menus more stable, resolves #461.
+* 2024-05-11 - Improvement: Enhance smart menu restrictions for authenticated user role, guest roles and visitor role, resolves #571
+* 2024-05-11 - Improvement: Smart menu "locations" must be filled with a value, resolves #404
+* 2024-05-10 - Bugfix: Do not show empty smart menus to users, resolves #405
+* 2024-05-09 - Bugfix: Smart menu menubar overlaid course index, resolves #607
+* 2024-04-27 - Improvement: Add navigation to policy overview page, resolves #633
+
 ### v4.3-r12
 
 * 2024-04-20 - Bugfix: Footnote ignored paragraph breaks, resolves #623.

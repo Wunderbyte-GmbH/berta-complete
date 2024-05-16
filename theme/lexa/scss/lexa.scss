@@ -51,6 +51,9 @@
     max-height: $navbar-height;
     padding: 0;
 
+    // Avoid conflict with drawers.
+    z-index: $zindex-sticky;
+
     .navbar-row {
         height: $navbar-height / 2;
         max-height: $navbar-height / 2;
@@ -166,7 +169,7 @@ body.notloggedin {
     .navbar {
         .lexa-nav-second-row {
             display: grid;
-            grid-template-columns: 300px auto 300px;
+            grid-template-columns: $navbar-scrolled-layout;
         }
     }
 }

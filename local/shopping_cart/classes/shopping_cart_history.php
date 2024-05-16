@@ -200,7 +200,9 @@ class shopping_cart_history {
                 ON p.itemid = sch.identifier AND p.userid=sch.userid
                 $customorderidpart
                 $gatewayspart
-                WHERE sch.userid = :userid AND sch.paymentstatus >= :paymentstatus
+                WHERE sch.userid = :userid
+                AND sch.paymentstatus >= :paymentstatus
+                AND NOT (sch.componentname LIKE 'local_shopping_cart' AND sch.area LIKE 'installments%' )
                 ORDER BY sch.timemodified DESC";
 
         $records = $DB->get_records_sql($sql, ['userid' => $userid, 'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_SUCCESS]);
@@ -283,7 +285,15 @@ class shopping_cart_history {
                     // We also need to insert the record into the ledger table.
                     // We only write the old schistoryid, if we have it.
                     $data->schistoryid = $data->schistoryid ?? $id;
-                    shopping_cart::add_record_to_ledger_table($data);
+
+                    /* There is one exception, when we don't write to ledger.
+                     The reason is that we want to write installments in a separate process.
+                     if (!($data->componentname === 'local_shopping_cart'
+                         && strpos($data->area, 'installments') !== false)) {
+
+                         shopping_cart::add_record_to_ledger_table($data);
+                     }
+                    */
                     $success = true;
 
                     $context = context_system::instance();
@@ -583,7 +593,9 @@ class shopping_cart_history {
             $record->paymentstatus = LOCAL_SHOPPING_CART_PAYMENT_SUCCESS;
             $record->timemodified = $now;
 
-            list($area, $addinfo) = explode('-', $record->area);
+            $areaarray = explode('-', $record->area);
+            $area = $areaarray[0];
+            $addinfo = $areaarray[1] ?? null;
 
             if ($record->componentname === 'local_shopping_cart'
                 && $area === 'rebookitem') {
@@ -605,6 +617,7 @@ class shopping_cart_history {
                 $ledgerrecord->area = $historyitem->area;
                 $ledgerrecord->componentname = $historyitem->componentname;
                 $ledgerrecord->usermodified = $USER->id;
+                $ledgerrecord->timecreated = $now;
 
                 // Get Information about the current payment.
                 $jsonobject = json_decode($historyitem->json);
@@ -616,9 +629,9 @@ class shopping_cart_history {
                 }
 
                 // Still some additional Info for the ledger.
-                    $ledgerrecord->schistoryid = $historyitem->id;
-                    $ledgerrecord->annotation =
-                        get_string('ledgerinstallment', 'local_shopping_cart', $a);
+                $ledgerrecord->schistoryid = $historyitem->id;
+                $ledgerrecord->annotation =
+                    get_string('ledgerinstallment', 'local_shopping_cart', $a);
 
                 // Now we manipulate the orignal entry.
                 $newrecord = $historyitem;
@@ -638,9 +651,16 @@ class shopping_cart_history {
                 $ledgerrecord = $record;
             }
 
-            if (!$DB->update_record('local_shopping_cart_history', $record)) {
+            if (empty($record->id)) {
+                if (!$DB->insert_record('local_shopping_cart_history', $record)) {
+                    $success = false;
+                }
+
+            } else if (!$DB->update_record('local_shopping_cart_history', $record)) {
                 $success = false;
-            } else {
+            }
+
+            if ($success) {
 
                 // Only on payment success, we add a new record to the ledger table!
                 unset($ledgerrecord->id);
