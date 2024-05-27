@@ -11,6 +11,15 @@ Feature: Test booking options avaialbility conditions
       | student1 | Student   | 1        | student1@example1.com | S1       |
       | student2 | Student   | 2        | student2@example2.com | S2       |
       | student3 | Student   | 3        | student3@example3.com | S3       |
+    And the following "cohorts" exist:
+      | name                    | idnumber | visible |
+      | System booking cohort 1 | SBC1     | 1       |
+      | System booking cohort 2 | SBC2     | 1       |
+    And the following "cohort members" exist:
+      | user     | cohort |
+      | student2 | SBC1   |
+      | student3 | SBC1   |
+      | student3 | SBC2   |
     And the following "courses" exist:
       | fullname | shortname | category | enablecompletion |
       | Course 1 | C1        | 0        | 1                |
@@ -353,15 +362,17 @@ Feature: Test booking options avaialbility conditions
     And I set the field "Form needs to be filled out before booking" to "checked"
     And I wait "1" seconds
     And I set the following fields to these values:
-      | bo_cond_customform_value_1_1 | Confirm your intention |
-      | bo_cond_customform_label_1_2 | Yes                    |
+      | bo_cond_customform_select_1_1   | select                           |
+      | bo_cond_customform_label_1_1    | Choose what you agree            |
+      | bo_cond_customform_value_1_1    | 1 => option one/n2 => option two |
+      | bo_cond_customform_notempty_1_1 | 1                                |
     And I press "Save"
     ## Check availability as students
     Given I am on the "My booking" Activity page logged in as student1
     Then I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"
     And I click on "Book now" "text" in the ".allbookingoptionstable_r1" "css_element"
-    Then I should see "Confirm your intention" in the ".condition-customform" "css_element"
-    And I set the field "customform_checkbox_2" to "checked"
+    Then I should see "Choose what you agree" in the ".condition-customform" "css_element"
+    And I set the field "customform_select_1" to "option one"
     And I follow "Continue"
     And I should see "You have successfully booked Option - advanced availability" in the ".condition-confirmation" "css_element"
     And I follow "Close"
@@ -379,16 +390,67 @@ Feature: Test booking options avaialbility conditions
     And I set the field "Form needs to be filled out before booking" to "checked"
     And I wait "1" seconds
     And I set the following fields to these values:
-      | bo_cond_customform_value_1_1 | Confirm your intention |
-      | bo_cond_customform_label_1_2 | Yes                    |
+      | bo_cond_customform_select_1_1   | advcheckbox            |
+      | bo_cond_customform_label_1_1    | Confirm your intention |
+      | bo_cond_customform_notempty_1_1 | 1                      |
     And I press "Save"
     ## Check availability as students
     Given I am on the "My booking" Activity page logged in as student1
     Then I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"
     And I click on "Book now" "text" in the ".allbookingoptionstable_r1" "css_element"
     Then I should see "Confirm your intention" in the ".allbookingoptionstable_r1 .condition-customform" "css_element"
-    And I set the field "customform_checkbox_2" to "checked"
+    And I set the field "customform_advcheckbox_1" to "checked"
     And I follow "Continue"
     And I should see "You have successfully booked Option - advanced availability" in the ".allbookingoptionstable_r1 .condition-confirmation" "css_element"
     And I follow "Close"
     And I should see "Booked" in the ".allbookingoptionstable_r1" "css_element"
+
+  @javascript
+  Scenario: Option availability: check users cohort settings
+    Given I am on the "My booking" Activity page logged in as teacher1
+    And I click on "Settings" "icon" in the ".allbookingoptionstable_r1" "css_element"
+    And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r1" "css_element"
+    And I follow "Availability conditions"
+    And I set the field "User is enrolled in certain cohort(s)" to "checked"
+    And I wait "1" seconds
+    ## Teacher: hide unavailable option and require both cohort membership
+    And I set the following fields to these values:
+      | Cohort(s)                                    | System booking cohort 1,System booking cohort 2 |
+      | bo_cond_enrolledincohorts_cohortids_operator | User has to be member of all cohorts            |
+      | bo_cond_enrolledincohorts_sqlfiltercheck     | 1                                               |
+    And I press "Save"
+    And I log out
+    ## Check availability as students - only student3 supposed to see
+    When I am on the "My booking" Activity page logged in as student1
+    Then I should not see "Option - advanced availability" in the ".allbookingoptionstable_r1" "css_element"
+    And I log out
+    And I am on the "My booking" Activity page logged in as student2
+    And I should not see "Option - advanced availability" in the ".allbookingoptionstable_r1" "css_element"
+    ## And I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"
+    And I log out
+    And I am on the "My booking" Activity page logged in as student3
+    And I should see "Option - advanced availability" in the ".allbookingoptionstable_r1" "css_element"
+    And I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"
+    And I log out
+    ## Teacher: show unavailable option and require at least one cohort membership
+    And I am on the "My booking" Activity page logged in as teacher1
+    And I click on "Settings" "icon" in the ".allbookingoptionstable_r1" "css_element"
+    And I click on "Edit booking option" "link" in the ".allbookingoptionstable_r1" "css_element"
+    And I follow "Availability conditions"
+    And I wait "1" seconds
+    ##And I set the field "bo_cond_enrolledincohorts_sqlfiltercheck" to ""
+    And I set the following fields to these values:
+     | bo_cond_enrolledincohorts_cohortids_operator | User has to be member to at least one of these cohorts |
+     | bo_cond_enrolledincohorts_sqlfiltercheck     |                                                        |
+    And I press "Save"
+    And I log out
+    ## Check availability as student1
+    And I am on the "My booking" Activity page logged in as student1
+    And I should see "Option - advanced availability" in the ".allbookingoptionstable_r1" "css_element"
+    And I should see "Booking not allowed because you are not enrolled in at least one of the following cohort(s): System booking cohort 1, System booking cohort 2" in the ".allbookingoptionstable_r1" "css_element"
+    ## And I should see "Booking not allowed because you are not enrolled in all of the following cohort(s): System booking cohort 1, System booking cohort 2" in the ".allbookingoptionstable_r1" "css_element"
+    And I should not see "Book now" in the ".allbookingoptionstable_r1" "css_element"
+    And I log out
+    And I am on the "My booking" Activity page logged in as student2
+    And I should see "Option - advanced availability" in the ".allbookingoptionstable_r1" "css_element"
+    And I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"

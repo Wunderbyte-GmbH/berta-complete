@@ -438,6 +438,7 @@ class bo_info {
 
         $conditions = self::get_conditions(MOD_BOOKING_CONDPARAM_JSON_ONLY);
 
+        $sqlfilter = 0;
         foreach ($conditions as $condition) {
             if (!empty($condition)) {
                 $fullclassname = get_class($condition); // With namespace.
@@ -448,6 +449,9 @@ class bo_info {
                 if (isset($fromform->{$key})) {
                     // For each condition, add the appropriate form fields.
                     $conditionobject = $condition->get_condition_object_for_json($fromform);
+                    if (!empty($conditionobject->sqlfilter)) {
+                        $sqlfilter = MOD_BOOKING_SQL_FILTER_ACTIVE_JSON_BO;
+                    }
                     if (!empty($conditionobject->class)) {
                         $arrayforjson[] = $conditionobject;
                     }
@@ -465,7 +469,58 @@ class bo_info {
         }
         // This will be saved in the table booking_options in the 'availability' field.
         $fromform->availability = json_encode($arrayforjson);
+        $fromform->sqlfilter = $sqlfilter;
         // Without an optionid we do nothing.
+    }
+
+    /**
+     * Add the sql from the conditions.
+     *
+     * @return array
+     */
+    public static function return_sql_from_conditions() {
+        global $PAGE;
+        // First, we get all the relevant conditions.
+        $conditions = self::get_conditions(MOD_BOOKING_CONDPARAM_MFORM_ONLY);
+        $selectall = '';
+        $fromall = '';
+        $filterall = '';
+        $paramsarray = [];
+
+        $cm = $PAGE->cm;
+        if ($cm && ((has_capability('mod/booking:updatebooking', $cm->context)))) {
+            // With this capability, ignore filter for sql check.
+            // Because of missing $cm this will not work for display outside a course i.e. in shortcodes display.
+            // A teacher would not see hidden bookingconditions on startpage but in courselist they would be displayed.
+            return ['', '', '', [], ''];
+        }
+        foreach ($conditions as $class) {
+
+            $condition = new $class();
+
+            list($select, $from, $filter, $params, $where) = $condition->return_sql();
+
+            $selectall .= $select;
+            $fromall .= $from;
+            $filterall .= $filter;
+            if (!empty($where)) {
+                $wherearray[] = $where;
+            }
+            $paramsarray = array_merge($paramsarray, $params);
+
+        }
+
+        $where = implode(" AND ", $wherearray);
+
+        // For performance reason we have a flag if we need to check the value at all.
+        $where = " (
+                        sqlfilter < 1 OR (
+                            $where
+                            )
+                        )
+                        ";
+
+        return ['', '', '', $paramsarray, $where];
     }
 
     /**
@@ -569,16 +624,27 @@ class bo_info {
         // ... then we need to verify if we are already booked.
         // If not, we need to do it now.
 
-        if (!isset($conditions[$pagenumber]['pre'])) {
+        if (!isset($conditions[$pagenumber]['pre'])
+            && !($conditions[$pagenumber]['id'] === MOD_BOOKING_BO_COND_BOOKITBUTTON)) {
 
             // Every time we load a page which is not "pre", we need to check if we are booked.
             // First, determine if this is a booking option with a price.
 
             // Book this option.
             if (!self::has_price_set($results)) {
-                $response = booking_bookit::bookit('option', $optionid, $userid);
-                // We need to book twice, as confirmation might be in place.
-                $response = booking_bookit::bookit('option', $optionid, $userid);
+
+                // Check if we are already booked.
+                $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+                $boinfo = new bo_info($settings);
+
+                // Check option availability if user is not logged yet.
+                list($id, $isavailable, $description) = $boinfo->is_available($settings->id, $userid, false);
+
+                if ($id !== MOD_BOOKING_BO_COND_ALREADYBOOKED) {
+                    $response = booking_bookit::bookit('option', $optionid, $userid);
+                    // We need to book twice, as confirmation might be in place.
+                    $response = booking_bookit::bookit('option', $optionid, $userid);
+                }
             } else {
                 if (class_exists('local_shopping_cart\shopping_cart')) {
                     shopping_cart::add_item_to_cart('mod_booking', 'option', $optionid, $userid);
@@ -876,9 +942,10 @@ class bo_info {
         // This single page has to be necessarily the confirmation page.
         if ((count($prepages['pre']) + count($prepages['post'])) < 2) {
             return [];
-        } else {
-            return $conditionsarray;
+        } else if (empty($prepages['pre'])) {
+            array_unshift($conditionsarray, $prepages['book']);
         }
+        return $conditionsarray;
     }
 
     /**
@@ -1052,5 +1119,31 @@ class bo_info {
         $footerdata['data']['backbutton'] = $backbutton; // Show button at all.
         $footerdata['data']['backaction'] = $backaction; // Which action should be taken?
         $footerdata['data']['backlabel'] = $backlabel; // The visible label.
+    }
+
+    /**
+     * Returns part of SQL-Query according to DB Family for a specified column and key.
+     *
+     * @param string $dbcolumn
+     * @param string $jsonkey
+     *
+     * @return string
+     *
+     */
+    public static function check_for_sqljson_key(string $dbcolumn, string $jsonkey): string {
+        global $DB;
+
+        $databasetype = $DB->get_dbfamily();
+        // The $key param is the name of the param in json.
+        switch ($databasetype) {
+            case 'postgres':
+                return " ($dbcolumn->>'$jsonkey')";
+            case 'mysql':
+                return " JSON_EXTRACT($dbcolumn, '$jsonkey')";
+            case 'mariadb':
+                return " JSON_EXTRACT($dbcolumn, '$jsonkey')";
+            default:
+                return '';
+        }
     }
 }

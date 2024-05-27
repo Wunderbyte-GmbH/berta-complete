@@ -38,6 +38,12 @@ class behat_mod_booking_generator extends behat_generator_base {
                 'required' => ['booking', 'text', 'course', 'description'],
                 'switchids' => ['booking' => 'bookingid', 'course' => 'courseid', 'semester' => 'semesterid'],
             ],
+            'answers' => [
+                'singular' => 'answer',
+                'datagenerator' => 'answer',
+                'required' => ['booking', 'option', 'user'],
+                'switchids' => ['booking' => 'bookingid', 'option' => 'optionid', 'user' => 'userid'],
+            ],
             'pricecategories' => [
                 'datagenerator' => 'pricecategory',
                 'required' => ['ordernum', 'identifier', 'name', 'defaultvalue'],
@@ -45,6 +51,11 @@ class behat_mod_booking_generator extends behat_generator_base {
             'campaigns' => [
                 'datagenerator' => 'campaign',
                 'required' => ['name', 'type', 'json', 'starttime', 'endtime', 'pricefactor', 'limitfactor'],
+            ],
+            'subbookings' => [
+                'datagenerator' => 'subbooking',
+                'required' => ['name', 'type', 'option', 'block', 'json'],
+                'switchids' => ['option' => 'optionid'],
             ],
             'semesters' => [
                 'datagenerator' => 'semester',
@@ -88,6 +99,21 @@ class behat_mod_booking_generator extends behat_generator_base {
 
         if (!$id = $DB->get_field('booking_semesters', 'id', ['identifier' => $identifier])) {
             throw new Exception('The specified booking semester with name "' . $identifier . '" does not exist');
+        }
+        return $id;
+    }
+
+    /**
+     * Get the optionID using an identifier.
+     *
+     * @param string $identifier
+     * @return int The option id
+     */
+    protected function get_option_id(string $identifier): int {
+        global $DB;
+
+        if (!$id = $DB->get_field('booking_options', 'id', ['text' => $identifier])) {
+            throw new Exception('The specified booking option with name text "' . $identifier . '" does not exist');
         }
         return $id;
     }

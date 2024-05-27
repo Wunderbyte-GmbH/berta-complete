@@ -38,7 +38,7 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * Condition to identify the user who triggered an event (userid of event).
  *
  * @package mod_booking
- * @copyright 2022 Wunderbyte GmbH <info@wunderbyte.at>
+ * @copyright 2024 Wunderbyte GmbH <info@wunderbyte.at>
  * @author Bernhard Fischer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -116,11 +116,15 @@ class select_user_from_event implements booking_rule_condition {
     public function add_condition_to_mform(MoodleQuickForm &$mform, array &$ajaxformdata = null) {
 
         // The event selected in the form.
-        $eventnameonly = str_replace("\\mod_booking\\event\\", "", $ajaxformdata["rule_react_on_event_event"]);
+        $eventnameonly = '';
+        if (!empty($ajaxformdata["rule_react_on_event_event"])) {
+            $eventnameonly = str_replace("\\mod_booking\\event\\", "", $ajaxformdata["rule_react_on_event_event"]);
+        }
 
         // This is a list of events supporting relateduserid (affected user of the event).
         $eventssupportingrelateduserid = [
             'bookingoption_completed',
+            'custom_message_sent',
             // More events yet to come...
         ];
 

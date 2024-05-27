@@ -61,6 +61,8 @@ $string['expirationtime:description'] = 'How long should the item be in the cart
 $string['cancelationfee'] = 'Cancelation fee';
 $string['bookingfee'] = 'Booking fee';
 $string['bookingfee_desc'] = 'Booking fee for every checkout.';
+$string['rebookingfee'] = 'Rebooking fee';
+$string['rebookingfee_desc'] = 'Rebooking fee for every rebooking.';
 $string['uniqueidentifier'] = 'Unique id';
 $string['uniqueidentifier_desc'] = 'Define the starting id, if you want. If you set this value to 10000000 the first purchase will have the id 10000001. If you set the value, the max number of digits will be defined as well. If you set it to 1, you can only have 9 purchases.';
 $string['bookingfeeonlyonce'] = 'Charge booking fee only once';
@@ -113,6 +115,14 @@ $string['privacyheading'] = "Privacy settings";
 $string['privacyheadingdescription'] = "Set behaviour related to the privacy settings in Moodle";
 $string['deleteledger'] = "Delete ledger on deletion request of user";
 $string['deleteledgerdescription'] = "The ledger will hold payment information which you might need to keep for legal reasons, even when a user is deleted.";
+
+$string['rebookingheading'] = "Rebookings";
+$string['rebookingheadingdescription'] = "Purchases can be rebooked under certain circumstances. This means that, for example, a purchased course is canceled. Instead of a credit, it is immediately rebooked to another course. No additional booking fee is charged. Any overpayments will be forfeited.";
+$string['rebookingperiod'] = "Rebooking Period";
+$string['rebookingperioddesc'] = "The time during which the maximum number of rebookings can be restricted. Typically the duration of a semester.";
+$string['rebookingmaxnumber'] = "Maximum Number of Rebookings";
+$string['rebookingmaxnumberdesc'] = "For example, only 3 rebookings are allowed within 100 days";
+$string['rebookingalert'] = "To rebook, add another course to your cart";
 
 // Capabilities.
 $string['shopping_cart:canbuy'] = 'Can buy';
@@ -571,18 +581,18 @@ $string['privacy:metadata:local_shopping_cart_invoices:invoiceid'] = 'Invoice ID
 
 // Shopping cart handler.
 $string['allowinstallment'] = 'Allow installments';
-$string['allowinstallment_help'] = 'With installments, only a portion of the total amount needs to be paid initially.';
+$string['allowinstallment_help'] = 'With installments, only a part of the total amount needs to be paid initially.';
 $string['useinstallments'] = "Use installment payments";
 $string['ledgerinstallment'] = 'The following installment payment was registered: Number {$a->id}, due date {$a->date}';
 
 $string['numberofpayments'] = 'Number of Payments';
-$string['numberofpayments_help'] = 'This number refers to the required payments AFTER the first payment.';
+$string['numberofpayments_help'] = "This number refers to the required payments AFTER the first payment. Please note that installments will not be possible if there isn't enough time until coursestart, considering number of payments and time between payments (admin plugin setting).";
 $string['duedate'] = 'Final payment date';
 $string['duedate_help'] = 'The full amount must be paid by this date. If the date is 100 days in the future
 and two installment payments are set, half of the remaining amount must be paid after 50 days following the
 first payment, and the rest after 100 days.';
 $string['duedatevariable'] = 'Due nr. of days after initial purchase';
-$string['duedatevariable_help'] = 'Enter the number of days after initial purchase when last payment is due';
+$string['duedatevariable_help'] = 'Enter the number of days after initial purchase when last payment is due. ';
 $string['duedaysbeforecoursestart'] = 'Due nr. of days before coursestart';
 $string['duedaysbeforecoursestart_help'] = 'Enter the number of days before course start when last payment is due';
 $string['on'] = "on";

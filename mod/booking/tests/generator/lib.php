@@ -28,11 +28,9 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 use mod_booking\booking_option;
-use mod_booking\price;
-use mod_booking\semester;
-use mod_booking\customfield\booking_handler;
 use mod_booking\booking_campaigns\campaigns_info;
 use mod_booking\singleton_service;
+use mod_booking\bo_availability\bo_info;
 
 /**
  * Class to handle module booking data generator
@@ -179,6 +177,28 @@ class mod_booking_generator extends testing_module_generator {
     }
 
     /**
+     * Function to create a dummy student's answer on option.
+     *
+     * @param array|stdClass $record
+     * @return int $id the booking answer status
+     */
+    public function create_answer($record = null) {
+        global $DB;
+
+        $record = (object) $record;
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($record->optionid);
+        $boinfo = new bo_info($settings);
+        $option = singleton_service::get_instance_of_booking_option($settings->cmid, $settings->id);
+        $user = $DB->get_record('user', ['id' => (int)$record->userid], '*', MUST_EXIST);
+        $option->user_submit_response($user, 0, 0, 0, MOD_BOOKING_VERIFIED);
+        list($id, $isavailable, $description) = $boinfo->is_available($settings->id, $record->userid, true);
+        // Value of $id expected to be MOD_BOOKING_BO_COND_ALREADYBOOKED.
+
+        return $id;
+    }
+
+    /**
      * Function to create a dummy pricecategory option.
      *
      * @param array|stdClass $record
@@ -198,7 +218,6 @@ class mod_booking_generator extends testing_module_generator {
      * Function to create a dummy campaign option.
      *
      * @param array|stdClass $record
-     * @return stdClass the booking campaign object
      */
     public function create_campaign($record = null) {
 
@@ -213,9 +232,36 @@ class mod_booking_generator extends testing_module_generator {
         }
 
         campaigns_info::save_booking_campaign($record);
-        $camp = campaigns_info::get_campaign_by_name($record->name);
+    }
 
-        return $camp;
+    /**
+     * Function to create a dummy subooking option.
+     *
+     * @param array|stdClass $record
+     * @return stdClass the booking subbooking DB object
+     */
+    public function create_subbooking($record = null) {
+        global $DB, $USER;
+
+        $record = (object) $record;
+
+        $record->timemodified = time();
+        $record->usermodified = $USER->id;
+
+        $record->id = $DB->insert_record('booking_subbooking_options', $record);
+
+        // Every time we save the subbooking, we have to invalidate caches.
+        // Trigger an event that booking option has been updated.
+        $booking = singleton_service::get_instance_of_booking_by_optionid($record->optionid);
+        $context = context_module::instance($booking->cmid);
+        $event = \mod_booking\event\bookingoption_updated::create([
+                                                                    'context' => $context,
+                                                                    'objectid' => $record->optionid,
+                                                                    'userid' => $USER->id,
+                                                                ]);
+        $event->trigger();
+
+        return $record;
     }
 
     /**

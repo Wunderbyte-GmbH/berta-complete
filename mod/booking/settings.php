@@ -272,6 +272,12 @@ if ($ADMIN->fulltree) {
                     'coursestarttime',
                     $canceldependentonarr));
 
+        $settings->add(
+            new admin_setting_configtext('booking/coolingoffperiod',
+                get_string('coolingoffperiod', 'mod_booking'),
+                get_string('coolingoffperiod_desc', 'mod_booking'), 0, PARAM_INT));
+
+
     } else {
         $settings->add(
             new admin_setting_heading('cancellationsettings',
@@ -770,6 +776,7 @@ if ($ADMIN->fulltree) {
             get_string('globalpollurlteacherstext', 'booking'), '', ''));
 
         // TODO: globalactivitycompletiontext is currently not implemented because activitycompletiontext isn't either.
+
     }
 }
 

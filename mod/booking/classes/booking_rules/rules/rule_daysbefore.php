@@ -89,20 +89,34 @@ class rule_daysbefore implements booking_rule {
 
         $numberofdaysbefore = [
             0 => get_string('choose...', 'mod_booking'),
-            1 => '1',
-            2 => '2',
-            3 => '3',
-            4 => '4',
-            5 => '5',
-            6 => '6',
-            7 => '7',
-            8 => '8',
-            9 => '9',
-            10 => '10',
-            15 => '15',
-            20 => '20',
-            25 => '25',
-            30 => '30',
+            1 => get_string('daybefore1', 'mod_booking'),
+            -1 => get_string('dayafter1', 'mod_booking'),
+            2 => get_string('daybefore2', 'mod_booking'),
+            -2 => get_string('dayafter2', 'mod_booking'),
+            3 => get_string('daybefore3', 'mod_booking'),
+            -3 => get_string('dayafter3', 'mod_booking'),
+            4 => get_string('daybefore4', 'mod_booking'),
+            -4 => get_string('dayafter4', 'mod_booking'),
+            5 => get_string('daybefore5', 'mod_booking'),
+            -5 => get_string('dayafter5', 'mod_booking'),
+            6 => get_string('daybefore6', 'mod_booking'),
+            -6 => get_string('dayafter6', 'mod_booking'),
+            7 => get_string('daybefore7', 'mod_booking'),
+            -7 => get_string('dayafter7', 'mod_booking'),
+            8 => get_string('daybefore8', 'mod_booking'),
+            -8 => get_string('dayafter8', 'mod_booking'),
+            9 => get_string('daybefore9', 'mod_booking'),
+            -9 => get_string('dayafter9', 'mod_booking'),
+            10 => get_string('daybefore10', 'mod_booking'),
+            -10 => get_string('dayafter10', 'mod_booking'),
+            15 => get_string('daybefore15', 'mod_booking'),
+            -15 => get_string('dayafter15', 'mod_booking'),
+            20 => get_string('daybefore20', 'mod_booking'),
+            -20 => get_string('dayafter20', 'mod_booking'),
+            25 => get_string('daybefore25', 'mod_booking'),
+            -25 => get_string('dayafter25', 'mod_booking'),
+            30 => get_string('daybefore30', 'mod_booking'),
+            -30 => get_string('dayafter30', 'mod_booking'),
         ];
 
         // Get a list of allowed option fields (only date fields allowed).
@@ -113,6 +127,13 @@ class rule_daysbefore implements booking_rule {
             'bookingopeningtime' => get_string('rule_optionfield_bookingopeningtime', 'mod_booking'),
             'bookingclosingtime' => get_string('rule_optionfield_bookingclosingtime', 'mod_booking'),
         ];
+
+        // We support special treatments for shopping cart notifications.
+        if (class_exists('local_shopping_cart\shopping_cart')) {
+
+            $datefields['installmentpayment'] = get_string('installment', 'local_shopping_cart')
+                . " (" . get_string('pluginname', 'local_shopping_cart') . ")";
+        }
 
         $mform->addElement('static', 'rule_daysbefore_desc', '',
             get_string('rule_daysbefore_desc', 'mod_booking'));
@@ -159,6 +180,10 @@ class rule_daysbefore implements booking_rule {
         $jsonobject->ruledata = new stdClass();
         $jsonobject->ruledata->days = $data->rule_daysbefore_days ?? 0;
         $jsonobject->ruledata->datefield = $data->rule_daysbefore_datefield ?? '';
+        if (isset($data->useastemplate)) {
+            $jsonobject->useastemplate = $data->useastemplate;
+            $record->useastemplate = $data->useastemplate;
+        }
 
         $record->rulejson = json_encode($jsonobject);
         $record->rulename = $this->rulename;
@@ -257,9 +282,13 @@ class rule_daysbefore implements booking_rule {
      * @param int $optionid
      * @param int $userid
      * @param bool $testmode
+     * @param int $nextruntime
      * @return array
      */
-    public function get_records_for_execution(int $optionid = 0, int $userid = 0, bool $testmode = false) {
+    public function get_records_for_execution(int $optionid = 0,
+                                              int $userid = 0,
+                                              bool $testmode = false,
+                                              int $nextruntime = 0) {
         global $DB;
 
         // Execution of a rule is a complex action.
@@ -310,7 +339,7 @@ class rule_daysbefore implements booking_rule {
 
         $condition->set_conditiondata_from_json($this->rulejson);
 
-        $condition->execute($sql, $params);
+        $condition->execute($sql, $params, $testmode, $nextruntime);
 
         $sqlstring = "SELECT $sql->select FROM $sql->from WHERE $sql->where";
 

@@ -60,6 +60,9 @@ $string['updatebooking'] = 'Update booking';
 $string['booking:manageoptiontemplates'] = "Manage option templates";
 $string['booking:editbookingrules'] = "Edit rules (Pro)";
 $string['booking:overrideboconditions'] = 'User can book even when conditions return false.';
+$string['cohort'] = 'Cohort';
+$string['cohorts'] = 'Cohorts';
+$string['cohort_s'] = 'Cohort(s)';
 $string['confirmchangesemester'] = 'YES, I really want to delete all existing dates of the booking instance and generate new ones.';
 $string['course'] = 'Moodle course';
 $string['courseduplicating'] = 'DO NOT REMOVE this item. Moodle course is being copied with next run of CRON task.';
@@ -373,6 +376,7 @@ $string['deletecategory'] = 'Delete';
 $string['deletesubcategory'] = 'Please, first delete all subcategories of this category!';
 $string['usedinbooking'] = 'You can\'t delete this category, because you\'re using it in booking!';
 $string['successfulldeleted'] = 'Category was deleted!';
+$string['sqlfiltercheckstring'] = 'Hide bookingoption when condition not met';
 
 // Events.
 $string['bookingoptiondate_created'] = 'Booking option date created';
@@ -521,6 +525,7 @@ $string['viewparam:cards'] = 'Cards view';
 
 $string['eventslist'] = 'Recent updates';
 $string['showrecentupdates'] = 'Show recent updates';
+$string['showmessages'] = 'Show messages';
 
 $string['error:semestermissingbutcanceldependentonsemester'] = 'The setting to calculate cancellation periods from semester start is active but semester is missing!';
 
@@ -613,6 +618,10 @@ $string['title'] = "title";
 $string['usercalendarurl'] = "usercalendarurl";
 $string['username'] = "username";
 $string['loopprevention'] = 'The placeholder {$a} causes a loop. Please replace it.';
+$string['duedate'] = 'duedate of installment';
+$string['numberofinstallment'] = 'numberofinstallment';
+$string['numberofinstallmentstring'] = 'installment number {$a}';
+$string['installmentprice'] = 'installmentprice';
 
 $string['configurefields'] = 'Configure fields and columns';
 $string['manageresponsespagefields'] = 'Manage responses - Page';
@@ -1371,9 +1380,8 @@ $string['duplicatemoodlecourses_desc'] = 'When this setting is active and you du
 then the connected Moodle course will also be duplicated. This will be done with an adhoc task,
 so be sure that CRON runs regularly.';
 
-// Mobile.
-$string['next'] = 'Next';
-$string['previous'] = 'Previous';
+$string['coolingoffperiod'] = 'Cancellation possible after x seconds';
+$string['coolingoffperiod_desc'] = 'To prevent users from canceling due to, for example, accidentally clicking the booking button too quickly, a cooling off period can be set in seconds. During this time, cancellation is not possible. Do not set more than a few seconds, as the waiting time is not explicitly shown to users.';
 
 // Privacy API.
 $string['privacy:metadata:booking_answers'] = 'Represents a booking of an event';
@@ -1839,6 +1847,7 @@ $string['bo_cond_onwaitinglist'] = 'onwaitinglist: User is on waiting list';
 $string['bo_cond_askforconfirmation'] = 'askforconfirmation: Manually confirm booking';
 $string['bo_cond_previouslybooked'] = 'User has previously booked a certain option';
 $string['bo_cond_enrolledincourse'] = 'User is enrolled in certain course(s)';
+$string['bo_cond_enrolledincohorts'] = 'User is enrolled in certain cohort(s)';
 $string['bo_cond_priceisset'] = 'priceisset: Price is set';
 $string['bo_cond_userprofilefield_1_default'] = 'User profile field has a certain value';
 $string['bo_cond_userprofilefield_2_custom'] = 'Custom user profile field has a certain value';
@@ -1927,6 +1936,17 @@ $string['bo_cond_previouslybooked_full_available'] = 'Booking is possible';
 $string['bo_cond_previouslybooked_not_available'] = 'Only users who have previously booked <a href="{$a}">this option</a> are allowed to book.';
 $string['bo_cond_previouslybooked_full_not_available'] = 'Only users who have previously booked <a href="{$a}">this option</a> are allowed to book.
     <br>But you have the right to book a user anyways.';
+
+$string['bo_cond_enrolledincohorts_available'] = 'Book it';
+$string['bo_cond_enrolledincohorts_full_available'] = 'Booking is possible';
+$string['bo_cond_enrolledincohorts_not_available'] = 'Booking not allowed because you are not enrolled in at least one of the following cohort(s): {$a}';
+$string['bo_cond_enrolledincohorts_full_not_available'] = 'Only users who are enrolled in at least one of the following cohort(s) are allowed to book: {$a}
+    <br>But you have the right to book a user anyways.';
+$string['bo_cond_enrolledincohorts_not_available_and'] = 'Booking not allowed because you are not enrolled in all of the following cohort(s): {$a}';
+$string['bo_cond_enrolledincohorts_full_not_available_and'] = 'Only users who are enrolled in all of the following cohort(s) are allowed to book: {$a}
+    <br>But you have the right to book a user anyways.';
+$string['bo_cond_enrolledincohorts_warning'] = 'You have a very high number of cohorts on your system. Not all of them will be available here. If that is a problem for you, please contact <a mailto="contact@wunderyte.at">Wunderbyte</a>';
+
 
 $string['bo_cond_enrolledincourse_available'] = 'Book it';
 $string['bo_cond_enrolledincourse_full_available'] = 'Booking is possible';
@@ -2026,8 +2046,11 @@ $string['overrideoperator'] = 'Operator';
 $string['overrideoperator:and'] = 'AND';
 $string['overrideoperator:or'] = 'OR';
 $string['bo_cond_previouslybooked_optionid'] = 'Must be already booked';
+$string['allcohortsmustbefound'] = 'User has to be member of all cohorts';
 $string['allcoursesmustbefound'] = 'User has to be subscribed to all courses';
-$string['onecoursemustbefound'] = 'User hast to be subscribed to only one of these courses';
+$string['onecohortmustbefound'] = 'User has to be member to at least one of these cohorts';
+$string['onecoursemustbefound'] = 'User has to be subscribed to at least only one of these courses';
+
 
 $string['noelement'] = "No Element";
 $string['checkbox'] = "Checkbox";
@@ -2036,6 +2059,9 @@ $string['textarea'] = "Textarea";
 $string['shorttext'] = "Shorttext";
 $string['formtype'] = "Type of form";
 $string['bo_cond_customform_label'] = "Label";
+$string['bo_cond_customform_notempty'] = 'Must not be empty';
+$string['bo_cond_customform_value'] = 'Value';
+$string['bo_cond_customform_value_help'] = 'When a dropdown menu is selected, please enter one value per line. The values and displayed values can be entered separately, for example, "1 => My first value" etc.';
 
 // Teacher_performed_units_report.php.
 $string['error:wrongteacherid'] = 'Error: No user could be found for the provided "teacherid".';
@@ -2117,6 +2143,9 @@ $string['bookingrule'] = 'Rule';
 $string['addbookingrule'] = 'Add rule';
 $string['deletebookingrule'] = 'Delete rule';
 $string['deletebookingrule_confirmtext'] = 'Do you really want to delete the following rule?';
+$string['bookingruletemplates'] = 'Load a template rule';
+$string['bookinguseastemplate'] = 'Set this rule as template';
+$string['bookingdefaulttemplate'] = 'Choose template...';
 
 $string['rule_event'] = 'Event';
 $string['rule_mailtemplate'] = 'Mail template';
@@ -2124,7 +2153,7 @@ $string['rule_datefield'] = 'Date field';
 $string['rule_customprofilefield'] = 'Custom user profile field';
 $string['rule_operator'] = 'Operator';
 $string['rule_value'] = 'Value';
-$string['rule_days'] = 'Number of days before';
+$string['rule_days'] = 'Number of days';
 
 $string['rule_optionfield'] = 'Option field to compare';
 $string['rule_optionfield_coursestarttime'] = 'Begin (coursestarttime)';
@@ -2140,8 +2169,8 @@ $string['rule_sendmail_cpf_desc'] = 'Choose an event that should trigger the "Se
  (you can use placeholders like {bookingdetails}) and define to which users the e-mail should be sent.
   Example: All users having the value "Vienna center" in a custom user profile field called "Study center".';
 
-$string['rule_daysbefore'] = 'Trigger n days before a certain date';
-$string['rule_daysbefore_desc'] = 'Choose a date field of booking options and the number of days BEFORE that date.';
+$string['rule_daysbefore'] = 'Trigger n days in relation to a certain date';
+$string['rule_daysbefore_desc'] = 'Choose a date field of booking options and the number of days in relation to that date.';
 $string['rule_react_on_event'] = "React on event";
 $string['rule_react_on_event_desc'] = "Choose an event that should trigger the rule.<br>
 <b>Hint:</b> You can use the placeholder <code>{eventdescription}</code> to show a description of the event.";
@@ -2174,6 +2203,9 @@ $string['studentdeleted'] = 'Users who were already deleted';
 $string['useraffectedbyevent'] = 'User affected by the event';
 $string['userwhotriggeredevent'] = 'User who triggered the event';
 $string['condition_select_user_from_event_type'] = 'Choose role';
+
+$string['select_user_shopping_cart'] = "Choose user who has to pay installments";
+$string['condition_select_user_shopping_cart_desc'] = "User with payment obligation is chosen";
 
 // Booking rules actions.
 $string['bookingaction'] = "Action";
@@ -2335,6 +2367,7 @@ $string['mod/booking:reducedoptionform4'] = 'Reduced booking option 4';
 $string['mod/booking:reducedoptionform5'] = 'Reduced booking option 5';
 
 // Vue strings.
+$string['vue_dashboard_checked'] = 'Default Checked';
 $string['vue_dashboard_name'] = 'Name';
 $string['vue_dashboard_course_count'] = 'Course Count';
 $string['vue_dashboard_path'] = 'Path';
@@ -2367,3 +2400,55 @@ $string['vue_notification_title_action_success'] = 'Configuration was {$a}';
 $string['vue_notification_text_action_success'] = 'Configuration was {$a} successfully.';
 $string['vue_notification_title_action_fail'] = 'Configuration was not  {$a}';
 $string['vue_notification_text_action_fail'] = 'Something went wrong while saving. The changes have not been made.';
+$string['vue_dashboard_goto_category'] = 'Go to category';
+
+// Mobile.
+$string['mobileapp_heading'] = "Mobile App";
+$string['mobileapp_heading_desc'] = "Choose your booking instance to display on the connected Moodle Mobile Apps.";
+$string['mobileappnobookinginstance'] = "No booking instance on your plattform";
+$string['mobileappnobookinginstance_desc'] = "You need to create at least one booking instance";
+$string['mobileappsetinstance'] = "Booking instance";
+$string['mobileappsetinstancedesc'] = "Choose the Booking instance which should be shown on the mobile app.";
+$string['details'] = 'Details';
+$string['notbookable'] = "Not bookable";
+$string['next'] = 'Next';
+$string['previous'] = 'Previous';
+$string['show_dates'] = 'Show dates';
+$string['mobileapp_price'] = 'Price';
+$string['mobile_notification'] = 'Form has been submitted';
+$string['mobile_submitted_success'] = 'You can continue and book the course';
+$string['mobile_reset_submission'] = 'Reset Submission form';
+$string['mobile_set_submission'] = 'Submit';
+$string['mobile_field_required'] = 'This field is required';
+// Days before or after.
+$string['choose...'] = 'Choose...';
+$string['daybefore1'] = '1 day before';
+$string['dayafter1'] = '1 day after';
+$string['daybefore2'] = '2 days before';
+$string['dayafter2'] = '2 days after';
+$string['daybefore3'] = '3 days before';
+$string['dayafter3'] = '3 days after';
+$string['daybefore4'] = '4 days before';
+$string['dayafter4'] = '4 days after';
+$string['daybefore5'] = '5 days before';
+$string['dayafter5'] = '5 days after';
+$string['daybefore6'] = '6 days before';
+$string['dayafter6'] = '6 days after';
+$string['daybefore7'] = '7 days before';
+$string['dayafter7'] = '7 days after';
+$string['daybefore8'] = '8 days before';
+$string['dayafter8'] = '8 days after';
+$string['daybefore9'] = '9 days before';
+$string['dayafter9'] = '9 days after';
+$string['daybefore10'] = '10 days before';
+$string['dayafter10'] = '10 days after';
+$string['daybefore15'] = '15 days before';
+$string['dayafter15'] = '15 days after';
+$string['daybefore20'] = '20 days before';
+$string['dayafter20'] = '20 days after';
+$string['daybefore25'] = '25 days before';
+$string['dayafter25'] = '25 days after';
+$string['daybefore30'] = '30 days before';
+$string['dayafter30'] = '30 days after';
+
+

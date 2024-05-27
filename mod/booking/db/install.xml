@@ -32,7 +32,7 @@
         <FIELD NAME="duration" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Duration - info field."/>
         <FIELD NAME="points" TYPE="number" LENGTH="10" NOTNULL="false" SEQUENCE="false" DECIMALS="2" COMMENT="Points, get from this course."/>
         <FIELD NAME="organizatorname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Name of organizator - for sending emails."/>
-        <FIELD NAME="pollurl" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Url to send in email - poll for evaluation."/>
+        <FIELD NAME="pollurl" TYPE="char" LENGTH="1000" NOTNULL="false" SEQUENCE="false" COMMENT="Url to send in email - poll for evaluation."/>
         <FIELD NAME="addtogroup" TYPE="int" LENGTH="4" NOTNULL="false" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="categoryid" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="pollurltext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
@@ -40,7 +40,7 @@
         <FIELD NAME="notificationtext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="userleave" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="enablecompletion" TYPE="int" LENGTH="3" NOTNULL="false" DEFAULT="1" SEQUENCE="false" COMMENT="For activity completion API!"/>
-        <FIELD NAME="pollurlteachers" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+        <FIELD NAME="pollurlteachers" TYPE="char" LENGTH="1000" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="pollurlteacherstext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="activitycompletiontext" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="cancancelbook" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Can cancel or book when the seminar is started?"/>
@@ -172,6 +172,7 @@
         <FIELD NAME="credits" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Elective feature."/>
         <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="Elective feature."/>
         <FIELD NAME="json" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="This allows to add supplementary information which is not performance sensible like after booking actions etc."/>
+        <FIELD NAME="sqlfilter" TYPE="int" LENGTH="2" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="This is a marker to show if the availability json in this specific option needs to be parsed to filter. 0 means no, 1 means yes."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
@@ -467,6 +468,7 @@
         <FIELD NAME="rulename" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Name of the rule"/>
         <FIELD NAME="rulejson" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON defining the rule."/>
         <FIELD NAME="eventname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="For eventbased rules, for faster execution"/>
+        <FIELD NAME="useastemplate" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="The value 1 means that this rule is a template."/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id"/>

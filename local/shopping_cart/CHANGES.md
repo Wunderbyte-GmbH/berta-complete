@@ -1,3 +1,13 @@
+## Version 0.9.0 (2024052101)
+* Bugfixes: Add creation date to ledger.
+* Bugfixes: Installment checkbox.
+* Bugfixes: Correct price calculation.
+* Bugfixes: Duplicated treatment for rebooking.
+
+## Version 0.8.9 (2024051501)
+* Improvement: Add rebookingfee.
+* Bugfixes: A couple of rebooking bugs.
+
 ## Version 0.8.8 (2024051500)
 * Improvement: Add Installments.
 * Bugfix: Missing ledger.

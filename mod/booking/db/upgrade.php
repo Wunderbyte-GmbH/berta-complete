@@ -3750,5 +3750,46 @@ function xmldb_booking_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024040901, 'booking');
     }
 
+    if ($oldversion < 2024052200) {
+
+        // Define field sqlfilter to be added to booking_options.
+        $table = new xmldb_table('booking_options');
+        $field = new xmldb_field('sqlfilter', XMLDB_TYPE_INTEGER, '2', null, null, null, '0', 'json');
+
+        // Conditionally launch add field sqlfilter.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Booking savepoint reached.
+        upgrade_mod_savepoint(true, 2024052200, 'booking');
+    }
+
+    if ($oldversion < 2024052300) {
+        // Define field id to be added to booking_rules.
+        $table = new xmldb_table('booking_rules');
+        $field = new xmldb_field('useastemplate', XMLDB_TYPE_INTEGER, '10', null, null, null, '0', null);
+
+        // Conditionally launch add field id.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Booking savepoint reached.
+        upgrade_mod_savepoint(true, 2024052300, 'booking');
+    }
+
+    if ($oldversion < 2024052400) {
+        // Changing precision of fields pollurlteachers & pollurl on table booking_options to (1000).
+        $table = new xmldb_table('booking_options');
+        $field1 = new xmldb_field('pollurl', XMLDB_TYPE_CHAR, '1000', null, null, null, null, 'address');
+        $field2 = new xmldb_field('pollurlteachers', XMLDB_TYPE_CHAR, '1000', null, null, null, null, 'address');
+
+        // Launch change of precision for fields pollurlteachers & pollurl.
+        $dbman->change_field_type($table, $field1);
+        $dbman->change_field_type($table, $field2);
+        // Booking savepoint reached.
+        upgrade_mod_savepoint(true, 2024052400, 'booking');
+    }
     return true;
 }

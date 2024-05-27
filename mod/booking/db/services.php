@@ -26,13 +26,21 @@
 defined('MOODLE_INTERNAL') || die();
 
 $functions = [
-    'mod_booking_update_bookingnotes' => [
-        'classname' => 'mod_booking\external\update_bookingnotes',
-        'description' => 'Update the booking notes via AJAX',
+    'mod_booking_bookit' => [
+        'classname' => 'mod_booking\external\bookit',
+        'description' => 'Book option or suboption via ajax',
         'type' => 'write',
+        'capabilities' => 'mod/booking:choose',
         'ajax' => true,
-        'capabilities' => 'mod/booking:readresponses',
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'local_mobile'],
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'moodle_mobile_app'],
+    ],
+    'mod_booking_get_submission_mobile' => [
+      'classname' => 'mod_booking\external\get_submission_mobile',
+      'description' => 'Checks the submission form',
+      'type' => 'read',
+      'capabilities' => '',
+      'ajax' => 1,
+      'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE, 'moodle_mobile_app'],
     ],
     'mod_booking_addbookingoption' => [ // Function will be added manually to service, only for admin use.
         'classname' => 'mod_booking\external\addbookingoption',
@@ -87,13 +95,6 @@ $functions = [
         'classname' => 'mod_booking\external\load_pre_booking_page',
         'description' => 'Loads the injected pre booking page from the right bo_condition',
         'type' => 'read',
-        'capabilities' => '',
-        'ajax' => true,
-    ],
-    'mod_booking_bookit' => [
-        'classname' => 'mod_booking\external\bookit',
-        'description' => 'Book option or suboption via ajax',
-        'type' => 'write',
         'capabilities' => '',
         'ajax' => true,
     ],
@@ -156,6 +157,13 @@ $functions = [
     'mod_booking_set_parent_content' => [
         'classname' => 'mod_booking\external\save_option_field_config',
         'description' => 'Returns all possible configurable fields of option form',
+        'type' => 'read',
+        'capabilities' => '',
+        'ajax' => 1,
+    ],
+    'mod_booking_set_checked_booking_instance' => [
+        'classname' => 'mod_booking\external\set_checked_booking_instance',
+        'description' => 'Set booking instance config',
         'type' => 'read',
         'capabilities' => '',
         'ajax' => 1,

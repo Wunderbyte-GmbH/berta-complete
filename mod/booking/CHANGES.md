@@ -1,3 +1,43 @@
+
+## Version 8.3.6 (2024052400)
+* Improvement: Upgrade fields pollurlteachers & pollurl up to 1000 chars.
+* Improvement: Display sent messages in bo report.
+* Improvement: Add coolingoffperiod to avoid unintentional double clicks.
+* Bugfix: Avoid errors for restorement.
+* Bugfix: Fieldofstudy Display.
+* Bugfix: Fix prepage for subbooking.
+* Bugfix: Fix filter display on view.php.
+
+## Version 8.3.5 (2024052300)
+* Bugfix: Look at cancel until date also for cancel purchase button
+
+## Version 8.3.4 (2024052201)
+* Bugfix: Update events on booking optiondate change (instead of insert).
+* Bugfix: Don't impose dark text in bookingoption form.
+
+## Version 8.3.3 (2024052200)
+* Improvement: Add warning when exceeding max n of cohorts (set to 500).
+* Improvement: Checkbox for booking instance.
+* Bugfix: Check for berta settings.
+
+## Version 8.3.1 (2024052101)
+* Bugfix: Sorting of waitinglist in mysql dbfamily.
+
+## Version 8.3.0 (2024052100)
+* Improvement: Add placeholders for installments (local_shopping_cart)
+* Improvement: Support moodle mobile app. Support for booking options and using custom forms.
+* Improvement: Enable rule for timestamps (days) after dueday.
+* Improvement: Enable sql filter for mariadb/mysql.
+* Bugfix: For teachers responsible for a bookingoption, link to teacherpage instead of user profile.
+
+## Version 8.2.9 (2024050800)
+* Improvement: For teachers responsible for a bookingoption, link to teacherpage instead of user profile.
+* Improvement: Allow confirmation when there is is no pre booking page.
+* Bugfix: Users on notification list must not be enroled in moodle course.
+* Bugfix: Check if already booked before booking again.
+* Bugfix: Remove unnecessary inclusion of question/category from requirements.
+* Bugfix: Create bookingcampaign via DB and view as teacher.
+
 ## Version 8.2.8 (2024042900)
 * Bugfix: Cashiers can still overbook when waitinglist is full
 

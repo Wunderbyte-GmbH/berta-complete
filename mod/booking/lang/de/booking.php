@@ -57,6 +57,9 @@ $string['updatebooking'] = 'Update Buchung';
 $string['booking:manageoptiontemplates'] = "Buchungsoptionsvorlagen verwalten";
 $string['booking:editbookingrules'] = "Regeln bearbeiten (Pro)";
 $string['booking:overrideboconditions'] = 'Nutzer:in darf buchen auch wenn Verfügbarkeit false zurückliefert.';
+$string['cohort'] = 'Globale Gruppe';
+$string['cohorts'] = 'Globale Gruppen';
+$string['cohort_s'] = 'Globale Gruppe(n)';
 $string['collapsedescriptionoff'] = 'Beschreibungen nicht einklappen';
 $string['collapsedescriptionmaxlength'] = 'Beschreibungen einklappen (Zeichenanzahl)';
 $string['collapsedescriptionmaxlength_desc'] = 'Geben Sie die maximale Anzahl an Zeichen, die eine Beschreibung haben darf, ein.
@@ -372,6 +375,7 @@ $string['deletecategory'] = 'Löschen';
 $string['deletesubcategory'] = 'Löschen Sie zuerst alle Unterkategorien dieser Kategorie!';
 $string['usedinbooking'] = 'Das Löschen dieser Kategorie/n ist nicht möglich, da sie verwendet werden!';
 $string['successfulldeleted'] = 'Kategorie wurde erfolgreich gelöscht!';
+$string['sqlfiltercheckstring'] = 'Bookingoption ausblenden wenn diese Bedingung nicht erfüllt ist';
 
 // Events.
 $string['bookingoptiondate_created'] = 'Termin erstellt';
@@ -511,6 +515,7 @@ $string['viewparam:cards'] = 'Karten-Ansicht';
 
 $string['eventslist'] = 'Letzte Bearbeitungen';
 $string['showrecentupdates'] = 'Zeige die letzten Bearbeitungen';
+$string['showmessages'] = 'Zeige Nachrichten';
 
 $string['error:semestermissingbutcanceldependentonsemester'] = 'Die Einstellung zur Berechnung der
 Stornierungsfrist ab Semesterbeginn ist aktiv, aber das Semester fehlt!';
@@ -604,6 +609,10 @@ $string['title'] = "Titel";
 $string['usercalendarurl'] = "Nutzer:innen Kalender";
 $string['username'] = "Usernamen";
 $string['loopprevention'] = 'Den Platzhalter {$a} hier zu verwenden führt zu einem Loop. Bitte entfernen Sie ihn .';
+$string['duedate'] = 'Fälligkeitsdatum';
+$string['numberofinstallment'] = 'Anzahl Ratenzahlung';
+$string['numberofinstallmentstring'] = '{$a}. Ratenzahlung';
+$string['installmentprice'] = 'Ratenzahlungspreis';
 
 $string['configurefields'] = 'Spalten und Felder anpassen';
 $string['manageresponsespagefields'] = 'Buchungen verwalten - Seite';
@@ -1336,6 +1345,9 @@ $string['duplicatemoodlecourses_desc'] = 'Wenn diese Einstellung aktiviert ist, 
 auch der verbundene Moodle-Kurs dupliziert (Achtung: Nutzer:innen-Daten des Moodle-Kurses werden nicht mit-dupliziert!).
 Da das Duplizieren asynchron über einen Adhoc-Task gemacht wird, stellen Sie bitte sicher, dass der CRON-Task regelmäßig läuft.';
 
+$string['coolingoffperiod'] = 'Stornierung möglich nach x Sekunden';
+$string['coolingoffperiod_desc'] = 'Um zu vermeiden, dass NutzerInnen z.B. irrtümlich durch zu schnelles Klicken auf den Buchen-Button wieder stornieren, kann eine Cooling Off Period in Sekunden eingestellt werden. In dieser Zeit ist Stornieren nicht möglich. Nicht mehr als wenige Sekunden einstellen, die Wartezeit wird den UserInne nicht extra angezeigt.';
+
 // Optiontemplatessettings.php.
 $string['optiontemplatessettings'] = 'Buchungsoptionsvorlagen';
 $string['defaulttemplate'] = 'Standard-Vorlage';
@@ -1714,6 +1726,7 @@ $string['bo_cond_onwaitinglist'] = 'onwaitinglist: Auf Warteliste';
 $string['bo_cond_askforconfirmation'] = 'askforconfirmation: Manuelle Bestätigung der Buchung';
 $string['bo_cond_previouslybooked'] = 'Benutzer:in hat früher eine bestimmte Option gebucht';
 $string['bo_cond_enrolledincourse'] = 'Benutzer:in ist in bestimmte(n) Kurs(e) eingeschrieben';
+$string['bo_cond_enrolledincohorts'] = 'Benutzer:in ist in bestimmte(n) globale(n) Gruppe(n) eingeschrieben';
 $string['bo_cond_priceisset'] = 'priceisset: Preis ist vorhanden';
 $string['bo_cond_userprofilefield_1_default'] = 'User-Profilfeld hat einen bestimmten Wert';
 $string['bo_cond_userprofilefield_2_custom'] = 'Benutzerdefiniertes User-Profilfeld hat einen bestimmten Wert';
@@ -1777,6 +1790,16 @@ $string['bo_cond_previouslybooked_full_available'] = 'Buchen möglich';
 $string['bo_cond_previouslybooked_not_available'] = 'Nur Benutzer:innen, die früher bereits <a href="{$a}">option</a> gebucht haben, dürfen buchen.';
 $string['bo_cond_previouslybooked_full_not_available'] = 'Nur Benutzer:innen, die früher bereits <a href="{$a}">option</a> gebucht haben, dürfen buchen.
  <br>Sie haben aber das Recht dennoch zu buchen.';
+
+$string['bo_cond_enrolledincohorts_available'] = 'Buchen';
+$string['bo_cond_enrolledincohorts_full_available'] = 'Buchen möglich';
+$string['bo_cond_enrolledincohorts_not_available'] = 'Buchen nicht möglich, da Sie in mindestens eine der folgenden globalen Grupppen nicht eingeschrieben sind: {$a}';
+$string['bo_cond_enrolledincohorts_full_not_available'] = 'Nur Benutzer:innen, die in mindestens einen der folgenden globalen Grupppen eingeschrieben sind, dürfen buchen: {$a}
+    <br>Sie haben aber das Recht dennoch zu buchen.';
+$string['bo_cond_enrolledincohorts_not_available_and'] = 'Buchen nicht möglich, da Sie nicht in alle der folgenden globalen Grupppen eingeschrieben sind: {$a}';
+$string['bo_cond_enrolledincohorts_full_not_available_and'] = 'Nur Benutzer:innen, die in alle folgenden globalen Grupppen eingeschrieben sind, dürfen buchen: {$a}
+<br>Sie haben aber das Recht dennoch zu buchen.';
+$string['bo_cond_enrolledincohorts_warning'] = 'Sie haben eine sehr hohe Anzahl an Globalen Gruppen auf Ihrem System. Nicht alle werden als Auswahl angezeigt. Wenn das ein Problem für Sie ist, kontaktieren Sie <a mailto="contact@wunderyte.at">Wunderbyte</a>';
 
 $string['bo_cond_enrolledincourse_available'] = 'Buchen';
 $string['bo_cond_enrolledincourse_full_available'] = 'Buchen möglich';
@@ -1895,7 +1918,9 @@ $string['overrideoperator'] = 'Operator';
 $string['overrideoperator:and'] = 'UND';
 $string['overrideoperator:or'] = 'ODER';
 $string['bo_cond_previouslybooked_optionid'] = 'Buchungsoption';
+$string['allcohortsmustbefound'] = 'Zugehörigkeit zu allen globalen Gruppen';
 $string['allcoursesmustbefound'] = 'Alle Kurse müssen gebucht sein';
+$string['onecohortmustbefound'] = 'Zumindest eine dieser globalen Gruppen muss zutreffen';
 $string['onecoursemustbefound'] = 'Zumindest einer dieser Kurse muss gebucht sein';
 
 $string['noelement'] = "Kein Element";
@@ -1903,8 +1928,12 @@ $string['checkbox'] = "Checkbox";
 $string['displaytext'] = "Text anzeigen";
 $string['textarea'] = "Textbereich";
 $string['shorttext'] = "Kurztext";
+$string['select'] = "DropDown Menü";
 $string['formtype'] = "Formulartyp";
 $string['bo_cond_customform_label'] = "Bezeichnung";
+$string['bo_cond_customform_notempty'] = 'Darf nicht leer sein';
+$string['bo_cond_customform_value'] = 'Wert';
+$string['bo_cond_customform_value_help'] = 'Wenn ein DropDown Menü ausgewählt ist bitte einen Wert pro Zeile eingeben. Die Werte und angezeigte Werte können getrennt eingegeben werden, also z.b. "1 => Mein erster Wert" usw.';
 
 // Teacher_performed_units_report.php.
 $string['error:wrongteacherid'] = 'Fehler: Für die angegebene "teacherid" wurde kein:e Nutzer:in gefunden.';
@@ -1988,6 +2017,9 @@ $string['bookingrule'] = 'Regel';
 $string['addbookingrule'] = 'Regel hinzufügen';
 $string['deletebookingrule'] = 'Regel löschen';
 $string['deletebookingrule_confirmtext'] = 'Wollen Sie die folgende Regel wirklich löschen?';
+$string['bookingruletemplates'] = 'Lade eine Template-Regel';
+$string['bookinguseastemplate'] = 'Setze diese Regel als Template';
+$string['bookingdefaulttemplate'] = 'Wähle Template...';
 
 $string['rule_event'] = 'Event';
 $string['rule_mailtemplate'] = 'E-Mail-Vorlage';
@@ -1995,7 +2027,7 @@ $string['rule_datefield'] = 'Datumsfeld';
 $string['rule_customprofilefield'] = 'Benutzerdefiniertes User-Profilfeld';
 $string['rule_operator'] = 'Operator';
 $string['rule_value'] = 'Wert';
-$string['rule_days'] = 'Anzahl Tage vorher';
+$string['rule_days'] = 'Anzahl Tage';
 
 $string['rule_optionfield'] = 'Buchungsoptionsfeld, das verglichen werden soll';
 $string['rule_optionfield_coursestarttime'] = 'Beginn (coursestarttime)';
@@ -2011,8 +2043,8 @@ $string['rule_sendmail_cpf_desc'] = 'Wählen Sie ein Event aus, auf das reagiert
 (Sie können auch Platzhalter wie {bookingdetails} verwenden) und legen Sie fest, an welche Nutzer:innen die E-Mail versendet werden soll.
 Beispiel: Alle Nutzer:innen, die im benutzerdefinierten Feld "Studienzentrumsleitung" den Wert "SZL Wien" stehen haben.';
 
-$string['rule_daysbefore'] = 'Reagiere n Tage vor einem bestimmtem Datum';
-$string['rule_daysbefore_desc'] = 'Wählen Sie die Anzahl der Tage VOR einem gewissen Datum einer Buchungsoption aus.';
+$string['rule_daysbefore'] = 'Reagiere n Tage vor/nach einem bestimmtem Datum';
+$string['rule_daysbefore_desc'] = 'Wählen Sie die Anzahl der Tage in Bezug zu einem gewissen Datum einer Buchungsoption aus.';
 $string['rule_react_on_event'] = 'Reagiere auf Ereignis';
 $string['rule_react_on_event_desc'] = 'Wählen Sie ein Ereignis aus, durch das die Regel ausgelöst werden soll.<br>
 <b>Tipp:</b> Verwenden Sie den Platzhalter <code>{eventdescription}</code> um eine Beschreibung des Ereignisses anzuzeigen.';
@@ -2045,6 +2077,9 @@ $string['studentdeleted'] = 'Nutzer:innen, die bereits entfernt wurden';
 $string['useraffectedbyevent'] = 'Vom Ereignis betroffene:r Nutzer:in';
 $string['userwhotriggeredevent'] = 'Nutzer:in, die das Ereignis ausgelöst hat';
 $string['condition_select_user_from_event_type'] = 'Rolle wählen';
+
+$string['select_user_shopping_cart'] = "Wähle Nutzer:in die Ratenzahlung zu leisten hat";
+$string['condition_select_user_shopping_cart_desc'] = "Nutzer:in mit Zahlungsverpflichtung ist ausgewählt";
 
 // Booking rules actions.
 $string['bookingaction'] = "Aktion";
@@ -2204,6 +2239,7 @@ $string['mod/booking:reducedoptionform4'] = 'Buchungsoption reduziert 4';
 $string['mod/booking:reducedoptionform5'] = 'Buchungsoption reduziert 5';
 
 // Vue strings.
+$string['vue_dashboard_checked'] = 'Default Ausgewählt';
 $string['vue_dashboard_name'] = 'Name';
 $string['vue_dashboard_course_count'] = 'Anzahl der Kurse';
 $string['vue_dashboard_path'] = 'Pfad';
@@ -2236,3 +2272,52 @@ $string['vue_notification_title_action_success'] = 'Die Konfiguration wurde erfo
 $string['vue_notification_text_action_success'] = 'Die Konfiguration wurde erfolgreich {$a}.';
 $string['vue_notification_title_action_fail'] = 'Die Konfiguration wurde nicht erfolgreich {$a}';
 $string['vue_notification_text_action_fail'] = 'Beim Speichern ist ein Fehler aufgetreten. Die Änderungen wurden nicht vorgenommen.';
+$string['vue_dashboard_goto_category'] = 'Zur Kategorie';
+
+// Mobile.
+$string['mobileapp_heading'] = "Mobile App";
+$string['mobileapp_heading_desc'] = "Wählen Sie Ihre Buchungsinstanz aus, die in den verbundenen Moodle Mobile Apps angezeigt werden soll.";
+$string['mobileappnobookinginstance'] = "Keine Buchungsinstanz auf Ihrer Plattform";
+$string['mobileappnobookinginstance_desc'] = "Sie müssen mindestens eine Buchungsinstanz erstellen.";
+$string['mobileappsetinstance'] = "Buchungsinstanz";
+$string['mobileappsetinstancedesc'] = "Wählen Sie die Buchungsinstanz aus, die in der mobilen App angezeigt werden soll.";
+$string['details'] = 'Details';
+$string['notbookable'] = "Nicht buchbar";
+$string['next'] = 'Nächste';
+$string['previous'] = 'Vorherige';
+$string['show_dates'] = 'Zeige Termine';
+$string['mobileapp_price'] = 'Preis';
+$string['mobile_notification'] = 'Formular wurde eingereicht';
+$string['mobile_submitted_success'] = 'Sie können fortfahren und den Kurs buchen';
+$string['mobile_reset_submission'] = 'Einreichungsformular zurücksetzen';
+$string['mobile_set_submission'] = 'Einreichen';
+$string['mobile_field_required'] = 'Dieses Feld ist erforderlich';
+// Days before and after.
+$string['daybefore1'] = '1 Tag davor';
+$string['dayafter1'] = '1 Tag danach';
+$string['daybefore2'] = '2 Tage davor';
+$string['dayafter2'] = '2 Tage danach';
+$string['daybefore3'] = '3 Tage davor';
+$string['dayafter3'] = '3 Tage danach';
+$string['daybefore4'] = '4 Tage davor';
+$string['dayafter4'] = '4 Tage danach';
+$string['daybefore5'] = '5 Tage davor';
+$string['dayafter5'] = '5 Tage danach';
+$string['daybefore6'] = '6 Tage davor';
+$string['dayafter6'] = '6 Tage danach';
+$string['daybefore7'] = '7 Tage davor';
+$string['dayafter7'] = '7 Tage danach';
+$string['daybefore8'] = '8 Tage davor';
+$string['dayafter8'] = '8 Tage danach';
+$string['daybefore9'] = '9 Tage davor';
+$string['dayafter9'] = '9 Tage danach';
+$string['daybefore10'] = '10 Tage davor';
+$string['dayafter10'] = '10 Tage danach';
+$string['daybefore15'] = '15 Tage davor';
+$string['dayafter15'] = '15 Tage danach';
+$string['daybefore20'] = '20 Tage davor';
+$string['dayafter20'] = '20 Tage danach';
+$string['daybefore25'] = '25 Tage davor';
+$string['dayafter25'] = '25 Tage danach';
+$string['daybefore30'] = '30 Tage davor';
+$string['dayafter30'] = '30 Tage danach';

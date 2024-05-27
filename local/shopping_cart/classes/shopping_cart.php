@@ -203,7 +203,12 @@ class shopping_cart {
             list($areatocheck) = explode('-', $area);
             if ((!$cartstore->has_items()
                 || $cartstore->get_total_price_of_items() === 0)
-                && !in_array($areatocheck, ['bookingfee', 'rebookingcredit', 'rebookitem', 'installments'])) {
+                && !in_array($areatocheck, [
+                    'bookingfee',
+                    'rebookingfee',
+                    'rebookingcredit',
+                    'rebookitem',
+                    'installments'])) {
                 // If we buy for user, we need to use -1 as userid.
                 // Also we add $userid as second param so we can check if fee was already paid.
                 shopping_cart_bookingfee::add_fee_to_cart($buyforuser ? -1 : $userid, $buyforuser ? $userid : 0);
@@ -1208,6 +1213,8 @@ class shopping_cart {
                     'schistoryid' => $record->schistoryid ?? null,
                 ]))) {
                     // We only insert if entry does not exist yet.
+
+                    $record->timecreated = $record->timecreated ?? time();
                     $id = $DB->insert_record('local_shopping_cart_ledger', $record);
                     cache_helper::purge_by_event('setbackcachedcashreport');
                 }
@@ -1301,7 +1308,8 @@ class shopping_cart {
      * @return float the total price (net or gross) of all items rounded to two decimal places
      */
     public static function calculate_total_price(array $items, bool $calculatenetprice = false): float {
-        return round(array_reduce($items, function($sum, $item) use ($calculatenetprice) {
+
+        $price = round(array_reduce($items, function($sum, $item) use ($calculatenetprice) {
             if ($calculatenetprice) {
                 // Calculate net price.
                 if (key_exists('price_net', $item)) {
@@ -1319,6 +1327,8 @@ class shopping_cart {
             }
             return $sum;
         }, 0.0), 2);
+
+        return $price >= 0 ? $price : 0;
     }
 
     /**

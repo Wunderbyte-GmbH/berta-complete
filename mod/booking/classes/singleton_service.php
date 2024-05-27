@@ -79,6 +79,14 @@ class singleton_service {
     /** @var array $campaigns */
     public array $campaigns = [];
 
+    /** @var array $courses */
+    public array $courses = [];
+
+    /** @var array $cohorts */
+    public array $cohorts = [];
+
+    /** @var array $usercohorts */
+    public array $usercohorts = [];
 
 
     /**
@@ -505,5 +513,63 @@ class singleton_service {
         }
 
         return (array)$instance->campaigns;
+    }
+
+    /**
+     * Return course with given id.
+     *
+     * @param int $courseid
+     * @return object
+     */
+    public static function get_course(int $courseid): object {
+
+        global $DB;
+
+        $instance = self::get_instance();
+
+        if (!isset($instance->courses[$courseid])) {
+            $course = $DB->get_record('course', ['id' => $courseid], '*', IGNORE_MISSING);
+            $instance->courses[$courseid] = $course;
+        }
+
+        return $instance->courses[$courseid];
+    }
+
+    /**
+     * Return course with given id.
+     *
+     * @param int $cohortid
+     * @return object
+     */
+    public static function get_cohort(int $cohortid): object {
+
+        global $DB;
+
+        $instance = self::get_instance();
+
+        if (!isset($instance->cohorts[$cohortid])) {
+            $cohort = $DB->get_record('cohort', ['id' => $cohortid], '*', IGNORE_MISSING);
+            $instance->cohorts[$cohortid] = $cohort;
+        }
+
+        return $instance->cohorts[$cohortid];
+    }
+
+    /**
+     * Return cohorts of a given user.
+     *
+     * @param int $userid
+     * @return array
+     */
+    public static function get_cohorts_of_user(int $userid): array {
+
+        $instance = self::get_instance();
+
+        if (!isset($instance->usercohorts[$userid])) {
+            $usercohorts = cohort_get_user_cohorts($userid);
+            $instance->usercohorts[$userid] = $usercohorts;
+        }
+
+        return $instance->usercohorts[$userid];
     }
 }

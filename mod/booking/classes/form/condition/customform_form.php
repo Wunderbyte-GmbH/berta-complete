@@ -30,10 +30,11 @@ global $CFG;
 require_once("$CFG->libdir/formslib.php");
 require_once("$CFG->dirroot/mod/booking/lib.php");
 
-use cache;
 use context;
 use context_system;
 use core_form\dynamic_form;
+use mod_booking\bo_availability\conditions\customform;
+use mod_booking\local\customformstore;
 use mod_booking\singleton_service;
 use moodle_url;
 use stdClass;
@@ -83,12 +84,11 @@ class customform_form extends dynamic_form {
         $optionid = $formdata['id'];
         $userid = $formdata['userid'] ?? $USER->id;
 
-        $cache = cache::make('mod_booking', 'conditionforms');
+        $customformstore = new customformstore($userid, $optionid);
+        $cachedata = $customformstore->get_customform_data();
 
-        $cachekey = $userid . '_' . $optionid . '_customform';
-
-        if ($cachedata = $cache->get($cachekey)) {
-            $data->customform_checkbox = $cachedata->customform_checkbox;
+        if ($cachedata) {
+            $data->customform_advcheckbox = $cachedata->customform_advcheckbox;
         }
 
         $this->set_data($data);
@@ -106,10 +106,8 @@ class customform_form extends dynamic_form {
 
         $userid = $data->userid ?? $USER->id;
 
-        $cache = cache::make('mod_booking', 'customformuserdata');
-        $cachekey = $userid . "_" . $data->id . '_customform';
-
-        $cache->set($cachekey, $data);
+        $customformstore = new customformstore($userid, $data->id);
+        $customformstore->set_customform_data($data);
 
         return $data;
     }
@@ -155,12 +153,36 @@ class customform_form extends dynamic_form {
 
                     case 'static':
                         $mform->addElement($formelementvalue->formtype, 'customform_element_' . $counter,
-                            '',
+                            $formelementvalue->label,
                             $formelementvalue->value);
                         break;
-                    default:
-                        $mform->addElement($formelementvalue->formtype, 'customform_checkbox_' . $counter, '',
+                    case 'advcheckbox':
+                        $mform->addElement('advcheckbox', 'customform_advcheckbox_' . $counter,
+                        '',
                         $formelementvalue->label ?? "Label " . $counter);
+                        break;
+                    case 'shorttext':
+                        $mform->addElement('text', 'customform_shorttext_' . $counter,
+                        $formelementvalue->label ?? "Label " . $counter);
+                        $mform->setDefault('customform_shorttext_' . $counter, $formelementvalue->value);
+                        $mform->setType('customform_shorttext_' . $counter, PARAM_TEXT);
+                        break;
+                    case 'select':
+
+                        // Create the array.
+                        $lines = explode(PHP_EOL, $formelementvalue->value);
+                        $options = [];
+                        foreach ($lines as $line) {
+                            $linearray = explode(' => ', $line);
+                            if (count($linearray) > 1) {
+                                $options[$linearray[0]] = $linearray[1];
+                            } else {
+                                $options[] = $line;
+                            }
+                        }
+
+                        $mform->addElement('select', 'customform_select_' . $counter,
+                        $formelementvalue->label ?? "Label " . $counter, $options);
                         break;
                 }
 
@@ -181,19 +203,18 @@ class customform_form extends dynamic_form {
     public function validation($data, $files): array {
         $errors = [];
 
-        // All checkboxes have to be checked right now.
-        // Todo: Make this generic!
-        foreach ($data as $key => $value) {
-
-            if (strpos($key, 'checkbox') != false) {
-                if ($value != 1) {
-                    $errors[$key] = get_string('customformnotchecked', 'mod_booking');
-                }
-            }
-
+        if ($data['id']) {
+            $id = $data['id'];
+        } else {
+            return $errors;
         }
 
-        return $errors;
+        // We have to pass by the option settings.
+        $settings = singleton_service::get_instance_of_booking_option_settings((int)$id);
+        $customform = customform::return_formelements($settings);
+
+        $customformstore = new customformstore($data['userid'], $id);
+        return $customformstore->validation($customform, $data);
     }
 
     /**

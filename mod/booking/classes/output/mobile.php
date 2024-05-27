@@ -27,11 +27,21 @@ namespace mod_booking\output;
 
 defined('MOODLE_INTERNAL') || die();
 
+use cache;
 use context_module;
 use context;
+use core_form\external\dynamic_form;
+use mod_booking\bo_availability\bo_info;
+use mod_booking\bo_availability\conditions\customform;
 use mod_booking\booking;
+use mod_booking\booking_bookit;
+use mod_booking\form\condition\customform_form;
+use mod_booking\local\customformstore;
+use mod_booking\local\mobileformbuilder;
 use mod_booking\places;
+use mod_booking\price;
 use mod_booking\singleton_service;
+use moodle_exception;
 use stdClass;
 
 require_once($CFG->dirroot . '/mod/booking/locallib.php');
@@ -52,11 +62,164 @@ class mobile {
      * @param array $args Arguments from tool_mobile_get_content WS
      * @return array HTML, javascript and otherdata
      */
+    public static function mobile_system_view($args) {
+
+        global $DB, $OUTPUT, $USER;
+
+        $cmid = get_config('booking', 'shortcodessetinstance');
+
+        if (empty($cmid)) {
+            throw new moodle_exception('nocmidselected', 'mod_booking');
+        }
+
+        $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
+
+        $wherearray['bookingid'] = (int)$booking->id;
+
+        list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, null, [], $wherearray);
+
+        $sql = "SELECT $fields
+                FROM $from
+                WHERE $where";
+
+        $records = $DB->get_records_sql($sql, $params);
+
+        $outputdata = [];
+        $pattern = '/<br\s*\/?>/i';
+        $maxdatabeforecollapsable = get_config('booking', 'collapseshowsettings');
+        if ($maxdatabeforecollapsable === false) {
+            $maxdatabeforecollapsable = '2';
+        }
+        foreach ($records as $record) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($record->id);
+            $tmpoutputdata = $settings->return_booking_option_information();
+            $tmpoutputdata['maxsessions'] = $maxdatabeforecollapsable;
+            $data = $settings->return_booking_option_information();
+            $data['description'] = preg_split($pattern, $data['description']);
+            if (count($settings->sessions) > $maxdatabeforecollapsable) {
+                $data['collapsedsessions'] = $data['sessions'];
+                unset($data['sessions']);
+            }
+            $outputdata[] = $data;
+        }
+
+        $data = [
+          'mybookings' => $outputdata,
+        ];
+        return [
+            'templates' => [
+                [
+                    'id' => 'main',
+                    'html' => $OUTPUT->render_from_template('mod_booking/mobile/mobile_mybookings_list', $data),
+                ],
+            ],
+            'javascript' => '',
+            'otherdata' => ['data' => '{}'],
+        ];
+    }
+
+    /**
+     * Returns detail view of booking option
+     *
+     * @param array $args Arguments from tool_mobile_get_content WS
+     * @return array HTML, javascript and otherdata
+     */
+    public static function mobile_booking_option_details($args) {
+
+        global $DB, $OUTPUT, $USER;
+
+        if (empty($args['optionid'])) {
+            throw new moodle_exception('nooptionid', 'mod_booking');
+        }
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($args['optionid']);
+        $customform = customform::return_formelements($settings);
+        $mobileformbuilder = new mobileformbuilder();
+
+        $data = (array)$settings->return_settings_as_stdclass();
+
+        $teachers = [];
+        foreach ($data['teachers'] as $teacher) {
+            $teacher->email = str_replace('@', '&#64;', $teacher->email);
+            $teachers[] = (array)$teacher;
+        }
+
+        $data['teachers'] = $teachers;
+        $data['userid'] = $USER->id;
+
+        $boinfo = new bo_info($settings);
+        list($id, $isavailable, $description) = $boinfo->is_available($settings->id, $USER->id, false);
+
+        // Now we render the button for this option & user.
+        list($templates, $button) = booking_bookit::render_bookit_template_data($settings, 0, false);
+        $button = reset($button);
+
+        $ionsubmissionhtml = '';
+
+        switch ($id) {
+            case MOD_BOOKING_BO_COND_JSON_CUSTOMFORM:
+                if (!empty($customform)) {
+                    $customformstore = new customformstore($USER->id, $data['id']);
+                    $customformuserdata = $customformstore->get_customform_data();
+                    $formvalidated = [false];
+                    if ($customformuserdata !== false) {
+                        $customform = $customformstore->validation_data($customform, $customformuserdata);
+                    }
+                    if ($customformuserdata) {
+                        $formvalidated = $customformstore->validation($customform, (array)$customformuserdata);
+                    }
+                    if (empty($formvalidated)) {
+                        $data['submit']['label'] = $button->data['main']['label'];
+                        $ionsubmissionhtml = $mobileformbuilder::submission_form_submitted($button);
+                    } else {
+                        $ionsubmissionhtml = $mobileformbuilder::build_submission_entitites($customform, $data);
+                    }
+                }
+                break;
+            case MOD_BOOKING_BO_COND_BOOKITBUTTON:
+            case MOD_BOOKING_BO_COND_CONFIRMBOOKIT:
+                $data['submit']['label']
+                    = $description;
+                break;
+            case MOD_BOOKING_BO_COND_PRICEISSET:
+                $price = price::get_price('option', $settings->id);
+                $data['nosubmit']['label'] = $price['price'] . " " . $price['currency'];
+                break;
+            case MOD_BOOKING_BO_COND_BOOKINGPOLICY:
+                $data['nosubmit']['label'] = get_string('', 'mod_booking');
+                break;
+            default:
+
+                $data['nosubmit']['label']
+                    = !empty($description) ? $description : get_string('notbookable', 'mod_booking');
+                break;
+        }
+
+        $detailhtml = $OUTPUT->render_from_template('mod_booking/mobile/mobile_booking_option_details', $data);
+        return [
+            'templates' => [
+                [
+                    'id' => 'main',
+                    'html' => $detailhtml . $ionsubmissionhtml ?? '',
+                ],
+            ],
+            'javascript' => '',
+            'otherdata' => ['data' => '{}'],
+        ];
+    }
+
+    /**
+     * Returns all my bookings view for mobile app.
+     *
+     * @param array $args Arguments from tool_mobile_get_content WS
+     * @return array HTML, javascript and otherdata
+     */
     public static function mobile_mybookings_list($args) {
         global $OUTPUT, $USER, $DB;
 
         $mybookings = $DB->get_records_sql(
-        "SELECT ba.id id, c.id courseid, c.fullname fullname, b.id bookingid, b.name name, bo.text text, bo.id optionid,
+        "SELECT ba.id id, c.id courseid, c.fullname fullname, b.id bookingid, b.name, bo.text, bo.id optionid,
         bo.coursestarttime coursestarttime, bo.courseendtime courseendtime, cm.id cmid
         FROM
         {booking_answers} ba
@@ -101,11 +264,11 @@ class mobile {
             'templates' => [
                 [
                     'id' => 'main',
-                    'html' => $OUTPUT->render_from_template('mod_booking/mobile_mybookings_list', $data),
+                    'html' => $OUTPUT->render_from_template('mod_booking/mobile/mobile_mybookings_list', $data),
                 ],
             ],
             'javascript' => '',
-            'otherdata' => '',
+            'otherdata' => ['data' => '{}'],
         ];
     }
 
@@ -116,88 +279,58 @@ class mobile {
      * @return array HTML, javascript and otherdata
      */
     public static function mobile_course_view($args) {
-        global $OUTPUT, $USER, $DB, $COURSE;
+        global $DB, $OUTPUT, $USER;
 
-        $bcolorshowall = 'light';
-        $bcolorshowactive = 'light';
-        $bcolormybooking = 'light';
+        $cmid = $args['cmid'];
 
-        $args = (object) $args;
-        $cm = get_coursemodule_from_id('booking', $args->cmid);
-        $allpages = 0;
-        $pagnumber = 0;
-
-        if (isset($args->whichview)) {
-            $whichview = $args->whichview;
+        if (empty($cmid)) {
+            throw new moodle_exception('nocmidselected', 'mod_booking');
         }
 
-        if (isset($args->pagnumber)) {
-            $pagnumber = $args->pagnumber;
+        $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
+
+        $wherearray['bookingid'] = (int)$booking->id;
+
+        list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, null, [], $wherearray);
+
+        $sql = "SELECT $fields
+                FROM $from
+                WHERE $where";
+
+        $records = $DB->get_records_sql($sql, $params);
+
+        $outputdata = [];
+        $pattern = '/<br\s*\/?>/i';
+        $maxdatabeforecollapsable = get_config('booking', 'collapseshowsettings');
+        if ($maxdatabeforecollapsable === false) {
+            $maxdatabeforecollapsable = '2';
         }
-
-        $searchstring = empty($args->searchstring) ? '' : $args->searchstring;
-
-        // Capabilities check.
-        require_login($args->courseid, false, $cm, true, true);
-
-        $context = context_module::instance($cm->id);
-
-        $booking = singleton_service::get_instance_of_booking_by_cmid($cm->id);
-
-        $paging = $booking->settings->paginationnum;
-        if (!isset($whichview)) {
-            $whichview = $booking->settings->whichview;
+        foreach ($records as $record) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($record->id);
+            $tmpoutputdata = $settings->return_booking_option_information();
+            $tmpoutputdata['maxsessions'] = $maxdatabeforecollapsable;
+            $data = $settings->return_booking_option_information();
+            $data['description'] = preg_split($pattern, $data['description']);
+            if (count($settings->sessions) > $maxdatabeforecollapsable) {
+                $data['collapsedsessions'] = $data['sessions'];
+                unset($data['sessions']);
+            }
+            $outputdata[] = $data;
         }
-
-        if ($paging == 0) {
-            $paging = 25;
-        }
-
-        switch ($whichview) {
-            case 'showall':
-                $bookingoptions = $booking->get_all_options($pagnumber * $paging, $paging, $searchstring);
-                $allpages = floor($booking->get_all_options_count($searchstring) / $paging);
-                $bcolorshowall = '';
-                break;
-
-            case 'showactive':
-                $bookingoptions = $booking->get_active_optionids($booking->id, $pagnumber * $paging,
-                $paging, $searchstring);
-                $allpages = floor($booking->get_active_optionids_count($booking->id, $searchstring) / $paging);
-                $bcolorshowactive = '';
-                break;
-
-            case 'mybooking':
-                $bookingoptions = $booking->get_my_bookingids($pagnumber * $paging, $paging, $searchstring);
-                $allpages = floor($booking->get_my_bookingids_count($searchstring) / $paging);
-                $bcolormybooking = '';
-                break;
-        }
-
-        $options = self::prepare_options_array($bookingoptions, $booking, $context, $cm, $args->courseid);
 
         $data = [
-            'pagnumber' => $pagnumber, 'courseid' => $args->courseid, 'booking' => $booking,
-                        'booking_option' => $options, 'cmid' => $cm->id, 'activeview' => $whichview,
-            'string' => [
-                'showactive' => get_string('activebookingoptions', 'booking'),
-                'showallbookingoptions' => get_string('showallbookingoptions', 'booking'),
-                'showmybookingsonly' => get_string('showmybookingsonly', 'booking'),
-                'next' => get_string('next', 'booking'),
-                'previous' => get_string('previous', 'booking'),
-            ], 'btnnp' => self::npbuttons($allpages, $pagnumber), 'bcolorshowall' => $bcolorshowall,
-            'bcolorshowactive' => $bcolorshowactive, 'bcolormybooking' => $bcolormybooking,
+          'mybookings' => $outputdata,
         ];
         return [
-
             'templates' => [
-
                 [
                     'id' => 'main',
-                    'html' => $OUTPUT->render_from_template('mod_booking/mobile_view_page', $data),
+                    'html' => $OUTPUT->render_from_template('mod_booking/mobile/mobile_mybookings_list', $data),
                 ],
-            ], 'javascript' => '', 'otherdata' => ['searchstring' => $searchstring],
-
+            ],
+            'javascript' => '',
+            'otherdata' => ['data' => '{}'],
         ];
     }
 
