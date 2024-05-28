@@ -149,6 +149,7 @@ $string['showcountlabel'] = 'Anzahl der gefundenen Einträge anzeigen';
 $string['stickyheader'] = 'Header fixieren (sticky header)';
 $string['showrowcountselect'] = 'Dropdown für Anzahl der anzuzeigenden Zeilen anzeigen';
 $string['placebuttonandpageelementsontop'] = 'Buttons und Elemente oben statt unten anzeigen';
+$string['showfilterontop'] = 'Filter über der Tabelle anzeigen';
 $string['tableheight'] = 'Tabellen-Höhe';
 $string['tableheight_help'] = 'Die Tabellenhöhe wird in Pixel angegeben, sinnvolle Werte beginnen daher bei ca. 300.
 Bei 0 wird die Höhe automatisch anhand der angezeigten Tabellen berechnet.';
@@ -183,3 +184,4 @@ $string['table2name'] = 'Demo Tabelle 2';
 $string['table3name'] = 'Demo Tabelle 3';
 $string['table4name'] = 'Demo Tabelle 4';
 $string['id'] = 'ID';
+$string['other'] = 'Andere';

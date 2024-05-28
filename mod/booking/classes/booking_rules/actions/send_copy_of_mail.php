@@ -76,26 +76,28 @@ class send_copy_of_mail implements booking_rule_action {
         $this->rulejson = $json;
         $jsonobject = json_decode($json);
         $actiondata = $jsonobject->actiondata;
-        $datafromevent = $jsonobject->datafromevent;
+        $event = $jsonobject->ruledata->boevent::restore((array)$jsonobject->datafromevent, []);
 
-        $settings = singleton_service::get_instance_of_booking_option_settings($datafromevent->other->optionid);
+        $datafromevent = $event->get_data();
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($event->objectid);
         $fulltitle = $settings->get_title_with_prefix();
         $optionformatted = "<b>" . get_string('bookingoption', 'mod_booking') . "</b>: $fulltitle<br>";
 
-        $userfrom = singleton_service::get_instance_of_user((int) $datafromevent->userid);
+        $userfrom = singleton_service::get_instance_of_user((int) $datafromevent['userid']);
         $userfromformatted = "$userfrom->firstname $userfrom->lastname &lt;$userfrom->email&gt;";
         $userfromformatted = "<b>" . get_string('from') . "</b>: $userfromformatted<br>";
 
         $usertoformatted = '';
-        if (!empty($datafromevent->relateduserid)) {
-            $userto = singleton_service::get_instance_of_user((int) $datafromevent->relateduserid);
+        if (!empty($datafromevent['relateduserid'])) {
+            $userto = singleton_service::get_instance_of_user((int) $datafromevent['relateduserid']);
             $usertoformatted .= "$userto->firstname $userto->lastname &lt;$userto->email&gt;";
             $usertoformatted = "<b>" . get_string('to') . "</b>: $usertoformatted<br>";
         }
 
-        $this->subject = $actiondata->subjectprefix . ": " . $datafromevent->other->subject;
+        $this->subject = $actiondata->subjectprefix . ": " . $datafromevent['other']->subject;
         $this->message = "$actiondata->messageprefix<hr>" .
-            $optionformatted . $userfromformatted . $usertoformatted . $datafromevent->other->message;
+            $optionformatted . $userfromformatted . $usertoformatted . $datafromevent['other']->message;
     }
 
     /**

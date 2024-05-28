@@ -237,6 +237,7 @@ $string['bookinganswer_cancelled'] = 'Buchungsoption von/für Nutzer:in stornier
 // Booking option events.
 $string['bookingoption_cancelled'] = "Buchungsoption für alle storniert";
 $string['bookingoption_booked'] = 'Buchungsoption durchgeführt';
+$string['bookingoption_freetobookagain'] = 'Wieder freie Plätze';
 $string['bookingoption_completed'] = 'Buchungsoption abgeschlossen';
 $string['bookingoption_created'] = 'Buchungsoption angelegt';
 $string['bookingoption_updated'] = 'Buchungsoption upgedatet';
@@ -316,6 +317,13 @@ $string['scgfselectcohorts'] = 'Globale Gruppe(n) wählen';
 $string['scgfbookgroupscohorts'] = 'Globale Gruppe(n) oder Gruppe(n) buchen';
 $string['scgfselectgroups'] = 'Gruppe(n) auswählen';
 
+$string['nodirectbookingbecauseofprice'] = 'Das Buchen von anderen ist bei dieser Buchungsoption nur eingeschränkt möglich. Die Gründe dafür sind folgende:
+<ul>
+<li>ein Preis ist hinterlegt</li>
+<li>das Shopping Cart Modul ist installiert</li>
+<li>die Warteliste ist global nicht deaktiivert</li>
+</ul>
+Der Zweck dieses Verhaltens ist es, "gemischte" Buchungen mit und ohne Warenkorb zu verhindern. Bitte verwenden Sie die Kassierfunktion des Warenkorbs, um Benutzer:innen zu buchen.';
 
 // Bookingform.
 $string['address'] = 'Adresse';
@@ -399,7 +407,11 @@ $string['attachedfiles'] = 'Dateianhänge';
 $string['availability'] = 'Noch verfügbar ';
 $string['available'] = 'Plätze verfügbar';
 $string['booked'] = 'Gebucht';
+$string['always'] = 'Immer';
 $string['fullybooked'] = 'Ausgebucht';
+$string['notfullybooked'] = 'Nicht ausgebucht';
+$string['fullwaitinglist'] = 'Volle Warteliste';
+$string['notfullwaitinglist'] = 'Nicht volle Warteliste';
 $string['notifyme'] = 'Benachrichtigen wenn frei';
 $string['alreadyonlist'] = 'Sie werden benachrichtigt';
 $string['bookedpast'] = 'Gebucht (Kurs wurde bereits beendet)';
@@ -1253,6 +1265,11 @@ $string['duplicationrestoresubbookings'] = 'Zusatzbuchungen inkludieren ' . $bad
 $string['duplicationrestoreoption'] = 'Buchungsoptionen: Duplizieren ' . $badgepro;
 $string['duplicationrestoreoption_desc'] = 'Spezielle Einstellungen für das Duplizieren von Buchungsoptionen.';
 
+$string['coursesheader'] = 'Moodle Kurse';
+$string['nomoodlecourseconnection'] = 'Keine Verbindung zu Moodle Kurs';
+$string['createnewmoodlecourse'] = 'Erstelle neuen, leeren Moodle Kurs';
+$string['createnewmoodlecoursefromtemplate'] = 'Erstelle neuen Kurs von Template';
+
 $string['waitinglistheader'] = 'Warteliste';
 $string['waitinglistheader_desc'] = 'Hier können Sie Einstellungen zum Verhalten der Warteliste vornehmen.';
 $string['turnoffwaitinglist'] = 'Warteliste global deaktivieren';
@@ -1345,6 +1362,14 @@ $string['duplicatemoodlecourses_desc'] = 'Wenn diese Einstellung aktiviert ist, 
 auch der verbundene Moodle-Kurs dupliziert (Achtung: Nutzer:innen-Daten des Moodle-Kurses werden nicht mit-dupliziert!).
 Da das Duplizieren asynchron über einen Adhoc-Task gemacht wird, stellen Sie bitte sicher, dass der CRON-Task regelmäßig läuft.';
 
+$string['choosetags'] = 'Wähle Tags';
+$string['choosetags_desc'] = 'Kurse, die mit diesen Tags markiert sind, können als Vorlagen verwendet werden. Wird eine Buchungsoption mit so einer Vorlage verknüpft, wird beim ersten Speichern automatisch eine Kopie des Vorlagen-Kurses erstellt.';
+
+$string['templatecategoryname'] = 'Kurzname der Kurskategorie, in der sich die Vorlagenkurse befinden.';
+$string['templatecategoryname_desc'] = 'Buchungsoptionen können mit Moodle Kursen verknüpft werden. Dieses Feature erlaubt es, die Kurse beim ersten Speichern der Buchungsoption zu erstellen.';
+
+$string['usecoursecategorytemplates'] = 'Verwende Vorlagen für neu zu erstellende Moodle Kurse';
+$string['usecoursecategorytemplates_desc'] = '';
 $string['coolingoffperiod'] = 'Stornierung möglich nach x Sekunden';
 $string['coolingoffperiod_desc'] = 'Um zu vermeiden, dass NutzerInnen z.B. irrtümlich durch zu schnelles Klicken auf den Buchen-Button wieder stornieren, kann eine Cooling Off Period in Sekunden eingestellt werden. In dieser Zeit ist Stornieren nicht möglich. Nicht mehr als wenige Sekunden einstellen, die Wartezeit wird den UserInne nicht extra angezeigt.';
 
@@ -1799,7 +1824,7 @@ $string['bo_cond_enrolledincohorts_full_not_available'] = 'Nur Benutzer:innen, d
 $string['bo_cond_enrolledincohorts_not_available_and'] = 'Buchen nicht möglich, da Sie nicht in alle der folgenden globalen Grupppen eingeschrieben sind: {$a}';
 $string['bo_cond_enrolledincohorts_full_not_available_and'] = 'Nur Benutzer:innen, die in alle folgenden globalen Grupppen eingeschrieben sind, dürfen buchen: {$a}
 <br>Sie haben aber das Recht dennoch zu buchen.';
-$string['bo_cond_enrolledincohorts_warning'] = 'Sie haben eine sehr hohe Anzahl an Globalen Gruppen auf Ihrem System. Nicht alle werden als Auswahl angezeigt. Wenn das ein Problem für Sie ist, kontaktieren Sie <a mailto="contact@wunderyte.at">Wunderbyte</a>';
+$string['bo_cond_enrolledincohorts_warning'] = 'Sie haben eine sehr hohe Anzahl an Globalen Gruppen auf Ihrem System. Nicht alle werden als Auswahl angezeigt. Wenn das ein Problem für Sie ist, kontaktieren Sie <a mailto="info@wunderyte.at">Wunderbyte</a>';
 
 $string['bo_cond_enrolledincourse_available'] = 'Buchen';
 $string['bo_cond_enrolledincourse_full_available'] = 'Buchen möglich';
@@ -2020,8 +2045,11 @@ $string['deletebookingrule_confirmtext'] = 'Wollen Sie die folgende Regel wirkli
 $string['bookingruletemplates'] = 'Lade eine Template-Regel';
 $string['bookinguseastemplate'] = 'Setze diese Regel als Template';
 $string['bookingdefaulttemplate'] = 'Wähle Template...';
+$string['interval'] = "Interval";
+$string['interval_help'] = "In Minuten. 1440 für 24h.";
 
 $string['rule_event'] = 'Event';
+$string['rule_event_condition'] = 'Führe aus wenn...';
 $string['rule_mailtemplate'] = 'E-Mail-Vorlage';
 $string['rule_datefield'] = 'Datumsfeld';
 $string['rule_customprofilefield'] = 'Benutzerdefiniertes User-Profilfeld';
@@ -2086,6 +2114,7 @@ $string['bookingaction'] = "Aktion";
 $string['sendcopyofmailsubjectprefix'] = 'Vorangestellter Text für den Betreff';
 $string['sendcopyofmailmessageprefix'] = 'Vorangestellter Text für die Nachricht';
 $string['send_copy_of_mail'] = 'Eine Kopie der E-Mail senden';
+$string['send_mail_interval'] = 'Eine Nachricht zeitversetzt an mehrere Nutzer:innen schicken';
 
 // Cancel booking option.
 $string['canceloption'] = "Storniere Buchungsoption";

@@ -242,6 +242,7 @@ $string['bookinganswer_cancelled'] = 'Booking option cancelled for/by user';
 // Booking option events.
 $string['bookingoption_cancelled'] = "Booking option cancelled for all";
 $string['bookingoption_booked'] = 'Booking option booked';
+$string['bookingoption_freetobookagain'] = 'Free places again';
 $string['bookingoption_completed'] = 'Booking option completed';
 $string['bookingoption_created'] = 'Booking option created';
 $string['bookingoption_updated'] = 'Booking option updated';
@@ -400,7 +401,12 @@ $string['attachedfiles'] = 'Attached files';
 $string['availability'] = 'Still available';
 $string['available'] = 'Places available';
 $string['booked'] = 'Booked';
+$string['always'] = 'Always';
 $string['fullybooked'] = 'Fully booked';
+$string['notfullybooked'] = 'Not fully booked';
+$string['fullwaitinglist'] = 'Full waitinglist';
+$string['notfullwaitinglist'] = 'Not full waitinglist';
+
 $string['notifyme'] = 'Notify when available';
 $string['alreadyonlist'] = 'You will be notified';
 $string['bookedpast'] = 'Booked (course finished)';
@@ -1293,6 +1299,11 @@ $string['duplicationrestoresubbookings'] = 'Include subbookings ' . $badgepro;
 $string['duplicationrestoreoption'] = 'Booking options: Duplication settings ' . $badgepro;
 $string['duplicationrestoreoption_desc'] = 'Special settings for the duplication of booking options.';
 
+$string['coursesheader'] = 'Moodle Courses';
+$string['nomoodlecourseconnection'] = 'No connection to Moodle course';
+$string['createnewmoodlecourse'] = 'Create new empty Moodle course';
+$string['createnewmoodlecoursefromtemplate'] = 'Create new Moodle course from template';
+
 $string['waitinglistheader'] = 'Waiting list';
 $string['waitinglistheader_desc'] = 'Here you can set how the booking waiting list should behave.';
 $string['turnoffwaitinglist'] = 'Turn off waiting list globally';
@@ -1380,6 +1391,15 @@ $string['duplicatemoodlecourses_desc'] = 'When this setting is active and you du
 then the connected Moodle course will also be duplicated. This will be done with an adhoc task,
 so be sure that CRON runs regularly.';
 
+$string['choosetags'] = 'Choose tags';
+$string['choosetags_desc'] = 'Courses marked with these tags can be used as templates. If a booking option is linked to such a template, a copy of the template course will be automatically created upon first saving.';
+
+$string['templatecategoryname'] = 'Short name of the course category where the template courses are located.';
+$string['templatecategoryname_desc'] = 'Booking options can be linked to Moodle courses. This feature allows the courses to be created upon the first saving of the booking option.';
+
+$string['usecoursecategorytemplates'] = 'Use templates for newly created Moodle courses';
+$string['usecoursecategorytemplates_desc'] = '';
+
 $string['coolingoffperiod'] = 'Cancellation possible after x seconds';
 $string['coolingoffperiod_desc'] = 'To prevent users from canceling due to, for example, accidentally clicking the booking button too quickly, a cooling off period can be set in seconds. During this time, cancellation is not possible. Do not set more than a few seconds, as the waiting time is not explicitly shown to users.';
 
@@ -1461,6 +1481,14 @@ $string['sucesfullcompleted'] = 'Activity was sucesfully completed for users.';
 $string['enablecompletion'] = 'Count of entries';
 $string['confirmuserswith'] = 'Confirm users who completed activity or received badge';
 $string['confirmusers'] = 'Confirm users activity';
+
+$string['nodirectbookingbecauseofprice'] = 'Booking for others is only partially possible with this booking option. The reasons for this are as follows:
+    <ul>
+    <li>a price is entered</li>
+    <li>the Shopping Cart module is installed</li>
+    <li>the waiting list is not globally deactivated</li>
+    </ul>
+    The intention of this behaviour is to prevent "mixed" bookings with and without shopping cart. Please use shopping cart cashier function to book users.';
 
 // Optiontemplatessettings.php.
 $string['optiontemplatessettings'] = 'Booking option templates';
@@ -1945,7 +1973,7 @@ $string['bo_cond_enrolledincohorts_full_not_available'] = 'Only users who are en
 $string['bo_cond_enrolledincohorts_not_available_and'] = 'Booking not allowed because you are not enrolled in all of the following cohort(s): {$a}';
 $string['bo_cond_enrolledincohorts_full_not_available_and'] = 'Only users who are enrolled in all of the following cohort(s) are allowed to book: {$a}
     <br>But you have the right to book a user anyways.';
-$string['bo_cond_enrolledincohorts_warning'] = 'You have a very high number of cohorts on your system. Not all of them will be available here. If that is a problem for you, please contact <a mailto="contact@wunderyte.at">Wunderbyte</a>';
+$string['bo_cond_enrolledincohorts_warning'] = 'You have a very high number of cohorts on your system. Not all of them will be available here. If that is a problem for you, please contact <a mailto="info@wunderyte.at">Wunderbyte</a>';
 
 
 $string['bo_cond_enrolledincourse_available'] = 'Book it';
@@ -2148,6 +2176,7 @@ $string['bookinguseastemplate'] = 'Set this rule as template';
 $string['bookingdefaulttemplate'] = 'Choose template...';
 
 $string['rule_event'] = 'Event';
+$string['rule_event_condition'] = 'Execute when...';
 $string['rule_mailtemplate'] = 'Mail template';
 $string['rule_datefield'] = 'Date field';
 $string['rule_customprofilefield'] = 'Custom user profile field';
@@ -2212,6 +2241,9 @@ $string['bookingaction'] = "Action";
 $string['sendcopyofmailsubjectprefix'] = 'Subject prefix for the copy';
 $string['sendcopyofmailmessageprefix'] = 'Message prefix for the copy';
 $string['send_copy_of_mail'] = 'Send an email copy';
+$string['send_mail_interval'] = 'Send a message to multiple users with a time delay';
+$string['interval'] = "Delay";
+$string['interval_help'] = "In minutes. 1440 for 24 hours.";
 
 // Cancel booking option.
 $string['canceloption'] = "Cancel boooking option";

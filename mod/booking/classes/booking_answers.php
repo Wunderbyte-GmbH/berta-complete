@@ -516,6 +516,24 @@ class booking_answers {
     }
 
     /**
+     * Check if the booking option is already fully booked.
+     * @return bool
+     */
+    public function is_fully_booked_on_waitinglist() {
+
+        // If booking option is unlimited, we always return false.
+        if (empty($this->bookingoptionsettings->maxoverbooking)) {
+            return false;
+        }
+
+        if (count($this->usersonwaitinglist) >= $this->bookingoptionsettings->maxoverbooking) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * Function to return the number of active bookings of a user.
      * Optionally for booking opitons with a given teacher.
      * @param int $userid
