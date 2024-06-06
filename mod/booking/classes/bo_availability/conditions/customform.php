@@ -61,10 +61,10 @@ class customform implements bo_condition {
     /**
      * Constructor.
      *
-     * @param int $id
+     * @param ?int $id
      * @return void
      */
-    public function __construct(int $id = null) {
+    public function __construct(?int $id = null) {
 
         if ($id) {
             $this->id = $id;
@@ -186,10 +186,10 @@ class customform implements bo_condition {
      *
      * @param MoodleQuickForm $mform
      * @param int $optionid
-     * @param moodleform $moodleform
+     * @param ?\moodleform $moodleform
      * @return void
      */
-    public function add_condition_to_mform(MoodleQuickForm &$mform, int $optionid = 0, $moodleform = null) {
+    public function add_condition_to_mform(MoodleQuickForm &$mform, int $optionid = 0, ?\moodleform $moodleform = null) {
         global $DB;
 
         // Check if PRO version is activated.
@@ -204,11 +204,14 @@ class customform implements bo_condition {
                 'static' => get_string('displaytext', 'mod_booking'),
                 'shorttext' => get_string('shorttext', 'mod_booking'),
                 'select' => get_string('select', 'mod_booking'),
+                'url' => get_string('bo_cond_customform_url', 'mod_booking'),
+                'mail' => get_string('bo_cond_customform_mail', 'mod_booking'),
             ];
 
             // We add four potential elements.
             $counter = 1;
             $previous = 0;
+
             while ($counter < 10) {
 
                 $buttonarray = [];
@@ -235,7 +238,6 @@ class customform implements bo_condition {
                 $mform->addElement('textarea', 'bo_cond_customform_value_1_' . $counter,
                     get_string('bo_cond_customform_value', 'mod_booking'), []);
                 $mform->addHelpButton('bo_cond_customform_value_1_' . $counter, 'bo_cond_customform_value', 'mod_booking');
-
                 // We need a few rules. We don't show label...
                 // ... when no element is chosen, when upper button is not checked, when form element is static.
                 $mform->hideIf('bo_cond_customform_value_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
@@ -530,5 +532,27 @@ class customform implements bo_condition {
         } catch (Exception $e) {
             return [];
         }
+    }
+
+    /**
+     * Appends the customform values to answer.
+     * @param object $answer
+     * @return object
+     */
+    public static function append_customform_elements($answer) {
+        if (isset($answer->json)) {
+            $answerjson = json_decode($answer->json);
+            if (
+                isset($answerjson->condition_customform) &&
+                !empty($answerjson->condition_customform)
+            ) {
+                foreach ($answerjson->condition_customform as $key => $value) {
+                    if (strpos($key, 'customform_') !== false) {
+                        $answer->$key = $value;
+                    }
+                }
+            }
+        }
+        return $answer;
     }
 }

@@ -85,7 +85,7 @@ class json extends field_base {
      * @param stdClass $formdata
      * @param stdClass $newoption
      * @param int $updateparam
-     * @param mixed $returnvalue
+     * @param ?mixed $returnvalue
      * @return string // If no warning, empty string.
      */
     public static function prepare_save_field(
@@ -123,7 +123,10 @@ class json extends field_base {
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
         global $DB;
-
-        $data->json = $settings->json ?? '{}';
+        if (!empty($data->importing)) {
+            $data->json = $data->json ?? $settings->json ?? '{}';
+        } else {
+            $data->json = $settings->json ?? '{}';
+        }
     }
 }

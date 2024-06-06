@@ -194,7 +194,7 @@ class booking_option {
      * @throws coding_exception
      * @throws dml_exception
      */
-    public static function create_option_from_optionid($optionid, ?int $bookingid = null) {
+    public static function create_option_from_optionid(int $optionid, ?int $bookingid = null) {
         global $DB;
 
         if (empty($bookingid)) {
@@ -725,7 +725,7 @@ class booking_option {
             // Let's send the cancel e-mails by using adhoc tasks.
             $messagecontroller = new message_controller(
                 MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, $msgparam,
-                $this->cmid, $this->bookingid, $this->optionid, $userid
+                $this->cmid, $this->optionid, $userid, $this->bookingid
             );
             $messagecontroller->send_or_queue();
         }
@@ -866,7 +866,7 @@ class booking_option {
                     self::purge_cache_for_answers($this->optionid);
                     $messagecontroller = new message_controller(
                         MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, MOD_BOOKING_MSGPARAM_STATUS_CHANGED,
-                        $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                        $this->cmid, $this->optionid, $currentanswer->userid, $this->bookingid
                     );
                     $messagecontroller->send_or_queue();
                 }
@@ -887,7 +887,7 @@ class booking_option {
                 self::purge_cache_for_answers($this->optionid);
                 $messagecontroller = new message_controller(
                     MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, MOD_BOOKING_MSGPARAM_STATUS_CHANGED,
-                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                    $this->cmid, $this->optionid, $currentanswer->userid, $this->bookingid
                 );
                 $messagecontroller->send_or_queue();
             }
@@ -913,7 +913,7 @@ class booking_option {
                 self::purge_cache_for_answers($this->optionid);
                 $messagecontroller = new message_controller(
                     MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, MOD_BOOKING_MSGPARAM_CANCELLED_BY_TEACHER_OR_SYSTEM,
-                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                    $this->cmid, $this->optionid, $currentanswer->userid, $this->bookingid
                 );
                 $messagecontroller->send_or_queue();
             }
@@ -929,7 +929,7 @@ class booking_option {
                 self::purge_cache_for_answers($this->optionid);
                 $messagecontroller = new message_controller(
                     MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, MOD_BOOKING_MSGPARAM_STATUS_CHANGED,
-                    $this->cmid, $this->bookingid, $this->optionid, $currentanswer->userid
+                    $this->cmid, $this->optionid, $currentanswer->userid, $this->bookingid
                 );
                 $messagecontroller->send_or_queue();
             }
@@ -1338,10 +1338,10 @@ class booking_option {
      *
      * @param stdClass $user user object
      * @param bool $optionchanged optional param used to inform the user of updates on the option
-     * @param array $changes a string containing changes to be replaced in the update message
+     * @param ?array $changes a string containing changes to be replaced in the update message
      * @return bool
      */
-    public function send_confirm_message($user, $optionchanged = false, $changes = null) {
+    public function send_confirm_message(stdClass $user, bool $optionchanged = false, ?array $changes = null) {
 
         global $DB;
 
@@ -1374,8 +1374,8 @@ class booking_option {
 
         // Use message controller to send the message.
         $messagecontroller = new message_controller(
-            MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, $msgparam, $this->cmid, $this->bookingid,
-            $this->optionid, $user->id, null, $changes
+            MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC, $msgparam, $this->cmid,
+            $this->optionid, $user->id, $this->bookingid, null, $changes
         );
         $messagecontroller->send_or_queue();
 
@@ -2229,7 +2229,7 @@ class booking_option {
             // Use message controller to send the Poll URL to every selected user.
             $messagecontroller = new message_controller(
                 MOD_BOOKING_MSGCONTRPARAM_SEND_NOW, MOD_BOOKING_MSGPARAM_POLLURL_PARTICIPANT,
-                $this->cmid, $this->bookingid, $this->optionid, $userid
+                $this->cmid, $this->optionid, $userid, $this->bookingid
             );
             $messagecontroller->send_or_queue();
         }
@@ -2260,7 +2260,7 @@ class booking_option {
             // Use message controller to send the Poll URL to teacher(s).
             $messagecontroller = new message_controller(
                 MOD_BOOKING_MSGCONTRPARAM_SEND_NOW, MOD_BOOKING_MSGPARAM_POLLURL_TEACHER,
-                $this->cmid, $this->bookingid, $this->optionid, $teacher->userid
+                $this->cmid, $this->optionid, $teacher->userid, $this->bookingid
             );
             $messagecontroller->send_or_queue();
         }
@@ -2270,11 +2270,11 @@ class booking_option {
      * Send notifications function for different types of notifications.
      * @param int $messageparam the message type
      * @param array $tousers
-     * @param int $optiondateid optional (needed for session reminders only)
+     * @param ?int $optiondateid optional (needed for session reminders only)
      * @throws coding_exception
      * @throws dml_exception
      */
-    public function sendmessage_notification(int $messageparam, $tousers = [], int $optiondateid = null) {
+    public function sendmessage_notification(int $messageparam, array $tousers = [], ?int $optiondateid = null) {
 
         $allusers = [];
 
@@ -2306,8 +2306,8 @@ class booking_option {
         foreach ($allusers as $user) {
 
             $messagecontroller = new message_controller(
-                MOD_BOOKING_MSGCONTRPARAM_SEND_NOW, $messageparam, $this->cmid,
-                $this->bookingid, $this->optionid, $user->id, $optiondateid
+                MOD_BOOKING_MSGCONTRPARAM_SEND_NOW, $messageparam, $this->cmid, $this->optionid, $user->id,
+                $this->bookingid, $optiondateid
             );
             $messagecontroller->send_or_queue();
         }
@@ -2350,7 +2350,7 @@ class booking_option {
      * @param ?int $statusparam optional statusparam if we already know it
      * @return string localized string of user status
      */
-    public function get_user_status_string(int $userid, $statusparam = null) {
+    public function get_user_status_string(int $userid, ?int $statusparam = null) {
 
         if ($statusparam === null) {
             $settings = singleton_service::get_instance_of_booking_option_settings($this->optionid);
@@ -2615,11 +2615,11 @@ class booking_option {
      * Returns the link if the user has the right
      * time before course start is hardcoded to 15 minutes
      *
-     * @param int $sessionid
+     * @param ?int $sessionid
      *
      * @return bool
      */
-    public function show_conference_link(int $sessionid = null): bool {
+    public function show_conference_link(?int $sessionid = null): bool {
 
         global $USER;
 
@@ -3425,7 +3425,7 @@ class booking_option {
      * @throws dml_exception
      * @throws moodle_exception
      */
-    public static function update($data, context $context = null,
+    public static function update($data, ?context $context = null,
         int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
 
         global $DB;

@@ -1,5 +1,16 @@
+## Version 8.4.0 (2024060600)
+* Improvement: Add rank number to waiting list.
+* Improvement: New placeholder eventdescription.
+* Improvement: Mobile customform extensions.
+* Improvement: Individual campaigns, depending on user profile field.
+* Improvement: Display messages sent for bookingoptions.
+* Improvement: Add possibility to autmatically buy pro license.
+* Bugfix: Subbookings moving through prepages.
 
-## Version 8.3.6 (2024052400)
+## Version 8.3.9 (2024052900)
+* Bugfix: Make sure deleted cohort does not break system.
+
+## Version 8.3.8 (2024052800)
 * Feature: New moodle course template handling
 * Feature: New waitinglist handling & notifications (via booking rules)
 

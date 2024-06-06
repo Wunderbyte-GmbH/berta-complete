@@ -173,8 +173,8 @@ class addbookingoption extends external_api {
      * @param string|null $bookingclosingtime
      * @param int|null $enrolmentstatus
      * @param string|null $description
-     * @param int $descriptionformat
-     * @param int $limitanswers
+     * @param int|null $descriptionformat
+     * @param int|null $limitanswers
      * @param int|null $addtocalendar
      * @param string|null $pollurl
      * @param string|null $location
@@ -185,73 +185,72 @@ class addbookingoption extends external_api {
      * @param int|null $removeafterminutes
      * @param string|null $notifcationtext
      * @param int|null $notifcationtextformat
-     * @param int $disablebookingusers
+     * @param int|null $disablebookingusers
      * @param string|null $beforebookedtext
      * @param string|null $beforecompletedtext
      * @param string|null $aftercompletedtext
      * @param string|null $shorturl
-     * @param int $duration
+     * @param int|null $duration
      * @param string|null $useremail
      * @param string|null $teacheremail
      * @param string|null $userusername
      * @param string|null $coursestarttime
      * @param string|null $courseendtime
-     * @param int $invisible
+     * @param int|null $invisible
      * @param string|null $responsiblecontact
      * @param string|null $boavenrolledincourse
      * @param string|null $recommendedin
      * @param int|null $mergeparam
-     *
      * @return array
-     *
+     * @throws \invalid_parameter_exception
      */
     public static function execute(
                         string $name,
                         string $identifier,
-                        string $titleprefix = null,
-                        int $targetcourseid = null,
-                        int $courseid = null,
-                        int $bookingid = null,
-                        $bookingidnumber = null,
-                        int $bookingoptionid = null,
-                        $courseidnumber = null,
-                        string $courseshortname = null,
-                        string $enroltocourseshortname = null,
-                        int $maxanswers = null,
-                        int $maxoverbooking = null,
-                        int $minanswers = null,
-                        string $bookingopeningtime = null,
-                        string $bookingclosingtime = null,
-                        int $enrolmentstatus = null,
-                        string $description = null,
-                        int $descriptionformat = 0,
-                        int $limitanswers = 0,
-                        int $addtocalendar = null,
-                        string $pollurl = null,
-                        string $location = null,
-                        string $institution = null,
-                        string $address = null,
-                        string $pollurlteachers = null,
-                        int $howmanyusers = null,
-                        int $removeafterminutes = null,
-                        string $notifcationtext = null,
-                        int $notifcationtextformat = null,
-                        int $disablebookingusers = 0,
-                        string $beforebookedtext = null,
-                        string $beforecompletedtext = null,
-                        string $aftercompletedtext = null,
-                        string $shorturl = null,
-                        int $duration = 0,
-                        string $useremail = null,
-                        string $teacheremail = null,
-                        string $userusername = null,
-                        string $coursestarttime = null,
-                        string $courseendtime = null,
-                        int $invisible = 0,
-                        string $responsiblecontact = null,
-                        string $boavenrolledincourse = null,
-                        string $recommendedin = null,
-                        int $mergeparam = null
+                        ?string $titleprefix = null,
+                        ?int $targetcourseid = null,
+                        ?int $courseid = null,
+                        ?int $bookingid = null,
+                        ?int $bookingidnumber = null,
+                        ?int $bookingoptionid = null,
+                        ?int $courseidnumber = null,
+                        ?string $courseshortname = null,
+                        ?string $enroltocourseshortname = null,
+                        ?int $maxanswers = null,
+                        ?int $maxoverbooking = null,
+                        ?int $minanswers = null,
+                        ?string $bookingopeningtime = null,
+                        ?string $bookingclosingtime = null,
+                        ?int $enrolmentstatus = null,
+                        ?string $description = null,
+                        ?int $descriptionformat = 0,
+                        ?int $limitanswers = 0,
+                        ?int $addtocalendar = null,
+                        ?string $pollurl = null,
+                        ?string $location = null,
+                        ?string $institution = null,
+                        ?string $address = null,
+                        ?string $pollurlteachers = null,
+                        ?int $howmanyusers = null,
+                        ?int $removeafterminutes = null,
+                        ?string $notifcationtext = null,
+                        ?int $notifcationtextformat = null,
+                        ?int $disablebookingusers = 0,
+                        ?string $beforebookedtext = null,
+                        ?string $beforecompletedtext = null,
+                        ?string $aftercompletedtext = null,
+                        ?string $shorturl = null,
+                        ?int $duration = 0,
+                        ?string $useremail = null,
+                        ?string $teacheremail = null,
+                        ?string $userusername = null,
+                        ?string $coursestarttime = null,
+                        ?string $courseendtime = null,
+                        ?int $invisible = 0,
+                        ?string $responsiblecontact = null,
+                        ?string $boavenrolledincourse = null,
+                        ?string $recommendedin = null,
+                        ?int $mergeparam = null
                     ): array {
 
         $params = external_api::validate_parameters(self::execute_parameters(),

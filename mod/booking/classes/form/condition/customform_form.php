@@ -168,21 +168,47 @@ class customform_form extends dynamic_form {
                         $mform->setType('customform_shorttext_' . $counter, PARAM_TEXT);
                         break;
                     case 'select':
-
                         // Create the array.
+                        $identifier = 'customform_select_' . $counter;
                         $lines = explode(PHP_EOL, $formelementvalue->value);
                         $options = [];
                         foreach ($lines as $line) {
                             $linearray = explode(' => ', $line);
                             if (count($linearray) > 1) {
                                 $options[$linearray[0]] = $linearray[1];
+                                if (count($linearray) > 2) {
+                                    $ba = singleton_service::get_instance_of_booking_answers($settings);
+                                    $expectedvalue = $linearray[0];
+                                    $filteredba = array_filter($ba->usersonlist,
+                                        function($userbookings) use ($identifier, $expectedvalue) {
+                                            return isset($userbookings->$identifier)
+                                                    && $userbookings->$identifier === $expectedvalue;
+                                        }
+                                    );
+                                    $leftover = $linearray[2] - count($filteredba);
+                                    if ( $leftover == 0) {
+                                        unset($options[$linearray[0]]);
+                                    } else {
+                                        $options[$linearray[0]] .= ', ' . $leftover  .
+                                            ' ' . get_string('bo_cond_customform_available', 'mod_booking');
+                                    }
+                                }
                             } else {
                                 $options[] = $line;
                             }
                         }
-
-                        $mform->addElement('select', 'customform_select_' . $counter,
+                        $mform->addElement('select', $identifier,
                         $formelementvalue->label ?? "Label " . $counter, $options);
+                        break;
+                    case 'url':
+                        $mform->addElement('text', 'customform_url_' . $counter,
+                        $formelementvalue->label ?? "Label " . $counter);
+                        $mform->setDefault('customform_url_' . $counter, $formelementvalue->value);
+                        break;
+                    case 'mail':
+                        $mform->addElement('text', 'customform_mail_' . $counter,
+                        $formelementvalue->label ?? "Label " . $counter);
+                        $mform->setDefault('customform_mail_' . $counter, $formelementvalue->value);
                         break;
                 }
 
@@ -212,7 +238,6 @@ class customform_form extends dynamic_form {
         // We have to pass by the option settings.
         $settings = singleton_service::get_instance_of_booking_option_settings((int)$id);
         $customform = customform::return_formelements($settings);
-
         $customformstore = new customformstore($data['userid'], $id);
         return $customformstore->validation($customform, $data);
     }

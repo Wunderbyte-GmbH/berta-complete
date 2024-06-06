@@ -59,10 +59,10 @@ class enrolledincohorts implements bo_condition {
     /**
      * Constructor.
      *
-     * @param int $id
+     * @param ?int $id
      * @return void
      */
-    public function __construct(int $id = null) {
+    public function __construct(?int $id = null) {
         if ($id) {
             $this->id = $id;
         }
@@ -531,7 +531,9 @@ class enrolledincohorts implements bo_condition {
             $coursestringsarr = [];
             foreach ($this->customsettings->cohortids as $cohortid) {
                 $cohort = singleton_service::get_cohort($cohortid);
-                $coursestringsarr[] = $cohort->name;
+                if (!empty($cohort)) {
+                    $coursestringsarr[] = $cohort->name;
+                }
             }
             $a = implode(', ', $coursestringsarr);
 

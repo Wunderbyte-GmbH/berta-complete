@@ -74,6 +74,9 @@ class campaign_blockbooking implements booking_campaign {
     /** @var string $hascapability */
     public $hascapability = '';
 
+    /** @var bool $userspecificprice */
+    public $userspecificprice = false;
+
     /**
      * Load json data from DB into the object.
      * @param stdClass $record a campaign record from DB
@@ -97,10 +100,10 @@ class campaign_blockbooking implements booking_campaign {
     /**
      * Add the campaign to the mform.
      * @param MoodleQuickForm $mform
-     * @param array $ajaxformdata reference to form data
+     * @param ?array $ajaxformdata reference to form data
      * @return void
      */
-    public function add_campaign_to_mform(MoodleQuickForm &$mform, array &$ajaxformdata = null) {
+    public function add_campaign_to_mform(MoodleQuickForm &$mform, ?array &$ajaxformdata = null) {
 
         global $DB;
 
@@ -309,11 +312,12 @@ class campaign_blockbooking implements booking_campaign {
     }
 
     /**
-     * Does not apply for this campaign type.
+     * Function to apply the campaign price factor.
      * @param float $price the original price
+     * @param int $userid for userspecific campaigns.
      * @return float the new price
      */
-    public function get_campaign_price(float $price): float {
+    public function get_campaign_price(float $price, int $userid = 0): float {
         return $price;
     }
 

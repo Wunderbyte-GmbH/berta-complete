@@ -398,6 +398,9 @@ $string['optiondates_teacher_added'] = 'Vertretung wurde eingetragen';
 $string['optiondates_teacher_deleted'] = 'Trainer:in wurde aus Trainingsjournal entfernt';
 $string['booking_failed'] = 'Buchung gescheitert';
 $string['booking_afteractionsfailed'] = 'Actions nach der Buchung gescheitert';
+$string['rest_script_succes'] = 'Rest Skript Ausführung';
+$string['rest_script_failed'] = 'Skript konnte nicht ausgeführt werden';
+$string['rest_script_executed'] = 'Nach dem Rest-Skript Aufruf';
 
 // View.php.
 $string['bookingpolicyagree'] = 'Ich habe die Buchungsbedingungen gelesen und erkläre mich damit einverstanden.';
@@ -421,6 +424,7 @@ $string['bookingsaved'] = '<b>Vielen Dank für Ihre Buchung!</b> <br /> Ihre Buc
 $string['booknow'] = 'Jetzt buchen';
 $string['bookotherusers'] = 'Buchung für andere Nutzer:innen durchführen';
 $string['cancelbooking'] = 'Buchung stornieren';
+$string['generateprolicense'] = 'Generiere Pro Lizens';
 $string['closed'] = 'Buchung beendet';
 $string['confirmbookingoffollowing'] = 'Bitte bestätigen Sie folgende Buchung';
 $string['confirmdeletebookingoption'] = 'Möchten Sie diese Buchung wirklich löschen?';
@@ -617,6 +621,8 @@ $string['qr_id'] = "QR_id";
 $string['qr_username'] = "QR_nutzerinnenname";
 $string['startdate'] = "Startdatum";
 $string['starttime'] = "Startzeit";
+$string['rest_response'] = "rest_response";
+$string['eventdescription'] = "eventdescription";
 $string['title'] = "Titel";
 $string['usercalendarurl'] = "Nutzer:innen Kalender";
 $string['username'] = "Usernamen";
@@ -1868,8 +1874,8 @@ $string['bo_cond_askforconfirmation_full_not_available'] = 'Buchen - auf Warteli
 
 $string['bo_cond_onwaitinglist_available'] = 'Buchen';
 $string['bo_cond_onwaitinglist_full_available'] = 'Buchen möglich';
-$string['bo_cond_onwaitinglist_not_available'] = 'Ausgebucht - Sie sind auf der Warteliste';
-$string['bo_cond_onwaitinglist_full_not_available'] = 'Ausgebucht - Nutzer:in ist auf der Warteliste';
+$string['bo_cond_onwaitinglist_not_available'] = 'Sie sind auf der Warteliste';
+$string['bo_cond_onwaitinglist_full_not_available'] = 'Nutzer:in ist auf der Warteliste';
 
 $string['bo_cond_priceisset_available'] = 'Buchen';
 $string['bo_cond_priceisset_full_available'] = 'Buchen möglich';
@@ -1953,12 +1959,19 @@ $string['checkbox'] = "Checkbox";
 $string['displaytext'] = "Text anzeigen";
 $string['textarea'] = "Textbereich";
 $string['shorttext'] = "Kurztext";
+$string['bo_cond_customform_url'] = "Url";
+$string['bo_cond_customform_url_error'] = "Die URL ist nicht valide oder beginnt nicht mit http oder https.";
+$string['bo_cond_customform_numbers_error'] = "Bitte trage eine gültige Zahl an Tagen ein.";
+$string['bo_cond_customform_mail'] = "E-Mail";
+$string['bo_cond_customform_mail_error'] = "Die E-Mail ist nicht richtig.";
+$string['bo_cond_customform_fully_booked'] = 'Die Option "{$a}" ist bereits voll gebucht.';
 $string['select'] = "DropDown Menü";
 $string['formtype'] = "Formulartyp";
 $string['bo_cond_customform_label'] = "Bezeichnung";
 $string['bo_cond_customform_notempty'] = 'Darf nicht leer sein';
 $string['bo_cond_customform_value'] = 'Wert';
-$string['bo_cond_customform_value_help'] = 'Wenn ein DropDown Menü ausgewählt ist bitte einen Wert pro Zeile eingeben. Die Werte und angezeigte Werte können getrennt eingegeben werden, also z.b. "1 => Mein erster Wert" usw.';
+$string['bo_cond_customform_value_help'] = 'Wenn ein DropDown Menü ausgewählt ist bitte einen Wert pro Zeile eingeben. Die Werte und angezeigte Werte können getrennt eingegeben werden, also z.b. "1 => Mein erster Wert => anzahl_der_möglichkeiten" usw.';
+$string['bo_cond_customform_available'] = 'verfügbar';
 
 // Teacher_performed_units_report.php.
 $string['error:wrongteacherid'] = 'Fehler: Für die angegebene "teacherid" wurde kein:e Nutzer:in gefunden.';
@@ -2000,6 +2013,10 @@ $string['campaignend'] = 'Ende der Kampagne';
 $string['campaign_blockbooking'] = 'Bestimmte Buchungen blockieren';
 $string['campaign_blockbooking_descriptiontext'] = 'Betrifft: Benutzerdefiniertes Buchungsoptionsfeld "{$a->fieldname}"
 mit dem Wert "{$a->fieldvalue}".';
+
+$string['userspecificcampaignwarning'] = "Wenn Sie ein unten ein benutzerdefiniertes User Profilfeld auswählen, wird der Preis-Teil der Kampagne nur für jene NutzerInnen wirksam, die auch dieses Feld ausgewählt haben.";
+$string['customuserprofilefield'] = "Benutzerdefiniertes User Profilfeld";
+$string['customuserprofilefield_help'] = "Wenn Sie hier ein Feld auswählen, ist der Preis-Teil der Kampagne nur für NutzerInnen wirksam, die auch einen bestimmten Wert in einem bestimmten Profilfeld haben.";
 
 $string['blockoperator'] = 'Operator';
 $string['blockoperator_help'] = '<b>Blockiere über</b> ... Sobald der angegebene Prozentsatz an Buchungen erreicht ist, wird das Online-Buchen geblockt,
@@ -2244,6 +2261,8 @@ Sie können es ausprobieren, aber bitte verwenden Sie es noch auf keiner Produkt
 $string['boactions'] = 'Aktionen nach der Buchung ' . $badgepro . ' ' . $badgeexp;
 $string['onlyaddactionsonsavedoption'] = "Aktionen nach der Buchung könnnen nur zu schon gespeicherte Optionen hinzugefügt werden.";
 $string['boactionname'] = "Name der Aktion";
+$string['bonumberofdays'] = "Anzahl der tage";
+$string['bopathtoscript'] = "Pfad zur REST-Skript";
 $string['showboactions'] = "Aktiviere Aktionen nach der Buchung";
 $string['boactionselectuserprofilefield'] = "Wähle Profilfeld";
 $string['boactioncancelbookingvalue'] = "Activate immediate cancelation";
@@ -2253,6 +2272,13 @@ $string['actionoperator:set'] = 'Ersetzen';
 $string['actionoperator:subtract'] = 'Minus';
 $string['actionoperator'] = 'Aktion';
 $string['actionoperator:adddate'] = 'Füge Zeitraum hinzu';
+$string['customformparams_value'] = "Customform Parameter";
+$string['customformparams_desc'] = "Benutze die Parameter aus der customform.";
+$string['adminparameter_value'] = "Admin Parameter";
+$string['adminparameter_desc'] = "Benutze die Parameter aus den Admin Einstellungen.";
+$string['userparameter_value'] = "User Parameter";
+$string['userparameter_desc'] = "Benutze User Parameter.";
+$string['editaction'] = "Editiere Action";
 
 // Dates class.
 $string['adddatebutton'] = "Füge Datum hinzu";

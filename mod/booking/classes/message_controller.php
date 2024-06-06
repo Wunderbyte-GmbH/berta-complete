@@ -112,6 +112,9 @@ class message_controller {
     /** @var int $installmentnr number of installment - starting with 0. */
     private $installmentnr;
 
+    /** @var string $rulejson eventdata string */
+    private $rulejson;
+
     /** @var int $duedate duedate of installment. */
     private $duedate;
 
@@ -120,24 +123,38 @@ class message_controller {
 
     /**
      * Constructor
+     *
      * @param int $msgcontrparam message controller param (send now | queue adhoc)
      * @param int $messageparam the message type
      * @param int $cmid course module id
-     * @param int $bookingid booking id
      * @param int $optionid option id
      * @param int $userid user id
-     * @param int|null $optiondateid optional id of a specific session (optiondate)
-     * @param array $changes array of changes for change notifications
+     * @param ?int $bookingid booking id
+     * @param ?int $optiondateid optional id of a specific session (optiondate)
+     * @param ?array $changes array of changes for change notifications
      * @param string $customsubject subject of custom messages
      * @param string $custommessage body of custom messages
      * @param int $installmentnr number of installment
      * @param int $duedate UNIX timestamp for duedate of installment
      * @param float $price price of installment
+     * @param string $rulejson event data
      */
-    public function __construct(int $msgcontrparam, int $messageparam, int $cmid, int $bookingid = null,
-        int $optionid, int $userid, int $optiondateid = null, $changes = null,
-        string $customsubject = '', string $custommessage = '',
-        int $installmentnr = 0, int $duedate = 0, float $price = 0.0) {
+    public function __construct(
+        int $msgcontrparam,
+        int $messageparam,
+        int $cmid,
+        int $optionid,
+        int $userid,
+        ?int $bookingid = null,
+        ?int $optiondateid = null,
+        ?array $changes = null,
+        string $customsubject = '',
+        string $custommessage = '',
+        int $installmentnr = 0,
+        int $duedate = 0,
+        float $price = 0.0,
+        string $rulejson = ''
+    ) {
 
         global $USER, $PAGE;
 
@@ -189,6 +206,7 @@ class message_controller {
         $this->installmentnr = $installmentnr;
         $this->duedate = $duedate;
         $this->price = $price;
+        $this->rulejson = $rulejson;
         $this->params = new stdClass();
 
         // For custom messages only.
@@ -301,7 +319,7 @@ class message_controller {
         // We apply the default placeholders.
         $text = placeholders_info::render_text($text, $this->optionsettings->cmid, $this->optionid, $this->userid,
             $this->installmentnr, $this->duedate, $this->price,
-            $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE);
+            $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE, $this->rulejson);
 
         return $text;
     }
@@ -432,9 +450,11 @@ class message_controller {
                         'context' => context_system::instance(),
                         'userid' => $this->messagedata->userto->id,
                         'relateduserid' => $this->messagedata->userfrom->id,
+                        'objectid' => $this->optionid ?? 0,
                         'other' => [
                             'messageparam' => $this->messageparam,
                             'subject' => $this->messagedata->subject,
+                            'objectid' => $this->optionid ?? 0,
                         ],
                     ]);
                     $event->trigger();
@@ -463,6 +483,7 @@ class message_controller {
 
             if (!empty($bookingsettings->sendmail)) {
                 $sendtask = new send_confirmation_mails();
+                $this->messagedata->optionid = $this->optionid;
                 $sendtask->set_custom_data($this->messagedata);
                 \core\task\manager::queue_adhoc_task($sendtask);
             }

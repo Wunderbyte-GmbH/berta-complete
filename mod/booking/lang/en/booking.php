@@ -391,7 +391,10 @@ $string['reminder_teacher_sent'] = 'Teacher reminder sent';
 $string['optiondates_teacher_added'] = 'Substitution teacher was added';
 $string['optiondates_teacher_deleted'] = 'Teacher deleted from teaching journal';
 $string['booking_failed'] = 'Booking failed';
+$string['rest_script_succes'] = 'Rest script execution';
+$string['rest_script_failed'] = 'Script execution has failed';
 $string['booking_afteractionsfailed'] = 'Actions after booking failed';
+$string['rest_script_executed'] = 'After the rest call has been executed';
 
 // View.php.
 $string['bookingpolicyagree'] = 'I have read, understood and agree to the booking policy.';
@@ -416,6 +419,7 @@ $string['bookingsaved'] = 'Your booking was successfully saved. You can now proc
 $string['booknow'] = 'Book now';
 $string['bookotherusers'] = 'Book other users';
 $string['cancelbooking'] = 'Cancel booking';
+$string['generateprolicense'] = 'Generate Pro License';
 $string['closed'] = 'Booking closed';
 $string['confirmbookingoffollowing'] = 'Please confirm the booking of following course';
 $string['confirmdeletebookingoption'] = 'Do you really want to delete this booking option?';
@@ -620,6 +624,8 @@ $string['qr_id'] = "qr_id";
 $string['qr_username'] = "qr_username";
 $string['startdate'] = "startdate";
 $string['starttime'] = "starttime";
+$string['rest_response'] = "rest_response";
+$string['eventdescription'] = "eventdescription";
 $string['title'] = "title";
 $string['usercalendarurl'] = "usercalendarurl";
 $string['username'] = "username";
@@ -1939,8 +1945,8 @@ $string['bo_cond_askforconfirmation_full_not_available'] = 'Book it - on waiting
 
 $string['bo_cond_onwaitinglist_available'] = 'Book it';
 $string['bo_cond_onwaitinglist_full_available'] = 'Booking is possible';
-$string['bo_cond_onwaitinglist_not_available'] = 'Fully booked - You are on the waiting list';
-$string['bo_cond_onwaitinglist_full_not_available'] = 'Fully booked - User is on the waiting list';
+$string['bo_cond_onwaitinglist_not_available'] = 'You are on the waiting list';
+$string['bo_cond_onwaitinglist_full_not_available'] = 'User is on the waiting list';
 
 $string['bo_cond_priceisset_available'] = 'Book it';
 $string['bo_cond_priceisset_full_available'] = 'Booking is possible';
@@ -2085,11 +2091,18 @@ $string['checkbox'] = "Checkbox";
 $string['displaytext'] = "Display text";
 $string['textarea'] = "Textarea";
 $string['shorttext'] = "Shorttext";
+$string['bo_cond_customform_url'] = "Url";
+$string['bo_cond_customform_url_error'] = "The URL is not valid or does not start with http or https.";
+$string['bo_cond_customform_numbers_error'] = "Please insert a valid number of days.";
+$string['bo_cond_customform_mail'] = "E-Mail";
+$string['bo_cond_customform_mail_error'] = "The email address is invalid.";
+$string['bo_cond_customform_fully_booked'] = 'The option "{$a}" is already fully booked.';
 $string['formtype'] = "Type of form";
 $string['bo_cond_customform_label'] = "Label";
 $string['bo_cond_customform_notempty'] = 'Must not be empty';
 $string['bo_cond_customform_value'] = 'Value';
-$string['bo_cond_customform_value_help'] = 'When a dropdown menu is selected, please enter one value per line. The values and displayed values can be entered separately, for example, "1 => My first value" etc.';
+$string['bo_cond_customform_value_help'] = 'When a dropdown menu is selected, please enter one value per line. The values and displayed values can be entered separately, for example, "1 => My first value => number_of_availability" etc.';
+$string['bo_cond_customform_available'] = 'available';
 
 // Teacher_performed_units_report.php.
 $string['error:wrongteacherid'] = 'Error: No user could be found for the provided "teacherid".';
@@ -2131,6 +2144,11 @@ $string['campaignend'] = 'End of campaign';
 $string['campaign_blockbooking'] = 'Block certain booking options';
 $string['campaign_blockbooking_descriptiontext'] = 'Affects: Booking option custom field "{$a->fieldname}"
 having the value "{$a->fieldvalue}".';
+
+$string['userspecificcampaignwarning'] = "If you choose a user profile field here beneath, the price part of the campaign will only be effective for users with the defined value in the custom user profile field.";
+$string['customuserprofilefield'] = "Custom user profile field";
+$string['customuserprofilefield_help'] = "If you choose a value here, the price part of the camapaign will only be valid for users with the defined value in the defined custom field.";
+
 
 $string['blockoperator'] = 'Operator';
 $string['blockoperator_help'] = '<b>Block above</b> ... Online booking will be blocked once the given percentage
@@ -2375,6 +2393,8 @@ But do not use them in a productive environment yet!";
 $string['boactions'] = 'Actions after booking ' . $badgepro . ' ' . $badgeexp;
 $string['onlyaddactionsonsavedoption'] = "Actions after booking can only be added once the booking option is saved.";
 $string['boactionname'] = "Name of action";
+$string['bonumberofdays'] = "Number of days";
+$string['bopathtoscript'] = "Path to rest script";
 $string['showboactions'] = "Activate actions after booking";
 $string['boactionselectuserprofilefield'] = "Choose profile field";
 $string['boactioncancelbookingvalue'] = "Aktiviere sofortige Ausbuchung";
@@ -2384,6 +2404,14 @@ $string['actionoperator:set'] = 'Replace';
 $string['actionoperator:subtract'] = 'Subtract';
 $string['actionoperator'] = 'Action';
 $string['actionoperator:adddate'] = 'Add date';
+$string['customformparams_value'] = "Customform parameter";
+$string['customformparams_desc'] = "Use parameter that are set in the customform.";
+$string['adminparameter_value'] = "Admin parameter";
+$string['adminparameter_desc'] = "Use parameter that are set in the admin settings.";
+$string['userparameter_value'] = "User parameter";
+$string['userparameter_desc'] = "Use user parameter.";
+$string['editaction'] = "Edit Action";
+
 
 // Dates class.
 $string['adddatebutton'] = "Add date";

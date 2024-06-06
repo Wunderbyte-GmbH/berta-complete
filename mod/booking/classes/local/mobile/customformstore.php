@@ -26,6 +26,8 @@
 namespace mod_booking\local\mobile;
 
 use cache;
+use mod_booking\singleton_service;
+use stdClass;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -98,9 +100,42 @@ class customformstore {
     public function validation($customform, $data): array {
         $errors = [];
         foreach ($customform as $key => $formelement) {
+            $identifier = 'customform_' . $formelement->formtype . "_" . $key;
+            if (
+              $formelement->formtype == 'url' &&
+              !self::isvalidhttpurl($data[$identifier], FILTER_VALIDATE_EMAIL)
+            ) {
+                $errors[$identifier] = get_string('bo_cond_customform_url_error', 'mod_booking');
+            } else if (
+              $formelement->formtype == 'mail' &&
+              !filter_var($data[$identifier], FILTER_VALIDATE_EMAIL)
+            ) {
+                $errors[$identifier] = get_string('bo_cond_customform_mail_error', 'mod_booking');
+            } else if (
+                $formelement->formtype == 'select'
+            ) {
+                $lines = explode(PHP_EOL, $formelement->value);
+                foreach ($lines as $line) {
+                    $linearray = explode(' => ', $line);
+                    if (isset($linearray[2]) && $linearray[0] == $data[$identifier]) {
+                        $settings = singleton_service::get_instance_of_booking_option_settings($data['id']);
+                        $ba = singleton_service::get_instance_of_booking_answers($settings);
+                        $expectedvalue = $linearray[0];
+                        $filteredba = array_filter($ba->usersonlist, function($userbookings) use ($identifier, $expectedvalue) {
+                            return isset($userbookings->$identifier) && $userbookings->$identifier === $expectedvalue;
+                        });
+                        if (count($filteredba) >= $linearray[2]) {
+                            $errors[$identifier] = get_string(
+                                'bo_cond_customform_fully_booked',
+                                'mod_booking',
+                                $linearray[1]
+                            );
+                        }
+                        break;
+                    }
+                }
+            }
             if (!empty($formelement->notempty)) {
-                $identifier = 'customform_' . $formelement->formtype . "_" . $key;
-
                 if (empty($data[$identifier])) {
                     $errors[$identifier] = get_string('error:mustnotbeempty', 'mod_booking');
                 }
@@ -111,42 +146,29 @@ class customformstore {
 
     /**
      * Validates each submission entry.
+     * @param string $url
+     * @return bool
+     */
+    public function isvalidhttpurl($url) {
+        if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+            return false;
+        }
+        return preg_match('/^https?:\/\//', $url);
+    }
+
+    /**
+     * Validates each submission entry.
      * @param object $customform
-     * @param object $customformuserdata
+     * @param array $errors
      * @return object
      */
-    public static function validation_data($customform, $customformuserdata) {
+    public function translate_errors($customform, $errors) {
         foreach ($customform as $key => &$customitem) {
-            if (!empty($customitem->notempty)) {
-                if (empty($customformuserdata)) {
-                    $customitem->error = true;
-                } else {
-                    $found = false;
-                    foreach ($customformuserdata as $keyformitem => $customformitem) {
-                        if ($keyformitem == 'customform_' . $customitem->formtype . '_' . $key) {
-                            $found = true;
-                            if (str_contains($customitem->formtype, 'select')) {
-                                $customitem->selectedvalue = $customformitem;
-                                $selecttype = gettype($customitem->selectedvalue);
-                                if ($selecttype != 'string') {
-                                    $customitem->error = true;
-                                } else {
-                                    $customitem->error = false;
-                                }
-                            } else {
-                                $customitem->value = $customformitem;
-                                if (empty($customformitem)) {
-                                    $customitem->error = true;
-                                } else {
-                                    $customitem->error = false;
-                                }
-                            }
-                        }
-                    }
-                    if (!$found) {
-                        $customitem->error = true;
-                    }
-                }
+            $keyerroritem = 'customform_' . $customitem->formtype . '_' . $key;
+            if (isset($errors[$keyerroritem])) {
+                $customitem->error = $errors[$keyerroritem];
+            } else {
+                $customitem->error = false;
             }
         }
         return $customform;

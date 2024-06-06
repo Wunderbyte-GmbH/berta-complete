@@ -27,6 +27,7 @@ namespace mod_booking;
 
 use context_system;
 use dml_exception;
+use mod_booking\bo_availability\conditions\customform;
 use mod_booking\singleton_service;
 
 defined('MOODLE_INTERNAL') || die();
@@ -150,7 +151,7 @@ class booking_answers {
             $this->answers = $answers;
 
             foreach ($answers as $answer) {
-
+                $answer = customform::append_customform_elements($answer);
                 // A user might have one or more 'deleted' entries, but else, there should be only one.
                 if ($answer->waitinglist != MOD_BOOKING_STATUSPARAM_DELETED) {
                     $this->users[$answer->userid] = $answer;
@@ -571,7 +572,7 @@ class booking_answers {
      */
     public static function return_sql_for_booked_users(int $optionid, int $statusparam) {
         // We need to set a limit for the query in mysqlfamily.
-        $fields = 's1.*';
+        $fields = 's1.*, ROW_NUMBER() OVER (ORDER BY s1.timemodified, s1.id DESC) AS rank';
         $from = " (SELECT ba.id,
                           u.id as userid,
                           u.firstname,

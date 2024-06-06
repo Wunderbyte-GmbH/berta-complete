@@ -93,7 +93,7 @@ class courseid extends field_base {
      * @param stdClass $formdata
      * @param stdClass $newoption
      * @param int $updateparam
-     * @param mixed $returnvalue
+     * @param ?mixed $returnvalue
      * @return string // If no warning, empty string.
      */
     public static function prepare_save_field(
@@ -249,10 +249,14 @@ class courseid extends field_base {
             'noselectionstring' => get_string('nocourseselected', 'mod_booking'),
             'valuehtmlcallback' => function($a) {
                 return get_string('nocourseselected', 'mod_booking');
-            }
+            },
         ];
 
-        $mform->addElement('autocomplete', 'coursetemplateid', get_string("createnewmoodlecoursefromtemplate", "mod_booking"), [], $options);
+        $mform->addElement('autocomplete',
+                        'coursetemplateid',
+                        get_string("createnewmoodlecoursefromtemplate", "mod_booking"),
+                        [],
+                        $options);
         $mform->hideIf('coursetemplateid', 'chooseorcreatecourse', 'neq', 3);
     }
 

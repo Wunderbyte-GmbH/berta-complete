@@ -16,10 +16,8 @@
 
 namespace mod_booking\booking_rules\actions;
 
-use mod_booking\booking_rules\booking_rule;
 use mod_booking\booking_rules\booking_rule_action;
 use mod_booking\placeholders\placeholders_info;
-use mod_booking\singleton_service;
 use mod_booking\task\send_mail_by_rule_adhoc;
 use MoodleQuickForm;
 use stdClass;
@@ -69,15 +67,6 @@ class send_mail implements booking_rule_action {
         $this->rulejson = $json;
         $jsonobject = json_decode($json);
         $actiondata = $jsonobject->actiondata;
-
-        if (!empty($jsonobject->datafromevent)) {
-            /* If the template contains the {eventdescription} placeholder,
-            we replace it here, because we have the eventdescription in the $datafromevent
-            which is part of the JSON. */
-            $event = $jsonobject->ruledata->boevent::restore((array)$jsonobject->datafromevent, []);
-            $actiondata->template = str_replace('{eventdescription}', $event->get_description() ?? "",
-                $actiondata->template);
-        }
 
         $this->subject = $actiondata->subject;
         $this->template = $actiondata->template;

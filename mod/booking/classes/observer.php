@@ -61,6 +61,9 @@ class mod_booking_observer {
      */
     public static function user_updated(\core\event\user_updated $event) {
 
+        // Prices can be depend on the user profile field. Therefore, we need to update caching of prices.
+        cache_helper::purge_by_event('setbackprices');
+
         $userid = $event->relateduserid;
 
         // Check if any booking rules apply for this new user.
@@ -217,7 +220,7 @@ class mod_booking_observer {
 
             foreach ($optiondates as $optiondate) {
                 // Create or update the sessions.
-                option_optiondate_update_event($optionid, $optiondate, $cmid);
+                option_optiondate_update_event($optionid, $cmid, $optiondate);
             }
         }
 
