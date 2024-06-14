@@ -156,6 +156,7 @@ $string['error:entervalue'] = 'Sie müssen hier einen Wert eingeben.';
 $string['error:negativevaluenotallowed'] = 'Bitte einen positiven Wert eingeben.';
 $string['error:pricemissing'] = 'Bitte geben Sie einen Preis ein.';
 $string['error:missingcapability'] = 'Erforderliche Berechtigung fehlt. Bitte wenden Sie sich an einen Administrator.';
+$string['error:noendtagfound'] = 'Beenden Sie den begonnenen Placeholder-Abschnitt "{$a}" durch einen Backslash ("/").';
 
 // Index.php.
 $string['week'] = "Woche";
@@ -623,6 +624,7 @@ $string['startdate'] = "Startdatum";
 $string['starttime'] = "Startzeit";
 $string['rest_response'] = "rest_response";
 $string['eventdescription'] = "eventdescription";
+$string['customform'] = "customform";
 $string['title'] = "Titel";
 $string['usercalendarurl'] = "Nutzer:innen Kalender";
 $string['username'] = "Usernamen";
@@ -1995,7 +1997,8 @@ $string['bookingcampaigns'] = 'Buchung: Kampagnen (PRO)';
 $string['bookingcampaign'] = 'Kampagne';
 $string['bookingcampaignssubtitle'] = 'Mit Kampagnen können Sie für einen festgelegten Zeitraum die Preise von ausgewählten
  Buchungsoptionen vergünstigen und das Buchungslimit für diesen Zeitraum erhöhen. Damit die Kampagnen funktionieren, muss der
- Moodle Cron-Job regelmäßig laufen.';
+ Moodle Cron-Job regelmäßig laufen.<br>
+ Überschneidende Kampagnen werden addiert. Zwei 50% Kampagnen führen zu einem 25% Preis.';
 $string['campaigntype'] = 'Kampagnentyp';
 $string['editcampaign'] = 'Kampagne bearbeiten';
 $string['addbookingcampaign'] = 'Kampagne hinzufügen';
@@ -2005,7 +2008,7 @@ $string['campaign_name'] = 'Eigener Name der Kampagne';
 $string['campaign_customfield'] = 'Preis oder Buchungslimit anpassen';
 $string['campaign_customfield_descriptiontext'] = 'Betrifft: Benutzerdefiniertes Buchungsoptionsfeld "{$a->fieldname}"
  mit dem Wert "{$a->fieldvalue}".';
-$string['campaignfieldname'] = 'Feld';
+$string['campaignfieldname'] = 'Buchungsoptionsfeld';
 $string['campaignfieldvalue'] = 'Wert';
 $string['campaignstart'] = 'Beginn der Kampagne';
 $string['campaignend'] = 'Ende der Kampagne';
@@ -2014,9 +2017,10 @@ $string['campaign_blockbooking'] = 'Bestimmte Buchungen blockieren';
 $string['campaign_blockbooking_descriptiontext'] = 'Betrifft: Benutzerdefiniertes Buchungsoptionsfeld "{$a->fieldname}"
 mit dem Wert "{$a->fieldvalue}".';
 
-$string['userspecificcampaignwarning'] = "Wenn Sie ein unten ein benutzerdefiniertes User Profilfeld auswählen, wird der Preis-Teil der Kampagne nur für jene NutzerInnen wirksam, die auch dieses Feld ausgewählt haben.";
+$string['optionspecificcampaignwarning'] = "Wenn Sie ein Buchungsoptionsfeld auswählen, werden Preis und Limit nur für jene Buchungsoptionen geändert, die diese Anforderungen erfüllen.<br><br>Wenn Sie auch ein Benutzerdefiniertes User Profilfeld wählen, wird der Preis nur dann geändert, wenn BEIDE Anforderungen erfüllt sind.";
+$string['userspecificcampaignwarning'] = "Wenn Sie ein unten ein Benutzerdefiniertes User Profilfeld auswählen, wird der Preis-Teil der Kampagne nur für jene NutzerInnen wirksam, die auch dieses Feld ausgewählt haben.";
 $string['customuserprofilefield'] = "Benutzerdefiniertes User Profilfeld";
-$string['customuserprofilefield_help'] = "Wenn Sie hier ein Feld auswählen, ist der Preis-Teil der Kampagne nur für NutzerInnen wirksam, die auch einen bestimmten Wert in einem bestimmten Profilfeld haben.";
+$string['customuserprofilefield_help'] = "Wenn Sie ein Benutzerdefiniertes User Profilfeld auswählen, ist der Preis-Teil der Kampagne nur für NutzerInnen wirksam, die auch einen bestimmten Wert in einem bestimmten Profilfeld haben.";
 
 $string['blockoperator'] = 'Operator';
 $string['blockoperator_help'] = '<b>Blockiere über</b> ... Sobald der angegebene Prozentsatz an Buchungen erreicht ist, wird das Online-Buchen geblockt,
@@ -2347,32 +2351,8 @@ $string['mobile_submitted_success'] = 'Sie können fortfahren und den Kurs buche
 $string['mobile_reset_submission'] = 'Einreichungsformular zurücksetzen';
 $string['mobile_set_submission'] = 'Einreichen';
 $string['mobile_field_required'] = 'Dieses Feld ist erforderlich';
+
 // Days before and after.
-$string['daybefore1'] = '1 Tag davor';
-$string['dayafter1'] = '1 Tag danach';
-$string['daybefore2'] = '2 Tage davor';
-$string['dayafter2'] = '2 Tage danach';
-$string['daybefore3'] = '3 Tage davor';
-$string['dayafter3'] = '3 Tage danach';
-$string['daybefore4'] = '4 Tage davor';
-$string['dayafter4'] = '4 Tage danach';
-$string['daybefore5'] = '5 Tage davor';
-$string['dayafter5'] = '5 Tage danach';
-$string['daybefore6'] = '6 Tage davor';
-$string['dayafter6'] = '6 Tage danach';
-$string['daybefore7'] = '7 Tage davor';
-$string['dayafter7'] = '7 Tage danach';
-$string['daybefore8'] = '8 Tage davor';
-$string['dayafter8'] = '8 Tage danach';
-$string['daybefore9'] = '9 Tage davor';
-$string['dayafter9'] = '9 Tage danach';
-$string['daybefore10'] = '10 Tage davor';
-$string['dayafter10'] = '10 Tage danach';
-$string['daybefore15'] = '15 Tage davor';
-$string['dayafter15'] = '15 Tage danach';
-$string['daybefore20'] = '20 Tage davor';
-$string['dayafter20'] = '20 Tage danach';
-$string['daybefore25'] = '25 Tage davor';
-$string['dayafter25'] = '25 Tage danach';
-$string['daybefore30'] = '30 Tage davor';
-$string['dayafter30'] = '30 Tage danach';
+$string['daysbefore'] = '{$a} Tag(e) davor';
+$string['daysafter'] = '{$a} Tag(e) danach';
+$string['sameday'] = 'Selber Tag';

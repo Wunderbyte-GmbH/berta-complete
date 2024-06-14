@@ -18,6 +18,7 @@ namespace mod_booking;
 
 use context_module;
 use context_system;
+use html_writer;
 use local_entities\entitiesrelation_handler;
 use mod_booking\bo_availability\bo_subinfo;
 use mod_booking\bo_availability\conditions\subbooking;
@@ -43,7 +44,19 @@ class booking_option_settings {
     public $id = null;
 
     /** @var int $bookingid */
+    /**
+     * [Description for $bookingid]
+     *
+     * @var null
+     */
+    /**
+     * [Description for $bookingid]
+     *
+     * @var null
+     */
     public $bookingid = null;
+
+
 
     /** @var int $cmid */
     public $cmid = null;
@@ -189,6 +202,9 @@ class booking_option_settings {
     /** @var array $customfields */
     public $customfields = [];
 
+    /** @var array $customfieldsfortemplates */
+    public $customfieldsfortemplates = [];
+
     /** @var string $editoptionurl */
     public $editoptionurl = null;
 
@@ -273,6 +289,9 @@ class booking_option_settings {
     /** @var int $sqlfilter defines if an element should be hidden via sql filter. hidden > 0 */
     public $sqlfilter = 0;
 
+    /** @var int $attachedfiles The links on the attached files */
+    public $attachedfiles = [];
+
     /**
      * Constructor for the booking option settings class.
      * The constructor can take the dbrecord stdclass which is the initial DB request for this option.
@@ -336,6 +355,7 @@ class booking_option_settings {
                     JOIN {course_modules} cm ON bo.bookingid=cm.instance
                     JOIN {modules} m ON m.id=cm.module
                     WHERE m.name='booking'
+
                     AND bo.id=:id";
             $cmid = $DB->get_field_sql($sql, $params);
 
@@ -454,16 +474,29 @@ class booking_option_settings {
             // If the course module id (cmid) is not yet set, we load it. //TODO: bookingid 0 bei option templates berücksichtigen!!
             if (!isset($dbrecord->cmid)) {
                 $cm = get_coursemodule_from_instance('booking', $dbrecord->bookingid);
+
                 if (!$cm) {
+
                     // Set cmid to 0 for option templates as they are set globally (not only for one instance).
+
                     $this->cmid = 0;
                     $dbrecord->cmid = 0;
+
                 } else {
+
                     $this->cmid = $cm->id;
                     $dbrecord->cmid = $cm->id;
                 }
+
             } else {
                 $this->cmid = $dbrecord->cmid;
+            }
+
+            if (!isset($dbrecord->attachedfiles)) {
+                $this->load_attachments($dbrecord);
+                $dbrecord->attachedfiles = !empty($this->attachedfiles) ? $this->attachedfiles : [];
+            } else {
+                $this->attachedfiles = $dbrecord->attachedfiles;
             }
 
             // If the key "editoptionurl" is not yet set, we need to generate it.
@@ -540,8 +573,10 @@ class booking_option_settings {
             if (!isset($dbrecord->customfields)) {
                 $this->load_customfields($optionid);
                 $dbrecord->customfields = $this->customfields;
+                $dbrecord->customfieldsfortemplates = $this->customfieldsfortemplates ?? [];
             } else {
                 $this->customfields = $dbrecord->customfields;
+                $this->customfieldsfortemplates = $dbrecord->customfieldsfortemplates ?? [];
             }
 
             // If a cost center is defined in plugin settings, we load it directly into the booking option settings.
@@ -729,6 +764,7 @@ class booking_option_settings {
         if (!empty($this->cmid) && !empty($optionid)) {
 
             /* IMPORTANT NOTICE: We CANNOT use new moodle_url here, as it is already used in the
+
             add_return_url function of the booking_option_settings class. */
             $this->editoptionurl = "/mod/booking/editoptions.php?id=" . $this->cmid . "&optionid=" . $optionid;
         }
@@ -743,7 +779,6 @@ class booking_option_settings {
         global $CFG;
 
         if (!empty($this->cmid) && !empty($optionid)) {
-
             $manageresponsesmoodleurl = new moodle_url('/mod/booking/report.php',
                 ['id' => $this->cmid, 'optionid' => $optionid]);
 
@@ -807,7 +842,6 @@ class booking_option_settings {
                 "/mod_booking/bookingoptionimage/" . $optionid . $imgfile->filepath . $imgfile->filename;
 
             return;
-
         } else {
             // Fix: Option templates have bookingid 0 as they are global and not instance-specific.
             if (empty($bookingid)) {
@@ -884,19 +918,35 @@ class booking_option_settings {
      * @param int $optionid
      */
     private function load_customfields(int $optionid) {
+        global $DB;
+
         $handler = booking_handler::create();
 
         $datas = $handler->get_instance_data($optionid, true);
 
         foreach ($datas as $data) {
 
-            $getfield = $data->get_field();
-            $shortname = $getfield->get('shortname');
-
+            $field = $data->get_field();
+            $shortname = $field->get('shortname');
+            $label = $field->get('name');
+            $type = $field->get('type');
+            $fieldid = $field->get('id');
             $value = $data->get_value();
 
             if (!empty($value)) {
                 $this->customfields[$shortname] = $value;
+
+                if ($type === 'select') {
+                    $options = singleton_service::get_customfields_select_options($fieldid);
+                    $value = $options[$value];
+                }
+
+                // We also return the customfieldsfortemplates where we get the real values of the selects.
+                $this->customfieldsfortemplates[$shortname] = [
+                    'label' => $label,
+                    'key' => $shortname,
+                    'value' => $value,
+                ];
             }
         }
     }
@@ -992,6 +1042,39 @@ class booking_option_settings {
             $this->waitforconfirmation = $dbrecord->waitforconfirmation ?? 0;
             $this->jsonobject = $dbrecord->jsonobject ?? null;
         }
+    }
+
+    /**
+     * Load after booking actions.
+     *
+     * @param stdClass $dbrecord
+     * @return void
+     */
+    private function load_attachments(stdClass &$dbrecord) {
+
+        if ($this->cmid) {
+            $context = context_module::instance($this->cmid);
+        } else {
+            $context = context_system::instance();
+        }
+
+        $fs = get_file_storage();
+        $files = $fs->get_area_files($context->id, 'mod_booking', 'myfilemanageroption', $dbrecord->id);
+
+        $attachedfiles = [];
+
+        if (count($files) > 1) {
+            foreach ($files as $file) {
+                if ($file->get_filesize() > 0) {
+                    $filename = $file->get_filename();
+                    $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
+                        $file->get_itemid(), $file->get_filepath(), $file->get_filename(), true);
+                    $attachedfiles[] = html_writer::link($url, $filename);
+                }
+            }
+        }
+
+        $this->attachedfiles = $attachedfiles;
     }
 
     /**

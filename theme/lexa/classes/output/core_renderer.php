@@ -25,6 +25,12 @@
 
 namespace theme_lexa\output;
 
+use block_contents;
+use block_move_target;
+use coding_exception;
+use html_writer;
+use stdClass;
+
 /**
  * Core renderer.
  */
@@ -36,7 +42,7 @@ class core_renderer extends \theme_boost_union\output\core_renderer {
      * @param array $additionalclasses Any additional classes to apply.
      * @return string
      */
-    public function body_css_classes(array $additionalclasses = array()) {
+    public function body_css_classes(array $additionalclasses = []) {
         if ($this->page->pagelayout == 'frontpage') {
             $bodyclasses = str_replace('limitedwidth', '', $this->page->bodyclasses);
         } else {
@@ -112,6 +118,21 @@ class core_renderer extends \theme_boost_union\output\core_renderer {
     }
 
     /**
+     * Wrapper for header elements.
+     *
+     * This renderer function is copied and modified from /lib/outputrenderers.php
+     *
+     * @return string HTML to display the main header.
+     */
+    public function full_header() {
+        if (($this->page->pagetype == 'site-index') ||
+            ($this->page->pagetype == 'course-index-category')) {
+            return '';
+        }
+        return parent::full_header();
+    }
+
+    /**
      * Get the mod booking codes.
      *
      * @return string Markup if any.
@@ -125,6 +146,166 @@ class core_renderer extends \theme_boost_union\output\core_renderer {
             }
         }
         return '';
+    }
+
+    /**
+     * Get the HTML for blocks in the given region.
+     *
+     * @since Moodle 2.5.1 2.6
+     * @param string $region The region to get HTML for.
+     * @param array $classes Wrapping tag classes.
+     * @param string $tag Wrapping tag.
+     * @param boolean $fakeblocksonly Include fake blocks only.
+     * @return string HTML.
+     */
+    public function blocks($region, $classes = [], $tag = 'aside', $fakeblocksonly = false) {
+        $displayregion = $this->page->apply_theme_region_manipulations($region);
+        $classes = (array)$classes;
+        $classes[] = 'block-region';
+        $attributes = [
+            'id' => 'block-region-'.preg_replace('#[^a-zA-Z0-9_\-]+#', '-', $displayregion),
+            'class' => join(' ', $classes),
+            'data-blockregion' => $displayregion,
+            'data-droptarget' => '1',
+        ];
+        $editing = $this->page->user_is_editing();
+        $content = '';
+
+        if ($editing) {
+            $content .= $this->block_region_title($displayregion);
+        }
+
+        if ($this->page->blocks->region_has_content($displayregion, $this)) {
+            $content .= html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']) .
+                $this->blocks_for_region($displayregion, $fakeblocksonly);
+        } else {
+            $content .= html_writer::tag('h2', get_string('blocks'), ['class' => 'sr-only']);
+        }
+        return html_writer::tag($tag, $content, $attributes);
+    }
+
+    /**
+     * Get the HTML for block title in the given region.
+     *
+     * @param string $region The region to get HTML for.
+     *
+     * @return string HTML.
+     */
+    protected function block_region_title($region) {
+        return html_writer::tag(
+            'p',
+            get_string('region-' . $region, 'theme_lexa'),
+            ['class' => 'block-region-title col-12 text-center font-italic font-weight-bold']
+        );
+    }
+
+    /**
+     * Output all the blocks in a particular region.
+     *
+     * @param string $region the name of a region on this page.
+     * @param boolean $fakeblocksonly Output fake block only.
+     * @return string the HTML to be output.
+     */
+    public function blocks_for_region($region, $fakeblocksonly = false) {
+        $blockcontents = $this->page->blocks->get_content_for_region($region, $this);
+        $lastblock = null;
+        $zones = [];
+        foreach ($blockcontents as $bc) {
+            if ($bc instanceof block_contents) {
+                $zones[] = $bc->title;
+            }
+        }
+        $output = '';
+        $notediting = !$this->page->user_is_editing();
+
+        foreach ($blockcontents as $bc) {
+            if ($bc instanceof block_contents) {
+                if ($fakeblocksonly && !$bc->is_fake()) {
+                    // Skip rendering real blocks if we only want to show fake blocks.
+                    continue;
+                }
+                if (!empty($bcadditionalclasses)) {
+                    $bc->attributes['class'] .= ' '.$bcadditionalclasses;
+                }
+                if (($notediting) && ($region == 'landing')) {
+                    $output .= html_writer::tag('div',
+                        $this->block(
+                            $bc,
+                            $region,
+                            ['notitle' => true, 'landingblock' => true]
+                        ), 
+                        ['class' => 'landingblock']
+                    );
+                } else {
+                    $output .= $this->block($bc, $region);
+                }
+                $lastblock = $bc->title;
+            } else if ($bc instanceof block_move_target) {
+                if (!$fakeblocksonly) {
+                    $output .= $this->block_move_target($bc, $zones, $lastblock, $region);
+                }
+            } else {
+                throw new coding_exception('Unexpected type of thing (' . get_class($bc) . ') found in list of block contents.');
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Prints a nice side block with an optional header.
+     *
+     * @param block_contents $bc HTML for the content
+     * @param string $region the region the block is appearing in.
+     * @return string the HTML to be output.
+     */
+    public function block(block_contents $bc, $region, $blockoptions = []) {
+        $bc = clone($bc); // Avoid messing up the object passed in.
+        if (empty($bc->blockinstanceid) || !strip_tags($bc->title)) {
+            $bc->collapsible = block_contents::NOT_HIDEABLE;
+        }
+
+        $id = !empty($bc->attributes['id']) ? $bc->attributes['id'] : uniqid('block-');
+        $context = new stdClass();
+        $context->skipid = $bc->skipid;
+        $context->blockinstanceid = $bc->blockinstanceid ?: uniqid('fakeid-');
+        $context->dockable = $bc->dockable;
+        $context->id = $id;
+        $context->hidden = $bc->collapsible == block_contents::HIDDEN;
+        $context->skiptitle = strip_tags($bc->title);
+        $context->showskiplink = !empty($context->skiptitle);
+        $context->arialabel = $bc->arialabel;
+        $context->ariarole = !empty($bc->attributes['role']) ? $bc->attributes['role'] : 'complementary';
+        $context->class = $bc->attributes['class'];
+        $context->type = $bc->attributes['data-block'];
+        if (empty($blockoptions['notitle'])) {
+            $context->title = $bc->title;
+        }
+        $context->content = $bc->content;
+        $context->annotation = $bc->annotation;
+        $context->footer = $bc->footer;
+        $context->hascontrols = !empty($bc->controls);
+        if ($context->hascontrols) {
+            $context->controls = $this->block_controls($bc->controls, $id);
+        }
+
+        if (!empty($blockoptions['landingblock'])) {
+            $template = 'theme_lexa/landing_block';
+        } else {
+            $template = 'core/block';
+        }
+        return $this->render_from_template($template, $context);
+    }
+
+    /**
+     * Show the popover?
+     *
+     * @return bool.
+     */
+    public function has_footer_popover() {
+        if ($this->page->pagetype == 'site-index') {
+            return false;
+        }
+        return true;
     }
 
     /**

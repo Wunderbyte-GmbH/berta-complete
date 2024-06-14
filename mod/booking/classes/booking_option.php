@@ -38,6 +38,7 @@ use html_writer;
 use invalid_parameter_exception;
 use local_entities\entitiesrelation_handler;
 use mod_booking\bo_availability\conditions\customform;
+use mod_booking\event\booking_rulesexecutionfailed;
 use mod_booking\option\dates_handler;
 use mod_booking\bo_actions\actions_info;
 use mod_booking\booking_rules\rules_info;
@@ -1292,12 +1293,21 @@ class booking_option {
 
         $this->enrol_user_coursestart($user->id);
 
+        $other = [];
+        $ba = singleton_service::get_instance_of_booking_answers($this->settings);
+        if (isset($ba->usersonlist[$user->id])) {
+            $answer = $ba->usersonlist[$user->id];
+            $other['baid'] = $answer->baid;
+            $other['json'] = $answer->json ?? '';
+        }
+
         $event = event\bookingoption_booked::create(
-                ['objectid' => $this->optionid,
-                    'context' => context_module::instance($this->cmid),
-                    'userid' => $USER->id,
-                    'relateduserid' => $user->id,
-                ]);
+            ['objectid' => $this->optionid,
+                'context' => context_module::instance($this->cmid),
+                'userid' => $USER->id,
+                'relateduserid' => $user->id,
+                'other' => $other,
+            ]);
         $event->trigger();
 
         $settings = singleton_service::get_instance_of_booking_option_settings($this->optionid);
@@ -3428,7 +3438,7 @@ class booking_option {
     public static function update($data, ?context $context = null,
         int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
 
-        global $DB;
+        global $DB, $CFG, $USER;
 
         // When we come here, we have the following possibilities:
         // A) Normal saving via Form of an existing option.
@@ -3500,9 +3510,26 @@ class booking_option {
             // We have less places now, so we only sync if the setting to keep users booked is turned off.
             $option->sync_waiting_list();
         }
-
-        // Now check, if there are rules to execute.
-        rules_info::execute_rules_for_option($newoption->id);
+        try {
+            // Now check, if there are rules to execute.
+            rules_info::execute_rules_for_option($newoption->id);
+        } catch (Exception $e) {
+            if ($CFG->debug == DEBUG_DEVELOPER) {
+                throw $e;
+            } else {
+                $message = $e->getMessage();
+                // Log cancellation of user.
+                $event = booking_rulesexecutionfailed::create([
+                    'objectid' => $newoption->id,
+                    'context' => context_system::instance(),
+                    'userid' => $USER->id, // The user triggered the action.
+                    'other' => [
+                        'error' => $message,
+                    ],
+                ]);
+                $event->trigger(); // This will trigger the observer function.
+            }
+        }
 
         // If there have been changes to significant fields, we react on changes.
         // Change notification will be sent (if active).
@@ -3569,23 +3596,8 @@ class booking_option {
     public static function render_attachments(int $optionid, string $classes = ''): string {
         $ret = '';
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
-        $cmid = $settings->cmid;
-        $context = context_module::instance($cmid);
 
-        $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'mod_booking', 'myfilemanageroption', $optionid);
-
-        if (count($files) > 1) {
-            $attachedfiles = [];
-            foreach ($files as $file) {
-                if ($file->get_filesize() > 0) {
-                    $filename = $file->get_filename();
-                    $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                        $file->get_itemid(), $file->get_filepath(), $file->get_filename(), true);
-                    $attachedfiles[] = html_writer::link($url, $filename);
-                }
-            }
-        }
+        $attachedfiles = $settings->attachedfiles;
         if (!empty($attachedfiles)) {
             $ret .= html_writer::start_div($classes);
             foreach ($attachedfiles as $attachedfile) {

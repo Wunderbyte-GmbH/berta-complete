@@ -125,8 +125,8 @@ class cartstore {
 
                 if (empty($data['items'])) {
                     $data['expirationtime'] = 0;
+                    unset($data['paymentaccountid']);
                 }
-
                 $this->set_cache($data);
             }
         }
@@ -292,9 +292,31 @@ class cartstore {
         $data = $this->get_cache();
 
         $data['credit'] = round($newbalance, 2);
+        $data['remainingcredit'] = round($newbalance, 2);
         $data['currency'] = $currency;
 
         $this->set_cache($data);
+    }
+
+    /**
+     * Set new paymentaccountid.
+     * @param int $paymentaccountid
+     * @return bool
+     * @throws coding_exception
+     */
+    public function set_paymentaccountid(int $paymentaccountid): bool {
+
+        $data = $this->get_cache();
+
+        // If the paymentaccountid is not set yet, we just use the one we transmitted here.
+        $storedpaymentaccountid = $data['paymentaccountid'] ?? $paymentaccountid;
+        if ($storedpaymentaccountid != $paymentaccountid) {
+            return false;
+        }
+        $data['paymentaccountid'] = $paymentaccountid;
+
+        $this->set_cache($data);
+        return true;
     }
 
     /**
@@ -775,11 +797,6 @@ class cartstore {
 
     /**
      * Gets the openinstallments.
-     * @param string $country
-     * @param string $vatnrnumber
-     * @param string $companyname
-     * @param string $street
-     * @param string $place
      * @return bool
      * @throws coding_exception
      */

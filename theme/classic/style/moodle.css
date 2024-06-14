@@ -23204,12 +23204,8 @@ a.autolink.glossary:hover {
   display: none;
 }
 
-.visibleifjs {
+body:not(.jsenabled) .visibleifjs {
   display: none;
-}
-
-.jsenabled .visibleifjs {
-  display: inline;
 }
 
 .jsenabled .collapsibleregion {
@@ -24966,6 +24962,10 @@ a.disabled {
   cursor: default;
   font-style: italic;
   color: #6a737b;
+}
+
+a.btn.disabled {
+  opacity: 1;
 }
 
 body.lockscroll {

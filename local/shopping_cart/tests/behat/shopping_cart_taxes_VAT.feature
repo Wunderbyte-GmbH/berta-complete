@@ -31,8 +31,9 @@ Feature: Configure tax categories and using VAT to waive price.
   Scenario: Shopping Cart taxes: use VAT number to reduce net price of single item
     Given the following config values are set as admin:
       | config          | value | plugin              |
-      | itempriceisnet  | 1     | local_shopping_cart | 
+      | itempriceisnet  | 1     | local_shopping_cart |
     And I log in as "user1"
+    And Shopping cart has been cleaned for user "user1"
     And Testitem "1" has been put in shopping cart of user "user1"
     And I visit "/local/shopping_cart/checkout.php"
     And I wait until the page is ready
@@ -61,8 +62,9 @@ Feature: Configure tax categories and using VAT to waive price.
   Scenario: Shopping Cart taxes: use VAT number to reduce gross price of single item
     Given the following config values are set as admin:
       | config          | value | plugin              |
-      | itempriceisnet  |       | local_shopping_cart | 
+      | itempriceisnet  | 0     | local_shopping_cart |
     And I log in as "user1"
+    And Shopping cart has been cleaned for user "user1"
     And Testitem "1" has been put in shopping cart of user "user1"
     And I visit "/local/shopping_cart/checkout.php"
     And I wait until the page is ready
@@ -77,3 +79,42 @@ Feature: Configure tax categories and using VAT to waive price.
     And I click on "Verify validity of VAT number" "button"
     And I wait "1" seconds
     And I should see "8.70 EUR" in the ".sc_totalprice" "css_element"
+
+  @javascript
+  Scenario: Shopping Cart taxes: use VAT number and installment to reduce net price of single item
+    Given the following config values are set as admin:
+      | config              | value | plugin              |
+      | itempriceisnet      | 1     | local_shopping_cart |
+      | enableinstallments  | 1     | local_shopping_cart |
+      | timebetweenpayments | 2     | local_shopping_cart |
+      | reminderdaysbefore  | 1     | local_shopping_cart |
+    And I log in as "admin"
+    And Shopping cart has been cleaned for user "admin"
+    And Testitem "5" has been put in shopping cart of user "admin"
+    And I visit "/local/shopping_cart/checkout.php"
+    And I wait until the page is ready
+    And I should see "my test item 5" in the ".checkoutgrid.checkout #item-local_shopping_cart-main-5" "css_element"
+    And I should see "44.54 EUR" in the ".checkoutgrid.checkout #item-local_shopping_cart-main-5 .item-price" "css_element"
+    And I should see "(42.42 EUR + 5%)" in the ".checkoutgrid.checkout #item-local_shopping_cart-main-5 .item-price" "css_element"
+    And I should see "44.54 EUR" in the ".sc_totalprice" "css_element"
+    ## Enable installment 1st (to test potentional page reload issues).
+    And I set the field "Use installment payments" to "1"
+    And I wait "1" seconds
+    And I should see "Down payment for my test item 5:"
+    And I should see "20 EUR instead of 42.42 EUR"
+    And I should see "Further payments"
+    And I should see "2" occurrences of "11.21 EUR on" in the ".sc_installments .furtherpayments" "css_element"
+    And I should see "21.00 EUR" in the ".sc_totalprice" "css_element"
+    ## Provide a valid VAT number.
+    And I set the field "usevatnr" to "1"
+    And I set the field "Select your country" to "Austria"
+    And I set the field "Enter your VAT number" to "U74259768"
+    And I click on "Verify validity of VAT number" "button"
+    ## VAT verification reloads page and does not preserve installment status - reactivate it.
+    And I should see "42.42 EUR" in the ".sc_totalprice" "css_element"
+    And I set the field "Use installment payments" to "1"
+    And I wait "1" seconds
+    And I should see "20 EUR instead of 42.42 EUR"
+    And I should see "Further payments"
+    And I should see "2" occurrences of "11.21 EUR on" in the ".sc_installments .furtherpayments" "css_element"
+    And I should see "20.00 EUR" in the ".sc_totalprice" "css_element"

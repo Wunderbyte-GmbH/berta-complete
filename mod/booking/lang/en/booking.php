@@ -159,6 +159,7 @@ $string['error:entervalue'] = 'You have to enter a value here.';
 $string['error:negativevaluenotallowed'] = 'Please enter a positive value.';
 $string['error:pricemissing'] = 'Please enter a price.';
 $string['error:missingcapability'] = 'Necessary capability is missing. Please contact an administrator.';
+$string['error:noendtagfound'] = 'End the placeholder section "{$a}" with backslash ("/").';
 
 // Index.php.
 $string['week'] = "Week";
@@ -626,6 +627,7 @@ $string['startdate'] = "startdate";
 $string['starttime'] = "starttime";
 $string['rest_response'] = "rest_response";
 $string['eventdescription'] = "eventdescription";
+$string['customform'] = "customform";
 $string['title'] = "title";
 $string['usercalendarurl'] = "usercalendarurl";
 $string['username'] = "username";
@@ -2126,7 +2128,8 @@ $string['bookingcampaigns'] = 'Booking: Campaigns (PRO)';
 $string['bookingcampaign'] = 'Campaign';
 $string['bookingcampaignssubtitle'] = 'Campaigns allow you to discount the prices of selected booking options
  for a specified period of time and increase the booking limit for that period. For campaigns to work, the
- Moodle cron job must run regularly.';
+ Moodle cron job must run regularly.<br>
+ Overlapping campaigns will add up. Two matching 50% price campaigns will result in a 25% price.';
 $string['campaigntype'] = 'Campaign type';
 $string['editcampaign'] = 'Edit campaign';
 $string['addbookingcampaign'] = 'Add campaign';
@@ -2136,7 +2139,7 @@ $string['campaign_name'] = 'Custom name for the campaign';
 $string['campaign_customfield'] = 'Change price or booking limit';
 $string['campaign_customfield_descriptiontext'] = 'Affects: Booking option custom field "{$a->fieldname}"
  having the value "{$a->fieldvalue}".';
-$string['campaignfieldname'] = 'Field';
+$string['campaignfieldname'] = 'Booking option field';
 $string['campaignfieldvalue'] = 'Value';
 $string['campaignstart'] = 'Start of campaign';
 $string['campaignend'] = 'End of campaign';
@@ -2145,7 +2148,8 @@ $string['campaign_blockbooking'] = 'Block certain booking options';
 $string['campaign_blockbooking_descriptiontext'] = 'Affects: Booking option custom field "{$a->fieldname}"
 having the value "{$a->fieldvalue}".';
 
-$string['userspecificcampaignwarning'] = "If you choose a user profile field here beneath, the price part of the campaign will only be effective for users with the defined value in the custom user profile field.";
+$string['optionspecificcampaignwarning'] = "If you choose a Booking option field specific field here beneath, the price and limit part of the campaign will apply only for booking options that fullfill the requirements.<br><br>If you choose a Booking option field AND a Custom user profile field, both requirements have to be fullfilled.";
+$string['userspecificcampaignwarning'] = "If you choose a Custom user profile field here beneath, the price part of the campaign will only be effective for users with the defined value in the custom user profile field.";
 $string['customuserprofilefield'] = "Custom user profile field";
 $string['customuserprofilefield_help'] = "If you choose a value here, the price part of the camapaign will only be valid for users with the defined value in the defined custom field.";
 
@@ -2482,33 +2486,6 @@ $string['mobile_set_submission'] = 'Submit';
 $string['mobile_field_required'] = 'This field is required';
 // Days before or after.
 $string['choose...'] = 'Choose...';
-$string['daybefore1'] = '1 day before';
-$string['dayafter1'] = '1 day after';
-$string['daybefore2'] = '2 days before';
-$string['dayafter2'] = '2 days after';
-$string['daybefore3'] = '3 days before';
-$string['dayafter3'] = '3 days after';
-$string['daybefore4'] = '4 days before';
-$string['dayafter4'] = '4 days after';
-$string['daybefore5'] = '5 days before';
-$string['dayafter5'] = '5 days after';
-$string['daybefore6'] = '6 days before';
-$string['dayafter6'] = '6 days after';
-$string['daybefore7'] = '7 days before';
-$string['dayafter7'] = '7 days after';
-$string['daybefore8'] = '8 days before';
-$string['dayafter8'] = '8 days after';
-$string['daybefore9'] = '9 days before';
-$string['dayafter9'] = '9 days after';
-$string['daybefore10'] = '10 days before';
-$string['dayafter10'] = '10 days after';
-$string['daybefore15'] = '15 days before';
-$string['dayafter15'] = '15 days after';
-$string['daybefore20'] = '20 days before';
-$string['dayafter20'] = '20 days after';
-$string['daybefore25'] = '25 days before';
-$string['dayafter25'] = '25 days after';
-$string['daybefore30'] = '30 days before';
-$string['dayafter30'] = '30 days after';
-
-
+$string['daysbefore'] = '{$a} day(s) before';
+$string['daysafter'] = '{$a} day(s) after';
+$string['sameday'] = 'same day';

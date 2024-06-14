@@ -86,6 +86,8 @@ class shopping_cart {
         int $itemid,
         int $userid): array {
 
+        global $DB;
+
         $userid = self::set_user($userid);
 
         // Check the cache for items in cart.
@@ -120,6 +122,24 @@ class shopping_cart {
                 $currentcostcenter = $cartitem['costcenter'] ?? '';
 
                 if (!$cartstore->same_costcenter($currentcostcenter)) {
+                    return [
+                        'success' => LOCAL_SHOPPING_CART_CARTPARAM_COSTCENTER,
+                        'itemname' => $cartitem['itemname'] ?? '',
+                    ];
+                }
+            }
+            if (get_config('local_shopping_cart', 'allowchooseaccount')) {
+
+                $searchdata = [
+                    'itemid' => $cartitem['itemid'],
+                    'componentname' => $cartitem['componentname'],
+                    'area' => $cartitem['area'],
+                ];
+                $json = $DB->get_field('local_shopping_cart_iteminfo', 'json', $searchdata);
+                $jsonobject = json_decode($json);
+
+                $paymentaccountid = $jsonobject->paymentaccountid ?? get_config('local_shopping_cart', 'accountid') ?: 1;
+                if (!$cartstore->set_paymentaccountid($paymentaccountid)) {
                     return [
                         'success' => LOCAL_SHOPPING_CART_CARTPARAM_COSTCENTER,
                         'itemname' => $cartitem['itemname'] ?? '',
@@ -441,6 +461,7 @@ class shopping_cart {
 
         $cartstore = cartstore::instance($userid);
         $cartstore->delete_all_items();
+        $cartstore->reset_instance($userid);
         return true;
     }
 
@@ -641,12 +662,12 @@ class shopping_cart {
      *
      * @param int $userid
      * @param int $paymenttype
-     * @param array $datafromhistory
-     * @param string $annotation - empty on default
+     * @param ?array $datafromhistory
+     * @param ?string $annotation - empty on default
      * @return array
      */
-    public static function confirm_payment(int $userid, int $paymenttype, array $datafromhistory = null,
-        string $annotation = '') {
+    public static function confirm_payment(int $userid, int $paymenttype, ?array $datafromhistory = null,
+        ?string $annotation = '') {
         global $USER;
 
         $identifier = 0;
@@ -927,7 +948,7 @@ class shopping_cart {
         string $area,
         int $userid,
         string $componentname,
-        int $historyid = null,
+        ?int $historyid = null,
         float $customcredit = 0.0,
         float $cancelationfee = 0.0,
         int $applytocomponent = 1): array {

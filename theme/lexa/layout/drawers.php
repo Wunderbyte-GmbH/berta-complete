@@ -112,11 +112,22 @@ if (!$courseindex) {
     $courseindexopen = false;
 }
 
+$landingblockshtml = $OUTPUT->blocks('landing');
+$haslandingblocks = (strpos($landingblockshtml, 'data-block=') !== false || !empty($addblockbutton));
+
 $forceblockdraweropen = $OUTPUT->firstview_fakeblocks();
+
+$notcoursecategorypage = ($PAGE->pagetype != 'course-index-category');
+$siteindexsecondarynav = true;
+if ($PAGE->pagetype == 'site-index') {
+    if (!$PAGE->user_is_editing()) {
+        $siteindexsecondarynav = false;
+    }
+}
 
 $secondarynavigation = false;
 $overflow = '';
-if ($PAGE->has_secondary_navigation()) {
+if (($notcoursecategorypage) && ($siteindexsecondarynav) && ($PAGE->has_secondary_navigation())) {
     $tablistnav = $PAGE->has_tablist_secondary_navigation();
     $moremenu = new \core\navigation\output\more_menu($PAGE->secondarynav, 'nav-tabs', true, $tablistnav);
     $secondarynavigation = $moremenu->export_for_template($OUTPUT);
@@ -162,6 +173,8 @@ $templatecontext = [
     'output' => $OUTPUT,
     'sidepreblocks' => $blockshtml,
     'hasblocks' => $hasblocks,
+    'landingblocks' => $landingblockshtml,
+    'haslandingblocks' => $haslandingblocks,
     'bodyattributes' => $bodyattributes,
     'courseindexopen' => $courseindexopen,
     'blockdraweropen' => $blockdraweropen,
