@@ -1,0 +1,29 @@
+
+
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="left-panel{{#lightmode}} text-light{{/lightmode}}">
+            {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
+            <h1>{{headline}}</h1>
+            {{{description}}}
+            <div class="row mt-4 justify-content-center">
+            <a class="carousel-control-prev mt-4 mr-2" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next mt-4 ml-2" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+            </a>
+            </div>
+            {{#editmode}}
+            {{> local_wb_news/editsinglenews}}
+            {{/editmode}}
+        </div>
+        <div class="right-panel">
+            <div class="image-container  w-100">
+                <img src="{{bgimage}}" class="img-fluid w-100" alt="...">
+                <div class="image-caption">{{imagecaption}}</div>
+            </div>
+        </div>
+    </div>
+

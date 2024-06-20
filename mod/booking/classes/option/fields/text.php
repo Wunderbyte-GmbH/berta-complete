@@ -92,9 +92,16 @@ class text extends field_base {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = null): array {
 
-        return parent::prepare_save_field($formdata, $newoption, $updateparam, '');
+        parent::prepare_save_field($formdata, $newoption, $updateparam, '');
+
+        $mockdata = new stdClass;
+        $mockdata->id = $formdata->id;
+        $instance = new text();
+        $changes = $instance->check_for_changes($formdata, $instance, $mockdata);
+
+        return $changes;
     }
 
     /**

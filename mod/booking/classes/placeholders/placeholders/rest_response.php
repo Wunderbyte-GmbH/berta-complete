@@ -26,7 +26,6 @@ namespace mod_booking\placeholders\placeholders;
 
 use mod_booking\placeholders\placeholders_info;
 use mod_booking\singleton_service;
-use moodle_exception;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -75,12 +74,8 @@ class rest_response {
         ) {
             $value = $rulejson->datafromevent->other->restscriptresponse;
         } else {
-            throw new moodle_exception(
-                'paramnotpresent',
-                'mod_booking',
-                '',
-                '',
-                "Something went wrong with the rest script execution.");
+            $classname = substr(strrchr(get_called_class(), '\\'), 1);
+            $value = get_string('sthwentwrongwithplaceholder', 'mod_booking', $classname);
         }
 
         return $value;

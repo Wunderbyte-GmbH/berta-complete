@@ -28,6 +28,7 @@ use coding_exception;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields;
 use mod_booking\option\fields_info;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -73,13 +74,13 @@ abstract class field_base implements fields {
      * @param stdClass $newoption
      * @param int $updateparam
      * @param mixed $returnvalue
-     * @return string // If no warning, empty string.
+     * @return array // Covers changes & warnings, if nothing to report: empty array.
      */
     public static function prepare_save_field(
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = ''): string {
+        $returnvalue = ''): array {
 
         $key = fields_info::get_class_name(static::class);
         $value = $formdata->{$key} ?? null;
@@ -90,8 +91,8 @@ abstract class field_base implements fields {
             $newoption->{$key} = $returnvalue;
         }
 
-        // We can return an warning message here.
-        return '';
+        // We can return an warning message here. Or report changes.
+        return [];
     }
 
     /**
@@ -182,5 +183,133 @@ abstract class field_base implements fields {
      */
     public static function get_subfields() {
         return [];
+    }
+
+    /**
+     * Check if there is a difference between the former and the new values of the formdata.
+     *
+     * @param stdClass $formdata
+     * @param field_base $self
+     * @param mixed $mockdata // Only needed if there the object needs params for the save_data function.
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return array
+     *
+     */
+    public function check_for_changes(
+        stdClass $formdata,
+        field_base $self,
+        $mockdata = '',
+        string $key = '',
+        $value = ''): array {
+
+        if (!isset($self)) {
+            return [];
+        }
+
+        $excludeclassesfromtrackingchanges = MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING;
+        $areaswithuseridstoresolve = [
+            'responsiblecontact',
+            'teachersforoption',
+        ];
+        $classname = fields_info::get_class_name(static::class);
+        if (in_array($classname, $excludeclassesfromtrackingchanges)) {
+            return [];
+        }
+
+        $changes = [];
+        $key = empty($key) ? $classname : $key;
+        $value = empty($value) ? ($formdata->{$key} ?? '') : $value;
+
+        $mockdata = empty($mockdata) ? new stdClass : $mockdata;
+
+        // Check if there were changes and return these.
+        if (!empty($formdata->id) && isset($value)) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($formdata->id);
+            $self::set_data($mockdata, $settings);
+
+            // Handling for textfields.
+            if (is_array($mockdata->{$key})
+                && is_array($value)
+                && isset($mockdata->{$key}['text'])
+                && isset($value['text'])) {
+                    $oldvalue = $mockdata->{$key}['text'];
+                    $newvalue = $value['text'];
+            } else { // Default handling.
+                $oldvalue = $mockdata->{$key};
+                $newvalue = $value;
+            }
+            $infotext = get_string($classname, 'booking') . get_string('changeinfochanged', 'booking');
+            // In some cases, formvalues are ids of users, we make them readable.
+            if ($oldvalue != $newvalue
+                && in_array($key, $areaswithuseridstoresolve)
+                && !(empty($oldvalue) && empty($newvalue)) ) {
+                    $oldvaluestring = "";
+                    $newvaluestring = "";
+
+                if (!empty($oldvalue)) {
+                    if (is_array($oldvalue)) {
+                        foreach ($oldvalue as $userid) {
+                            $ov = $this->resolve_userid_as_readable_personparams((int) $userid, $oldvaluestring);
+                        };
+                    } else {
+                        $ov = $this->resolve_userid_as_readable_personparams((int) $oldvalue, $oldvaluestring);
+                    }
+                    if (!$ov) {
+                        $oldvaluestring = $oldvalue;
+                    }
+                }
+                if (!empty($newvalue)) {
+                    if (is_array($newvalue)) {
+                        foreach ($newvalue as $userid) {
+                            $nv = $this->resolve_userid_as_readable_personparams((int) $userid, $newvaluestring);
+                        };
+                    } else {
+                        $nv = $this->resolve_userid_as_readable_personparams((int) $newvalue, $newvaluestring);
+                    }
+                    if (!$nv) {
+                        $newvaluestring = $newvalue;
+                    }
+                }
+
+                $changes = [
+                    'changes' => [
+                        'info' => $infotext,
+                        'fieldname' => $classname,
+                        'oldvalue' => $oldvaluestring,
+                        'newvalue' => $newvaluestring,
+                    ],
+                ];
+            } else if ($oldvalue != $newvalue
+            && !(empty($oldvalue) && empty($newvalue))) {
+                $changes = [
+                    'changes' => [
+                        'info' => $infotext,
+                        'fieldname' => $classname,
+                        'oldvalue' => $oldvalue,
+                        'newvalue' => $newvalue,
+                    ],
+                ];
+            }
+        }
+        return $changes;
+    }
+    /**
+     * Appends the information about a given user(id) to the string.
+     *
+     * @param int $userid
+     * @param string $returnvalue
+     *
+     * @return bool
+     *
+     */
+    private function resolve_userid_as_readable_personparams(int $userid, string &$returnvalue) {
+        $user = singleton_service::get_instance_of_user((int)$userid);
+        if (empty($user)) {
+            return false;
+        }
+        $returnvalue .= get_string('userinfosasstring', 'mod_booking', $user) . " ";
+        return true;
     }
 }

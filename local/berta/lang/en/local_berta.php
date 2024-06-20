@@ -174,14 +174,16 @@ $string['coursesiteacharchive'] = 'Courses I taught in previous semesters:';
 
 // Access.php.
 $string['berta:canedit'] = 'User can edit';
+$string['berta:viewdashboard'] = "User can see Dashboard";
 
 // Filter.
 $string['organisation'] = 'Organisation';
 $string['location'] = 'Location';
+$string['competency'] = 'Competency';
 
 // Nav.
-$string['berta'] = 'berta';
-$string['entities'] = 'Entities';
+$string['berta'] = 'u:Skills';
+$string['entities'] = 'Manage locations';
 $string['coursename'] = "Coursename";
 
 // Contract management.
@@ -251,3 +253,5 @@ $string['berta:view'] = "View";
 // Settings.
 $string['multibookinginstances'] = "List of default activeted booking instances";
 $string['multibookinginstances_desc'] = "Choose which booking instances are activated by default.";
+
+$string['searchheadertext'] = "What would you like to learn?";

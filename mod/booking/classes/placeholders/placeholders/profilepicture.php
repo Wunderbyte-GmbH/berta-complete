@@ -26,7 +26,7 @@ namespace mod_booking\placeholders\placeholders;
 
 use mod_booking\placeholders\placeholders_info;
 use context_user;
-use moodle_exception;
+
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -103,12 +103,7 @@ class profilepicture {
                 }
             }
         } else {
-            throw new moodle_exception(
-                'paramnotpresent',
-                'mod_booking',
-                '',
-                '',
-                "You can't use param {{$classname}} without providing a user id.");
+            $value = get_string('sthwentwrongwithplaceholder', 'mod_booking', $classname);
         }
 
         return $value;

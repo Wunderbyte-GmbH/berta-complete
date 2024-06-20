@@ -15,13 +15,14 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace local_wb_news;
+use core_tag_tag;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/filelib.php');
 
-use core_course_category;
 use stdClass;
+use context_system;
 
 /**
  * Class news.
@@ -32,54 +33,396 @@ use stdClass;
  */
 class news {
 
-    public $schooltypes;
 
-    private static array $instance;
+    /**
+     * IMAGEMODE_HEADER
+     *
+     * @var int
+     */
+    const IMAGEMODE_HEADER = 0;
 
-    // The constructor is private to prevent direct creation of object
-    private function __construct(int $id) {
+    /**
+     * IMAGEMODE_BACKGROUND
+     *
+     * @var int
+     */
+    const IMAGEMODE_BACKGROUND = 1;
+
+    /**
+     * Array of instances.
+     *
+     * @var array
+     */
+    private static array $instance = [];
+
+    /**
+     * [Description for $instanceid]
+     *
+     * @var int
+     */
+    public $instanceid = 0;
+
+    /**
+     * Array of news.
+     *
+     * @var array
+     */
+    private array $news = [];
+
+    /**
+     * Template string.
+     *
+     * @var string
+     */
+    private string $template = 'local_wb_news/wb_news_grid';
+
+    /**
+     * Name string.
+     *
+     * @var string
+     */
+    private string $name = '';
+
+
+    /**
+     * Constructor
+     *
+     * @param int $instanceid
+     *
+     */
+    private function __construct(int $instanceid = 0, bool $fetchitems = true) {
         global $DB;
-        $sql = "SELECT * FROM {local_wb_news} wn
-                JOIN {local_wb_news_instance} wni ON wni.id = wn.instanceid
-                WHERE wni.id = ?";
 
-        $news = $DB->get_records_sql($sql, [$id], true);
-        $this->instance[$id] = $news;
+        $this->instanceid = $instanceid;
+        // When there is no instance id, we fetch all the items from the start.
+        if ($fetchitems) {
+            $news = self::get_items_from_db($instanceid);
+
+            foreach ($news as $newsitem) {
+                if ($newsitem->instanceid != $instanceid) {
+                    $news = self::getinstance($newsitem->instanceid ?? 0, false);
+                    $news->add_news($newsitem);
+                } else {
+                    $this->add_news($newsitem);
+                }
+            }
+        }
     }
 
     /**
-     * Get singelton
+     * Get singelton instance.
      *
-     * @param  integer $id
-     *
-     * @return void
+     * @param  int $id
+     * @param  bool $fetchitems
+     * @return news
      */
-    public static function getinstance(int $id) {
-        // Create the instance if it doesn't exist
-        if (self::$instance[$id] === null) {
-            self::$instance[$id] = new self($id);
+    public static function getinstance(int $instanceid, bool $fetchitems = true) {
+        // Create the instance if it doesn't exist.
+        if (!isset(self::$instance[$instanceid]) || self::$instance[$instanceid] === null) {
+            self::$instance[$instanceid] = new self($instanceid, $fetchitems);
         }
-        return self::$instance[$id];
+        return self::$instance[$instanceid];
     }
 
-    public function formfields(&$mform) {
+    /**
+     * Returns a list of news from the current instance.
+     *
+     * @return array
+     *
+     */
+    public function return_list_of_news() {
 
+        $returnarray = [];
+
+        foreach ($this->news as $news) {
+
+            $user = \core_user::get_user($news->userid);
+            $context = \context_user::instance($news->userid);
+            $url = \moodle_url::make_pluginfile_url($context->id, 'user', 'icon', 0, '/', 'f1');
+            $news->profileurl = $url->out();
+            $news->fullname = "$user->firstname $user->lastname";
+            $news->tags = array_values(core_tag_tag::get_item_tags_array('local_wb_news', 'news', $news->id));
+            $news->publishedon = userdate($news->timecreated, get_string('strftimedate', 'core_langconfig'));
+            $returnarray[] = (array)$news;
+        }
+
+        return $returnarray;
     }
 
-    // TODO Replace with setting manager.
+    /**
+     * Returns a the template string.
+     *
+     * @return string
+     *
+     */
+    public function return_template() {
+        return $this->template;
+    }
+
+    /**
+     * Returns a the name string.
+     *
+     * @return string
+     *
+     */
+    public function return_name() {
+        return $this->name;
+    }
+
+    /**
+     * Returns a list of news from the current instance.
+     *
+     * @param int $id
+     * @return stdClass|null
+     *
+     */
+    public function get_news_item($id) {
+
+        return $this->news[$id] ?? null;
+    }
+
     /**
      * Update or Create news
      *
-     * @param stdClass|array $data
+     * @param stdClass $data
      * @return int $id
      */
     public function update_news($data) {
-        global $DB;
-        if ($data->id) {
+        global $DB, $USER;
+
+        $id = $data->id ?? false;
+
+        $data->userid = $USER->id;
+
+        $data->fullname = "$USER->firstname $USER->lastname";
+        $data->timemodified = time();
+
+        if ($id) {
             $DB->update_record('local_wb_news', $data, true);
+        } else {
+            $data->timecreated = time();
+            $id = $DB->insert_record('local_wb_news', $data, true);
+        }
+
+        if (isset($data->tags)) {
+            core_tag_tag::set_item_tags('local_wb_news', 'news', $id, context_system::instance(), $data->tags);
+        }
+
+        // We set active for 0 for every other record than our own.
+        if (!empty($data->active)) {
+            $records = $DB->get_records('local_wb_news', ['instanceid' => $data->instanceid]);
+            foreach ($records as $record) {
+                if ($record->id == $id) {
+                    continue;
+                }
+                $record->active = 0;
+                $DB->update_record('local_wb_news', $record);
+            }
+        }
+
+        return $id;
+    }
+
+    /**
+     * Delete news. On failure, return 0, else id of deleted record.
+     *
+     * @param stdClass $data
+     */
+    public function add_news(stdClass $data) {
+
+        // Here, we apply the correct value depending on image mode.
+
+        switch ($data->imagemode) {
+            case self::IMAGEMODE_BACKGROUND:
+                // Do nothing as we use the bgimage key already.
+                break;
+            case self::IMAGEMODE_HEADER:
+                $data->headerimage = $data->bgimage;
+                unset($data->bgimage);
+                break;
+        }
+
+        $this->news[$data->id] = $data;
+        if (!empty($data->template)) {
+            $this->template = $data->template;
+        }
+        if (!empty($data->name)) {
+            $this->name = $data->name;
+        }
+    }
+
+    /**
+     * Delete news. On failure, return 0, else id of deleted record.
+     *
+     * @param stdClass $data
+     * @return int $id
+     */
+    public function delete_news($data) {
+        global $DB, $USER;
+
+        if (!empty($data->id)) {
+            $DB->delete_records('local_wb_news', ['id' => $data->id]);
+            return $data->id;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Update or Create newsinstance
+     *
+     * @param stdClass $data
+     * @return int $id
+     */
+    public function update_newsinstance($data) {
+        global $DB, $USER;
+
+        $id = $data->id ?? false;
+
+        $data->userid = $USER->id;
+        $data->timemodified = time();
+
+        if ($id) {
+            $DB->update_record('local_wb_news_instance', $data, true);
             return true;
         } else {
-            $DB->insert_record('local_wb_news', $data, true);
+            $data->timecreated = time();
+            $id = $DB->insert_record('local_wb_news_instance', $data, true);
         }
+
+        return $id;
+    }
+
+    /**
+     * Delete newsinstance. On failure, return 0, else id of deleted record.
+     *
+     * @param stdClass $data
+     * @return int $id
+     */
+    public function delete_newsinstance($data) {
+        global $DB, $USER;
+
+        if (!empty($data->id)) {
+            $DB->delete_records('local_wb_news_instance', ['id' => $data->id]);
+            return $data->id;
+        }
+
+        return 0;
+    }
+
+    /**
+     * Returns the instance as a renderable array.
+     *
+     * @return array
+     *
+     */
+    public function return_instance() {
+
+        global $PAGE;
+
+        $instanceitem = [
+            'instanceid' => $this->instanceid,
+            'template' => $this->template,
+            'name' => $this->name,
+            'editmode' => $PAGE->user_is_editing(),
+        ];
+
+        if (!empty($this->news)) {
+            $instanceitem['news'] = $this->return_list_of_news();
+        }
+
+        switch ($this->template) {
+            case 'local_wb_news/wb_news_masonry':
+                $instanceitem['masonrytemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_grid':
+                $instanceitem['gridtemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_slider':
+                $instanceitem['slidertemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_tabs':
+                $instanceitem['tabstemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_blog':
+                $instanceitem['blogtemplate'] = true;
+                break;
+        }
+
+        return $instanceitem;
+    }
+
+    /**
+     * As we need it twice, we create a function.
+     * @return array
+     */
+    public static function get_textfield_options() {
+
+        $context = context_system::instance();
+
+        return [
+            'trusttext' => true,
+            'subdirs' => true,
+            'context' => $context,
+            'maxfiles' => EDITOR_UNLIMITED_FILES,
+            'noclean' => true,
+        ];
+    }
+
+    /**
+     * Fetch Items from DB.
+     *
+     * @param int $instanceid
+     *
+     * @return [type]
+     *
+     */
+    private static function get_items_from_db(int $instanceid) {
+
+        global $DB;
+
+        $sql = $sql = "SELECT " . $DB->sql_concat(
+            $DB->sql_cast_to_char('COALESCE(wni.id, 0)'),
+            "'-'",
+            $DB->sql_cast_to_char('COALESCE(wn.id, 0)')
+        ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name
+        FROM {local_wb_news} wn
+        RIGHT JOIN {local_wb_news_instance} wni ON wni.id = wn.instanceid";
+
+
+        if (!empty($id)) {
+            $params = ['instanceid' => $instanceid];
+            $sql .= " WHERE wni.id =:instanceid";
+        } else {
+            $params = [];
+        }
+
+        $sql .= " ORDER By sortorder ASC";
+
+        return $DB->get_records_sql($sql, $params);
+    }
+
+    /**
+     * Return all instances.
+     *
+     * @return array
+     *
+     */
+    public static function return_all_instances() {
+
+        global $PAGE;
+
+        $returnarray = [];
+        foreach (self::$instance as $instance) {
+            if (empty($instance->instanceid)) {
+                continue;
+            }
+
+            $instanceitem = $instance->return_instance();
+
+            $returnarray[] = $instanceitem;
+        }
+
+        return $returnarray;
     }
 }

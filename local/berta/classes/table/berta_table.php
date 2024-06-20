@@ -22,6 +22,7 @@ global $CFG;
 require_once(__DIR__ . '/../../lib.php');
 require_once($CFG->libdir.'/tablelib.php');
 
+use cache;
 use coding_exception;
 use context_module;
 use context_system;
@@ -128,6 +129,81 @@ class berta_table extends wunderbyte_table {
         }
         $output = singleton_service::get_renderer('local_berta');
         return $output->render_col_teacher($data);;
+    }
+
+       /**
+        * This function is called for each data row to allow processing of the
+        * kurssprache value.
+        *
+        * @param object $values Contains object with all the values of record.
+        * @return string $string Return name of the booking option.
+        * @throws dml_exception
+        */
+    public function col_kurssprache($values) {
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
+
+        if (isset($settings->customfieldsfortemplates) && isset($settings->customfieldsfortemplates['kurssprache'])) {
+            $value = $settings->customfieldsfortemplates['kurssprache']['value'];
+            return $value;
+    }
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * kurssprache value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string $string Return name of the booking option.
+     * @throws dml_exceptiond
+     */
+    public function col_format($values) {
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
+
+        if (isset($settings->customfieldsfortemplates) && isset($settings->customfieldsfortemplates['format'])) {
+                $value = $settings->customfieldsfortemplates['format']['value'];
+                return $value;
+        }
+
+    }
+
+        /**
+         * This function is called for each data row to allow processing of the
+         * category value.
+         *
+         * @param object $values Contains object with all the values of record.
+         * @return string $string Return name of the booking option.
+         * @throws dml_exceptiond
+         */
+    public function col_category($values) {
+
+        $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
+
+        if (isset($settings->customfields) && isset($settings->customfields['category'])) {
+            if (strpos($settings->customfields['category'], ',') !== false) {
+                // Split the string by commas into an array
+                $values = explode(',', $settings->customfields['category']);
+                // Loop over each value in the array
+                $string = '';
+                foreach ($values as $value) {
+                    // Optionally trim whitespace from each value
+                    $value = trim($value);
+                    $stringpart = "<span class='bg-secondary pl-1 pr-1 mr-1 rounded category'>
+                    $value
+                    </span>";
+                    $string = $string . $stringpart;
+                }
+                return $string;
+            } else {
+                $value = $settings->customfields['category'];
+                $string = "<span class='bg-secondary pl-1 pr-1 mr-1 rounded category'>
+                $value
+                </span>";
+                return $string;
+            }
+        }
+
     }
 
     /**
@@ -303,7 +379,9 @@ class berta_table extends wunderbyte_table {
             if (is_array($settings->customfields['organisation'])) {
                 return implode(", ", $settings->customfields['organisation']);
             } else {
-                return $settings->customfields['organisation'];
+                $value = $settings->customfields['organisation'];
+                $message = "<span class='bg-secondary orga'>$value</span>";
+                return $message;
             }
         }
 
@@ -347,7 +425,7 @@ class berta_table extends wunderbyte_table {
                 foreach ($botagsarray as $botag) {
                     if (!empty($botag)) {
                         $botagsstring .=
-                            "<span class='berta-table-botag rounded-sm bg-info text-light pl-1 pr-1 pb-0 pt-0 mr-1'>
+                            "<span class='berta-table-botag rounded-sm bg-info text-light pl-2 pr-2 pt-1 pb-1 mr-1 d-inline-block text-center'>
                             $botag
                             </span>";
                     } else {
@@ -384,6 +462,12 @@ class berta_table extends wunderbyte_table {
             return $courseurl;
         }
 
+        // When we have this seeting, we never show the link here:
+
+        if (get_config('booking', 'linktomoodlecourseonbookedbutton')) {
+            return '';
+        }
+
         $buyforuser = price::return_user_to_buy_for();
 
         $answersobject = singleton_service::get_instance_of_booking_answers($settings);
@@ -402,7 +486,7 @@ class berta_table extends wunderbyte_table {
             // ...is a teacher of this option.
             // ...has the system-wide "updatebooking" capability (admins).
             $gotomoodlecourse = get_string('tocoursecontent', 'local_berta');
-            $ret = "<a href='$courseurl' target='_self' class='btn btn-primary p-1 mt-2 mb-2 w-100'>
+            $ret = "<a href='$courseurl' target='_self' class='btn btn-primary p-1 ml-2 w-100'>
                 <i class='fa fa-graduation-cap fa-fw' aria-hidden='true'></i>&nbsp;&nbsp;$gotomoodlecourse
             </a>";
         }
@@ -626,6 +710,45 @@ class berta_table extends wunderbyte_table {
             $ret = $renderedcourseendtime;
         } else {
             $ret = get_string('courseendtime', 'mod_booking') . ": " . $renderedcourseendtime;
+        }
+        return $ret;
+    }
+
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * showdates value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string a string containing collapsible dates
+     * @throws coding_exception
+     */
+    public function col_showdates($values) {
+
+        // NOTE: Do not use $this->cmid and $this->context because it might be that booking options come from different instances!
+        // So we always need to retrieve them via singleton service for the current booking option ($values->id).
+        $optionid = $values->id;
+        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+        $cmid = $settings->cmid;
+        $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
+
+        $ret = '';
+        if ($this->is_downloading()) {
+            $datestrings = dates_handler::return_array_of_sessions_datestrings($optionid);
+            $ret = implode(' | ', $datestrings);
+        } else {
+            // Use the renderer to output this column.
+            $lang = current_language();
+
+            $cachekey = "sessiondates$optionid$lang";
+            $cache = cache::make($this->cachecomponent, $this->rawcachename);
+
+            if (!$ret = $cache->get($cachekey)) {
+                $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
+                $output = singleton_service::get_renderer('local_berta');
+                $ret = $output->render_col_coursestarttime($data);
+                $cache->set($cachekey, $ret);
+            }
         }
         return $ret;
     }

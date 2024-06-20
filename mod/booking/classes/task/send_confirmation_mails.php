@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Handling of sending confirmation mains.
  *
@@ -109,6 +110,7 @@ class send_confirmation_mails extends \core\task\adhoc_task {
                                         'messageparam' => $taskdata->messageparam,
                                         'subject' => $taskdata->subject,
                                         'objectid' => $taskdata->optionid ?? 0,
+                                        'message' => $taskdata->messagetext ?? 0,
                                     ],
                                 ]);
                                 $event->trigger();

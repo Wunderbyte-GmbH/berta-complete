@@ -31,24 +31,36 @@
         'btntext' => 'Read More'
     }
 }}
-
-<div class="card shadow-sm h-100" style="background-image: url({{bgimage}})">
+    {{#editmode}}
+    <span class="text-right">
+    {{> local_wb_news/editsinglenews}}
+    </span>
+    {{/editmode}}
+<div class="card shadow-sm h-100{{#lightmode}} wb_news-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}"
+style="{{#bgimage}}background-image: url({{bgimage}}); {{/bgimage}}{{#bgcolor}}background-color: {{bgcolor}};{{/bgcolor}}">
+    <div class="card-content">
     {{^btntext}}
     {{#btnlink}}<a href="{{btnlink}}" class="stretched-link"></a> {{/btnlink}}
     {{/btntext}}
+    <div>
+    {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
+    </div>
     <div class="card-body">
     {{#icon}}
     <div class="text-center">
         <img src="{{icon}}" class="card-icon mb-2 text-center" alt="Icon">
     </div>
     {{/icon}}
-    <h5 class="card-title">{{headline}}</h5>
-    <h6 class="card-subtitle mb-2 text-muted">{{subheadline}}</h6>
-    <p class="card-text">{{description}}</p>
     </div>
     <div class="card-footer">
+    <h5 class="card-title">{{headline}}</h5>
+    <h6 class="card-subtitle mb-2">{{subheadline}}</h6>
+    <p class="card-text">{{{description}}}</p>
     {{#btntext}}
     <a href="{{btnlink}}" class="btn btn-primary mt-auto">{{btntext}}</a>
     {{/btntext}}
     </div>
+
+    </div>
 </div>
+

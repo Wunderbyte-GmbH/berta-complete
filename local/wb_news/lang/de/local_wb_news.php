@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'News Manager';
-$string['news_manager'] = 'News Manager';
+$string['wb_news'] = 'News Manager';
 $string['manage'] = 'Bearbeiten';
 $string['delete'] = 'Entfernen';
 $string['form_submit'] = 'Speichern';
@@ -41,5 +41,47 @@ $string['news_updated'] = 'Neuigkeiteneintrag aktualisiert';
 $string['news_created'] = 'Neuigkeiteneintrag erstellt';
 $string['news_deleted'] = 'Neuigkeiteneintrag entfernt';
 
-$string['news_manager:manage'] = "Verwaltung von News";
-$string['news_manager:view'] = "Zugriff auf News";
+$string['wb_news:manage'] = "Verwaltung von News";
+$string['wb_news:view'] = "Zugriff auf News";
+
+$string['addnewnews'] = 'Füge Eintrag hinzu';
+$string['editnewnews'] = 'Bearbeite Eintrag';
+$string['deletenewnews'] = 'Lösche Eintrag';
+
+$string['addinstance'] = 'Füge Instanz hinzu';
+$string['editinstance'] = 'Bearbeite Instanz';
+$string['deleteinstance'] = 'Lösche Instanz';
+
+$string['addeditform'] = 'Hinzufügen oder bearbeiten eines Eintrags';
+$string['instanceid'] = 'Instanz-ID';
+$string['activenews'] = 'Beim ersten Laden aktiv';
+$string['icon'] = 'Icon';
+$string['sortorder'] = 'Niedrig wird vorgereiht';
+$string['bgimage'] = 'Hauptbild';
+$string['bgcolor'] = 'Farbe als Hex-Code';
+$string['novalidhexcolor'] = 'Das ist kein gültiger Hex-Code';
+$string['imagemode'] = 'Anzeige des Bildes';
+$string['useasbgimage'] = 'Als Hintergrundbild verwenden';
+$string['useasheaderimage'] = 'Als Kopfzeilenbild verwenden';
+$string['icon'] = 'Symbol';
+$string['userid'] = 'Benutzer-ID';
+$string['headline'] = 'Überschrift';
+$string['subheadline'] = 'Unterüberschrift';
+$string['description'] = 'Beschreibung';
+$string['btnlink'] = 'Schaltflächenlink';
+$string['btntext'] = 'Schaltflächentext';
+$string['lightmode'] = 'Heller Modus';
+$string['cssclasses'] = 'Zusätzliche CSS Klassen';
+
+$string['template'] = 'Vorlage';
+$string['name'] = 'Name';
+$string['masonrytemplate'] = 'Bausteine Vorlage';
+$string['slidertemplate'] = 'Slider Vorlage';
+$string['tabstemplate'] = 'Tabs Vorlage';
+$string['gridtemplate'] = 'Gitter Vorlage';
+
+// Errors.
+$string['interror'] = 'Nur ganze Zahlen sind erlaubt.';
+
+// Shortcodes.
+$string['wbnewslist'] = 'Eine oder alle News Instanzen.';

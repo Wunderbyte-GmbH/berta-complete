@@ -29,7 +29,10 @@ namespace local_berta;
 use Closure;
 use coding_exception;
 use context_system;
+use context_module;
 use dml_exception;
+use local_wunderbyte_table\filters\types\hierarchicalfilter;
+use local_wunderbyte_table\wunderbyte_table;
 use mod_booking\output\page_allteachers;
 use local_berta\output\userinformation;
 use local_berta\table\berta_table;
@@ -46,6 +49,132 @@ use stdClass;
  * Deals with local_shortcodes regarding booking.
  */
 class shortcodes {
+
+    /**
+     * KOMPETENZEN
+     *
+     * @var array]
+     */
+    public const KOMPETENZEN = [
+        'Lehrkonzeption & -planung' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Lehr- & Lernmethoden' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Erstellung Lehr-/Lernmaterialien' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Lehren mit digitalen Technologien' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Prüfen & Beurteilen' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Betreuung schriftlicher Arbeiten' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Weiterentwicklung der Lehre' => [
+            'parent' => 'Lehrkompetenzen',
+        ],
+        'Wissenschaftliches Arbeiten' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Wissenschaftliches Publizieren' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Open Science' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Wissensaustausch & Innovation' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Wissenschaftliche Integrität' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Networking in der Wissenschaft' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Interdisziplinäre Forschung' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Forschungsförderung' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Karriereentwicklung & -planung' => [
+            'parent' => 'Forschungskompetenzen',
+        ],
+        'Präsentation' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Gesprächs- und Verhandlungsführung' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Feedback' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Moderation' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Sprachkenntnisse' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Konfliktmanagement' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Information & Kommunikation' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Gender- & Diversitätskompetenz' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Kooperationskompetenz' => [
+            'parent' => 'Kommunikations- und Kooperationskompetenzen',
+        ],
+        'Veranstaltungsorganisation' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Arbeitsorganisation' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Selbstorganisation' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Service- & Kund*innenorientierung' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Lösungs- & Zukunftsorientierung' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Ressourceneffizienz' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Change-Kompetenz' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Gesundheitsorientierung' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'Lernkompetenz' => [
+            'parent' => 'Selbst- und Arbeitsorganisation',
+        ],
+        'IT Security' => [
+            'parent' => 'Digitalkompetenzen',
+        ],
+        'Digitale Interaktion' => [
+            'parent' => 'Digitalkompetenzen',
+        ],
+        'Umgang mit Informationen & Daten' => [
+            'parent' => 'Digitalkompetenzen',
+        ],
+        'Technologienutzung' => [
+            'parent' => 'Digitalkompetenzen',
+        ],
+        'Educational Leadership and Management' => [
+            'parent' => 'Führungskompetenzen',
+        ],
+    ];
+
 
     /**
      * Prints out list of bookingoptions.
@@ -83,28 +212,34 @@ class shortcodes {
         return $output->render_userinformation($data);
     }
 
-    /**
-     * Prints out list of bookingoptions.
-     * Arguments can be 'category' or 'perpage'.
-     *
-     * @param string $shortcode
-     * @param array $args
-     * @param string|null $content
-     * @param object $env
-     * @param Closure $next
-     * @return void
-     */
-    public static function unifiedlist($shortcode, $args, $content, $env, $next) {
+     /**
+      * Prints out list of bookingoptions.
+      * Arguments can be 'category' or 'perpage'.
+      *
+      * @param string $shortcode
+      * @param array $args
+      * @param string|null $content
+      * @param object $env
+      * @param Closure $next
+      * @return void
+      */
+    public static function unifiedcards($shortcode, $args, $content, $env, $next) {
 
-        global $DB;
-
+        // TODO: Define capability.
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+        /* if (!has_capability('moodle/site:config', $env->context)) {
+            return '';
+        } */
         self::fix_args($args);
-
         $booking = self::get_booking($args);
 
         $bookingids = explode(',', get_config('local_berta', 'multibookinginstances'));
 
-        $bookingids = array_filter($bookingids, fn($a) => !empty($a));
+        foreach ($bookingids as $key => $value) {
+            if (empty($value)) {
+                unset($bookingids[$key]);
+            }
+        }
 
         if (empty($bookingids)) {
             return get_string('nobookinginstancesselected', 'local_berta');
@@ -164,6 +299,110 @@ class shortcodes {
             $table->add_subcolumns('cardimage', ['image']);
         }
 
+        self::generate_table_for_cards($table, $args);
+
+        self::set_table_options_from_arguments($table, $args);
+
+        $table->tabletemplate = 'local_berta/table_card';
+
+        // If we find "nolazy='1'", we return the table directly, without lazy loading.
+        if (!empty($args['lazy'])) {
+
+            list($idstring, $encodedtable, $out) = $table->lazyouthtml($perpage, true);
+
+            return $out;
+        }
+
+        $out = $table->outhtml($perpage, true);
+
+        return $out;
+    }
+
+    /**
+     * Prints out list of bookingoptions.
+     * Arguments can be 'category' or 'perpage'.
+     *
+     * @param string $shortcode
+     * @param array $args
+     * @param string|null $content
+     * @param object $env
+     * @param Closure $next
+     * @return void
+     */
+    public static function unifiedlist($shortcode, $args, $content, $env, $next) {
+
+        global $DB;
+
+        self::fix_args($args);
+
+        $bookingids = explode(',', get_config('local_berta', 'multibookinginstances'));
+
+        $bookingids = array_filter($bookingids, fn($a) => !empty($a));
+
+        if (empty($bookingids)) {
+            return get_string('nobookinginstancesselected', 'local_berta');
+        }
+
+        if (!isset($args['organisation']) || !$category = ($args['organisation'])) {
+            $organisation = '';
+        }
+
+        if (!isset($args['image']) || !$showimage = ($args['image'])) {
+            $showimage = false;
+        }
+
+        if (empty($args['countlabel'])) {
+            $args['countlabel'] = false;
+        }
+
+        if (empty($args['reload'])) {
+            $args['reload'] = false;
+        }
+
+        $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
+
+        if (
+            !isset($args['perpage'])
+            || !is_int((int)$args['perpage'])
+            || !$perpage = ($args['perpage'])
+        ) {
+            $perpage = 100;
+        } else {
+            $infinitescrollpage = 0;
+        }
+
+        $table = self::inittableforcourses();
+
+        $table->showcountlabel = $args['countlabel'];
+        $table->showreloadbutton = $args['reload'];
+
+        $wherearray = ['bookingid' => $bookingids];
+
+        if (!empty($organisation)) {
+            $wherearray['organisation'] = $category;
+        };
+
+        // If we want to find only the teacher relevant options, we chose different sql.
+        if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
+            $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
+            list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, null, [], $wherearray);
+        } else {
+
+            list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, null, [], $wherearray);
+        }
+
+        $table->set_filter_sql($fields, $from, $where, $filter, $params);
+
+        $table->use_pages = true;
+
+        if ($showimage !== false) {
+            $table->set_tableclass('cardimageclass', 'pr-0 pl-1');
+
+            $table->add_subcolumns('cardimage', ['image']);
+        }
+
         self::set_table_options_from_arguments($table, $args);
         self::generate_table_for_list($table, $args);
 
@@ -173,8 +412,7 @@ class shortcodes {
         $table->infinitescroll = $infinitescrollpage;
 
         $table->tabletemplate = 'local_berta/table_list';
-        $table->showcountlabel = true;
-        $table->showreloadbutton = true;
+        $table->showfilterontop = false;
 
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
@@ -208,9 +446,13 @@ class shortcodes {
 
         self::fix_args($args);
 
-        $booking = self::get_booking($args);
-
         $bookingids = explode(',', get_config('local_berta', 'multibookinginstances'));
+
+        $bookingids = array_filter($bookingids, fn($a) => !empty($a));
+
+        if (empty($bookingids)) {
+            return get_string('nobookinginstancesselected', 'local_berta');
+        }
 
         if (!isset($args['category']) || !$category = ($args['category'])) {
             $category = '';
@@ -224,6 +466,10 @@ class shortcodes {
             $args['countlabel'] = false;
         }
 
+        if (empty($args['reload'])) {
+            $args['reload'] = false;
+        }
+
         $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
 
         if (
@@ -234,9 +480,11 @@ class shortcodes {
             $perpage = 100;
         }
 
-        $table = self::inittableforcourses($booking);
+        $table = self::inittableforcourses();
 
         $table->showcountlabel = $args['countlabel'];
+        $table->showreloadbutton = $args['reload'];
+
         $wherearray = ['bookingid' => $bookingids];
 
         if (!empty($category)) {
@@ -269,7 +517,7 @@ class shortcodes {
                     0,
                     '',
                     null,
-                    $booking->context,
+                    null,
                     [],
                     $wherearray,
                     $USER->id,
@@ -305,9 +553,6 @@ class shortcodes {
 
         // This allows us to use infinite scrolling, No pages will be used.
         $table->infinitescroll = $infinitescrollpage;
-
-        $table->showcountlabel = true;
-        $table->showreloadbutton = true;
 
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
@@ -365,7 +610,13 @@ class shortcodes {
 
     }
 
-    private static function inittableforcourses($booking) {
+    /**
+     * Init the table.
+     *
+     * @return wunderbyte_table
+     *
+     */
+    private static function inittableforcourses() {
 
         global $PAGE, $USER;
 
@@ -391,10 +642,22 @@ class shortcodes {
         return $table;
     }
 
+    /**
+     * Define filtercolumns.
+     *
+     * @param mixed $table
+     *
+     * @return void
+     *
+     */
     private static function define_filtercolumns(&$table) {
 
         $standardfilter = new standardfilter('organisation', get_string('organisation', 'local_berta'));
         $table->add_filter($standardfilter);
+
+        $hierarchicalfilter = new hierarchicalfilter('kompetenzen', get_string('competency', 'local_berta'));
+        $hierarchicalfilter->add_options(self::KOMPETENZEN);
+        $table->add_filter($hierarchicalfilter);
 
         $standardfilter = new standardfilter('dayofweek', get_string('dayofweek', 'local_berta'));
         $standardfilter->add_options([
@@ -404,7 +667,7 @@ class shortcodes {
             'thursday' => get_string('thursday', 'mod_booking'),
             'friday' => get_string('friday', 'mod_booking'),
             'saturday' => get_string('saturday', 'mod_booking'),
-            'sunday' => get_string('sunday', 'mod_booking')
+            'sunday' => get_string('sunday', 'mod_booking'),
         ]);
         $table->add_filter($standardfilter);
 
@@ -452,6 +715,14 @@ class shortcodes {
         }
     }
 
+    /**
+     * Get booking from shortcode arguments.
+     *
+     * @param mixed $args
+     *
+     * @return [type]
+     *
+     */
     private static function get_booking($args) {
         self::fix_args($args);
         // If the id argument was not passed on, we have a fallback in the connfig.
@@ -471,6 +742,15 @@ class shortcodes {
         return $booking;
     }
 
+    /**
+     * Set table from shortcodes arguments.
+     *
+     * @param mixed $table
+     * @param mixed $args
+     *
+     * @return [type]
+     *
+     */
     private static function set_table_options_from_arguments(&$table, $args) {
         self::fix_args($args);
 
@@ -540,81 +820,32 @@ class shortcodes {
         $table->add_subcolumns('optionid', ['id']);
 
         $table->add_subcolumns('cardimage', ['image']);
-        $table->add_subcolumns('optioninvisible', ['invisibleoption']);
+        $table->set_tableclass('cardimageclass', 'imagecontainer');
+        $table->add_subcolumns('cardheader', ['botags', 'bookings']);
+        $table->add_subcolumns('cardlist', ['showdates', 'kurssprache', 'format', 'category', 'organisation']);
+        $table->add_subcolumns('cardfooter', ['price']);
 
-        $table->add_subcolumns('cardbody', ['action', 'invisibleoption', 'organisation', 'text', 'botags']);
-        $table->add_classes_to_subcolumns('cardbody', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'float-right m-1'], ['action']);
-        $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'font-size-sm'], ['botags']);
-        $table->add_classes_to_subcolumns(
-            'cardbody',
-            ['columnvalueclass' => 'text-center shortcodes_option_info_invisible'],
-            ['invisibleoption']
-        );
-        $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'organisation-badge rounded-sm text-gray-800 mt-2'],
-            ['organisation']);
-        $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'm-0 mt-1 mb-1 h5'], ['text']);
+        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-regular fa-message fa-fw text-primary mr-2'],
+         ['kurssprache']);
+         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-computer fa-fw  text-primary mr-2'],
+         ['format']);
+         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-hashtag fa-fw  text-primary mr-2'],
+         ['category']);
+        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'], ['showdates']);
+        $table->add_classes_to_subcolumns('cardlist', ['columnclass' => 'd-flex align-item-center'], ['showdates']);
+        // $table->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'mt-auto'], ['price']);
+        $table->add_classes_to_subcolumns('cardheader', ['columnkeyclass' => 'd-none']);
+        $table->add_classes_to_subcolumns('cardheader', ['columnvalueclass' => 'mr-auto'], ['botags']);
+        $table->add_classes_to_subcolumns('cardheader', ['columnvalueclass' => 'ml-auto'], ['bookings']);
+        // $table->add_classes_to_subcolumns('cardlist', ['columnvalueclass' =>
+        // 'bg-secondary orga'], ['organisation']);
 
-        // Subcolumns.
-        $subcolumns = ['teacher', 'dayofweektime', 'location', 'institution', 'responsiblecontact'];
-        if (get_config('local_berta', 'bertashortcodesshowstart')) {
-            $subcolumns[] = 'coursestarttime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowend')) {
-            $subcolumns[] = 'courseendtime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookablefrom')) {
-            $subcolumns[] = 'bookingopeningtime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookableuntil')) {
-            $subcolumns[] = 'bookingclosingtime';
-        }
-        $subcolumns[] = 'bookings';
-        if (!empty($args['showminanswers'])) {
-            $subcolumns[] = 'minanswers';
-        }
+        $table->add_subcolumns('cardbody', ['text', 'description']);
+        $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'mr-auto'], ['text']);
 
-        $table->add_subcolumns('cardlist', $subcolumns);
         $table->add_classes_to_subcolumns('cardlist', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('cardlist', ['columnvalueclass' => 'text-secondary']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'text-secondary']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-map-marker'], ['location']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-building-o'], ['institution']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-user'], ['responsiblecontact']);
-
-        if (get_config('local_berta', 'bertashortcodesshowstart')) {
-            $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-play'], ['coursestarttime']);
-        }
-        if (get_config('local_berta', 'bertashortcodesshowend')) {
-            $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-stop'], ['courseendtime']);
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookablefrom')) {
-            $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-forward'], ['bookingopeningtime']);
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookableuntil')) {
-            $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-step-forward'],
-                ['bookingclosingtime']);
-        }
-
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-clock-o'], ['dayofweektime']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-users'], ['bookings']);
-        if (!empty($args['showminanswers'])) {
-            $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-fw fa-arrow-up'], ['minanswers']);
-        }
-
-        // Set additional descriptions.
-        $table->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('teacheralt', 'local_berta')], ['teacher']);
-        $table->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('locationalt', 'local_berta')], ['location']);
-        $table->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('dayofweekalt', 'local_berta')], ['dayofweektime']);
-        $table->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('bookingsalt', 'local_berta')], ['bookings']);
-        $table->add_classes_to_subcolumns('cardimage', ['cardimagealt' => get_string('imagealt', 'local_berta')], ['image']);
-
-        $table->add_subcolumns('cardfooter', ['course', 'price']);
+        $table->add_classes_to_subcolumns('cardbody', ['columnkeyclass' => 'd-none']);
         $table->add_classes_to_subcolumns('cardfooter', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'theme-text-color bold '], ['price']);
-        $table->set_tableclass('cardimageclass', 'w-100');
-
-        $table->is_downloading('', 'List of booking options');
     }
 
     /**
@@ -629,21 +860,11 @@ class shortcodes {
 
         self::fix_args($args);
 
-        $subcolumnsleftside = ['text'];
-        $subcolumnsinfo = ['teacher', 'dayofweektime', 'location', 'institution'];
-        if (get_config('local_berta', 'bertashortcodesshowstart')) {
-            $subcolumnsinfo[] = 'coursestarttime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowend')) {
-            $subcolumnsinfo[] = 'courseendtime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookablefrom')) {
-            $subcolumnsinfo[] = 'bookingopeningtime';
-        }
-        if (get_config('local_berta', 'bertashortcodesshowbookableuntil')) {
-            $subcolumnsinfo[] = 'bookingclosingtime';
-        }
-        $subcolumnsinfo[] = 'bookings';
+        // Columns.
+
+        $subcolumnsleftside = ['text', 'description'];
+        $subcolumnsfooter = ['kurssprache', 'format', 'category'];
+        $subcolumnsinfo = ['showdates'];
 
         // Check if we should add the description.
         if (get_config('local_berta', 'shortcodelists_showdescriptions')) {
@@ -659,80 +880,61 @@ class shortcodes {
         // We define it here so we can pass it with the mustache template.
         $table->add_subcolumns('optionid', ['id']);
 
-        $table->add_subcolumns('top', ['organisation', 'action']);
+        $table->add_subcolumns('cardimage', ['image']);
+
+        $table->set_tableclass('cardimageclass', 'customimg');
+
+        // $table->add_subcolumns('top', ['organisation', 'action']);
+        $table->add_subcolumns('top', ['botags', 'action', 'bookings' ]);
+        // $table->add_subcolumns('top', ['botags', 'bookings' ]);
         $table->add_subcolumns('leftside', $subcolumnsleftside);
         $table->add_subcolumns('info', $subcolumnsinfo);
+        $table->add_subcolumns('footer', $subcolumnsfooter );
 
-        $table->add_subcolumns('rightside', ['botags', 'invisibleoption', 'course', 'price']);
+        $table->add_subcolumns('rightside', ['organisation', 'invisibleoption', 'course', 'price']);
+        $table->add_subcolumns('rightside', ['organisation', 'invisibleoption', 'price']);
 
         $table->add_classes_to_subcolumns('top', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-left col-md-8'], ['organisation']);
-        $table->add_classes_to_subcolumns('top', ['columnvalueclass' =>
-            'organisation-badge rounded-sm text-gray-800 mt-2'], ['organisation']);
-        $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-right col-md-2 position-relative pr-0'], ['action']);
+        // $table->add_classes_to_subcolumns('top', ['columniclassbefore' => 'fa-solid fa-people-group'], ['bookings']);
+        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'border border-2 border-dark p-1 rounded d-flex align-items-center'], ['bookings']);
+        $table->add_classes_to_subcolumns('top', ['columnclass' => 'mr-auto text-uppercase'], ['botags']);
+        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-left col-md-8'], ['organisation']);
+        // $table->add_classes_to_subcolumns('top', ['columnvalueclass' =>
+        //     'organisation-badge rounded-sm text-gray-800 mt-2'], ['organisation']);
+        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-right col-md-2 position-relative pr-0'], ['action']);
 
         $table->add_classes_to_subcolumns('leftside', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('leftside', ['columnclass' => 'text-left mt-1 mb-1 h3 col-md-auto'], ['text']);
+        $table->add_classes_to_subcolumns('leftside', ['columnclass' => 'text-left mt-1 mb-1 title'], ['text']);
         if (get_config('local_berta', 'shortcodelists_showdescriptions')) {
             $table->add_classes_to_subcolumns('leftside', ['columnclass' => 'text-left mt-1 mb-3 col-md-auto'], ['description']);
         }
-        $table->add_classes_to_subcolumns('info', ['columnkeyclass' => 'd-none']);
-        $table->add_classes_to_subcolumns('info', ['columnclass' => 'text-left text-secondary font-size-sm pr-2']);
-        $table->add_classes_to_subcolumns('info', ['columnvalueclass' => 'd-flex'], ['teacher']);
-        $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-clock-o'], ['dayofweektime']);
-        $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-map-marker'], ['location']);
-        $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-building-o'], ['institution']);
-        if (get_config('local_berta', 'bertashortcodesshowstart')) {
-            $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-play'], ['coursestarttime']);
-        }
+
+        $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-clock-o text-primary
+        showdatesicon'], ['showdates']);
+        $table->add_classes_to_subcolumns('info', ['columnclassinner' => 'align-items-center'], ['showdates']);
         if (get_config('local_berta', 'bertashortcodesshowend')) {
             $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-stop'], ['courseendtime']);
         }
         if (get_config('local_berta', 'bertashortcodesshowbookablefrom')) {
             $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-forward'], ['bookingopeningtime']);
         }
-        if (get_config('local_berta', 'bertashortcodesshowbookableuntil')) {
-            $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-step-forward'], ['bookingclosingtime']);
-        }
-        $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-ticket'], ['bookings']);
-        if (!empty($args['showminanswers'])) {
-            $table->add_classes_to_subcolumns('info', ['columniclassbefore' => 'fa fa-arrow-up'], ['minanswers']);
-        }
-
-        // Set additional descriptions.
-        $table->add_classes_to_subcolumns('info', ['columnalt' => get_string('teacheralt', 'local_berta')], ['teacher']);
-        $table->add_classes_to_subcolumns('info', ['columnalt' => get_string('dayofweekalt', 'local_berta')], ['dayofweektime']);
         $table->add_classes_to_subcolumns('info', ['columnalt' => get_string('locationalt', 'local_berta')], ['location']);
-        $table->add_classes_to_subcolumns('info', ['columnalt' => get_string('bookingsalt', 'local_berta')], ['bookings']);
+        $table->add_classes_to_subcolumns('cardimage', ['cardimagealt' => get_string('imagealt', 'local_berta')], ['image']);
 
         $table->add_classes_to_subcolumns('rightside',
             ['columnvalueclass' => 'text-right mb-auto align-self-end shortcodes_option_info_invisible '],
             ['invisibleoption']);
-        $table->add_classes_to_subcolumns('rightside', ['columnclass' => 'text-right mb-auto align-self-end '], ['botags']);
         $table->add_classes_to_subcolumns('rightside', ['columnclass' =>
-            'text-right mt-auto w-100 align-self-end theme-text-color bold '], ['price']);
+             'theme-text-color bold ml-auto'], ['price']);
+            //  $table->add_classes_to_subcolumns('rightside', ['columnvalueclass' =>
+            //  'bg-secondary orga mb-2'], ['organisation']);
 
-        // Override naming for columns. one could use getstring for localisation here.
-        $table->add_classes_to_subcolumns(
-            'top',
-            ['keystring' => get_string('tableheader_text', 'booking')],
-            ['organisation']
-        );
-        $table->add_classes_to_subcolumns(
-            'leftside',
-            ['keystring' => get_string('tableheader_text', 'booking')],
-            ['text']
-        );
-        $table->add_classes_to_subcolumns(
-            'info',
-            ['keystring' => get_string('tableheader_maxanswers', 'booking')],
-            ['maxanswers']
-        );
-        $table->add_classes_to_subcolumns(
-            'info',
-            ['keystring' => get_string('tableheader_maxoverbooking', 'booking')],
-            ['maxoverbooking']
-        );
+        $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-regular fa-message text-primary'],
+         ['kurssprache']);
+         $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-solid fa-computer text-primary'],
+         ['format']);
+         $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-solid fa-hashtag text-primary'],
+         ['category']);
 
         $table->is_downloading('', 'List of booking options');
     }

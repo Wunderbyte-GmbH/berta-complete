@@ -176,14 +176,16 @@ $string['coursesiteacharchive'] = 'Kurse, die ich in vergangenen Semestern unter
 
 // Access.php.
 $string['berta:canedit'] = 'Nutzer:in darf verwalten';
+$string['berta:viewdashboard'] = "User kann Dashboard sehen";
 
 // Filter.
 $string['organisation'] = 'Organisationseinheit';
 $string['location'] = 'Ort';
+$string['competency'] = 'Kompetenzen';
 
 // Nav.
-$string['berta'] = 'berta';
-$string['entities'] = 'Organisations-Einheiten';
+$string['berta'] = 'u:Skills';
+$string['entities'] = 'Raum-Management';
 $string['coursename'] = 'Kursname';
 
 // Contract management.
@@ -252,3 +254,5 @@ $string['summary_desc'] = 'Enthält die Einstellungsmöglichkeiten und Statistik
 // Rolls.
 $string['berta:create'] = "Erstelle";
 $string['berta:view'] = "Ansehen";
+
+$string['searchheadertext'] = "Was möchten sie lernen?";

@@ -32,39 +32,31 @@
 
 {{! Booking places }}
 {{#maxanswers}}
-        <span class="col-ap-availableplaces {{#bookingplacesclass}}{{.}}{{/bookingplacesclass}}">
-        {{^showbookingplacesinfotext}}
+{{{}}}
+        <span class="col-ap-availableplaces berta-avail d-block {{#bookingplacesclass}}{{.}}{{/bookingplacesclass}} text-dark font-weight-bold">
+        <i class="fa-solid fa-people-group {{#bookingplacesiconclass}}{{.}}{{/bookingplacesiconclass}}" aria-hidden="true"></i>
             {{#fullybooked}}
-                <span class="text-danger font-weight-bold">{{booked}}</span>
+                <span class="font-weight-bold text-dark">
+                    {{#str}} availplaces_full, mod_booking {{/str}}
+                </span>
             {{/fullybooked}}
             {{^fullybooked}}
-                <span class="text-success font-weight-bold">{{booked}}</span>
-            {{/fullybooked}}
+                <span class="font-weight-bold text-dark">{{booked}}</span>
         {{#showmaxanswers}}
             / {{maxanswers}}
         {{/showmaxanswers}}
-        {{/showbookingplacesinfotext}}
-            {{#showbookingplacesinfotext}}
-                {{bookingplacesinfotext}}
-            {{/showbookingplacesinfotext}}
+         {{/fullybooked}}
     </span>
 {{/maxanswers}}
 {{^maxanswers}}
-        <span class="text-success font-weight-bold">{{booked}}</span>
+        <span class="berta-avail avail text-dark font-weight-bold">
+        <span class="text-dark font-weight-bold">{{booked}}</span>
         / {{#str}} unlimitedplaces, mod_booking {{/str}}
+        </span>
 {{/maxanswers}}
 
 {{! Waiting list places }}
-{{#maxoverbooking}}
-        <span class="col-ap-waitingplacesavailable {{#waitinglistplacesclass}}{{.}}{{/waitinglistplacesclass}}">
-        {{^showwaitinglistplacesinfotext}}
-            ({{#str}} waitinglist, mod_booking {{/str}}: {{waiting}}/{{maxoverbooking}})
-        {{/showwaitinglistplacesinfotext}}
-            {{#showwaitinglistplacesinfotext}}
-                {{waitinglistplacesinfotext}}
-            {{/showwaitinglistplacesinfotext}}
-    </span>
-{{/maxoverbooking}}
+
 
 {{#showmanageresponses}}
     </a>

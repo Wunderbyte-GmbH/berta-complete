@@ -93,9 +93,16 @@ class teachers extends field_base {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = null): array {
 
-        return parent::prepare_save_field($formdata, $newoption, $updateparam, '');
+        parent::prepare_save_field($formdata, $newoption, $updateparam, '');
+
+        $instance = new teachers();
+        $mockclass = new stdClass;
+        $mockclass->id = $formdata->id ?? 0;
+        $changes = $instance->check_for_changes($formdata, $instance, $mockclass, 'teachersforoption');
+
+        return $changes;
     }
 
     /**
@@ -152,13 +159,17 @@ class teachers extends field_base {
      * Save data
      * @param stdClass $data
      * @param stdClass $option
-     * @return void
+     * @return array
      * @throws \dml_exception
      */
-    public static function save_data(stdClass &$data, stdClass &$option) {
+    public static function save_data(stdClass &$data, stdClass &$option): array {
+
+        $changes = [];
 
         $teacherhandler = new teachers_handler($data->id);
         $teacherhandler->save_from_form($data);
+
+        return $changes;
     }
 }
 

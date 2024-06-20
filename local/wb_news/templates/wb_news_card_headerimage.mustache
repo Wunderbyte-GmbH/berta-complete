@@ -32,13 +32,18 @@
     }
 }}
 
-<div class="card shadow-sm h-100">
+<div class="card shadow-sm h-100{{#lightmode}} wb_news-light{{/lightmode}}{{#cssclasses}}{{cssclasses}}{{/cssclasses}}"{{#bgcolor}} style="background-color: {{bgcolor}};"{{/bgcolor}}>
     {{^btntext}}
     {{#btnlink}}<a href="{{btnlink}}" class="stretched-link"></a> {{/btnlink}}
     {{/btntext}}
-    {{#bgimage}}
-    <img class="w-100 img-fluid" src="{{bgimage}}">
-    {{/bgimage}}
+    {{#headerimage}}
+    <img class="w-100 img-fluid wb_news-headerimage" src="{{headerimage}}">
+    {{/headerimage}}
+
+    <div>
+    {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
+    </div>
+
     <div class="card-body">
     {{#icon}}
     <div class="text-center">
@@ -47,11 +52,14 @@
     {{/icon}}
     <h5 class="card-title">{{headline}}</h5>
     <h6 class="card-subtitle mb-2 text-muted">{{subheadline}}</h6>
-    <p class="card-text">{{description}}</p>
+    <p class="card-text">{{{description}}}</p>
     </div>
     <div class="card-footer">
     {{#btntext}}
         <a href="{{btnlink}}" class="btn btn-primary mt-auto">{{btntext}}</a>
     {{/btntext}}
     </div>
+    {{#editmode}}
+    {{> local_wb_news/editsinglenews}}
+    {{/editmode}}
 </div>

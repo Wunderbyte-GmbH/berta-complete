@@ -106,7 +106,7 @@ class optiondates extends field_base {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = null): array {
 
         // Run through all dates to make sure we don't have an array.
         // We need to transform dates to timestamps.
@@ -139,7 +139,7 @@ class optiondates extends field_base {
         $newoption->semesterid = $formdata->semesterid ?? 0;
 
         // We can return a warning message here.
-        return '';
+        return [];
     }
 
     /**
@@ -180,12 +180,12 @@ class optiondates extends field_base {
      *
      * @param stdClass $formdata
      * @param stdClass $option
-     * @return void
+     * @return array
      * @throws \dml_exception
      */
-    public static function save_data(stdClass &$formdata, stdClass &$option) {
+    public static function save_data(stdClass &$formdata, stdClass &$option): array {
 
-        dates::save_optiondates_from_form($formdata, $option);
+        return dates::save_optiondates_from_form($formdata, $option);
     }
 
     /**

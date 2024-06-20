@@ -72,7 +72,6 @@ class condition_all_test extends advanced_testcase {
      * Test of booking option with price as well as cancellation by user.
      *
      * @covers \condition\priceset::is_available
-     * @covers \condition\cancelmyself::is_available
      * @throws \coding_exception
      * @throws \dml_exception
      *

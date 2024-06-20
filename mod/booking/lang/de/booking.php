@@ -26,6 +26,7 @@ global $CFG;
 
 $badgepro = '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
 $badgeexp = '<span class="badge bg-danger text-light"><i class="fa fa-flask" aria-hidden="true"></i> Experimentell</span>';
+$badgedepr = '<span class="badge bg-warning"><i class="fa fa-exclamation-triangle" aria-hidden="true"></i> Veraltet</span>';
 
 // General strings.
 $string['accept'] = 'Akzeptieren';
@@ -142,6 +143,18 @@ $string['allmoodleusers'] = 'Alle Nutzer:innen dieser Website';
 $string['enrolledusers'] = 'In den Kurs eingeschriebene Nutzer:innen';
 $string['nopriceisset'] = 'Kein Preis für Preiskategorie {$a} vorhanden';
 $string['youareediting'] = 'Sie bearbeiten "<b>{$a}</b>".';
+$string['displayloginbuttonforbookingoptions'] = 'Zeige in Buchungsoption Button an, der zur Loginseite führt';
+$string['displayloginbuttonforbookingoptions_desc'] = 'Wird nur für nicht eingeloggte Benutzer angezeigt';
+$string['loginbuttonforbookingoptionscoloroptions'] = 'Stil (Farbe) des angezeigten Buttons';
+$string['loginbuttonforbookingoptionscoloroptions_desc'] = 'Nutzt Bootstrap 4 Styles. Die Farben sind für die Standardanwendung.';
+$string['linktomoodlecourseonbookedbutton'] = 'Zeige Link auf Moodle Kurs direkt am Buchen-Button';
+$string['linktomoodlecourseonbookedbutton_desc'] = 'Statt eines extra Links auf den Moodle Kurs wird diese Option den Buchungsbutton in einen Link auf den gebuchten Moodle Kurs umwandeln';
+// Bootstrap 4 styles.
+$string['cdo:buttoncolor:primary'] = 'Primary (Blau)';
+$string['cdo:buttoncolor:secondary'] = 'Secondary (Grau)';
+$string['cdo:buttoncolor:success'] = 'Success (Grün)';
+$string['cdo:buttoncolor:warning'] = 'Warning (Gelb)';
+$string['cdo:buttoncolor:danger'] = 'Danger (Rot)';
 
 // Badges.
 $string['badge:pro'] = $badgepro;
@@ -220,6 +233,7 @@ $string['booking:reducedoptionform1'] = "1. Reduziertes Buchungsoptionsformular 
 $string['booking:reducedoptionform2'] = "2. Reduziertes Buchungsoptionsformular für Kursbereich.";
 $string['booking:reducedoptionform3'] = "3. Reduziertes Buchungsoptionsformular für Kursbereich.";
 $string['booking:reducedoptionform4'] = "4. Reduziertes Buchungsoptionsformular für Kursbereich.";
+$string['booking:reducedoptionform5'] = "5. Reduziertes Buchungsoptionsformular für Kursbereich.";
 
 $string['manageoptiontemplates'] = 'Kann Buchungsoptionsvorlagen erstellen';
 $string['bookingfull'] = 'Ausgebucht';
@@ -232,7 +246,7 @@ $string['datenotset'] = 'Datum nicht angegeben';
 $string['daystonotify'] = 'Wie viele Tage vor Kursbeginn soll an die Teilnehmenden eine Benachrichtigung gesendet werden?';
 $string['daystonotify_help'] = "Funktioniert nur, wenn ein Beginn- und Enddatum für die Buchungsoption gesetzt sind. Wenn Sie 0 eingeben, wird die Benachrichtigung deaktiviert.";
 $string['daystonotify2'] = 'Zweite Teilnehmerbenachrichtigung vor Veranstaltungsbeginn';
-$string['daystonotifyteachers'] = 'Wie viele Tage vor Kursbeginn soll an die Trainer:innen eine Benachrichtigung gesendet werden? ' . $badgepro;
+$string['daystonotifyteachers'] = 'Wie viele Tage vor Kursbeginn soll an die Trainer:innen eine Benachrichtigung gesendet werden?';
 $string['bookinganswer_cancelled'] = 'Buchungsoption von/für Nutzer:in storniert';
 
 // Booking option events.
@@ -241,11 +255,13 @@ $string['bookingoption_booked'] = 'Buchungsoption durchgeführt';
 $string['bookingoption_freetobookagain'] = 'Wieder freie Plätze';
 $string['bookingoption_completed'] = 'Buchungsoption abgeschlossen';
 $string['bookingoption_created'] = 'Buchungsoption angelegt';
-$string['bookingoption_updated'] = 'Buchungsoption upgedatet';
+$string['bookingoption_updated'] = 'Buchungsoption aktualisiert';
 $string['bookingoption_deleted'] = 'Buchungsoption gelöscht';
 $string['bookinginstance_updated'] = 'Buchungsinstanz upgedated';
 $string['records_imported'] = 'Buchungsoptionen importiert via CSV';
 $string['records_imported_description'] = '{$a} Buchungsoptionen importiert via CSV';
+$string['bookingoption_confirmed'] = 'Buchungsoption bestätigt';
+$string['bookingoptionconfirmed:description'] = 'NutzerIn mit ID {$a->userid} hat NutzerIn mit ID {$a->relateduserid} für die Buchung der Option Nr. {$a->objectid} freigeschaltet.';
 
 $string['eventreport_viewed'] = 'Report angesehen';
 $string['eventuserprofilefields_updated'] = 'Nutzerprofil aktualisiert';
@@ -399,7 +415,7 @@ $string['optiondates_teacher_added'] = 'Vertretung wurde eingetragen';
 $string['optiondates_teacher_deleted'] = 'Trainer:in wurde aus Trainingsjournal entfernt';
 $string['booking_failed'] = 'Buchung gescheitert';
 $string['booking_afteractionsfailed'] = 'Actions nach der Buchung gescheitert';
-$string['rest_script_succes'] = 'Rest Skript Ausführung';
+$string['rest_script_success'] = 'Rest Skript Ausführung';
 $string['rest_script_failed'] = 'Skript konnte nicht ausgeführt werden';
 $string['rest_script_executed'] = 'Nach dem Rest-Skript Aufruf';
 
@@ -425,7 +441,7 @@ $string['bookingsaved'] = '<b>Vielen Dank für Ihre Buchung!</b> <br /> Ihre Buc
 $string['booknow'] = 'Jetzt buchen';
 $string['bookotherusers'] = 'Buchung für andere Nutzer:innen durchführen';
 $string['cancelbooking'] = 'Buchung stornieren';
-$string['generateprolicense'] = 'Generiere Pro Lizens';
+$string['executerestscript'] = 'REST script ausführen';
 $string['closed'] = 'Buchung beendet';
 $string['confirmbookingoffollowing'] = 'Bitte bestätigen Sie folgende Buchung';
 $string['confirmdeletebookingoption'] = 'Möchten Sie diese Buchung wirklich löschen?';
@@ -496,7 +512,7 @@ $string['cancelallusers'] = 'Alle gebuchten Teilnehmer:innen stornieren';
 // Mod_form.
 $string['signinlogoheader'] = 'Logo in der Kopfzeile auf der Unterschriftenliste';
 $string['signinlogofooter'] = 'Logo in der Fußzeile auf der Unterschriftenliste';
-$string['textdependingonstatus'] = 'Statusabhängiger Buchungsoptionstext';
+$string['textdependingonstatus'] = 'Statusabhängiger Buchungsoptionstext ';
 $string['beforebookedtext'] = 'Vor der Buchung';
 $string['beforecompletedtext'] = 'Nach der Buchung';
 $string['beforecompletedtext_help'] = 'Text der vor dem Abschluss angezeigt wird';
@@ -570,16 +586,23 @@ $string['notes'] = 'Anmerkungen zur Buchung';
 $string['uploadheaderimages'] = 'Header-Bilder für Buchungsoptionen';
 $string['bookingimagescustomfield'] = 'Benutzerdefiniertes Feld von Buchungsoptionen, mit dem die Header-Bilder gematcht werden';
 $string['bookingimages'] = 'Header-Bilder für Buchungsoptionen hochladen - diese müssen exakt den selben Namen haben, wie der jeweilige Wert, den das ausgewählte benutzerdefinierte Feld in der jeweiligen Buchungsoption hat.';
-$string['emailsettings'] = 'E-Mail-Einstellungen';
+$string['emailsettings'] = 'E-Mail-Einstellungen ' . $badgedepr;
+$string['helptext:emailsettings'] = '<div class="alert alert-warning style="margin-left: 200px;">
+<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+<span>&nbsp;Veraltete Funktion, bitte migrieren Sie ihre Vorlagen und Einstellungen zu <a href="{$a}">Buchungs Regeln</a></span>!
+</div>';
 
 // Mail templates (Instanz-spezifisch oder global).
 $string['mailtemplatesadvanced'] = 'Erweiterte Einstelllungen für E-Mail-Vorlagen aktivieren';
-$string['mailtemplatessource'] = 'Quelle von E-Mail-Vorlagen festlegen ' . $badgepro;
+$string['mailtemplatessource'] = 'Quelle von E-Mail-Vorlagen festlegen';
 $string['mailtemplatessource_help'] = '<b>Achtung:</b> Wenn Sie globale E-Mail-Vorlagen wählen, werden die Instanz-spezifischen
 E-Mail-Vorlagen nicht verwendet, sondern die E-Mail-Vorlagen, die in den Einstellungen des Buchungs-Plugins angelegt
 wurden. <br><br>Bitte stellen Sie sicher, dass zu allen E-Mail-Typen eine Vorlage vorhanden ist.';
 $string['mailtemplatesinstance'] = 'E-Mail-Vorlagen aus dieser Buchungsinstanz verwenden (Standard)';
 $string['mailtemplatesglobal'] = 'Globale E-Mail-Vorlagen aus den Plugin-Einstellungen verwenden';
+$string['uselegacymailtemplates'] = 'Weiterhin veraltete E-Mail-Vorlagen verwenden';
+$string['uselegacymailtemplates_desc'] = 'Diese Funktion ist veraltet und wird in naher Zukunft entfernt. Wir empfehlen Ihnen dringend, Ihre Vorlagen und Einstellungen zu <a href="{$a}">Buchungs Regeln</a> zu migrieren.
+<span class="text-danger"><b>Vorsicht:</b> Wenn Sie dieses Kästchen deaktivieren, werden Ihre E-Mail-Vorlagen in Ihren Buchungsinstanzen nicht mehr angezeigt und verwendet.</span>';
 
 $string['feedbackurl_help'] = 'Link zu einem Feedback-Formular, das an Teilnehmer:innen gesendet werden soll.
  Verwenden Sie in E-Mails den Platzhalter <b>{pollurl}</b>.';
@@ -604,6 +627,7 @@ $string['helptext:placeholders'] = '<div class="alert alert-info" style="margin-
 $string['bookingdetails'] = "Buchungsdetails";
 $string['gotobookingoption'] = "Buchungslink";
 $string['bookinglink'] = "Buchungsinstanzlink";
+$string['changes'] = "Änderungen";
 $string['coursecalendarurl'] = "Kurskalenderlink";
 $string['courselink'] = "Kurslink";
 $string['duration'] = "Dauer";
@@ -633,6 +657,9 @@ $string['duedate'] = 'Fälligkeitsdatum';
 $string['numberofinstallment'] = 'Anzahl Ratenzahlung';
 $string['numberofinstallmentstring'] = '{$a}. Ratenzahlung';
 $string['installmentprice'] = 'Ratenzahlungspreis';
+$string['sthwentwrongwithplaceholder'] = ''; // Returnvalue for failed placeholders. {$a} returns classname.
+
+$string['userinfosasstring'] = '{$a->firstname} {$a->lastname} (ID:{$a->id})';
 
 $string['configurefields'] = 'Spalten und Felder anpassen';
 $string['manageresponsespagefields'] = 'Buchungen verwalten - Seite';
@@ -898,7 +925,7 @@ Um eine Übersicht über alle Buchungen zu erhalten, klicken Sie auf den folgend
 
 Hier geht\'s zum Kurs:  {$a->courselink}
 ';
-$string['notifyemailteachers'] = 'Trainer:innen-Benachrichtigung vor dem Beginn ' . $badgepro;
+$string['notifyemailteachers'] = 'Trainer:innen-Benachrichtigung vor dem Beginn';
 
 $string['userleavesubject'] = 'Sie wurden erfolgreich abgemeldet von: {$a->title}';
 $string['userleavemessage'] = 'Hallo {$a->participant},
@@ -960,6 +987,7 @@ Link zur Umfrage: <a href="{pollurlteachers}" target="_blank">{pollurlteachers}<
 
 $string['reportremindersubject'] = 'Erinnerung: Ihr gebuchter Kurs';
 $string['reportremindermessage'] = '{$a->bookingdetails}';
+$string['changesinentity'] = '{$a->name} (ID: {$a->id})';
 
 // Report.php and bookingmanagusers.class.php.
 $string['allmailssend'] = 'Alle Benachrichtigungen wurden erfolgreich versandt!';
@@ -1018,6 +1046,9 @@ $string['signature'] = 'Unterschrift';
 $string['userssucesfullygetnewpresencestatus'] = 'Anwesenheitsstatus für ausgewählte Nutzer:innen erfolgreich aktualisiert';
 $string['copytotemplate'] = 'Buchungsoption als Vorlage speichern';
 $string['copytotemplatesucesfull'] = 'Buchungsoption erfolgreich als Vorlage gespeichert';
+$string['successfullybooked'] = 'Erfolgreich gebucht';
+$string['indexnumber'] = 'Nummerierung';
+$string['bookingdate'] = 'Buchungsdatum';
 
 // Send message.
 $string['booking:cansendmessages'] = 'Kann Nachrichten schicken.';
@@ -1142,19 +1173,19 @@ $string['bookingdebugmode'] = 'Booking-Debug-Modus';
 $string['bookingdebugmode_desc'] = 'Der Booking-Debug-Modus sollte nur von Entwickler:innen aktiviert werden.';
 $string['globalcurrency'] = 'Währung';
 $string['globalcurrencydesc'] = 'Wählen Sie die Währung für Preise von Buchungsoptionen aus';
-$string['globalmailtemplates'] = 'Globale Mailvorlagen ' . $badgepro;
+$string['globalmailtemplates'] = 'Veraltete Mailvorlagen ' . $badgedepr;
 $string['globalmailtemplates_desc'] = 'Nach der Aktivierung können Sie in den Einstellungen jeder beliebigen Buchungsinstanz die Quelle der Mailvorlagen auf global setzen.';
-$string['globalbookedtext'] = 'Buchungsbestätigung (globale Vorlage)';
-$string['globalwaitingtext'] = 'Wartelistenbestätigung (globale Vorlage)';
-$string['globalnotifyemail'] = 'Teilnehmer:innen-Benachrichtigung vor dem Beginn (globale Vorlage)';
-$string['globalnotifyemailteachers'] = 'Trainer:innen-Benachrichtigung vor dem Beginn (globale Vorlage)';
-$string['globalstatuschangetext'] = 'Benachrichtigung über Statusänderung (globale Vorlage)';
-$string['globaluserleave'] = 'Nutzer/in hat Buchung storniert (globale Vorlage)';
-$string['globaldeletedtext'] = 'Stornierungsbenachrichtigung (globale Vorlage)';
-$string['globalbookingchangedtext'] = 'Benachrichtigung bei Änderungen an der Buchung (geht nur an User, die bereits gebucht haben). Verwenden Sie den Platzhalter {changes} um die Änderungen anzuzeigen. 0 eingeben um Änderungsbenachrichtigungen auszuschalten. (Globale Vorlage)';
-$string['globalpollurltext'] = 'Umfragelink versenden (globale Vorlage)';
-$string['globalpollurlteacherstext'] = 'Link zum Absender der Umfrage für Trainer:innen (globale Vorlage)';
-$string['globalactivitycompletiontext'] = 'Nachricht an Nutzer/in, wenn Buchungsoption abgeschlossen ist (globale Vorlage)';
+$string['globalbookedtext'] = 'Buchungsbestätigung (globale Vorlage) ' . $badgedepr;
+$string['globalwaitingtext'] = 'Wartelistenbestätigung (globale Vorlage) ' . $badgedepr;
+$string['globalnotifyemail'] = 'Teilnehmer:innen-Benachrichtigung vor dem Beginn (globale Vorlage) ' . $badgedepr;
+$string['globalnotifyemailteachers'] = 'Trainer:innen-Benachrichtigung vor dem Beginn (globale Vorlage) ' . $badgedepr;
+$string['globalstatuschangetext'] = 'Benachrichtigung über Statusänderung (globale Vorlage) ' . $badgedepr;
+$string['globaluserleave'] = 'Nutzer/in hat Buchung storniert (globale Vorlage) ' . $badgedepr;
+$string['globaldeletedtext'] = 'Stornierungsbenachrichtigung (globale Vorlage) ' . $badgedepr;
+$string['globalbookingchangedtext'] = 'Benachrichtigung bei Änderungen an der Buchung (geht nur an User, die bereits gebucht haben). Verwenden Sie den Platzhalter {changes} um die Änderungen anzuzeigen. 0 eingeben um Änderungsbenachrichtigungen auszuschalten. (Globale Vorlage) ' . $badgedepr;
+$string['globalpollurltext'] = 'Umfragelink versenden (globale Vorlage) ' . $badgedepr;
+$string['globalpollurlteacherstext'] = 'Link zum Absender der Umfrage für Trainer:innen (globale Vorlage) ' . $badgedepr;
+$string['globalactivitycompletiontext'] = 'Nachricht an Nutzer/in, wenn Buchungsoption abgeschlossen ist (globale Vorlage) ' . $badgedepr;
 $string['licensekeycfg'] = 'PRO-Version aktivieren';
 $string['licensekeycfgdesc'] = 'Mit einer PRO-Lizenz können Sie so viele Buchungsvorlagen erstellen wie Sie wollen und PRO-Features wie z.B. globale Mailvorlagen, Info-Texte für Wartelistenplätze und Benachrichtigungen für Trainer:innen nutzen.';
 $string['licensekey'] = 'PRO-Lizenz-Schlüssel';
@@ -1698,6 +1729,7 @@ $string['easy_availability_previouslybooked'] = 'Einfache bereits gebuchte Vorau
 $string['invisible'] = 'Unsichtbar';
 $string['annotation'] = 'Interne Anmerkung';
 $string['courseid'] = 'Kurs, in den eingeschrieben wird';
+$string['entitiesfieldname'] = 'Ort(e)';
 $string['entities'] = 'Orte mit Entities Plugin auswählen';
 $string['shoppingcart'] = 'Zahlungsoptionen mit Shopping Cart Plugin definieren';
 $string['optiondates'] = 'Termine';
@@ -2097,6 +2129,8 @@ $string['rule_daysbefore_desc'] = 'Wählen Sie die Anzahl der Tage in Bezug zu e
 $string['rule_react_on_event'] = 'Reagiere auf Ereignis';
 $string['rule_react_on_event_desc'] = 'Wählen Sie ein Ereignis aus, durch das die Regel ausgelöst werden soll.<br>
 <b>Tipp:</b> Verwenden Sie den Platzhalter <code>{eventdescription}</code> um eine Beschreibung des Ereignisses anzuzeigen.';
+$string['rule_react_on_event_after_completion'] = "Anzahl der Tage nach dem Ende der Buchungsoption, in denen die Regel weiterhin gilt";
+$string['rule_react_on_event_after_completion_help'] = "Feld leer lassen oder auf 0 setzen, wenn die Aktion nach dem Ende der Buchungsoption nicht mehr durchgeführt gelten soll. Sie können negative Zahlen eingeben, damit die Regel bereits vor dem angebenen Ende ausgesetzt wird.";
 
 $string['error:nofieldchosen'] = 'Sie müssen ein Feld auswählen.';
 $string['error:mustnotbeempty'] = 'Darf nicht leer sein.';
@@ -2266,6 +2300,7 @@ $string['boactions'] = 'Aktionen nach der Buchung ' . $badgepro . ' ' . $badgeex
 $string['onlyaddactionsonsavedoption'] = "Aktionen nach der Buchung könnnen nur zu schon gespeicherte Optionen hinzugefügt werden.";
 $string['boactionname'] = "Name der Aktion";
 $string['bonumberofdays'] = "Anzahl der tage";
+$string['bosecrettoken'] = "SSicherheits-Token";
 $string['bopathtoscript'] = "Pfad zur REST-Skript";
 $string['showboactions'] = "Aktiviere Aktionen nach der Buchung";
 $string['boactionselectuserprofilefield'] = "Wähle Profilfeld";
@@ -2296,6 +2331,8 @@ $string['mod/booking:reducedoptionform2'] = 'Buchungsoption reduziert 2';
 $string['mod/booking:reducedoptionform3'] = 'Buchungsoption reduziert 3';
 $string['mod/booking:reducedoptionform4'] = 'Buchungsoption reduziert 4';
 $string['mod/booking:reducedoptionform5'] = 'Buchungsoption reduziert 5';
+$string['booking:editoptionformconfig'] = 'Buchungsoptionsfelder bearbeiten';
+$string['booking:bookanyone'] = 'Darf alle Nutzer:innen buchen';
 
 // Vue strings.
 $string['vue_dashboard_checked'] = 'Default Ausgewählt';
@@ -2356,3 +2393,5 @@ $string['mobile_field_required'] = 'Dieses Feld ist erforderlich';
 $string['daysbefore'] = '{$a} Tag(e) davor';
 $string['daysafter'] = '{$a} Tag(e) danach';
 $string['sameday'] = 'Selber Tag';
+
+$string['reportfields'] = 'Felder reportieren';

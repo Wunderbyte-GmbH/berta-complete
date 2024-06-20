@@ -851,7 +851,7 @@ class booking_option {
             $noofuserstobook = $settings->maxanswers - count($ba->usersonlist) - count($ba->usersreserved);
 
             // We want to enrol people who have been waiting longer first.
-            usort($usersonwaitinglist, fn($a, $b) => $a->timecreated < $b->timecreated ? -1 : 1);
+            usort($usersonwaitinglist, fn($a, $b) => $a->timemodified < $b->timemodified ? -1 : 1);
             if ($noofuserstobook > 0 && !empty($ba->usersonwaitinglist)) {
                 while ($noofuserstobook > 0) {
                     $noofuserstobook--; // Decrement.
@@ -875,7 +875,7 @@ class booking_option {
 
             // 2. Update and inform users who have been put on the waiting list because of changed limits.
             $usersonlist = array_merge($ba->usersonlist, $ba->usersreserved);
-            usort($usersonlist, fn($a, $b) => $a->timecreated < $b->timecreated ? -1 : 1);
+            usort($usersonlist, fn($a, $b) => $a->timemodified < $b->timemodified ? -1 : 1);
             while (count($usersonlist) > $settings->maxanswers) {
                 $currentanswer = array_pop($usersonlist);
                 array_push($usersonwaitinglist, $currentanswer);
@@ -1353,6 +1353,11 @@ class booking_option {
      */
     public function send_confirm_message(stdClass $user, bool $optionchanged = false, ?array $changes = null) {
 
+        if (!get_config('booking', 'uselegacymailtemplates')) {
+            // Check if this deprecated method should really still be used.
+            return false;
+        }
+
         global $DB;
 
         $user = $DB->get_record('user', ['id' => $user->id]);
@@ -1400,8 +1405,9 @@ class booking_option {
      * @param bool $manual
      * @param int $roleid
      * @param bool $isteacher true for teacher enrolments
+     * @param int $courseid can override given courseid.
      */
-    public function enrol_user(int $userid, bool $manual = false, int $roleid = 0, bool $isteacher = false) {
+    public function enrol_user(int $userid, bool $manual = false, int $roleid = 0, bool $isteacher = false, int $courseid = 0) {
         global $DB;
 
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_bookingid($this->bookingid);
@@ -1410,7 +1416,8 @@ class booking_option {
                 return; // Autoenrol not enabled.
             }
         }
-        if (empty($this->option->courseid)) {
+        $courseid = empty($courseid) ? $this->option->courseid : $courseid;
+        if (empty($courseid)) {
             return; // No course specified.
         }
 
@@ -1422,7 +1429,7 @@ class booking_option {
             return; // No manual enrolment plugin.
         }
         if (!$instances = $DB->get_records('enrol',
-                        ['enrol' => 'manual', 'courseid' => $this->option->courseid, 'status' => ENROL_INSTANCE_ENABLED],
+                        ['enrol' => 'manual', 'courseid' => $courseid, 'status' => ENROL_INSTANCE_ENABLED],
                         'sortorder,id ASC')) {
             return; // No manual enrolment instance on this course.
         }
@@ -1451,7 +1458,7 @@ class booking_option {
             // TODO: Track enrolment status in booking_answers. It makes no sense to track it in booking_options.
 
             if ($bookingsettings->addtogroup == 1) {
-                $groups = groups_get_all_groups($this->option->courseid);
+                $groups = groups_get_all_groups($courseid);
                 if (!is_null($this->option->groupid) && ($this->option->groupid > 0) &&
                         in_array($this->option->groupid, $groups)) {
                     groups_add_member($this->option->groupid, $userid);
@@ -3475,7 +3482,7 @@ class booking_option {
         }
 
         $newoption = new stdClass();
-        fields_info::prepare_save_fields($data, $newoption, $updateparam);
+        $feedbackformchanges = fields_info::prepare_save_fields($data, $newoption, $updateparam);
 
         if (!empty($newoption->id)) {
             // Save the changes to DB.
@@ -3492,7 +3499,7 @@ class booking_option {
             $data->id = $optionid;
         }
 
-        fields_info::save_fields_post($data, $newoption, $updateparam);
+        $feedbackpostchanges = fields_info::save_fields_post($data, $newoption, $updateparam);
 
         // We need to keep the previous values (before purging caches).
         $oldsettings = singleton_service::get_instance_of_booking_option_settings($optionid);
@@ -3535,9 +3542,14 @@ class booking_option {
         // Change notification will be sent (if active).
         // Action logs will be stored ("Shwo recent updates..." link on bottom of option form).
         $bu = new booking_utils();
-        if ($changes = $bu->booking_option_get_changes($originaloption, $newoption)) {
 
-            $cmid = $originaloption->cmid ?? 0;
+        // New way of handling changes.
+        $feedbackpost = array_filter($feedbackpostchanges, function($value) {
+            return !empty($value);
+        });
+        $changes = array_merge($feedbackpost, $feedbackformchanges);
+        $cmid = $originaloption->cmid ?? 0;
+        if (!empty($changes)) {
 
             // If we have no cmid, it's most possibly a template.
             if (!empty($cmid) && $newoption->bookingid != 0) {
@@ -3548,6 +3560,12 @@ class booking_option {
                 }
                 $bu->react_on_changes($cmid, $context, $newoption->id, $changes);
             }
+        }
+        // Make sure, users are enroled to booking option when course is added after users already booked.
+        $bo = singleton_service::get_instance_of_booking_option($cmid, $newoption->id);
+        $ba = singleton_service::get_instance_of_booking_answers($bo->settings);
+        foreach ($ba->usersonlist as $bookeduser) {
+            $bo->enrol_user_coursestart($bookeduser->id);
         }
 
         return $newoption->id;

@@ -29,12 +29,12 @@ Feature: Edit booking's organizer, info and semester settings as a teacher or ad
     Given I am on the "My booking" Activity page logged in as teacher1
     Then I follow "Settings"
     And I set the following fields to these values:
-      | pollurl | https://example.com |
-    And I set the field "Send confirmation e-mail" to "Yes"
-    And I set the following fields to these values:
-      | Booking confirmation          | {bookingdetails} - Detailed summary of the booking option (incl. sessions und link to booking option) |
-      | Max current bookings per user | 30                                                                                                    |
+      | Booking instance name         | BookingUpd          |
+      | pollurl                       | https://example.com |
+      | Max current bookings per user | 30 |
     And I press "Save and display"
+    And I wait until the page is ready
+    And I should see "BookingUpd"
 
   @javascript
   Scenario: Settings - show organizer
@@ -166,3 +166,26 @@ Feature: Edit booking's organizer, info and semester settings as a teacher or ad
       | Do not show Wunderbyte logo und link | 1 |
     And I am on the "My booking" Activity page
     Then I should not see "Booking module created by Wunderbyte GmbH" in the "#region-main" "css_element"
+
+  @javascript
+  Scenario: Booking settings: control deprecated email templates
+    Given the following config values are set as admin:
+      | config                 | value | plugin      |
+      | uselegacymailtemplates | 1     | mod_booking |
+    And I am on the "My booking" Activity page logged in as admin
+    And I follow "Settings"
+    And I wait until the page is ready
+    And I should see "E-mail settings" in the "#id_emailsettings" "css_element"
+    And I should see "Deprecated" in the "#id_emailsettings" "css_element"
+    And I expand all fieldsets
+    And I should see "Booking confirmation" in the "#id_emailsettings" "css_element"
+    And I should see "Teacher notification before start" in the "#id_emailsettings" "css_element"
+    And I should see "Status change message" in the "#id_emailsettings" "css_element"
+    ## The only way to remove setting for some reason
+    And I visit "/admin/category.php?category=modbookingfolder"
+    And I set the field "Still use legacy mail templates" to ""
+    And I press "Save"
+    And I am on the "My booking" Activity page
+    And I follow "Settings"
+    And I wait until the page is ready
+    And "#id_emailsettings" "css_element" should not exist

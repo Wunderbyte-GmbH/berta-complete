@@ -208,6 +208,32 @@ if ($ADMIN->fulltree) {
             get_string('maxperuserdontcountnoshow_desc', 'mod_booking'), 1));
 
     $settings->add(
+        new admin_setting_configcheckbox('booking/displayloginbuttonforbookingoptions',
+            get_string('displayloginbuttonforbookingoptions', 'mod_booking'),
+            get_string('displayloginbuttonforbookingoptions_desc', 'mod_booking'), 1));
+
+    $coloroptions = [
+        'primary' => get_string('cdo:buttoncolor:primary', 'mod_booking'),
+        'secondary' => get_string('cdo:buttoncolor:secondary', 'mod_booking'),
+        'success' => get_string('cdo:buttoncolor:success', 'mod_booking'),
+        'warning' => get_string('cdo:buttoncolor:warning', 'mod_booking'),
+        'danger' => get_string('cdo:buttoncolor:danger', 'mod_booking'),
+    ];
+
+    $settings->add(
+        new admin_setting_configselect('booking/loginbuttonforbookingoptionscoloroptions',
+                get_string('loginbuttonforbookingoptionscoloroptions', 'mod_booking'),
+                get_string('loginbuttonforbookingoptionscoloroptions_desc', 'mod_booking'),
+                'primary',
+                $coloroptions));
+
+    $settings->add(
+        new admin_setting_configcheckbox('booking/linktomoodlecourseonbookedbutton',
+            get_string('linktomoodlecourseonbookedbutton', 'mod_booking'),
+            get_string('linktomoodlecourseonbookedbutton', 'mod_booking'), 1));
+
+
+    $settings->add(
         new admin_setting_configcheckbox('booking/bookingdebugmode',
             get_string('bookingdebugmode', 'mod_booking'),
             get_string('bookingdebugmode_desc', 'mod_booking'), 0));
@@ -781,40 +807,46 @@ if ($ADMIN->fulltree) {
         new admin_setting_heading('globalmailtemplates_heading',
             get_string('globalmailtemplates', 'mod_booking'),
             get_string('globalmailtemplates_desc', 'mod_booking')));
-    if ($proversion) {
-        $settings->add(new admin_setting_confightmleditor('booking/globalbookedtext',
-            get_string('globalbookedtext', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalwaitingtext',
-            get_string('globalwaitingtext', 'booking'), '', ''));
+    $url = new moodle_url('/mod/booking/edit_rules.php');
+    $linktorules = $url->out();
+    $settings->add(new admin_setting_configcheckbox('booking/uselegacymailtemplates',
+        get_string('uselegacymailtemplates', 'mod_booking'),
+        get_string('uselegacymailtemplates_desc', 'mod_booking', $linktorules),
+        1)
+        );
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalnotifyemail',
-            get_string('globalnotifyemail', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalbookedtext',
+        get_string('globalbookedtext', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalnotifyemailteachers',
-            get_string('globalnotifyemailteachers', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalwaitingtext',
+        get_string('globalwaitingtext', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalstatuschangetext',
-            get_string('globalstatuschangetext', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalnotifyemail',
+        get_string('globalnotifyemail', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globaluserleave',
-            get_string('globaluserleave', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalnotifyemailteachers',
+        get_string('globalnotifyemailteachers', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globaldeletedtext',
-            get_string('globaldeletedtext', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalstatuschangetext',
+        get_string('globalstatuschangetext', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalbookingchangedtext',
-            get_string('globalbookingchangedtext', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globaluserleave',
+        get_string('globaluserleave', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalpollurltext',
-            get_string('globalpollurltext', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globaldeletedtext',
+        get_string('globaldeletedtext', 'booking'), '', ''));
 
-        $settings->add(new admin_setting_confightmleditor('booking/globalpollurlteacherstext',
-            get_string('globalpollurlteacherstext', 'booking'), '', ''));
+    $settings->add(new admin_setting_confightmleditor('booking/globalbookingchangedtext',
+        get_string('globalbookingchangedtext', 'booking'), '', ''));
+
+    $settings->add(new admin_setting_confightmleditor('booking/globalpollurltext',
+        get_string('globalpollurltext', 'booking'), '', ''));
+
+    $settings->add(new admin_setting_confightmleditor('booking/globalpollurlteacherstext',
+        get_string('globalpollurlteacherstext', 'booking'), '', ''));
 
         // TODO: globalactivitycompletiontext is currently not implemented because activitycompletiontext isn't either.
-
-    }
 }
 
 $settings = null;

@@ -522,9 +522,9 @@ class dates {
      *
      * @param stdClass $formdata
      * @param stdClass $option
-     * @return void
+     * @return array // Array of changes.
      */
-    public static function save_optiondates_from_form(stdClass $formdata, stdClass &$option) {
+    public static function save_optiondates_from_form(stdClass $formdata, stdClass &$option): array {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($option->id);
         list($newoptiondates, $highesindex) = self::get_list_of_submitted_dates((array)$formdata);
@@ -558,21 +558,30 @@ class dates {
         }
 
         $datestodelete = array_merge($olddates, $datestodelete);
+        if (class_exists('local_entities\entitiesrelation_handler')) {
+            $handler = new entitiesrelation_handler('mod_booking', 'optiondate');
+        }
 
+        $memory = [];
         foreach ($datestodelete as $date) {
             $date = (array)$date;
 
             if (!empty($date['optiondateid'])) {
 
                 optiondate::delete($date['optiondateid']);
-
+                // For tracking of changes, store infos about old optiondates including entities.
+                if (isset($date['optiondateid']) && isset($handler) &&
+                    $data = $handler->get_instance_data($date['optiondateid'])) {
+                    $date['entityid'] = $data->id ?? 0;
+                    $date['entityarea'] = $data->area ?? '';
+                }
             }
+                $memory[] = $date;
         }
+        $memory = array_merge($memory, $datestoupdate);
 
         // Saving and updating uses the same routines anyway.
-
         $datestosave = array_merge($datestosave, $datestoupdate);
-
         foreach ($datestosave as $date) {
             $optiondate = optiondate::save(
                 (int)$date['optiondateid'] ?? 0,
@@ -587,6 +596,22 @@ class dates {
                 (int)$date['entityid'] ?? 0,
                 $date['customfields'] ?? []);
         }
+
+        // Checking for changes.
+        if ((empty($memory) && empty($datestosave))
+            || in_array('dates', MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING)) {
+            return [];
+        }
+
+        $changes = [
+            'changes' => [
+                'info' => get_string('dates', 'booking') . get_string('changeinfochanged', 'booking'),
+                'fieldname' => 'dates',
+                'oldvalue' => $memory,
+                'newvalue' => $datestosave,
+            ],
+        ];
+        return $changes;
     }
 
     /**

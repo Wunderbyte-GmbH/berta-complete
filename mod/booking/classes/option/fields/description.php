@@ -27,6 +27,7 @@ namespace mod_booking\option\fields;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields_info;
 use mod_booking\option\field_base;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -92,10 +93,13 @@ class description extends field_base {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = null): array {
 
         $key = fields_info::get_class_name(static::class);
         $value = $formdata->{$key} ?? null;
+
+        $instance = new description();
+        $changes = $instance->check_for_changes($formdata, $instance, null, $key, $value);
 
         if (!empty($value)) {
             // The form comes in the form of an array.
@@ -112,7 +116,7 @@ class description extends field_base {
         }
 
         // We can return an warning message here.
-        return '';
+        return $changes;
     }
 
     /**

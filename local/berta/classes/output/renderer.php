@@ -15,6 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace local_berta\output;
+
+use mod_booking\output\bookingoption_description;
+use mod_booking\output\renderer as OutputRenderer;
 use plugin_renderer_base;
 
 
@@ -26,8 +29,20 @@ use plugin_renderer_base;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class renderer extends plugin_renderer_base {
+    /**
+     * Function to print booking option single view on optionview.php
+     * @param bookingoption_description $data
+     * @return string
+     */
+    public function render_bookingoption_description_view(bookingoption_description $data) {
+        $o = '';
+        $data = $data->export_for_template($this);
+        $o .= $this->render_from_template('local_berta/bookingoption_description_view', $data);
+        return $o;
+    }
 
-    /** Function to render the dashboard
+    /**
+     * Function to render the dashboard
      * @param dashboard $data
      * @return string
      */
@@ -38,7 +53,8 @@ class renderer extends plugin_renderer_base {
         return $o;
     }
 
-    /** Function to render the card_content_stats1
+    /**
+     * Function to render the card_content_stats1
      * @param mixed $data
      * @return string
      */
@@ -78,6 +94,18 @@ class renderer extends plugin_renderer_base {
         $templatedata = $data->export_for_template($this);
         $templatedata['showmaxanswers'] = $data->showmaxanswers;
         $o .= $this->render_from_template('local_berta/col_availableplaces', $templatedata);
+        return $o;
+    }
+
+    /**
+     * Render function.
+     * @param object $data
+     * @return string
+     */
+    public function render_col_coursestarttime($data) {
+        $o = '';
+        $data = $data->export_for_template($this);
+        $o .= $this->render_from_template('local_berta/col_coursestarttime', $data);
         return $o;
     }
 

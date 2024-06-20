@@ -26,7 +26,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'News Manager';
-$string['news_manager'] = 'News Manager';
+$string['wb_news'] = 'News Manager';
 $string['manage'] = 'Manage';
 $string['delete'] = 'Delete';
 $string['form_submit'] = 'Submit';
@@ -41,5 +41,47 @@ $string['news_updated'] = 'News entry update';
 $string['news_created'] = 'News entry created';
 $string['news_deleted'] = 'News entry deleted';
 
-$string['news_manager:manage'] = "Manage news";
-$string['news_manager:view'] = "View News";
+$string['wb_news:manage'] = "Manage news";
+$string['wb_news:view'] = "View News";
+
+$string['addnewnews'] = 'Add news';
+$string['editnewnews'] = 'Edit news';
+$string['deletenewnews'] = 'Delete news';
+
+$string['addinstance'] = 'Add instance';
+$string['editinstance'] = 'Edit instance';
+$string['deleteinstance'] = 'Delete instance';
+
+$string['addeditform'] = 'Add or edit entry';
+$string['instanceid'] = 'Instance ID';
+$string['activenews'] = 'Active on first loading';
+$string['icon'] = 'Icon';
+$string['sortorder'] = 'Lower comes first';
+$string['bgimage'] = 'Main Image';
+$string['bgcolor'] = 'Background color as hex';
+$string['novalidhexcolor'] = 'This is not a valid hex color';
+$string['imagemode'] = 'Image mode';
+$string['useasbgimage'] = 'Use as background image';
+$string['useasheaderimage'] = 'Use as header image';
+$string['icon'] = 'Icon';
+$string['userid'] = 'User ID';
+$string['headline'] = 'Headline';
+$string['subheadline'] = 'Subheadline';
+$string['description'] = 'Description';
+$string['btnlink'] = 'Button Link';
+$string['btntext'] = 'Button Text';
+$string['lightmode'] = 'Light Mode';
+$string['cssclasses'] = 'Additionial CSS classes';
+
+$string['template'] = 'Template';
+$string['name'] = 'Name';
+$string['masonrytemplate'] = 'Masonry template';
+$string['slidertemplate'] = 'Slider template';
+$string['tabstemplate'] = 'Tabs template';
+$string['gridtemplate'] = 'Grid template';
+
+// Errors.
+$string['interror'] = 'Only full numbers are allowed.';
+
+// Shortcodes.
+$string['wbnewslist'] = 'One or all instances of news';

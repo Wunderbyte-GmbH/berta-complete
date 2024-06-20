@@ -89,13 +89,18 @@ class maxoverbooking extends field_base {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = null): string {
+        $returnvalue = null): array {
 
         if (!empty($formdata->maxoverbooking)) {
             $newoption->limitanswers = 1;
         }
 
-        return parent::prepare_save_field($formdata, $newoption, $updateparam, 0);
+        parent::prepare_save_field($formdata, $newoption, $updateparam, 0);
+
+        $instance = new maxoverbooking();
+        $changes = $instance->check_for_changes($formdata, $instance);
+
+        return $changes;
     }
 
     /**

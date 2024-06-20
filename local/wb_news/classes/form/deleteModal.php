@@ -21,7 +21,8 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace local_emis\form;
+namespace local_wb_news\form;
+use local_wb_news\news;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -31,8 +32,7 @@ require_once("$CFG->libdir/formslib.php");
 use context;
 use core_form\dynamic_form;
 use moodle_url;
-use stdClass;
-use local_wb_news\news;
+use context_system;
 
 /**
  * Add file form.
@@ -40,7 +40,7 @@ use local_wb_news\news;
  * @author Thomas Winkler
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class action_form extends dynamic_form {
+class deleteModal extends dynamic_form {
 
     /**
      * {@inheritdoc}
@@ -50,9 +50,17 @@ class action_form extends dynamic_form {
         $mform = $this->_form;
         $customdata = $this->_ajaxformdata;
 
-        $news = news::getinstance($customdata['id']);
-        $news->formfields($mform);
+        $mform = $this->_form; // Don't forget the underscore!
 
+        // ID of the news instance.
+        $mform->addElement('hidden', 'instanceid', $customdata['instanceid'] ?? 0);
+        $mform->setType('instanceid', PARAM_INT);
+
+        // ID of the news item.
+        $mform->addElement('hidden', 'id', $customdata['id'] ?? 0);
+        $mform->setType('id', PARAM_INT);
+
+        $mform->addElement('static', 'confirmdelete', get_string('confirmdelete', 'local_wb_news'));
     }
 
     /**
@@ -62,7 +70,7 @@ class action_form extends dynamic_form {
      */
     protected function check_access_for_dynamic_submission(): void {
         // TODO: capability to create advisors
-        require_capability('moodle/user:manageownfiles', $this->get_context_for_dynamic_submission());
+
     }
 
     /**
@@ -78,7 +86,9 @@ class action_form extends dynamic_form {
         global $CFG, $DB;
 
         $data = $this->get_data();
-        news::update_news($data->categoryid, $data);
+
+        $news = news::getinstance($data->instanceid ?? 0);
+        $news->delete_news($data);
 
         return $data;
     }
@@ -93,7 +103,27 @@ class action_form extends dynamic_form {
      *     $this->set_data(get_entity($this->_ajaxformdata['cmid']));
      */
     public function set_data_for_dynamic_submission(): void {
-        $data = $this->_ajaxformdata;
+        $ajaxformdata = $this->_ajaxformdata;
+
+        $id = $ajaxformdata['id'] ?? 0;
+        $instanceid = $ajaxformdata['instanceid'] ?? 0;
+        $news = news::getinstance($instanceid);
+        $data = $news->get_news_item($id);
+
+        $context = context_system::instance();
+        $data = file_prepare_standard_editor(
+                // The existing data.
+                $data,
+                // The field name in the database.
+                'description',
+                // The options.
+                news::get_textfield_options(),
+                // The combination of contextid, component, filearea, and itemid.
+                $context,
+                'local_wb_news',
+                'wb_news',
+                $data->id
+            );
 
         $this->set_data($data);
     }
@@ -108,7 +138,7 @@ class action_form extends dynamic_form {
      */
     protected function get_context_for_dynamic_submission(): context {
         global $USER;
-        return \context_user::instance($USER->id);
+        return context_system::instance();
     }
 
     /**
@@ -122,7 +152,7 @@ class action_form extends dynamic_form {
      * @return moodle_url
      */
     protected function get_page_url_for_dynamic_submission(): moodle_url {
-        return new moodle_url('/local/emis/index.php');
+        return new moodle_url('/local/wb_news/index.php');
     }
 
     /**
