@@ -40,7 +40,7 @@ use context_system;
  * @author Thomas Winkler
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class addeditInstanceModal extends dynamic_form {
+class deleteinstancemodal extends dynamic_form {
 
     /**
      * {@inheritdoc}
@@ -52,24 +52,15 @@ class addeditInstanceModal extends dynamic_form {
 
         $mform = $this->_form; // Don't forget the underscore!
 
-        // ID is here instanceid.
+        // ID of the news instance.
+        $mform->addElement('hidden', 'instanceid', $customdata['instanceid'] ?? 0);
+        $mform->setType('instanceid', PARAM_INT);
+
+        // ID of the news item.
         $mform->addElement('hidden', 'id', $customdata['id'] ?? 0);
         $mform->setType('id', PARAM_INT);
 
-        // Add headline field.
-        $mform->addElement('text', 'name', get_string('name', 'local_wb_news'));
-        $mform->setType('name', PARAM_TEXT);
-
-        $options = [
-            'local_wb_news/wb_news_masonry' => get_string('masonrytemplate', 'local_wb_news'),
-            'local_wb_news/wb_news_slider' => get_string('slidertemplate', 'local_wb_news'),
-            'local_wb_news/wb_news_tabs' => get_string('tabstemplate', 'local_wb_news'),
-            'local_wb_news/wb_news_grid' => get_string('gridtemplate', 'local_wb_news'),
-            'local_wb_news/wb_news_blog' => get_string('blogtemplate', 'local_wb_news'),
-        ];
-
-        // Add subheadline field.
-        $mform->addElement('select', 'template', get_string('template', 'local_wb_news'), $options);
+        $mform->addElement('static', 'confirmdelete', '', get_string('deleteinstance', 'local_wb_news'));
     }
 
     /**
@@ -97,7 +88,7 @@ class addeditInstanceModal extends dynamic_form {
         $data = $this->get_data();
 
         $news = news::getinstance($data->instanceid ?? 0);
-        $news->update_newsinstance($data);
+        $news->delete_newsinstance($data);
 
         return $data;
     }
@@ -115,13 +106,11 @@ class addeditInstanceModal extends dynamic_form {
         $ajaxformdata = $this->_ajaxformdata;
 
         $id = $ajaxformdata['id'] ?? 0;
-        $news = news::getinstance((int)$id);
+        $instanceid = $ajaxformdata['instanceid'] ?? 0;
 
         $data = new \stdClass();
-
-        $data->id = $news->instanceid;
-        $data->template = $news->return_template();
-        $data->name = $news->return_name();
+        $data->id = $id;
+        $data->instanceid = $instanceid;
 
         $this->set_data($data);
     }

@@ -40,7 +40,7 @@ use context_system;
  * @author Thomas Winkler
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class deleteModal extends dynamic_form {
+class addeditinstancemodal extends dynamic_form {
 
     /**
      * {@inheritdoc}
@@ -52,15 +52,24 @@ class deleteModal extends dynamic_form {
 
         $mform = $this->_form; // Don't forget the underscore!
 
-        // ID of the news instance.
-        $mform->addElement('hidden', 'instanceid', $customdata['instanceid'] ?? 0);
-        $mform->setType('instanceid', PARAM_INT);
-
-        // ID of the news item.
+        // ID is here instanceid.
         $mform->addElement('hidden', 'id', $customdata['id'] ?? 0);
         $mform->setType('id', PARAM_INT);
 
-        $mform->addElement('static', 'confirmdelete', get_string('confirmdelete', 'local_wb_news'));
+        // Add headline field.
+        $mform->addElement('text', 'name', get_string('name', 'local_wb_news'));
+        $mform->setType('name', PARAM_TEXT);
+
+        $options = [
+            'local_wb_news/wb_news_masonry' => get_string('masonrytemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_slider' => get_string('slidertemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_tabs' => get_string('tabstemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_grid' => get_string('gridtemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_blog' => get_string('blogtemplate', 'local_wb_news'),
+        ];
+
+        // Add subheadline field.
+        $mform->addElement('select', 'template', get_string('template', 'local_wb_news'), $options);
     }
 
     /**
@@ -88,7 +97,7 @@ class deleteModal extends dynamic_form {
         $data = $this->get_data();
 
         $news = news::getinstance($data->instanceid ?? 0);
-        $news->delete_news($data);
+        $news->update_newsinstance($data);
 
         return $data;
     }
@@ -106,24 +115,13 @@ class deleteModal extends dynamic_form {
         $ajaxformdata = $this->_ajaxformdata;
 
         $id = $ajaxformdata['id'] ?? 0;
-        $instanceid = $ajaxformdata['instanceid'] ?? 0;
-        $news = news::getinstance($instanceid);
-        $data = $news->get_news_item($id);
+        $news = news::getinstance((int)$id);
 
-        $context = context_system::instance();
-        $data = file_prepare_standard_editor(
-                // The existing data.
-                $data,
-                // The field name in the database.
-                'description',
-                // The options.
-                news::get_textfield_options(),
-                // The combination of contextid, component, filearea, and itemid.
-                $context,
-                'local_wb_news',
-                'wb_news',
-                $data->id
-            );
+        $data = new \stdClass();
+
+        $data->id = $news->instanceid;
+        $data->template = $news->return_template();
+        $data->name = $news->return_name();
 
         $this->set_data($data);
     }
