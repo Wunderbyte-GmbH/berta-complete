@@ -107,8 +107,8 @@ class entitydate {
      * @param int $starttime
      * @param int $endtime
      * @param int $status
-     * @param moodle_url $link
-     * @param string $bgcolor
+     * @param ?moodle_url $link
+     * @param ?string $bgcolor
      */
     public function __construct(int $itemid,
                                 string $component,
@@ -117,8 +117,8 @@ class entitydate {
                                 int $starttime,
                                 int $endtime,
                                 int $status,
-                                moodle_url $link = null,
-                                string $bgcolor = null) {
+                                ?moodle_url $link = null,
+                                ?string $bgcolor = null) {
         $this->itemid = $itemid;
         $this->component = $component;
         $this->area = $area;
