@@ -98,7 +98,9 @@ class vatnrchecker {
      * @return array
      */
     public static function return_countrycodes_array() {
-        return [
+        $originallanguage = current_language();
+        force_current_language('en');
+        $countries = [
             'novatnr' => get_string('novatnr', 'local_shopping_cart'),
             'AT' => get_string('at', 'local_shopping_cart'),
             'BE' => get_string('be', 'local_shopping_cart'),
@@ -131,6 +133,8 @@ class vatnrchecker {
             'XI' => get_string('xi', 'local_shopping_cart'),
             'EU' => get_string('eu', 'local_shopping_cart'),
         ];
+        force_current_language($originallanguage);
+        return $countries;
     }
 
     /**
@@ -144,5 +148,47 @@ class vatnrchecker {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Function to return an array of localized country codes.
+     * @param string $countrykey
+     * @return array
+     */
+    public static function is_own_country($countrykey) {
+        $hostvatnr = get_config('local_shopping_cart', 'owncountrycode');
+        if ($countrykey == $hostvatnr) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Function to return an array of localized country codes.
+     * @param string $countrykey
+     * @return string
+     */
+    public static function get_template(
+        $iseuropean,
+        $isowncountry,
+        $uid
+    ) {
+        if (!is_null($uid)) {
+            return 'Export VAT';
+        }
+        $hostvatnr = get_config('local_shopping_cart', 'owncountrycode');
+        $countries = self::return_countrycodes_array();
+        if (
+            $isowncountry ||
+            (
+                $iseuropean &&
+                get_config('local_shopping_cart', 'owncountrytax')
+            )
+        ) {
+            return $countries[$hostvatnr] . ' Tax';
+        } else if ($iseuropean) {
+            return 'EU Reverse Charge';
+        }
+        return 'Export VAT';
     }
 }

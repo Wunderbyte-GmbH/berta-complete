@@ -83,6 +83,13 @@ class news {
      */
     private string $name = '';
 
+    /**
+     * Contextids.
+     *
+     * @var string
+     */
+    private string $contextids = '';
+
 
     /**
      * Constructor
@@ -135,7 +142,6 @@ class news {
         $returnarray = [];
 
         foreach ($this->news as $news) {
-
             if (empty($news->userid)) {
                 continue;
             }
@@ -148,6 +154,10 @@ class news {
             $news->tags = array_values(core_tag_tag::get_item_tags_array('local_wb_news', 'news', $news->id));
             $news->publishedon = userdate($news->timecreated, get_string('strftimedate', 'core_langconfig'));
             $news->cssclasses = empty($news->cssclasses) ? false : $news->cssclasses;
+            $news->headline = strip_tags(format_text($news->headline));
+            $news->subheadline = strip_tags(format_text($news->subheadline));
+            $news->btntext = strip_tags(format_text($news->btntext));
+            $news->description = format_text($news->description);
             $returnarray[] = (array)$news;
         }
 
@@ -162,6 +172,21 @@ class news {
      */
     public function return_template() {
         return $this->template;
+    }
+
+    /**
+     * Return array of contextids.
+     *
+     * @return array
+     *
+     */
+    public function return_contextids() {
+
+        global $DB;
+
+        $contextids = explode(',', $this->contextids);
+
+        return $contextids;
     }
 
     /**
@@ -251,8 +276,12 @@ class news {
         if (!empty($data->template)) {
             $this->template = $data->template;
         }
-        if (!empty($data->name)) {
-            $this->name = $data->name;
+        if (!empty($data->name) && empty($this->name)) {
+            $this->name = strip_tags(format_text($data->name));
+        }
+
+        if (!empty($data->contextids) && empty($this->contextids)) {
+            $this->contextids = $data->contextids;
         }
     }
 
@@ -325,6 +354,9 @@ class news {
 
         $data->userid = $USER->id;
         $data->timemodified = time();
+        $data->name = empty($data->name) ? $id : $data->name;
+
+        $data->contextids = implode(',', $data->contextids);
 
         if ($id) {
             $DB->update_record('local_wb_news_instance', $data, true);
@@ -368,6 +400,7 @@ class news {
             'instanceid' => $this->instanceid,
             'template' => $this->template,
             'name' => $this->name,
+            'contextids' => $this->contextids,
             'editmode' => $PAGE->user_is_editing() && has_capability('local/wb_news:manage', context_system::instance()),
         ];
 
@@ -394,6 +427,30 @@ class news {
         }
 
         return $instanceitem;
+    }
+
+    /**
+     * Function will return an array of instances with names and ids.
+     *
+     * @return array
+     *
+     */
+    public static function get_instance_options() {
+
+        global $DB;
+
+        $returnarray = [];
+
+        $sql = "SELECT wni.id, wni.name
+                FROM {local_wb_news_instance} wni";
+
+        $instances = $DB->get_records_sql($sql);
+
+        foreach ($instances as $instance) {
+            $returnarray[$instance->id] = "$instance->name ($instance->id)";
+        }
+
+        return $returnarray;
     }
 
     /**
@@ -429,20 +486,19 @@ class news {
             $DB->sql_cast_to_char('COALESCE(wni.id, 0)'),
             "'-'",
             $DB->sql_cast_to_char('COALESCE(wn.id, 0)')
-            ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name
+            ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name, wni.contextids
             FROM {local_wb_news} wn
             RIGHT JOIN {local_wb_news_instance} wni ON wni.id = wn.instanceid
             WHERE (wn.instanceid > 0 OR wn.instanceid IS NULL) "; // Deleted Items are not normally included in the results.
 
-
-        if (!empty($id)) {
+        if (!empty($instanceid)) {
             $params = ['instanceid' => $instanceid];
-            $sql .= " AND wni.id =:instanceid";
+            $sql .= " AND wn.instanceid =:instanceid";
         } else {
             $params = [];
         }
 
-        $sql .= " ORDER By sortorder ASC";
+        $sql .= " ORDER By wni.id ASC";
 
         return $DB->get_records_sql($sql, $params);
     }
@@ -466,6 +522,34 @@ class news {
             $instanceitem = $instance->return_instance();
 
             $returnarray[] = $instanceitem;
+        }
+
+        return $returnarray;
+    }
+
+    /**
+     * Returns the possible options of a context select.
+     *
+     * @return array
+     *
+     */
+    public static function get_contextid_options() {
+
+        global $DB;
+
+        $returnarray = [
+            1 => get_string('system', 'local_wb_news'),
+        ];
+
+        $sql = "SELECT c.id, cc.name
+                FROM {context} c
+                JOIN {course_categories} cc ON c.instanceid=cc.id
+                WHERE c.contextlevel = " . CONTEXT_COURSECAT;
+
+        $records = $DB->get_records_sql($sql, [], IGNORE_MISSING);
+
+        foreach ($records as $record) {
+            $returnarray[$record->id] = $record->name;
         }
 
         return $returnarray;

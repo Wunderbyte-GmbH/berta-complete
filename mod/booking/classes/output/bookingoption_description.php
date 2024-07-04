@@ -164,6 +164,7 @@ class bookingoption_description implements renderable, templatable {
      * @param bool $withcustomfields
      * @param bool|null $forbookeduser
      * @param object|null $user
+     * @param bool $ashtml
      *
      */
     public function __construct(
@@ -172,7 +173,8 @@ class bookingoption_description implements renderable, templatable {
             int $descriptionparam = MOD_BOOKING_DESCRIPTION_WEBSITE,
             bool $withcustomfields = true,
             ?bool $forbookeduser = null,
-            ?object $user = null) {
+            ?object $user = null,
+            $ashtml = false) {
 
         global $CFG, $PAGE, $USER;
 
@@ -310,7 +312,7 @@ class bookingoption_description implements renderable, templatable {
         // But customfields will only be shown if we show booking option information inline.
 
         $this->dates = $bookingoption->return_array_of_sessions($bookingevent,
-                $descriptionparam, $withcustomfields, $forbookeduser);
+                $descriptionparam, $withcustomfields, $forbookeduser, $ashtml);
 
         if (!empty($this->dates)) {
             $this->datesexist = true;

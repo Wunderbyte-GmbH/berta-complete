@@ -50,7 +50,7 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
-class condition_all_test extends advanced_testcase {
+final class condition_all_test extends advanced_testcase {
 
     /**
      * Tests set up.
@@ -72,13 +72,15 @@ class condition_all_test extends advanced_testcase {
      * Test of booking option with price as well as cancellation by user.
      *
      * @covers \condition\priceset::is_available
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      *
      */
-    public function test_booking_bookit_with_price_and_cancellation() {
+    public function test_booking_bookit_with_price_and_cancellation(array $bdata): void {
         global $DB, $CFG;
 
         // Set parems requred for cancellation.
@@ -222,12 +224,13 @@ class condition_all_test extends advanced_testcase {
      * @covers \condition\notifymelist::is_available
      * @covers \condition\isloggedin::is_available
      *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_simple() {
+    public function test_booking_bookit_simple(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -371,12 +374,14 @@ class condition_all_test extends advanced_testcase {
      * Test of booking option availability by cohorts and bookingtime.
      *
      * @covers \condition\boking_time::is_available
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_cohorts_and_bookingtime() {
+    public function test_booking_bookit_cohorts_and_bookingtime(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -497,12 +502,14 @@ class condition_all_test extends advanced_testcase {
      *
      * @covers \booking_option->enrol_user
      * @covers \option\fields\addtogroup::save_data
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_add_to_group() {
+    public function test_booking_bookit_add_to_group(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -595,12 +602,14 @@ class condition_all_test extends advanced_testcase {
      * Test add to group.
      *
      * @covers \condition\boking_time::is_available
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_bookingtime() {
+    public function test_booking_bookit_bookingtime(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -674,12 +683,14 @@ class condition_all_test extends advanced_testcase {
      * @covers \condition\confirmation::is_available
      * @covers \condition\onwaitinglist::is_available
      * @covers \condition\askforconfirmation::render_page
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_askforconfirmation() {
+    public function test_booking_bookit_askforconfirmation(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -755,12 +766,14 @@ class condition_all_test extends advanced_testcase {
      * @covers \condition\askforconfirmation::is_available
      * @covers \condition\onwaitinglist::is_available
      * @covers \condition\priceset::is_available
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_askforconfirmation_with_price() {
+    public function test_booking_bookit_askforconfirmation_with_price(array $bdata): void {
         global $DB, $CFG;
 
         $bdata['cancancelbook'] = 1;
@@ -970,7 +983,7 @@ class condition_all_test extends advanced_testcase {
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookwithcredits(array $bdata) {
+    public function test_booking_bookwithcredits(array $bdata): void {
         global $CFG;
 
         $this->resetAfterTest();
@@ -1075,12 +1088,14 @@ class condition_all_test extends advanced_testcase {
      * @covers \condition\askforconfirmation::is_available
      * @covers \condition\onwaitinglist::is_available
      * @covers \condition\priceset::is_available
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
      *
      * @dataProvider booking_common_settings_provider
      */
-    public function test_booking_bookit_overbooking_with_price() {
+    public function test_booking_bookit_overbooking_with_price(array $bdata): void {
         global $DB, $CFG;
 
         // Setup test data.

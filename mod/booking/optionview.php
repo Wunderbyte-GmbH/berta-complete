@@ -81,11 +81,15 @@ if ($settings = singleton_service::get_instance_of_booking_option_settings($opti
     // This needs to be fixed.
 
     $output = $PAGE->get_renderer('mod_booking');
-    $data = new bookingoption_description($settings->id, null, MOD_BOOKING_DESCRIPTION_OPTIONVIEW, true, null, $user);
+    $data = new bookingoption_description($settings->id, null, MOD_BOOKING_DESCRIPTION_OPTIONVIEW, true, null, $user, true);
+
+    // The isinvisible check ONLY checks the "real" invisible option, not the "visible only with direct link".
+    // As the option here is only possible with direct link, we don't need to check this.
 
     if ($data->is_invisible()) {
         // If the user does have the capability to see invisible options...
         if (has_capability('mod/booking:canseeinvisibleoptions', $syscontext)) {
+
             // ... then show it.
             echo $output->render_bookingoption_description_view($data);
         } else {

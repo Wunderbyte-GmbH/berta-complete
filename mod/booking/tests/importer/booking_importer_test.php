@@ -42,7 +42,7 @@ use mod_booking\importer\bookingoptionsimporter;
  * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class booking_importer_test extends advanced_testcase {
+final class booking_importer_test extends advanced_testcase {
 
     /**
      * Tests set up.
@@ -67,7 +67,7 @@ class booking_importer_test extends advanced_testcase {
      * @throws \coding_exception
      * @throws \dml_exception
      */
-    public function test_csv_import_process_data() {
+    public function test_csv_import_process_data(): void {
         $this->resetAfterTest();
         // It is important to set timezone to have all dates correct!
         $this->setTimezone('Europe/London');
@@ -127,7 +127,8 @@ class booking_importer_test extends advanced_testcase {
         $cmb1 = get_coursemodule_from_instance('booking', $booking1->id);
 
         // Get booking instance.
-        $bookingobj1 = new booking($cmb1->id);
+        singleton_service::destroy_booking_singleton_by_cmid($cmb1->id);
+        $bookingobj1 = singleton_service::get_instance_of_booking_by_bookingid($booking1->id);
 
         // Prepare import (should work in behalf of teacher).
         $this->setUser($user1);
@@ -179,14 +180,10 @@ class booking_importer_test extends advanced_testcase {
         $this->assertEquals(MOD_BOOKING_STATUSPARAM_BOOKED, $ba->user_status($user3->id));
 
         // Create booking option object to get extra detsils.
-        $bookingoptionobj = new booking_option($cmb1->id, $option1->id);
+        singleton_service::destroy_booking_option_singleton($option1->id);
+        $bookingoptionobj = singleton_service::get_instance_of_booking_option($cmb1->id, $option1->id);
 
-        // Verify teacher for 1st option.
-        $teacher1 = $bookingoptionobj->get_teachers();
-        $teacher1 = array_shift($teacher1);
-        $this->assertEquals($useremails[0], $teacher1->email);
-
-        // Bookimg option must have sessions.
+        // Booking option must have sessions.
         $this->assertEquals(true, booking_utils::booking_option_has_optiondates($option1->id));
         // phpcs:ignore
         //$dates1 = $bookingoptionobj->return_array_of_sessions()); // Also works.

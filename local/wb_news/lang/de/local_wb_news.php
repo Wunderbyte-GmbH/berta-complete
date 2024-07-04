@@ -87,9 +87,12 @@ $string['deletenewsitem'] = "Bestätige das Löschen dieses Artikels";
 $string['deleteinstance'] = "Bestätige des Löschens aller Artikel und der Instanz";
 $string['confirmcopy'] = "Bestätige das Kopieren";
 $string['copyitem'] = "Kopieren";
+$string['alloweditincontext'] = "Editieren erlauben in...";
+$string['system'] = "Systemweit";
 
 // Errors.
 $string['interror'] = 'Nur ganze Zahlen sind erlaubt.';
 
 // Shortcodes.
 $string['wbnewslist'] = 'Eine oder alle News Instanzen.';
+$string['novalidinstance'] = 'Das ist keine verfügbare Instanz mit der id {$a}';

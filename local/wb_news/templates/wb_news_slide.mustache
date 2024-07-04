@@ -1,7 +1,7 @@
 
 
-    <div class="d-flex justify-content-between align-items-center">
-        <div class="left-panel{{#lightmode}} text-light{{/lightmode}}">
+    <div class="d-flex justify-content-between align-items-center wb_news_slide">
+        <div class="left-panel{{#lightmode}} text-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}">
             {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
             <h1>{{headline}}</h1>
             {{{description}}}
@@ -20,10 +20,9 @@
             {{/editmode}}
         </div>
         <div class="right-panel">
-            <div class="image-container  w-100">
-                <img src="{{bgimage}}" class="img-fluid w-100" alt="...">
+            <div class="image-container w-100">
+                <img src="{{bgimage}}{{headerimage}}" class="img-fluid w-100" alt="...">
                 <div class="image-caption">{{imagecaption}}</div>
             </div>
         </div>
     </div>
-

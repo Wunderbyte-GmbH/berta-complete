@@ -153,6 +153,13 @@ class page_teacher implements renderable, templatable {
             $url = new moodle_url('/mod/booking/teacher_performed_units_report.php', ['teacherid' => $this->teacher->id]);
             $returnarray['linktoperformedunitsreport'] = $url->out();
         }
+        if ((has_capability('mod/booking:seepersonalteacherinformation', $PAGE->context))) {
+            // Add given phonenumbers.
+            $returnarray['teacher']['phones'] = array_filter([
+                $this->teacher->phone1 ?? null,
+                $this->teacher->phone2 ?? null,
+            ]);
+        }
         // Include wwwroot for links.
         $returnarray['wwwroot'] = $CFG->wwwroot;
         return $returnarray;
@@ -219,7 +226,7 @@ class page_teacher implements renderable, templatable {
                 $firsttable = false;
 
                 // Keep only lowercaseletters and digits.
-                $tablename = preg_replace("/[^a-z0-9]/", '', $booking->settings->name);
+                $tablename = preg_replace("/[^a-z0-9]/", '', strtolower($booking->settings->name));
 
                 $newtable = [
                     'bookingid' => $bookingid,

@@ -791,6 +791,7 @@ $string['optionvisibility'] = 'Visibility';
 $string['optionvisibility_help'] = 'Here you can choose whether the option should be visible for everyone or if it should be hidden from normal users and be visible to entitled users only.';
 $string['optionvisible'] = 'Visible to everyone (default)';
 $string['optioninvisible'] = 'Hide from normal users (visible to entitled users only)';
+$string['optionvisibledirectlink'] = 'Normal users can only see this option with a direct link';
 $string['invisibleoption'] = '<i class="fa fa-eye-slash" aria-hidden="true"></i> Invisible';
 $string['optionannotation'] = 'Internal annotation';
 $string['optionannotation_help'] = 'Add internal remarks, annotations or anything you want. It will only be shown in this form and nowhere else.';
@@ -992,6 +993,7 @@ Survey URL: <a href="{pollurlteachers}" target="_blank">{pollurlteachers}</a>
 $string['reportremindersubject'] = 'Reminder: Your booked course';
 $string['reportremindermessage'] = '{$a->bookingdetails}';
 $string['changesinentity'] = '{$a->name} (ID: {$a->id})';
+$string['entitydeleted'] = 'Location has been deleted';
 
 // Report.php.
 $string['allmailssend'] = 'All e-mails to the users have been sent!';
@@ -1626,7 +1628,7 @@ $string['tableheader_maxoverbooking'] = 'Waiting list places';
 $string['tableheader_minanswers'] = 'Min. number of participants';
 $string['tableheader_coursestarttime'] = 'Course start';
 $string['tableheader_courseendtime'] = 'Course end';
-$string['course_start'] = 'Starten';
+$string['course_start'] = 'Start';
 
 // Customfields.
 $string['booking_customfield'] = 'Booking customfields for booking options';
@@ -2265,7 +2267,7 @@ $string['rule_react_on_event'] = "React on event";
 $string['rule_react_on_event_desc'] = "Choose an event that should trigger the rule.<br>
 <b>Hint:</b> You can use the placeholder <code>{eventdescription}</code> to show a description of the event.";
 $string['rule_react_on_event_after_completion'] = "Number of days after end of booking option, where rule still applies";
-$string['rule_react_on_event_after_completion_help'] = "Leave this field empty or set to 0 if you don't want to execute the action after ending of bookingoption. You can use negative numbers if the rule should be suspended before the specified end.";
+$string['rule_react_on_event_after_completion_help'] = "Leave this field empty or set to 0 if you want to keep executing the action. You can use negative numbers if the rule should be suspended before the specified courseend.";
 
 $string['error:nofieldchosen'] = 'You have to choose a field.';
 $string['error:mustnotbeempty'] = 'Must not be empty.';
@@ -2473,6 +2475,8 @@ $string['mod/booking:reducedoptionform2'] = 'Reduced booking option 2';
 $string['mod/booking:reducedoptionform3'] = 'Reduced booking option 3';
 $string['mod/booking:reducedoptionform4'] = 'Reduced booking option 4';
 $string['mod/booking:reducedoptionform5'] = 'Reduced booking option 5';
+$string['mod/booking:bookanyone'] = 'Book anyone';
+$string['mod/booking:seepersonalteacherinformation'] = 'See personal teacher information';
 
 // Vue strings.
 $string['vue_dashboard_checked'] = 'Default Checked';

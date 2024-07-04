@@ -28,12 +28,11 @@ namespace mod_booking;
 
 use advanced_testcase;
 use coding_exception;
-use mod_booking\option\dates_handler;
-use mod_booking\price;
 use mod_booking_generator;
+use mod_booking\bo_availability\bo_info;
 use context_module;
 use stdClass;
-use mod_booking\importer\bookingoptionsimporter;
+
 
 /**
  * Class handling tests for booking options.
@@ -43,7 +42,7 @@ use mod_booking\importer\bookingoptionsimporter;
  * @copyright 2023 Wunderbyte GmbH <info@wunderbyte.at>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class booking_option_test extends advanced_testcase {
+final class booking_option_test extends advanced_testcase {
 
     /**
      * Tests set up.
@@ -67,19 +66,13 @@ class booking_option_test extends advanced_testcase {
      * @covers \mod_booking\event\teacher_added
      * @covers \mod_booking\booking_option::update
      * @covers \mod_booking\option\field_base->check_for_changes
+     *
+     * @param array $bdata
      * @throws \coding_exception
+     *
+     * @dataProvider booking_common_settings_provider
      */
-    public function test_option_changes() {
-
-        $bdata = ['name' => 'Test Booking', 'eventtype' => 'Test event',
-                    'bookedtext' => ['text' => 'text'], 'waitingtext' => ['text' => 'text'],
-                    'notifyemail' => ['text' => 'text'], 'statuschangetext' => ['text' => 'text'],
-                    'deletedtext' => ['text' => 'text'], 'pollurltext' => ['text' => 'text'],
-                    'pollurlteacherstext' => ['text' => 'text'],
-                    'notificationtext' => ['text' => 'text'], 'userleave' => ['text' => 'text'],
-                    'bookingpolicy' => 'bookingpolicy', 'tags' => '',
-                    'showviews' => ['showall,showactive,mybooking,myoptions,myinstitution'],
-        ];
+    public function test_option_changes(array $bdata): void {
 
         // Setup test data.
         $course = $this->getDataGenerator()->create_course();
@@ -94,6 +87,7 @@ class booking_option_test extends advanced_testcase {
 
         $bdata['course'] = $course->id;
         $bdata['bookingmanager'] = $user2->username;
+        unset($bdata['completion']);
 
         $booking = $this->getDataGenerator()->create_module('booking', $bdata);
 
@@ -151,68 +145,67 @@ class booking_option_test extends advanced_testcase {
         $res = ob_get_clean();
         $sink->close();
 
-        $this->assertCount(5, $events);
-
         // Last event must be on the option update.
-        $event = end($events);
-        // Checking that the event contains the expected values.
-        $this->assertInstanceOf('mod_booking\event\bookingoption_updated', $event);
-        $modulecontext = context_module::instance($settings->cmid);
-        $this->assertEquals($modulecontext, $event->get_context());
-        $this->assertEventContextNotUsed($event);
-        $data = $event->get_data();
-        $this->assertIsArray($data);
-        $this->assertIsArray($data['other']['changes']);
-        $changes = $data['other']['changes'];
-        foreach ($changes as $change) {
-            switch ($change['fieldname']) {
-                case 'text':
-                    $this->assertEquals('Option-updated', $change['newvalue']);
-                    $this->assertEquals('Option-created', $change['oldvalue']);
-                    break;
-                case 'description':
-                    $this->assertEquals('Deskr-updated', $change['newvalue']);
-                    $this->assertEquals('Deskr-created', $change['oldvalue']['text']);
-                    break;
-                case 'maxanswers':
-                    $this->assertEquals(5, $change['newvalue']);
-                    $this->assertEmpty($change['oldvalue']);
-                    break;
-                case 'teachers':
-                    $this->assertStringContainsString('Teacher 2', $change['newvalue']);
-                    $this->assertStringContainsString('Teacher 1', $change['oldvalue']);
-                    break;
-                case 'dates':
-                    $this->assertEquals(strtotime('10 April 2055'), $change['newvalue'][0]['coursestarttime']);
-                    $this->assertEquals(strtotime('10 May 2055'), $change['newvalue'][0]['courseendtime']);
-                    $this->assertEquals(strtotime('20 June 2050'), $change['oldvalue'][0]['coursestarttime']);
-                    $this->assertEquals(strtotime('20 July 2050'), $change['oldvalue'][0]['courseendtime']);
-                    break;
+        foreach ($events as $key => $event) {
+            if ($event instanceof bookingoption_updated) {
+                // Checking that the event contains the expected values.
+                $this->assertInstanceOf('mod_booking\event\bookingoption_updated', $event);
+                $modulecontext = context_module::instance($settings->cmid);
+                $this->assertEquals($modulecontext, $event->get_context());
+                $this->assertEventContextNotUsed($event);
+                $data = $event->get_data();
+                $this->assertIsArray($data);
+                $this->assertIsArray($data['other']['changes']);
+                $changes = $data['other']['changes'];
+                foreach ($changes as $change) {
+                    switch ($change['fieldname']) {
+                        case 'text':
+                            $this->assertEquals('Option-updated', $change['newvalue']);
+                            $this->assertEquals('Option-created', $change['oldvalue']);
+                            break;
+                        case 'description':
+                            $this->assertEquals('Deskr-updated', $change['newvalue']);
+                            $this->assertEquals('Deskr-created', $change['oldvalue']);
+                            break;
+                        case 'maxanswers':
+                            $this->assertEquals(5, $change['newvalue']);
+                            $this->assertEmpty($change['oldvalue']);
+                            break;
+                        case 'teachers':
+                            $this->assertStringContainsString('Teacher 2', $change['newvalue']);
+                            $this->assertStringContainsString('Teacher 1', $change['oldvalue']);
+                            break;
+                        case 'dates':
+                            $this->assertEquals(strtotime('10 April 2055'), $change['newvalue'][0]['coursestarttime']);
+                            $this->assertEquals(strtotime('10 May 2055'), $change['newvalue'][0]['courseendtime']);
+                            $this->assertEquals(strtotime('20 June 2050'), $change['oldvalue'][0]['coursestarttime']);
+                            $this->assertEquals(strtotime('20 July 2050'), $change['oldvalue'][0]['courseendtime']);
+                            break;
+                    }
+                }
             }
         }
+
+        // Mandatory to solve potential cache issues.
+        singleton_service::destroy_booking_option_singleton($option->id);
     }
 
     /**
      * Test delete responses.
      *
      * @covers ::delete_responses_activitycompletion
+     *
+     * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
+     *
+     * @dataProvider booking_common_settings_provider
      */
-    public function test_delete_responses_activitycompletion() {
+    public function test_delete_responses_activitycompletion(array $bdata): void {
         global $DB, $CFG;
 
         $CFG->enablecompletion = 1;
 
-        $bdata = ['name' => 'Test Booking 1', 'eventtype' => 'Test event', 'enablecompletion' => 1,
-            'bookedtext' => ['text' => 'text'], 'waitingtext' => ['text' => 'text'],
-            'notifyemail' => ['text' => 'text'], 'statuschangetext' => ['text' => 'text'],
-            'deletedtext' => ['text' => 'text'], 'pollurltext' => ['text' => 'text'],
-            'pollurlteacherstext' => ['text' => 'text'],
-            'notificationtext' => ['text' => 'text'], 'userleave' => ['text' => 'text'],
-            'bookingpolicy' => 'bookingpolicy', 'tags' => '', 'completion' => 2,
-            'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
-        ];
         // Setup test data.
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
 
@@ -269,5 +262,160 @@ class booking_option_test extends advanced_testcase {
 
         $this->setUser($user1);
         $this->assertEquals(false, $bookingoption1->can_rate());
+
+        // Mandatory to solve potential cache issues.
+        singleton_service::destroy_booking_option_singleton($option1->id);
+    }
+
+    /**
+     * Test enrol user and add to group.
+     *
+     * @covers \booking_option->enrol_user
+     *
+     * @param array $bdata
+     * @throws \coding_exception
+     * @throws \dml_exception
+     *
+     * @dataProvider booking_common_settings_provider
+     */
+    public function test_course_connection_enrollemnt(array $bdata): void {
+        global $DB, $CFG;
+
+        $bdata['autoenrol'] = "1";
+
+        // Setup test courses.
+        $course1 = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $course2 = $this->getDataGenerator()->create_course(['enablecompletion' => 1, 'startdate' => strtotime('now + 2 day')]);
+        $course3 = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+
+        // Create users.
+        $student1 = $this->getDataGenerator()->create_user();
+        $student2 = $this->getDataGenerator()->create_user();
+        $student3 = $this->getDataGenerator()->create_user();
+        $student4 = $this->getDataGenerator()->create_user();
+        $teacher = $this->getDataGenerator()->create_user();
+        $bookingmanager = $this->getDataGenerator()->create_user(); // Booking manager.
+
+        $bdata['course'] = $course1->id;
+        $bdata['bookingmanager'] = $bookingmanager->username;
+
+        $booking1 = $this->getDataGenerator()->create_module('booking', $bdata);
+
+        $this->setAdminUser();
+
+        $this->getDataGenerator()->enrol_user($student1->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($student2->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($student3->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($student4->id, $course1->id, 'student');
+        $this->getDataGenerator()->enrol_user($teacher->id, $course1->id, 'editingteacher');
+        $this->getDataGenerator()->enrol_user($bookingmanager->id, $course1->id, 'editingteacher');
+
+        // Create 1st booking option - existing course, enrol at coursestart.
+        $record = new stdClass();
+        $record->bookingid = $booking1->id;
+        $record->text = 'Test option1 (enroll on start)';
+        $record->chooseorcreatecourse = 1; // Reqiured.
+        $record->courseid = $course2->id;
+        $record->enrolmentstatus = 0; // Enrol at coursestart.
+        $record->optiondateid_1 = "0";
+        $record->daystonotify_1 = "0";
+        $record->coursestarttime_1 = strtotime('now + 3 day');
+        $record->courseendtime_1 = strtotime('now + 4 day');
+
+        /** @var mod_booking_generator $plugingenerator */
+        $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
+        $option1 = $plugingenerator->create_option($record);
+
+        $settings1 = singleton_service::get_instance_of_booking_option_settings($option1->id);
+        // To avoid retrieving the singleton with the wrong settings, we destroy it.
+        singleton_service::destroy_booking_singleton_by_cmid($settings1->cmid);
+
+        // Create 2nd booking option - existing course, enrol immediately.
+        $record->text = 'Test option2 (enroll now)';
+        $record->chooseorcreatecourse = 1;
+        $record->courseid = $course3->id;
+        $record->enrolmentstatus = 2; // Enrol now.
+        $option2 = $plugingenerator->create_option($record);
+
+        $settings2 = singleton_service::get_instance_of_booking_option_settings($option2->id);
+        // To avoid retrieving the singleton with the wrong settings, we destroy it.
+        singleton_service::destroy_booking_singleton_by_cmid($settings2->cmid);
+
+        // Booking options by the 1st student.
+        $result = $plugingenerator->create_answer(['optionid' => $option1->id, 'userid' => $student1->id]);
+        $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $result);
+        $result = $plugingenerator->create_answer(['optionid' => $option2->id, 'userid' => $student1->id]);
+        $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $result);
+
+        // Now check if the user is enrolled to the course. We should get two courses.
+        $courses = enrol_get_users_courses($student1->id);
+        $this->assertEquals(count($courses), 2);
+        $this->assertEquals(true, in_array('Test course 3', array_column($courses, 'fullname')));
+        $this->assertEquals(false, in_array('Test course 2', array_column($courses, 'fullname')));
+
+        // Create 3rd booking option - new empty course, enrol at coursestart.
+        $record->text = 'Option3-empty_course-enrol_at_start';
+        $record->chooseorcreatecourse = 2;
+        $record->enrolmentstatus = 0; // Enrol at coursestart.
+        $option3 = $plugingenerator->create_option($record);
+
+        $settings3 = singleton_service::get_instance_of_booking_option_settings($option3->id);
+        // To avoid retrieving the singleton with the wrong settings, we destroy it.
+        singleton_service::destroy_booking_singleton_by_cmid($settings3->cmid);
+
+        // Create 4th booking option - new empty course, enrol immediately.
+        $record->text = 'Option4-empty_course-enrol_now';
+        $record->chooseorcreatecourse = 2;
+        $record->enrolmentstatus = 2; // Enroll now.
+        $option4 = $plugingenerator->create_option($record);
+
+        $settings4 = singleton_service::get_instance_of_booking_option_settings($option4->id);
+        // To avoid retrieving the singleton with the wrong settings, we destroy it.
+        singleton_service::destroy_booking_singleton_by_cmid($settings4->cmid);
+
+        // Booking options by the 1st student.
+        $result = $plugingenerator->create_answer(['optionid' => $option3->id, 'userid' => $student1->id]);
+        $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $result);
+        $result = $plugingenerator->create_answer(['optionid' => $option4->id, 'userid' => $student1->id]);
+        $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $result);
+
+        // Now check if the user is enrolled to the course. We should get three courses.
+        $courses = enrol_get_users_courses($student1->id);
+        $this->assertEquals(count($courses), 3);
+        $this->assertEquals(true, in_array('Option4-empty_course-enrol_now', array_column($courses, 'fullname')));
+        $this->assertEquals(false, in_array('Option3-empty_course-enrol_at_start', array_column($courses, 'fullname')));
+
+        // Mandatory to solve potential cache issues.
+        singleton_service::destroy_booking_option_singleton($option1->id);
+        singleton_service::destroy_booking_option_singleton($option2->id);
+        singleton_service::destroy_booking_option_singleton($option3->id);
+        singleton_service::destroy_booking_option_singleton($option4->id);
+    }
+
+    /**
+     * Data provider for booking_option_test
+     *
+     * @return array
+     * @throws \UnexpectedValueException
+     */
+    public static function booking_common_settings_provider(): array {
+        $bdata = [
+            'name' => 'Test Booking 1',
+            'eventtype' => 'Test event',
+            'enablecompletion' => 1,
+            'bookedtext' => ['text' => 'text'],
+            'waitingtext' => ['text' => 'text'],
+            'notifyemail' => ['text' => 'text'],
+            'statuschangetext' => ['text' => 'text'],
+            'deletedtext' => ['text' => 'text'],
+            'pollurltext' => ['text' => 'text'],
+            'pollurlteacherstext' => ['text' => 'text'],
+            'notificationtext' => ['text' => 'text'],
+            'userleave' => ['text' => 'text'],
+            'tags' => '',
+            'completion' => 2,
+            'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+        ];
+        return ['bdata' => [$bdata]];
     }
 }

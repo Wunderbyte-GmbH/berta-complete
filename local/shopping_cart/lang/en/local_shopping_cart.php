@@ -102,6 +102,8 @@ $string['rebookingfee'] = 'Rebooking fee';
 $string['rebookingfee_desc'] = 'Rebooking fee for every rebooking.';
 $string['uniqueidentifier'] = 'Unique id';
 $string['uniqueidentifier_desc'] = 'Define the starting id, if you want. If you set this value to 10000000 the first purchase will have the id 10000001. If you set the value, the max number of digits will be defined as well. If you set it to 1, you can only have 9 purchases.';
+$string['owncountrytax'] = 'Use own tax template';
+$string['owncountrytax_desc'] = 'Use home country tax template for all european customers.';
 $string['bookingfeeonlyonce'] = 'Charge booking fee only once';
 $string['bookingfeeonlyonce_desc'] = 'Every user pays the booking fee only once, no matter how many checkouts she makes.';
 $string['credittopayback'] = 'Amount to pay back';
@@ -546,6 +548,9 @@ $string['choosedefaultcountry'] = 'Choose Default Country for Customers';
 $string['choosedefaultcountrydesc'] = 'Select the default country for your customers. If user does not provide invoice data, this
  country is selected for the invoice.';
 $string['erpnext'] = 'ERPNext';
+$string['erpnext_subject'] = 'Your Invoice';
+$string['erpnext_content'] = 'Dear Customer,<br><br>Please find attached your invoice.<br><br>Best regards,<br>Wunderbyte Support Team';
+$string['erpnext_reference_doctype'] = 'Sales Invoice';
 
 // Privacy API.
 $string['history'] = "Purchases";

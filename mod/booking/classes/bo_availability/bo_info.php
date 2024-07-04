@@ -772,6 +772,7 @@ class bo_info {
      * @param bool $nojs
      * @param string $dataaction
      * @param string $link
+     * @param string $showicon
      * @return array
      */
     public static function render_button(
@@ -786,7 +787,7 @@ class bo_info {
         bool $nojs = true,
         string $dataaction = '', // Use 'noforward' to disable automatic forwarding.
         string $link = '',
-        string $showicon = '',
+        string $showicon = ''
     ) {
 
         $user = singleton_service::get_instance_of_user($userid);

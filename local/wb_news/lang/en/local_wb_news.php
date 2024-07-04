@@ -87,9 +87,12 @@ $string['deletenewsitem'] = "Confirm deletion of this news item";
 $string['deleteinstance'] = "Confirm deletion of this whole instance and all articles";
 $string['confirmcopy'] = "Confirm copy.";
 $string['copyitem'] = "Copy item";
+$string['alloweditincontext'] = "Allow editing in ...";
+$string['system'] = "System wide";
 
 // Errors.
 $string['interror'] = 'Only full numbers are allowed.';
 
 // Shortcodes.
 $string['wbnewslist'] = 'One or all instances of news';
+$string['novalidinstance'] = 'This is not a valid instance with the id {$a}';

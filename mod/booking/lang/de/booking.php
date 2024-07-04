@@ -782,7 +782,8 @@ $string['pricecurrency'] = 'Währung';
 $string['optionvisibility'] = 'Sichtbarkeit';
 $string['optionvisibility_help'] = 'Stellen Sie ein, ob die Buchungsoption für jede_n sichtbar sein soll oder nur für berechtigte Nutzer:innen.';
 $string['optionvisible'] = 'Für alle sichtbar (Standard)';
-$string['optioninvisible'] = 'Vor normalen Nutzer:innen verstecken (nur für berechtigte Personen sichtbar)';
+$string['optioninvisible'] = 'Nur für berechtigte Personen sichtbar (z.B. Teacher, Manager)';
+$string['optionvisibledirectlink'] = 'Für nicht berechtigte Personen nur mit direktem Link sichtbar';
 $string['invisibleoption'] = '<i class="fa fa-eye-slash" aria-hidden="true"></i> Unsichtbar';
 $string['optionannotation'] = 'Interne Anmerkung';
 $string['optionannotation_help'] = 'Fügen Sie interne Notizen bzw. Anmerkungen hinzu. Diese werden NUR in DIESEM Formular und sonst nirgendwo angezeigt.';
@@ -989,6 +990,7 @@ Link zur Umfrage: <a href="{pollurlteachers}" target="_blank">{pollurlteachers}<
 $string['reportremindersubject'] = 'Erinnerung: Ihr gebuchter Kurs';
 $string['reportremindermessage'] = '{$a->bookingdetails}';
 $string['changesinentity'] = '{$a->name} (ID: {$a->id})';
+$string['entitydeleted'] = 'Ort wurde gelöscht';
 
 // Report.php and bookingmanagusers.class.php.
 $string['allmailssend'] = 'Alle Benachrichtigungen wurden erfolgreich versandt!';
@@ -2133,7 +2135,7 @@ $string['rule_react_on_event'] = 'Reagiere auf Ereignis';
 $string['rule_react_on_event_desc'] = 'Wählen Sie ein Ereignis aus, durch das die Regel ausgelöst werden soll.<br>
 <b>Tipp:</b> Verwenden Sie den Platzhalter <code>{eventdescription}</code> um eine Beschreibung des Ereignisses anzuzeigen.';
 $string['rule_react_on_event_after_completion'] = "Anzahl der Tage nach dem Ende der Buchungsoption, in denen die Regel weiterhin gilt";
-$string['rule_react_on_event_after_completion_help'] = "Feld leer lassen oder auf 0 setzen, wenn die Aktion nach dem Ende der Buchungsoption nicht mehr durchgeführt gelten soll. Sie können negative Zahlen eingeben, damit die Regel bereits vor dem angebenen Ende ausgesetzt wird.";
+$string['rule_react_on_event_after_completion_help'] = "Feld leer lassen oder auf 0 setzen, wenn die Aktion unbegrenzt gelten soll. Sie können negative Zahlen eingeben, damit die Regel bereits vor dem Kursende ausgesetzt wird.";
 
 $string['error:nofieldchosen'] = 'Sie müssen ein Feld auswählen.';
 $string['error:mustnotbeempty'] = 'Darf nicht leer sein.';
@@ -2336,6 +2338,8 @@ $string['mod/booking:reducedoptionform4'] = 'Buchungsoption reduziert 4';
 $string['mod/booking:reducedoptionform5'] = 'Buchungsoption reduziert 5';
 $string['booking:editoptionformconfig'] = 'Buchungsoptionsfelder bearbeiten';
 $string['booking:bookanyone'] = 'Darf alle Nutzer:innen buchen';
+$string['mod/booking:bookanyone'] = 'JedeN buchen';
+$string['mod/booking:seepersonalteacherinformation'] = 'Detailinfos über Lehrende anzeigen';
 
 // Vue strings.
 $string['vue_dashboard_checked'] = 'Default Ausgewählt';

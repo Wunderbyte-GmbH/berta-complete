@@ -40,6 +40,8 @@ $string['address_country'] = 'Land';
 $string['address_postcode'] = 'Postleitzahl';
 $string['address_streetname'] = 'Straßenname';
 $string['address_streetnumber'] = 'Haus-Nr.';
+$string['address_floor'] = 'Stockwerk';
+$string['address_entrance'] = 'Stiege';
 $string['address_map_link'] = 'Karten-Link';
 $string['address_map_embed'] = 'Karte einbetten (HTML)';
 $string['affiliated'] = 'Zugehörige Orte';
@@ -62,10 +64,12 @@ $string['deleteentityconfirm'] = 'Wollen Sie die Entity wirklich löschen?';
 $string['entities:copymodule'] = 'Entities: Modul kopieren';
 $string['categories'] = 'Entity Kategorien';
 $string['map'] = 'Karte';
+$string['openmap'] = 'Karte öffnen';
 $string['entity_openinghours'] = "Öffnungszeiten";
 $string['usesubentitynamesforfilter'] = 'Filter: Namen von Sub-Entities verwenden';
 $string['usesubentitynamesforfilter:description'] = 'Filter nutzen standardmäßig den Namen der Parent-Entity.
 Wenn Sie dieses Häkchen aktivieren, dann wird jede einzelne Sub-Entity im Filter angezeigt.';
+
 
 // Errors.
 $string['error:entitydoesnotexist'] = "FEHLER: Die Entity existiert nicht!";

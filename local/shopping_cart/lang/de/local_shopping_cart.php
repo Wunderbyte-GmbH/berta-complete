@@ -90,6 +90,8 @@ $string['rebookingfee'] = 'Umbuchungsgebühr';
 $string['rebookingfee_desc'] = 'Für jede Umbuchung wird eine Gebühr eingehoben, wenn die normale Stornoperiode vorbei ist.';
 $string['uniqueidentifier'] = 'Eindeutige Buchungsid';
 $string['uniqueidentifier_desc'] = 'Jede Buchung benötigt eine eindeutige id. Diese startet üblicherweise bei 1, kann aber auch höher gesetzt werden. Wenn sie z.b. auf 10000000 gesetzt wird, hat der erste Kauf die ID 10000001. Wenn das Feld gesetzt wird, wird ein Error geworfen, sobald die Anzahl der Stellen überschritten wird. Wird der Wert auf 1 gesetzt, sind nur neun Buchungen möglich.';
+$string['owncountrytax'] = 'Verwende eigene Steuervorlage';
+$string['owncountrytax_desc'] = 'Benutze die Heimatland Steuervorlage für alle europäischen Kunden.';
 $string['bookingfeeonlyonce'] = 'Buchungsgebühr nur einmal einheben';
 $string['bookingfeeonlyonce_desc'] = 'Die Buchungsgebühr wird nur einmal für jede Nutzer:in eingehoben. Sobald einmal bezahlt wurde, sind alle weiteren Buchungen ohne Buchungsgebühr.';
 $string['credittopayback'] = 'Zurückerstatteter Betrag';
@@ -539,6 +541,9 @@ $string['choosedefaultcountry'] = 'Standardland auswählen';
 $string['choosedefaultcountrydesc'] = 'Wählen Sie das Standardland für die Rechnungsadresse aus. Dieses wird verwendet,
  wenn die Kund/innen keine Angaben zur Rechnungsadresse machen.';
 $string['erpnext'] = 'ERPNext';
+$string['erpnext_subject'] = 'Ihre Rechnung';
+$string['erpnext_content'] = 'Sehr geehrte Kundin, sehr geehrter Kunde,<br><br>Im Anhang finden Sie Ihre Rechnung.<br><br>Mit freundlichen Grüßen,<br>Wunderbyte Support Team';
+$string['erpnext_reference_doctype'] = 'Sales Invoice';
 
 // Privacy API.
 $string['history'] = "Käufe";

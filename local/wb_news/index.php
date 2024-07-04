@@ -24,6 +24,8 @@
 namespace local_wb_news;
 
 use local_wb_news\output\wb_news;
+use stdClass;
+use context;
 
 // @codingStandardsIgnoreStart
 require('../../config.php');
@@ -41,6 +43,10 @@ $PAGE->set_url($pageurl);
 
 $record = $DB->get_record("local_wb_news", ["id" => $id], '*');
 
+if ($id == 0) {
+    $record = new stdClass();
+    $record->title = get_string('wb_news', 'local_wb_news');
+}
 $PAGE->set_title($record->title ?? 'title');
 $PAGE->set_heading($record->title ?? 'title');
 $PAGE->set_pagelayout('base');
@@ -52,6 +58,31 @@ $data = $news->return_list();
 
 // Here, we want the information how to include the instance:
 foreach ($data['instances'] as $key => $value) {
+    if (!empty($data['instances'][$key]['contextids'])) {
+        $contextids = explode(',', $data['instances'][$key]['contextids']);
+        $hasaccess = false;
+        foreach ($contextids as $contextid) {
+            if (!empty($contextid)) {
+                try {
+                    $context = context::instance_by_id($contextid);
+                    if (has_capability('local/wb_news:manage', $context)) {
+                        $hasaccess = true;
+                    }
+                } catch (\Exception $e) {
+                    // Do nothing, we will skip this entry.
+                    if (is_siteadmin()) {
+                        $hasaccess = true;
+                    }
+                }
+            }
+        }
+
+        if (!$hasaccess) {
+            unset($data['instances'][$key]);
+            continue;
+        }
+    }
+
     $data['instances'][$key]['instancenameonindex'] = $value["name"];
     $data['instances'][$key]['shortcode'] = "[wbnews instance=" . $value["instanceid"] . "]";
 }

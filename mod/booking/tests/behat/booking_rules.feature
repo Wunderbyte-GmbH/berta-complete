@@ -102,7 +102,8 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     And I should see "Substitution teacher was added"
-    And I should see "An e-mail with subject 'teacher subst' has been sent to user with id: '2'"
+    ## And I should see "An e-mail with subject 'teacher subst' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"teacher subst\" has been sent to user with id"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -132,8 +133,8 @@ Feature: Create global booking rules as admin and insure they are working.
     And I visit "/report/loglive/index.php"
     And I should see "Booking option cancelled"
     And I should see "Booking option cancelled for/by user"
-    ## And I should see "An e-mail with subject 'Booking confirmation for Option-football' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'cancellation' has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'cancellation' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"cancellation\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -159,16 +160,17 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     And I should see "Booking option cancelled for/by user"
-    And I should see "Option cancelled by teacher or system: An e-mail with subject 'Deleted booking: Option-football by Student 1' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'answer cancellation' has been sent to user with id: '2'"
+    And I should see "Option cancelled by teacher or system A message e-mail with subject \"Deleted booking: Option-football by Student 1\" has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'answer cancellation' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"answer cancellation\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
   @javascript
   Scenario: Booking rules: create booking rule for teacher removal event and notify other teachers
     Given the following "mod_booking > options" exist:
-      | booking     | text           | course | description | limitanswers | maxanswers | datesmarker | optiondateid_1 | daystonotify_1 | coursestarttime_1 | courseendtime_1 | teachersforoption |
-      | BookingCMP  | Option-teacher | C1     | Deskr2      | 1            | 4          | 1           | 0              | 0              | ## +2 days ##     | ## +3 days ##   | teacher2, admin   |
+      | booking     | text           | course | description | limitanswers | maxanswers | datesmarker | optiondateid_1 | daystonotify_1 | coursestarttime_1 | courseendtime_1 | teachersforoption         |
+      | BookingCMP  | Option-teacher | C1     | Deskr2      | 1            | 4          | 1           | 0              | 0              | ## +2 days ##     | ## +3 days ##   | teacher2, teacher1, admin |
     And the following "mod_booking > rules" exist:
       | conditionname        | contextid | name        | actionname | actiondata                                                                          | rulename            | ruledata                                                        |
       | select_teacher_in_bo | 1         | notifyadmin | send_mail  | {"subject":"teacher removed","template":"teacher removed msg","templateformat":"1"} | rule_react_on_event | {"boevent":"\\mod_booking\\event\\optiondates_teacher_deleted"} |
@@ -187,7 +189,8 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Teacher deleted from teaching journal"
-    And I should see "An e-mail with subject 'teacher removed' has been sent to user with id: '2'"
+    ## And I should see "An e-mail with subject 'teacher removed' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"teacher removed\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -213,8 +216,9 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Booking option completed"
-    And I should see "Booking confirmation: An e-mail with subject 'Booking confirmation for Option-football' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'completion' has been sent to user with id:"
+    And I should see "Booking option completion A message e-mail with subject \"Booking option completed\" has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'completion' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"completion\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -237,9 +241,10 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     And I should see "Booking option cancelled"
-    ## Does not fired by now - disabled temporarily
-    And I should see "Custom message: An e-mail with subject 'cancellation football' has been sent to user with id:"
-    And I should see "An e-mail with subject 'cancellation football' has been sent to user with id:"
+    ## Changed since "feature-berta"
+    ## And I should see "Custom message: An e-mail with subject 'cancellation football' has been sent to user with id:"
+    ## And I should see "An e-mail with subject 'cancellation football' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"cancellation football\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -265,8 +270,8 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Booking option completed"
-    And I should see "Booking confirmation: An e-mail with subject 'Booking confirmation for football' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'completion football' has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'completion football' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"completion football\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -296,8 +301,11 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Custom message sent"
-    And I should see "A custom message e-mail with subject 'Rule send_copy_of_mail test' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'Custom msg copy: Rule send_copy_of_mail test' has been sent to user with id:"
+    ## And I should see "A custom message e-mail with subject 'Rule send_copy_of_mail test' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"Rule send_copy_of_mail test\" has been sent to user with id:"
+    And I should see "Unknown message type A message e-mail with subject \"Rule send_copy_of_mail test\" has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'Custom msg copy: Rule send_copy_of_mail test' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"Custom msg copy: Rule send_copy_of_mail test\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -329,8 +337,10 @@ Feature: Create global booking rules as admin and insure they are working.
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Custom message sent"
-    And I should see "A custom message e-mail with subject 'Rule send_copy_of_bulk_mail test' has been sent to user with id:"
-    And I should see "Custom message: An e-mail with subject 'Custom bulk msg copy: Rule send_copy_of_bulk_mail test' has been sent to user with id: '2'"
+    ## And I should see "A custom message e-mail with subject 'Rule send_copy_of_bulk_mail test' has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"Rule send_copy_of_bulk_mail test\" has been sent to user with id:"
+    ## And I should see "Custom message: An e-mail with subject 'Custom bulk msg copy: Rule send_copy_of_bulk_mail test' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"Custom bulk msg copy: Rule send_copy_of_bulk_mail test\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -351,13 +361,14 @@ Feature: Create global booking rules as admin and insure they are working.
       | Booking option name         | Option-updated |
       | Description                 | Deskr-updated  |
       | Max. number of participants | 5              |
-      | Assign teachers             | admin          |
+      | Assign teachers             | teacher1,admin |
     And I press "Save"
     ## Send messages via cron and verify via events log
     And I trigger cron
     And I visit "/report/loglive/index.php"
     Then I should see "Booking option updated"
-    And I should see "Custom message: An e-mail with subject 'OptionChanged' has been sent to user with id: '2'"
+    ## And I should see "Custom message: An e-mail with subject 'OptionChanged' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"OptionChanged\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out
 
@@ -381,8 +392,9 @@ Feature: Create global booking rules as admin and insure they are working.
     And I should see "Book now" in the ".allbookingoptionstable_r1" "css_element"
     And I trigger cron
     And I visit "/report/loglive/index.php"
-    And I wait "1" seconds
-    And I should see "Custom message: An e-mail with subject '1daybefore' has been sent to user with id: '2'"
-    And I should see "Custom message: An e-mail with subject '1dayafter' has been sent to user with id: '2'"
+    ## And I should see "Custom message: An e-mail with subject '1daybefore' has been sent to user with id: '2'"
+    ## And I should see "Custom message: An e-mail with subject '1dayafter' has been sent to user with id: '2'"
+    And I should see "Custom message A message e-mail with subject \"1daybefore\" has been sent to user with id:"
+    And I should see "Custom message A message e-mail with subject \"1dayafter\" has been sent to user with id:"
     ## Logout is mandatory for admin pages to avoid error
     And I log out

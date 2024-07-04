@@ -21,6 +21,9 @@
  * @copyright 2017 David Bogner, http://www.edulabs.org
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use mod_booking\customfield\booking_handler;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG, $DB, $ADMIN, $DB;
@@ -333,12 +336,7 @@ if ($ADMIN->fulltree) {
             new admin_setting_heading('newcoursecategorycfieldheading',
                 get_string('automaticcoursecreation', 'mod_booking'),
                 ''));
-
-        $sql = "SELECT cff.shortname, cff.name FROM {customfield_category} cfc
-        JOIN {customfield_field} cff ON cfc.id = cff.categoryid
-        WHERE cfc.component = 'mod_booking'";
-
-        $records = $DB->get_records_sql($sql);
+        $records = booking_handler::get_customfields();
         foreach ($records as $record) {
             $customfieldsarray[$record->shortname] = "$record->name ($record->shortname)";
         }

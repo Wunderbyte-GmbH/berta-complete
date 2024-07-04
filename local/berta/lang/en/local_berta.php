@@ -182,7 +182,7 @@ $string['location'] = 'Location';
 $string['competency'] = 'Competency';
 
 // Nav.
-$string['berta'] = 'u:Skills';
+$string['berta'] = 'u:rise';
 $string['entities'] = 'Manage locations';
 $string['coursename'] = "Coursename";
 
@@ -265,3 +265,10 @@ $string['coursemethods'] = "Methods";
 $string['additionalinfo'] = "Additional information";
 $string['targetaud'] = "Target audience";
 $string['optiondates'] = "Date(s)";
+$string['nolocation'] = "No location provided";
+$string['showdates'] = "Show dates";
+$string['teachers'] = "Teacher";
+$string['gotoprofile'] = "Profile";
+$string['buchungsbedingungen'] = "Booking requirements";
+$string['orgacontact'] = "Contactdetails responsible organisation";
+$string['aboutoffer'] = "About the offer";
