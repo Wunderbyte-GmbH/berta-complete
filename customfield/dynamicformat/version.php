@@ -1,5 +1,5 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
+// This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,21 +12,20 @@
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Customfield dynamic Type
  *
- * @package     local_entities
- * @copyright   2023 Wunderbyte GmbH <info@wunderbyte.at>
- * @author      Thomas Winkler, Bernhard Fischer, Georg Maißer
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   customfield_dynamicformat
+ * @copyright 2020 Sooraj Singh
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_entities';
-$plugin->release = '0.3.8';
-$plugin->version = 2024070400;
-$plugin->requires = 2020061500;
-$plugin->maturity = MATURITY_ALPHA;
+$plugin->component = 'customfield_dynamicformat';
+$plugin->version   = 2024062600;
+$plugin->requires  = 2019051100;
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = 'Version for Moodle 3.7 onwards';
