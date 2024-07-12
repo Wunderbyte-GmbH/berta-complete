@@ -72,6 +72,12 @@ $string['btnlink'] = 'Schaltflächenlink';
 $string['btntext'] = 'Schaltflächentext';
 $string['lightmode'] = 'Heller Modus';
 $string['cssclasses'] = 'Zusätzliche CSS Klassen';
+$string['columns'] = 'Spalten';
+$string['keyvaluepairs'] = 'Schlüssel: Wert';
+$string['additionaldata'] = 'Zusatzdaten';
+$string['timelinetemplate'] = 'Timeline Vorlage';
+$string['timelinetemplate2'] = 'Timeline Modus2 Vorlage';
+
 
 $string['template'] = 'Vorlage';
 $string['name'] = 'Name';
@@ -80,6 +86,7 @@ $string['slidertemplate'] = 'Slider Vorlage';
 $string['tabstemplate'] = 'Tabs Vorlage';
 $string['gridtemplate'] = 'Gitter Vorlage';
 $string['blogtemplate'] = 'Blog Vorlage';
+$string['crosslinkstemplate'] = 'Crosslinks Vorlage';
 
 // Modal.
 $string['confirmdelete'] = "Bestätige das Löschen. Dieser Vorgang kann nicht rückgängig gemacht werden.";
@@ -96,3 +103,4 @@ $string['interror'] = 'Nur ganze Zahlen sind erlaubt.';
 // Shortcodes.
 $string['wbnewslist'] = 'Eine oder alle News Instanzen.';
 $string['novalidinstance'] = 'Das ist keine verfügbare Instanz mit der id {$a}';
+$string['tagarea_news'] = "WB News";

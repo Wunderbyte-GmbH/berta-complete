@@ -22,27 +22,22 @@
 
     Example context (json):
     {
-        'bgimage' => '/local/wb_news/img/wb.jpg',
-        'icon' => '/local/wb_news/img/icon.png',
-        'headline' => 'News 1',
-        'subheadline' => 'Image and Icon',
-        'description' => 'Image and Icon',
-        'btnlink' => 'https://link1.com',
-        'btntext' => 'Read More'
+        "bgimage": "/local/wb_news/img/wb.jpg",
+        "icon": "/local/wb_news/img/icon.png",
+        "headline": "News 1",
+        "subheadline": "Image and Icon",
+        "description": "Image and Icon",
+        "btnlink": "https://link1.com",
+        "btntext": "Read More"
     }
 }}
 
-   {{#editmode}}
-    <div class="w-100 text-right">
-    {{> local_wb_news/editsinglenews}}
-    </div>
-    {{/editmode}}
 <div class="card h-100{{#lightmode}} wb_news-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}"{{#bgcolor}} style="background-color: {{bgcolor}};"{{/bgcolor}}>
     {{^btntext}}
     {{#btnlink}}<a href="{{btnlink}}" class="stretched-link"></a> {{/btnlink}}
     {{/btntext}}
     {{#headerimage}}
-    <img class="w-100 img-fluid wb_news-headerimage" src="{{headerimage}}">
+    <img class="w-100 img-fluid wb_news-headerimage" src="{{headerimage}}" alt="">
     {{/headerimage}}
 
     <div>
@@ -64,4 +59,9 @@
         <a href="{{btnlink}}" class="btn btn-primary mt-auto">{{btntext}}</a>
     {{/btntext}}
     </div>
+    {{#editmode}}
+        <div class="w-100 text-right">
+        {{> local_wb_news/editsinglenews}}
+        </div>
+    {{/editmode}}
 </div>

@@ -56,6 +56,7 @@ echo $OUTPUT->header();
 $news = new wb_news($id);
 $data = $news->return_list();
 
+// phpcs:ignore
 // Here, we want the information how to include the instance:
 foreach ($data['instances'] as $key => $value) {
     if (!empty($data['instances'][$key]['contextids'])) {
@@ -85,8 +86,8 @@ foreach ($data['instances'] as $key => $value) {
 
     $data['instances'][$key]['instancenameonindex'] = $value["name"];
     $data['instances'][$key]['shortcode'] = "[wbnews instance=" . $value["instanceid"] . "]";
+    $data['instances'][$key]['isadminpage'] = true;
 }
-
 
 $out = $OUTPUT->render_from_template('local_wb_news/wb_news_container', $data);
 echo $out;

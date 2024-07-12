@@ -16,6 +16,7 @@
 
 namespace local_wb_news;
 use core_tag_tag;
+use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -90,12 +91,19 @@ class news {
      */
     private string $contextids = '';
 
+    /**
+     * Columns
+     *
+     * @var int
+     */
+    private int $columns = 4;
+
 
     /**
      * Constructor
      *
      * @param int $instanceid
-     *
+     * @param bool $fetchitems
      */
     private function __construct(int $instanceid = 0, bool $fetchitems = true) {
         global $DB;
@@ -119,7 +127,7 @@ class news {
     /**
      * Get singelton instance.
      *
-     * @param  int $id
+     * @param  int  $instanceid
      * @param  bool $fetchitems
      * @return news
      */
@@ -141,24 +149,20 @@ class news {
 
         $returnarray = [];
 
+        $isactive = false;
         foreach ($this->news as $news) {
+
+            if (!empty($news->active)) {
+                $isactive = true;
+            }
             if (empty($news->userid)) {
                 continue;
             }
-
-            $user = \core_user::get_user($news->userid);
-            $context = \context_user::instance($news->userid);
-            $url = \moodle_url::make_pluginfile_url($context->id, 'user', 'icon', 0, '/', 'f1');
-            $news->profileurl = $url->out();
-            $news->fullname = "$user->firstname $user->lastname";
-            $news->tags = array_values(core_tag_tag::get_item_tags_array('local_wb_news', 'news', $news->id));
-            $news->publishedon = userdate($news->timecreated, get_string('strftimedate', 'core_langconfig'));
-            $news->cssclasses = empty($news->cssclasses) ? false : $news->cssclasses;
-            $news->headline = strip_tags(format_text($news->headline));
-            $news->subheadline = strip_tags(format_text($news->subheadline));
-            $news->btntext = strip_tags(format_text($news->btntext));
-            $news->description = format_text($news->description);
-            $returnarray[] = (array)$news;
+            $returnarray[] = (array)$this->get_formatted_news_item($news->id);
+        }
+        // If no item is active, we set the first active.
+        if (!$isactive) {
+            $returnarray[0]['active'] = 1;
         }
 
         return $returnarray;
@@ -190,6 +194,17 @@ class news {
     }
 
     /**
+     * Return number of columns in this instance.
+     *
+     * @return int
+     *
+     */
+    public function return_columns() {
+
+        return (int)$this->columns;
+    }
+
+    /**
      * Returns a the name string.
      *
      * @return string
@@ -200,7 +215,7 @@ class news {
     }
 
     /**
-     * Returns a list of news from the current instance.
+     * Returns a specifc news item from the current instance.
      *
      * @param int $id
      * @return stdClass|null
@@ -208,7 +223,51 @@ class news {
      */
     public function get_news_item($id) {
 
-        return $this->news[$id] ?? null;
+        $news = $this->news[$id];
+
+        return $news ?? null;
+    }
+
+    /**
+     * Returns a specific news item formatted from the current instance.
+     *
+     * @param int $id
+     * @return stdClass|null
+     *
+     */
+    public function get_formatted_news_item($id) {
+
+        global $PAGE;
+
+        $news = $this->news[$id];
+
+        $user = \core_user::get_user($news->userid);
+        $context = \context_user::instance($news->userid);
+        $url = moodle_url::make_pluginfile_url($context->id, 'user', 'icon', 0, '/', 'f1');
+        $news->profileurl = $url->out();
+        $news->fullname = "$user->firstname $user->lastname";
+        $news->tags = array_values(core_tag_tag::get_item_tags_array('local_wb_news', 'news', $news->id));
+        $news->publishedon = userdate($news->timecreated, get_string('strftimedate', 'core_langconfig'));
+        $news->cssclasses = empty($news->cssclasses) ? false : $news->cssclasses;
+        $news->headline = strip_tags(format_text($news->headline));
+        $news->subheadline = strip_tags(format_text($news->subheadline));
+        $news->btntext = strip_tags(format_text($news->btntext));
+        $news->description = format_text($news->description);
+        if ($news->json) {
+            $news->additionaldata = json_decode($news->json);
+        }
+        $returntourl = $returnurl = $PAGE->url->out();
+
+        $url = new moodle_url('/local/wb_news/newsview.php', [
+            'id' => $news->id,
+            'instanceid' => $this->instanceid,
+            'returnto' => 'url',
+            'returnurl' => $returnurl,
+        ]);
+
+        $news->detailviewurl = $url->out(false);
+
+        return $news ?? null;
     }
 
     /**
@@ -283,6 +342,8 @@ class news {
         if (!empty($data->contextids) && empty($this->contextids)) {
             $this->contextids = $data->contextids;
         }
+
+        $this->columns = empty($data->columns) ? $this->columns : $data->columns;
     }
 
     /**
@@ -399,6 +460,7 @@ class news {
         $instanceitem = [
             'instanceid' => $this->instanceid,
             'template' => $this->template,
+            'columns' => $this->columns,
             'name' => $this->name,
             'contextids' => $this->contextids,
             'editmode' => $PAGE->user_is_editing() && has_capability('local/wb_news:manage', context_system::instance()),
@@ -423,6 +485,15 @@ class news {
                 break;
             case 'local_wb_news/wb_news_blog':
                 $instanceitem['blogtemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_crosslinks':
+                $instanceitem['crosslinkstemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_timeline':
+                $instanceitem['timelinetemplate'] = true;
+                break;
+            case 'local_wb_news/wb_news_timeline2':
+                $instanceitem['timelinetemplate2'] = true;
                 break;
         }
 
@@ -486,7 +557,7 @@ class news {
             $DB->sql_cast_to_char('COALESCE(wni.id, 0)'),
             "'-'",
             $DB->sql_cast_to_char('COALESCE(wn.id, 0)')
-            ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name, wni.contextids
+            ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name, wni.contextids, wni.columns
             FROM {local_wb_news} wn
             RIGHT JOIN {local_wb_news_instance} wni ON wni.id = wn.instanceid
             WHERE (wn.instanceid > 0 OR wn.instanceid IS NULL) "; // Deleted Items are not normally included in the results.
@@ -498,7 +569,7 @@ class news {
             $params = [];
         }
 
-        $sql .= " ORDER By wni.id ASC";
+        $sql .= " ORDER By wni.id ASC, wn.sortorder";
 
         return $DB->get_records_sql($sql, $params);
     }

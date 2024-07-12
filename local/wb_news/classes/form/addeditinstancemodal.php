@@ -16,7 +16,7 @@
 
 /**
  * Entitiesrelation form implemantion to use entities in other plugins
- * @package     local_emis
+ * @package     local_wb_news
  * @copyright   2023 Wunderbyte GmbH
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -66,10 +66,26 @@ class addeditinstancemodal extends dynamic_form {
             'local_wb_news/wb_news_tabs' => get_string('tabstemplate', 'local_wb_news'),
             'local_wb_news/wb_news_grid' => get_string('gridtemplate', 'local_wb_news'),
             'local_wb_news/wb_news_blog' => get_string('blogtemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_crosslinks' => get_string('crosslinkstemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_timeline' => get_string('timelinetemplate', 'local_wb_news'),
+            'local_wb_news/wb_news_timeline2' => get_string('timelinetemplate2', 'local_wb_news'),
         ];
 
         // Add subheadline field.
         $mform->addElement('select', 'template', get_string('template', 'local_wb_news'), $options);
+
+        $options = [
+            12 => 1,
+            6 => 2,
+            4 => 3,
+            3 => 4,
+            2 => 6,
+            1 => 12,
+        ];
+
+        // Add subheadline field.
+        $mform->addElement('select', 'columns', get_string('columns', 'local_wb_news'), $options);
+        $mform->setDefault('columns', 4);
 
         $categories = news::get_contextid_options();
 
@@ -88,6 +104,7 @@ class addeditinstancemodal extends dynamic_form {
      * @return void
      */
     protected function check_access_for_dynamic_submission(): void {
+        // phpcs:ignore
         // TODO: capability to create advisors
 
     }
@@ -133,6 +150,7 @@ class addeditinstancemodal extends dynamic_form {
         $data->template = $news->return_template();
         $data->name = $news->return_name();
         $data->contextids = $news->return_contextids();
+        $data->columns = $news->return_columns();
 
         $this->set_data($data);
     }

@@ -22,25 +22,23 @@
 
     Example context (json):
     {
-        'bgimage' => '/local/wb_news/img/wb.jpg',
-        'icon' => '/local/wb_news/img/icon.png',
-        'headline' => 'News 1',
-        'subheadline' => 'Image and Icon',
-        'description' => 'Image and Icon',
-        'btnlink' => 'https://link1.com',
-        'btntext' => 'Read More'
+        "bgimage": "/local/wb_news/img/wb.jpg",
+        "icon": "/local/wb_news/img/icon.png",
+        "headline": "News 1",
+        "subheadline": "Image and Icon",
+        "description": "Image and Icon",
+        "btnlink": "https://link1.com",
+        "btntext": "Read More"
     }
 }}
 
 <div class="card h-100 wb_news_card_blog{{#lightmode}} wb_news-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}"{{#bgcolor}} style="background-color: {{bgcolor}};"{{/bgcolor}}>
-    {{^btntext}}
-    {{#btnlink}}<a href="{{btnlink}}" class="stretched-link"></a> {{/btnlink}}
-    {{/btntext}}
+    {{#detailviewurl}}<a href="{{detailviewurl}}" class="stretched-link"></a> {{/detailviewurl}}
     {{#headerimage}}
-    <img class="w-100 img-fluid wb_news-headerimage h-50" style="object-fit:cover;" src="{{headerimage}}">
+    <img class="w-100 img-fluid wb_news-headerimage h-50" style="object-fit:cover;" src="{{headerimage}}" alt="">
     {{/headerimage}}
     {{#bgimage}}
-    <img class="w-100 img-fluid wb_news-headerimage h-50" style="object-fit:cover;"  src="{{bgimage}}">
+    <img class="w-100 img-fluid wb_news-headerimage h-50" style="object-fit:cover;"  src="{{bgimage}}" alt="">
     {{/bgimage}}
 
     <div>
@@ -55,7 +53,6 @@
     {{/icon}}
     <h5 class="card-title">{{headline}}</h5>
     <h6 class="card-subtitle mb-2{{^lightmode}} text-muted{{/lightmode}}">{{subheadline}}</h6>
-    <p class="card-text">{{{description}}}</p>
     </div>
     <div class="card-footer">
     {{#btntext}}
@@ -63,13 +60,15 @@
     {{/btntext}}
     <div class="row no-gutters wb_news-userinfo">
         <div class="d-flex flex-grow-1 align-items-end">
-            <img src="{{profileurl}}" class="img-fluid rounded-circle profileimg" alt="Profile Picture">
+            {{#profileurl}}
+                <img src="{{profileurl}}" class="img-fluid rounded-circle profileimg" alt="Profile Picture">
+            {{/profileurl}}
             <span class="pl-2 smaller"><b>{{fullname}}</b></span>
             <span class="smaller pl-2 ml-auto text-black-50">{{{publishedon}}}</span>
         </div>
     </div>
     </div>
     {{#editmode}}
-    {{> local_wb_news/editsinglenews}}
+        {{> local_wb_news/editsinglenews}}
     {{/editmode}}
 </div>

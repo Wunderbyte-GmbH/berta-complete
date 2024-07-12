@@ -22,21 +22,23 @@
 
     Example context (json):
     {
-        "id" => "news Slider 1",
+        "id": "news Slider 1",
         "groupednews": [
-            "firstitem": 1
-            "news": [
-                {
-                    'bgimage' => '/local/wb_news/img/wb.jpg',
-                    'icon' => '/local/wb_news/img/icon.png',
-                    'headline' => 'News 1',
-                    'subheadline' => 'Image and Icon',
-                    'description' => 'Image and Icon',
-                    'btnlink' => 'https://link1.com',
-                    'btntext' => 'Read More',
-                    'headerimage' => 1
-                }
-            ]
+            {
+                "firstitem": 1,
+                "news": [
+                    {
+                        "bgimage": "/local/wb_news/img/wb.jpg",
+                        "icon": "/local/wb_news/img/icon.png",
+                        "headline": "News 1",
+                        "subheadline": "Image and Icon",
+                        "description": "Image and Icon",
+                        "btnlink": "https://link1.com",
+                        "btntext": "Read More",
+                        "headerimage": 1
+                    }
+                ]
+            }
         ]
     }
 }}
@@ -57,8 +59,10 @@
                     <img src="{{icon}}" class="card-icon mb-2 text-center" alt="Icon">
                 </div>
                 {{/icon}}
-                {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
-                <h3>{{headline}}</h3>
+                {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}#
+                {{#headline}}
+                    <h3>{{headline}}</h3>
+                {{/headline}}
                 <p>
                     {{{description}}}
                 </p>

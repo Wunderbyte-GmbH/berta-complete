@@ -22,25 +22,26 @@
 
     Example context (json):
     {
-        "id": "wbTabs"
+        "id": "wbTabs",
         "groupednews": [
-            "firstitem": 1
-            "news": [
-                {
-                    'bgimage' => '/local/wb_news/img/wb.jpg',
-                    'icon' => '/local/wb_news/img/icon.png',
-                    'headline' => 'News 1',
-                    'subheadline' => 'Image and Icon',
-                    'description' => 'Image and Icon',
-                    'btnlink' => 'https://link1.com',
-                    'btntext' => 'Read More',
-                    'headerimage' => 1
-                }
-            ]
+            {
+                "firstitem": 1,
+                "news": [
+                    {
+                        "bgimage": "/local/wb_news/img/wb.jpg",
+                        "icon": "/local/wb_news/img/icon.png",
+                        "headline": "News 1",
+                        "subheadline": "Image and Icon",
+                        "description": "Image and Icon",
+                        "btnlink": "https://link1.com",
+                        "btntext": "Read More",
+                        "headerimage": 1
+                    }
+                ]
+            }
         ]
     }
 }}
-
 <div data-id="wb-news-all-instances-container">
 {{#editmode}}
     <div class="text-center">
@@ -69,11 +70,21 @@
 {{#instances}}
     {{#instancenameonindex}}
     <div class="my-4">
-    <button class="btn btn-primary btn-collapse" type="button" data-toggle="collapse" data-target="#instance-{{instanceid}}" aria-expanded="false">
+
+    <button class="btn btn-primary btn-collapse mr-2" type="button" data-toggle="collapse" data-target="#instance-{{instanceid}}" aria-expanded="false">
     <i class="fa fa-chevron-down"></i>
     <i class="fa fa-chevron-up"></i>
     </button>
-    <span class="h4">{{instancenameonindex}}</span> <span>{{shortcode}}</span>
+    <div class="wb-news-addeditbutton btn btn-secondary fa-plus fa"
+    data-action="add"
+    data-instanceid="{{instanceid}}">
+    </div>
+    <div class="wb-news-addeditbutton btn btn-secondary fa-edit fa"
+        data-action="edit"
+        data-id="{{instanceid}}"
+        data-isinstance="true">
+    </div>
+    <span class="h4 ml-2">{{instancenameonindex}}</span> <span>{{shortcode}}</span>
     </div>
     {{/instancenameonindex}}
     <div id="instance-{{instanceid}}" class="card-body {{#instancenameonindex}}collapse{{/instancenameonindex}}">
@@ -92,18 +103,22 @@
     {{#blogtemplate}}
         {{> local_wb_news/wb_news_blog}}
     {{/blogtemplate}}
+    {{#crosslinkstemplate}}
+        {{> local_wb_news/wb_news_crosslinks}}
+    {{/crosslinkstemplate}}
+    {{#timelinetemplate}}
+        {{> local_wb_news/wb_news_timeline}}
+    {{/timelinetemplate}}
+    {{#timelinetemplate2}}
+        {{> local_wb_news/wb_news_timeline2}}
+    {{/timelinetemplate2}}
     </div>
 {{/instances}}
 </div>
 
-
-{{#js}}
-    require(['local_wb_news/editnews'], function(fn) {
-        fn.init({{instanceid}});
-    });
-{{/js}}
-
-<style>
+<script>
+    var style = document.createElement('style');
+    style.innerHTML = `
     .btn-collapse[aria-expanded="true"] .fa-chevron-down {
         display: none;
     }
@@ -116,4 +131,12 @@
     .btn-collapse[aria-expanded="false"] .fa-chevron-up {
         display: none;
     }
-</style>
+    `;
+    document.head.appendChild(style);
+</script>
+
+{{#js}}
+    require(['local_wb_news/editnews'], function(fn) {
+        fn.init({{instanceid}});
+    });
+{{/js}}
