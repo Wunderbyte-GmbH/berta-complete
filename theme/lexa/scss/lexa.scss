@@ -172,6 +172,19 @@ body.notloggedin {
             grid-template-columns: $navbar-scrolled-layout;
         }
     }
+    .pagelayout-standard {
+        #page.drawers {
+            .main-inner {
+                max-width: 100%;
+            }
+            .footer-popover {
+                border-radius: 0;
+                max-width: calc(100% + 6rem);
+                margin: 0 0 0 -3rem;
+                width: calc(100% + 6rem);
+            }
+        }
+    }
 }
 
 // Primary navigation/
@@ -228,6 +241,17 @@ body.notloggedin {
     }
 }
 
+@include media-breakpoint-up(lg) {
+    #page.drawers {
+        &.show-drawer-left {
+            padding-left: 3rem;
+        }
+        &.show-drawer-right {
+            padding-right: 3rem;
+        }
+    }
+}
+
 // Landing region.
 #block-region-landing {
     display: flex;
@@ -263,22 +287,46 @@ body.notloggedin {
     }
 }
 
-@include media-breakpoint-up(sm) {
+@include media-breakpoint-up(md) {
     body:not(.editing) #page.drawers {
         #block-region-landing {
             margin-left: -3rem;
             margin-right: -3rem;
         }
-        &.show-drawer-left {
-            #block-region-landing {
-                margin-left: 0;
-            }
-        }
-        &.show-drawer-right {
-            #block-region-landing {
-                margin-right: 0;
-            }
-        }
+    }
+}
+
+// Calendar.
+.lexatoday {
+    margin-bottom: 1rem;
+}
+
+#page-calendar-view #page.drawers .main-inner {
+    background-color: $calendar-bg-color;
+    #region-main {
+        @include border-radius();
+    }
+}
+
+.lexa-calendar-view .calendar-controls {
+    .current {
+        width: 100%;
+    }
+    .next,
+    .previous {
+        width: 50%;
+    }
+}
+
+.calendar_filters {
+    .calendar_event_site,
+    .calendar_event_category,
+    .calendar_event_course,
+    .calendar_event_group,
+    .calendar_event_user,
+    .calendar_event_other {
+        display: inline-block;
+        width: 32px;
     }
 }
 

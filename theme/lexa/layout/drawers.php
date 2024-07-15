@@ -102,14 +102,28 @@ if ($courseindexopen) {
     $extraclasses[] = 'drawer-open-index';
 }
 
-$blockshtml = $OUTPUT->blocks('side-pre');
-$hasblocks = (strpos($blockshtml, 'data-block=') !== false || !empty($addblockbutton));
-if (!$hasblocks) {
-    $blockdraweropen = false;
-}
+$blockcontentpre = '';
 $courseindex = core_course_drawer();
 if (!$courseindex) {
     $courseindexopen = false;
+}
+$blockshtml = $OUTPUT->blocks('side-pre');
+$hasblocks = (strpos($blockshtml, 'data-block=') !== false || !empty($addblockbutton));
+if ($hasblocks) {
+    $blocksright = true;
+    if (!$courseindex) {
+        if ($PAGE->pagetype == 'calendar-view') {
+            $blocksright = false;
+            // Extra calendar bits....
+            $calendarrenderer = $PAGE->get_renderer('core_calendar');
+            // Todo - Need to figure out the JS for this -> /calendar/amd/src/crud.js registerEventFormModal function ->
+            // root.on('click', CalendarSelectors.actions.create, function(e) bit.
+            // $blockcontentpre = $calendarrenderer->add_event_button($COURSE->id);
+            $blockcontentpre = $calendarrenderer->today();
+        }
+    }
+} else {
+    $blockdraweropen = false;
 }
 
 $landingblockshtml = $OUTPUT->blocks('landing');
@@ -173,6 +187,8 @@ $templatecontext = [
     'output' => $OUTPUT,
     'sidepreblocks' => $blockshtml,
     'hasblocks' => $hasblocks,
+    'blocksright' => $blocksright,
+    'blockcontentpre' => $blockcontentpre,
     'landingblocks' => $landingblockshtml,
     'haslandingblocks' => $haslandingblocks,
     'bodyattributes' => $bodyattributes,
