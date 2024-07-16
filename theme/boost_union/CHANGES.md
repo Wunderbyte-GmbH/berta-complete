@@ -4,27 +4,6 @@ moodle-theme_boost_union
 Changes
 -------
 
-### v4.4-r1
-
-* 2024-07-15 - Development: Rename master branch to main, please update your clones.
-* 2024-07-13 - Upgrade: Make the \theme_boost_union\task\purge_cache task non-blocking as this has been deprecated in Moodle core.
-* 2024-07-13 - Bugfix: Adopt fix for MDL-82397 before its integration into Moodle core, relates to #691.
-* 2024-07-12 - Upgrade: Adapt the course index icon feature visually to the new icon sizes.
-* 2024-07-12 - Upgrade: Adopt changes for coloring the activity icons when modifying the activity purpose.
-* 2024-07-12 - Upgrade: Adopt new activity purpose "Interactive content" when coloring activity icons, resolves #611.
-* 2024-07-07 - Upgrade: Adopt changes for coloring the activity icons, moving from background-colors to CSS filters, resolves #631.
-* 2024-07-04 - Upgrade: Fix Behat tests which broke due to the introduction of section pages in Moodle core.
-* 2024-07-04 - Upgrade: Adopt changes in boostnavbar.php from Boost core.
-* 2024-07-04 - Upgrade: Fix Behat tests which broke due to changes in the section naming in Moodle core.
-* 2024-07-04 - Upgrade: Adapt a Behat test as planned regarding the new theme selector in Moodle core. 
-* 2024-07-04 - Upgrade: Fix Behat tests which broke due to changes on the MyCourses page in Moodle core.
-* 2024-06-25 - Upgrade: Adopt and handle core changes for the footersuppressstandardfooter_* settings, moving from callback functions to hooks.
-* 2024-06-19 - Upgrade: Adopt changes in event-list-item.mustache from block_timeline in core.
-* 2024-06-19 - Upgrade: Adopt changes in view-cards.mustache from block_recentlyaccesseditems in core.
-* 2024-06-19 - Upgrade: Adopt changes in loginform.mustache from Boost core.
-* 2024-06-19 - Upgrade: Adopt changes in navbar.mustache from Boost core.
-* 2024-06-01 - Prepare compatibility for Moodle 4.4.
-
 ### v4.3-r15 
 
 * 2024-07-11 - Bugfix: Allow external SCSS to use SCSS variables by disabling the SCSS validation, resolves #683.

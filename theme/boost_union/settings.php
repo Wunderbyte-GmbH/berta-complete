@@ -25,8 +25,6 @@
 use theme_boost_union\admin_setting_configdatetime;
 use theme_boost_union\admin_setting_configstoredfilealwayscallback;
 use theme_boost_union\admin_setting_configtext_url;
-use core\di;
-use core\hook\manager as hook_manager;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -548,36 +546,51 @@ if ($hassiteconfig || has_capability('theme/boost_union:configure', context_syst
         $setting = new admin_setting_heading($name, $title, null);
         $tab->add($setting);
 
-        // Define all activity icon purposes (without the 'other' purpose as this is not branded).
-        $purposes = [MOD_PURPOSE_ADMINISTRATION,
-                MOD_PURPOSE_ASSESSMENT,
-                MOD_PURPOSE_COLLABORATION,
-                MOD_PURPOSE_COMMUNICATION,
-                MOD_PURPOSE_CONTENT,
-                MOD_PURPOSE_INTERACTIVECONTENT,
-                MOD_PURPOSE_INTERFACE];
-        // Iterate over all purposes.
-        foreach ($purposes as $purpose) {
-            // Setting: Activity icon color.
-            $name = 'theme_boost_union/activityiconcolor'.$purpose;
-            $title = get_string('activityiconcolor'.$purpose.'setting', 'theme_boost_union', null, true);
-            $description = get_string('activityiconcolor'.$purpose.'setting_desc', 'theme_boost_union', null, true);
-            $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
-            $setting->set_updatedcallback('theme_reset_all_caches');
-            $tab->add($setting);
-        }
+        // Setting: Activity icon color for 'administration'.
+        $name = 'theme_boost_union/activityiconcoloradministration';
+        $title = get_string('activityiconcoloradministrationsetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcoloradministrationsetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $tab->add($setting);
 
-        // Setting: Activity icon color fidelity.
-        $name = 'theme_boost_union/activityiconcolorfidelity';
-        $title = get_string('activityiconcolorfidelitysetting', 'theme_boost_union', null, true);
-        $description = get_string('activityiconcolorfidelitysetting_desc', 'theme_boost_union', null, true);
-        $activityiconcolorfidelityoptions = [
-                1 => get_string('activityiconcolorfidelity_oneshot', 'theme_boost_union'),
-                10 => get_string('activityiconcolorfidelity_sometries', 'theme_boost_union'),
-                100 => get_string('activityiconcolorfidelity_detailled', 'theme_boost_union'),
-                500 => get_string('activityiconcolorfidelity_insane', 'theme_boost_union'),
-            ];
-        $setting = new admin_setting_configselect($name, $title, $description, 1, $activityiconcolorfidelityoptions);
+        // Setting: Activity icon color for 'assessment'.
+        $name = 'theme_boost_union/activityiconcolorassessment';
+        $title = get_string('activityiconcolorassessmentsetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcolorassessmentsetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $tab->add($setting);
+
+        // Setting: Activity icon color for 'collaboration'.
+        $name = 'theme_boost_union/activityiconcolorcollaboration';
+        $title = get_string('activityiconcolorcollaborationsetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcolorcollaborationsetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $tab->add($setting);
+
+        // Setting: Activity icon color for 'communication'.
+        $name = 'theme_boost_union/activityiconcolorcommunication';
+        $title = get_string('activityiconcolorcommunicationsetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcolorcommunicationsetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $tab->add($setting);
+
+        // Setting: Activity icon color for 'content'.
+        $name = 'theme_boost_union/activityiconcolorcontent';
+        $title = get_string('activityiconcolorcontentsetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcolorcontentsetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
+        $setting->set_updatedcallback('theme_reset_all_caches');
+        $tab->add($setting);
+
+        // Setting: Activity icon color for 'interface'.
+        $name = 'theme_boost_union/activityiconcolorinterface';
+        $title = get_string('activityiconcolorinterfacesetting', 'theme_boost_union', null, true);
+        $description = get_string('activityiconcolorinterfacesetting_desc', 'theme_boost_union', null, true);
+        $setting = new admin_setting_configcolourpicker($name, $title, $description, '');
         $setting->set_updatedcallback('theme_reset_all_caches');
         $tab->add($setting);
 
@@ -598,7 +611,6 @@ if ($hassiteconfig || has_capability('theme/boost_union:configure', context_syst
                 MOD_PURPOSE_COLLABORATION => get_string('activitypurposecollaboration', 'theme_boost_union'),
                 MOD_PURPOSE_COMMUNICATION => get_string('activitypurposecommunication', 'theme_boost_union'),
                 MOD_PURPOSE_CONTENT => get_string('activitypurposecontent', 'theme_boost_union'),
-                MOD_PURPOSE_INTERACTIVECONTENT => get_string('activitypurposeinteractivecontent', 'theme_boost_union'),
                 MOD_PURPOSE_INTERFACE => get_string('activitypurposeinterface', 'theme_boost_union'),
                 MOD_PURPOSE_OTHER => get_string('activitypurposeother', 'theme_boost_union'),
         ];
@@ -844,70 +856,6 @@ if ($hassiteconfig || has_capability('theme/boost_union:configure', context_syst
         $title = get_string('courseoverviewshowprogresssetting', 'theme_boost_union', null, true);
         $description = get_string('courseoverviewshowprogresssetting_desc', 'theme_boost_union', null, true);
         $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_YES, $yesnooption);
-        $setting->set_updatedcallback('theme_reset_all_caches');
-        $tab->add($setting);
-
-        // Add tab to settings page.
-        $page->add($tab);
-
-
-        // Create Blocks tab.
-        $tab = new admin_settingpage('theme_boost_union_look_blocks',
-            get_string('blockstab', 'theme_boost_union', null, true));
-
-        // Create Timeline block heading.
-        $name = 'theme_boost_union/timelineheading';
-        $title = get_string('timelineheading', 'theme_boost_union', null, true);
-        $setting = new admin_setting_heading($name, $title, null);
-        $tab->add($setting);
-
-        // Setting: Tint activity icons in the timeline block.
-        $name = 'theme_boost_union/timelinetintenabled';
-        $title = get_string('timelinetintenabled', 'theme_boost_union', null, true);
-        $description = get_string('timelinetintenabled_desc', 'theme_boost_union', null, true);
-        $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
-        $setting->set_updatedcallback('theme_reset_all_caches');
-        $tab->add($setting);
-
-        // Create Upcoming events block heading.
-        $name = 'theme_boost_union/upcomingeventsheading';
-        $title = get_string('upcomingeventsheading', 'theme_boost_union', null, true);
-        $setting = new admin_setting_heading($name, $title, null);
-        $tab->add($setting);
-
-        // Setting: Tint activity icons in the upcoming events block.
-        $name = 'theme_boost_union/upcomingeventstintenabled';
-        $title = get_string('upcomingeventstintenabled', 'theme_boost_union', null, true);
-        $description = get_string('upcomingeventstintenabled_desc', 'theme_boost_union', null, true);
-        $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
-        $setting->set_updatedcallback('theme_reset_all_caches');
-        $tab->add($setting);
-
-        // Create Recently accessed items block heading.
-        $name = 'theme_boost_union/recentlyaccesseditemsheading';
-        $title = get_string('recentlyaccesseditemsheading', 'theme_boost_union', null, true);
-        $setting = new admin_setting_heading($name, $title, null);
-        $tab->add($setting);
-
-        // Setting: Tint activity icons in the recently accessed items block.
-        $name = 'theme_boost_union/recentlyaccesseditemstintenabled';
-        $title = get_string('recentlyaccesseditemstintenabled', 'theme_boost_union', null, true);
-        $description = get_string('recentlyaccesseditemstintenabled_desc', 'theme_boost_union', null, true);
-        $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
-        $setting->set_updatedcallback('theme_reset_all_caches');
-        $tab->add($setting);
-
-        // Create Activities block heading.
-        $name = 'theme_boost_union/activitiesheading';
-        $title = get_string('activitiesheading', 'theme_boost_union', null, true);
-        $setting = new admin_setting_heading($name, $title, null);
-        $tab->add($setting);
-
-        // Setting: Tint activity icons in the activities block.
-        $name = 'theme_boost_union/activitiestintenabled';
-        $title = get_string('activitiestintenabled', 'theme_boost_union', null, true);
-        $description = get_string('activitiestintenabled_desc', 'theme_boost_union', null, true);
-        $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
         $setting->set_updatedcallback('theme_reset_all_caches');
         $tab->add($setting);
 
@@ -1954,6 +1902,16 @@ if ($hassiteconfig || has_capability('theme/boost_union:configure', context_syst
         $page->hide_if('theme_boost_union/footersuppressusertour', 'theme_boost_union/enablefooterbutton', 'eq',
                 THEME_BOOST_UNION_SETTING_ENABLEFOOTER_NONE);
 
+        // Setting: Suppress 'Give feedback about this software' link.
+        $name = 'theme_boost_union/footersuppressfeedback';
+        $title = get_string('footersuppressfeedbacksetting', 'theme_boost_union', null, true);
+        $url = new moodle_url('/admin/settings.php', ['section' => 'userfeedback']);
+        $description = get_string('footersuppressfeedbacksetting_desc', 'theme_boost_union', ['url' => $url], true);
+        $setting = new admin_setting_configselect($name, $title, $description, THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
+        $tab->add($setting);
+        $page->hide_if('theme_boost_union/footersuppressfeedback', 'theme_boost_union/enablefooterbutton', 'eq',
+                THEME_BOOST_UNION_SETTING_ENABLEFOOTER_NONE);
+
         // Setting: Suppress theme switcher links.
         $name = 'theme_boost_union/footersuppressthemeswitch';
         $title = get_string('footersuppressthemeswitchsetting', 'theme_boost_union', null, true);
@@ -1972,34 +1930,7 @@ if ($hassiteconfig || has_capability('theme/boost_union:configure', context_syst
         $page->hide_if('theme_boost_union/footersuppresspowered', 'theme_boost_union/enablefooterbutton', 'eq',
                 THEME_BOOST_UNION_SETTING_ENABLEFOOTER_NONE);
 
-        // Settings: Suppress footer output by plugins (for updated plugins with the hook).
-        // Get the array of plugins with the before_standard_footer_html_generation hook which can be suppressed by Boost Union.
-        $pluginswithcallback =
-                di::get(hook_manager::class)->get_callbacks_for_hook('core\\hook\\output\\before_standard_footer_html_generation');
-        // Iterate over all plugins.
-        foreach ($pluginswithcallback as $callback) {
-            // Extract the pluginname.
-            $pluginname = theme_boost_union_get_pluginname_from_callbackname($callback);
-            // Compose the label.
-            if ($callback['component'] == 'core') {
-                $hooklabeltitle = get_string('footersuppressstandardfootercore', 'theme_boost_union', $pluginname, true);
-                $hooklabeldesc = get_string('footersuppressstandardfootercore_desc', 'theme_boost_union', $pluginname, true);
-            } else {
-                $hooklabeltitle = get_string('footersuppressstandardfooter', 'theme_boost_union', $pluginname, true);
-                $hooklabeldesc = get_string('footersuppressstandardfooter_desc', 'theme_boost_union', $pluginname, true);
-            }
-            // Get the plugin name from the language pack.
-            // Create the setting.
-            $name = 'theme_boost_union/footersuppressstandardfooter_'.$pluginname;
-            $setting = new admin_setting_configselect($name, $hooklabeltitle, $hooklabeldesc,
-                    THEME_BOOST_UNION_SETTING_SELECT_NO, $yesnooption);
-            $setting->set_updatedcallback('theme_boost_union_remove_hookmanipulation_marker');
-            $tab->add($setting);
-            $page->hide_if('theme_boost_union/footersuppressstandardfooter_'.$pluginname,
-                    'theme_boost_union/enablefooterbutton', 'eq', THEME_BOOST_UNION_SETTING_ENABLEFOOTER_NONE);
-        }
-
-        // Settings: Suppress footer output by plugins (for legacy plugins).
+        // Settings: Suppress footer output by plugins.
         // Get the array of plugins with the standard_footer_html() function which can be suppressed by Boost Union.
         $pluginswithfunction = get_plugins_with_function('standard_footer_html', 'lib.php');
         // Iterate over all plugins.
