@@ -161,7 +161,7 @@ class news {
             $returnarray[] = (array)$this->get_formatted_news_item($news->id);
         }
         // If no item is active, we set the first active.
-        if (!$isactive) {
+        if (count($returnarray) > 0 && !$isactive) {
             $returnarray[0]['active'] = 1;
         }
 
@@ -253,9 +253,10 @@ class news {
         $news->subheadline = strip_tags(format_text($news->subheadline));
         $news->btntext = strip_tags(format_text($news->btntext));
         $news->description = format_text($news->description);
-        if ($news->json) {
+        if (isset($news->json) && $news->json) {
             $news->additionaldata = json_decode($news->json);
         }
+
         $returntourl = $returnurl = $PAGE->url->out();
 
         $url = new moodle_url('/local/wb_news/newsview.php', [
@@ -491,9 +492,6 @@ class news {
                 break;
             case 'local_wb_news/wb_news_timeline':
                 $instanceitem['timelinetemplate'] = true;
-                break;
-            case 'local_wb_news/wb_news_timeline2':
-                $instanceitem['timelinetemplate2'] = true;
                 break;
         }
 
