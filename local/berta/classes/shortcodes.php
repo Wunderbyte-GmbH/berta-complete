@@ -33,6 +33,7 @@ use context_module;
 use dml_exception;
 use local_wunderbyte_table\filters\types\hierarchicalfilter;
 use local_wunderbyte_table\wunderbyte_table;
+use mod_booking\customfield\booking_handler;
 use mod_booking\output\page_allteachers;
 use local_berta\output\userinformation;
 use local_berta\table\berta_table;
@@ -542,7 +543,7 @@ class shortcodes {
       * @param string|null $content
       * @param object $env
       * @param Closure $next
-      * @return void
+      * @return string
       */
     public static function unifiedcards($shortcode, $args, $content, $env, $next) {
 
@@ -566,10 +567,6 @@ class shortcodes {
             return get_string('nobookinginstancesselected', 'local_berta');
         }
 
-        if (!isset($args['organisation']) || !$category = ($args['organisation'])) {
-            $organisation = '';
-        }
-
         if (!isset($args['image']) || !$showimage = ($args['image'])) {
             $showimage = false;
         }
@@ -582,8 +579,6 @@ class shortcodes {
             $args['filterontop'] = false;
         }
 
-        $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
-
         if (
             !isset($args['perpage'])
             || !is_int((int)$args['perpage'])
@@ -594,25 +589,32 @@ class shortcodes {
             $infinitescrollpage = 0;
         }
 
-        $table = self::inittableforcourses($booking);
+        $table = self::inittableforcourses();
 
         $table->showcountlabel = $args['countlabel'];
         $wherearray = ['bookingid' => $bookingids];
 
-        if (!empty($organisation)) {
-            $wherearray['organisation'] = $category;
-        };
+        $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
+
+        if (!empty($additionalwhere)) {
+            $additionalwhere .= " AND ";
+        }
+        // Additonal where has to be added here. We add the param later.
+        $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
 
         // If we want to find only the teacher relevant options, we chose different sql.
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
             list($fields, $from, $where, $params, $filter) =
-                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
+                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
         } else {
 
             list($fields, $from, $where, $params, $filter) =
-                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
+                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
         }
+
+        // Param has to be added after we got back params array.
+        $params['timenow'] = strtotime('today 00:00');
 
         $table->set_filter_sql($fields, $from, $where, $filter, $params);
 
@@ -1110,12 +1112,15 @@ class shortcodes {
      */
     private static function define_filtercolumns(&$table) {
 
-        $hierarchicalfilter = new hierarchicalfilter('organisation', get_string('organisation', 'local_berta'));
-        $hierarchicalfilter->add_options(self::ORGANISATIONEN);
-        $table->add_filter($hierarchicalfilter);
+        $standardfilter = new standardfilter('zgcommunities', get_string('zgcommunities', 'local_berta'));
+        $table->add_filter($standardfilter);
 
         $hierarchicalfilter = new hierarchicalfilter('kompetenzen', get_string('competency', 'local_berta'));
         $hierarchicalfilter->add_options(self::KOMPETENZEN);
+        $table->add_filter($hierarchicalfilter);
+
+        $hierarchicalfilter = new hierarchicalfilter('organisation', get_string('organisationfilter', 'local_berta'));
+        $hierarchicalfilter->add_options(self::ORGANISATIONEN);
         $table->add_filter($hierarchicalfilter);
 
         $standardfilter = new standardfilter('dayofweek', get_string('dayofweek', 'local_berta'));
@@ -1408,5 +1413,51 @@ class shortcodes {
             $value = str_replace('"', '', $value);
             $value = str_replace("'", "", $value);
         }
+    }
+
+    /**
+     * Modify there wherearray via arguments.
+     *
+     * @param array $args
+     *
+     * @return string
+     *
+     */
+    private static function set_wherearray_from_arguments(array &$args, &$wherearray) {
+
+        global $DB;
+
+        $customfields = booking_handler::get_customfields();
+        // Set given customfields (shortnames) as arguments.
+        $fields = [];
+        $additonalwhere = '';
+        if (!empty($customfields) && !empty($args)) {
+            foreach ($args as $key => $value) {
+                foreach ($customfields as $customfield) {
+                    if ($customfield->shortname == $key) {
+                        $configdata = json_decode($customfield->configdata ?? '[]');
+
+                        if (!empty($configdata->multiselect)) {
+                            if (!empty($additonalwhere)) {
+                                $additonalwhere .= " AND ";
+                            }
+
+                            $value = "'%$value%'";
+
+                            $additonalwhere .= " $key LIKE $value ";
+
+                        } else {
+                            $argument = strip_tags($argument);
+                            $argument = trim($argument);
+                            $wherearray[$key] = $value;
+                        }
+
+                        break;
+                    }
+                }
+            }
+        }
+
+        return $additonalwhere;
     }
 }
