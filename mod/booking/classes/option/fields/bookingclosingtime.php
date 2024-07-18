@@ -103,6 +103,7 @@ class bookingclosingtime extends field_base {
 
         if (empty($formdata->restrictanswerperiodclosing)) {
             $newoption->{$key} = 0;
+            $formdata->restrictanswerperiodclosing = 0;
         } else {
             if (!empty($value)) {
                 $newoption->{$key} = $value;
@@ -168,7 +169,7 @@ class bookingclosingtime extends field_base {
         } else {
 
             // Normally, we don't call set data after the first time loading.
-            if (isset($data->{$key})) {
+            if (isset($data->{$key}) && !empty($data->{$key})) {
                 $data->restrictanswerperiodclosing = 1;
                 return;
             }

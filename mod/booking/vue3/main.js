@@ -25,10 +25,9 @@
 import { createApp } from 'vue';
 import VueInputAutowidth from 'vue-input-autowidth';
 import { createAppStore } from './store';
-import Notifications from '@kyvg/vue3-notification';
-import router from './router/router';
-import './scss/custom.scss';
-import vSelect from "vue-select";
+import Notifications from '@kyvg/vue3-notification'
+import router from './router/router'
+
 // Enables the Composition API
 window.__VUE_OPTIONS_API__ = true;
 // Disable devtools in production
@@ -45,7 +44,6 @@ function init() {
         const app = createApp({});
         app.use(VueInputAutowidth);
         app.use(Notifications);
-        app.component("v-select", vSelect);
 
         const store = createAppStore();
         store.dispatch('loadComponentStrings');
