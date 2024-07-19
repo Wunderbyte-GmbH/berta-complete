@@ -1,3 +1,16 @@
+## Version 0.9.10 (2024071900)
+* Bugfix: Avoid double credit reduction in some cases
+* Bugfix: Default values for missing keys in webservice
+* Bugfix: Remove condition leading to incorrect userid
+
+## Version 0.9.9 (2024071800)
+* Improvement: enable filtered text display in additionalcashiersection
+* Improvement: Only show rebooking item if it's the same different costcenter
+* Improvement: Only accept rebooking items with with the same costcenter like in the cart
+* Improvement: Ajax reload for Shopping Cart history
+* Improvement: Enable variable bookingfees depending on costcenter
+* Bugfix: Fix different costcenter blocker
+
 ## Version 0.9.8 (2024070400)
 * Improvement: Add more automatic tests
 

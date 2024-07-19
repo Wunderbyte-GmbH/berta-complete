@@ -1,7 +1,8 @@
 <template>
   <div v-if="bookingstats.json && bookingstats.json.booking">
+    <h5>{{store.state.strings.vue_dashboard_booking_instances}}</h5>
     <table class="table mt-2">
-      <thead>
+      <thead class="thead-light">
         <tr>
           <th>{{ store.state.strings.vue_dashboard_checked }}</th>
           <th>{{ store.state.strings.vue_dashboard_name }}</th>
@@ -17,13 +18,19 @@
           :key="'bookingstats' + bookingStat.id"
         >
           <td>
-            <input
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" :id="'checkbox_' + bookingStat.id"  
+              :checked="bookingStat.checked"
+              @change="handleCheckboxChange(bookingStat)">
+              <label class="custom-control-label" :for="'checkbox_' + bookingStat.id"></label>
+            </div>
+            <!-- <input
               :id="'checkbox_' + bookingStat.id"
               type="checkbox"
-              class="mr-2"
+              class="form-check-input mr-2" role="switch"
               :checked="bookingStat.checked"
               @change="handleCheckboxChange(bookingStat)"
-            >
+            > -->
           </td>
           <td>
             <a :href="'/mod/booking/view.php?id=' + bookingStat.id">
@@ -57,3 +64,13 @@
   }
 
 </script>
+
+
+
+<style lang="scss" scoped>
+ @import './scss/custom.scss';
+
+  .thead-light th {
+    background: $vuelightcontent;
+  }
+</style>

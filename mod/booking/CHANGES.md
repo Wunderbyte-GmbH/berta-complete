@@ -1,3 +1,17 @@
+## Version 8.5.0 (2024071801)
+* Improvement: Enable up to 3 bookingrules for free version
+* Improvement: Vue Dashboard
+
+## Version 8.4.9 (2024071800)
+* Bugfix: Bookingopening and bookingclosing in bulk operations
+* Bugfix: Avoid unwanted moving of booking option
+
+## Version 8.4.8 (2024071700)
+* Improvement: Return configdata when fetching customfields via handler
+* Improvement: Bulk Operations for bookingoption via shortcode [bulkoperations]
+* Bugfix: Version supported uses new syntax
+* Bugfix: Fix wrong use call of external_multiple_structure
+
 ## Version 8.4.7 (2024071500)
 * Feature: Add feature to move booking option to different booking instance
 * Feature: Add setting "bookondetail" to allow booking only on details page

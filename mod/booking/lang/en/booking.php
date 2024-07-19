@@ -1839,6 +1839,22 @@ $string['teachingconfigforinstance'] = 'Edit booking option form for ';
 $string['dashboard_summary'] = 'General';
 $string['dashboard_summary_desc'] = 'Contains the settings and stats for the whole Moodle site';
 
+// Dashboard Vue.
+$string['dashboard_new_bookings'] = 'Bookings';
+$string['dashboard_ppl_wl'] = 'People in queue';
+$string['dashboard_neue_stornos'] = 'Cancellations';
+$string['dashboard_noshows'] = 'No shows';
+$string['dashboard_managelocation'] = 'Manage locations';
+
+$string['dashboard_overview'] = 'Overview';
+$string['dashboard_bookingfields'] = 'Bookingoptionfields';
+$string['dashboard_stats'] = 'Stats';
+$string['dashboard_mydashboard'] = 'My Dashboard';
+
+$string['dashboard_zeitraum'] = 'Timespan';
+$string['dashboard_organisation'] = 'Organisation';
+$string['dashboard_auswertung'] = 'Reporting';
+
 // Optionformconfig.php / optionformconfig_form.php.
 $string['optionformconfig'] = 'Configure booking option forms (PRO)';
 $string['optionformconfig_infotext'] = 'With this PRO feature, you can create your individual booking option forms by using drag & drop
@@ -2247,8 +2263,8 @@ $string['error:campaignstart'] = 'Campaign start has to be before campaign end.'
 $string['error:campaignend'] = 'Campaign end has to be after campaign start.';
 
 // Booking rules.
-$string['bookingruleswithbadge'] = 'Booking: Rules ' . $badgepro;
-$string['bookingrules'] = 'Booking: Rules (PRO)';
+$string['bookingruleswithprobadge'] = 'Booking: Rules ' . $badgepro;
+$string['bookingrules'] = 'Booking: Rules';
 $string['bookingrule'] = 'Rule';
 $string['addbookingrule'] = 'Add rule';
 $string['deletebookingrule'] = 'Delete rule';
@@ -2256,6 +2272,8 @@ $string['deletebookingrule_confirmtext'] = 'Do you really want to delete the fol
 $string['bookingruletemplates'] = 'Load a template rule';
 $string['bookinguseastemplate'] = 'Set this rule as template';
 $string['bookingdefaulttemplate'] = 'Choose template...';
+$string['useprotoenablemorerules'] = 'You need a Booking PRO license if you want to add more rules.
+<a href="https://wunderbyte.at/en/contact" target="_blank">Contact Wunderbyte</a> if you want to buy a PRO license.';
 
 $string['rule_event'] = 'Event';
 $string['rule_event_condition'] = 'Execute when...';
@@ -2506,6 +2524,7 @@ $string['vue_dashboard_path'] = 'Path';
 $string['vue_dashboard_create_oe'] = 'Create new OE';
 $string['vue_dashboard_assign_role'] = 'Assign Roles';
 $string['vue_dashboard_new_course'] = 'Create new course';
+$string['vue_dashboard_booking_instances'] = 'Booking instances';
 $string['vue_not_found_route_not_found'] = 'Route not found';
 $string['vue_not_found_try_again'] = 'Please try later again';
 $string['vue_booking_stats_capability'] = 'Capability';

@@ -26,6 +26,7 @@ declare(strict_types=1);
 
 namespace mod_booking\external;
 
+use core_plugin_manager;
 use external_api;
 use external_function_parameters;
 use external_multiple_structure;
@@ -102,11 +103,18 @@ class get_parent_categories extends external_api {
             $returnarray = [];
         }
 
+        // Check if urise plugin is installed.
+        $pluginman = core_plugin_manager::instance();
+        $plugininfo = $pluginman->get_plugin_info('local_urise');
+        if (!$plugininfo) {
+            return [];
+        }
+
         foreach ($records as $record) {
 
             $context = context_coursecat::instance($record->id);
 
-            if (!has_capability('local/berta:view', $context)) {
+            if (!has_capability('local/urise:view', $context)) {
                 continue;
             }
             $coursecount += $record->coursecount;
@@ -122,7 +130,7 @@ class get_parent_categories extends external_api {
 
             if ($bookingoptions
                     = coursecategories::return_booking_information_for_coursecategory((int)$record->contextid)) {
-                $multibookingconfig = explode(',', get_config('local_berta', 'multibookinginstances') ?: '');
+                $multibookingconfig = explode(',', get_config('local_urise', 'multibookinginstances') ?: '');
                 foreach ($bookingoptions as &$value) {
                     $defaultchecked = false;
                     if (in_array($value->bookingid, $multibookingconfig)) {
@@ -179,6 +187,14 @@ class get_parent_categories extends external_api {
                     'reservedcount' => new external_value(PARAM_TEXT, 'Reserved count', VALUE_DEFAULT, 0),
                     'description' => new external_value(PARAM_RAW, 'description', VALUE_DEFAULT, ''),
                     'path' => new external_value(PARAM_TEXT, 'path', VALUE_DEFAULT, ''),
+                    'courses' => new external_multiple_structure(
+                        new external_single_structure(
+                            [
+                                'id' => new external_value(PARAM_INT, 'Course ID'),
+                                'fullname' => new external_value(PARAM_TEXT, 'Full course name'),
+                            ]
+                        ), 'List of courses', VALUE_OPTIONAL
+                    ),
                     'json' => new external_value(PARAM_RAW, 'json', VALUE_DEFAULT, '{}'),
                 ]
             )
