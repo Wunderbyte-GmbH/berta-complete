@@ -1,10 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [2.5.2] 2024-07-18 (dev)
+## [2.5.2] 2024-07-22 (dev)
 ### Added
-- New {ifuser id|username}{/ifuser} tag.
+- New {ifprofile shortname is "value"}...{/ifprofile} tag.
+- New {ifprofile shortname is ""}...{/ifprofile} tag.
+- New {ifprofile shortname not "value"}...{/ifprofile} tag.
+- New {ifprofile shortname not ""}...{/ifprofile} tag. Similar to {ifprofile_field_shortname} tag but can't be nested.
+- New {ifprofile shortname contains "value"}...{/ifprofile} tag.
+- New {ifprofile shortname in "value"}...{/ifprofile} tag.
 ### Updated
+- Added more documentation to README.md.
+- Fixed links and updated table of contents in README.md.
 - {categories0} tag now shows hidden categories if role has moodle/category:viewhiddencategories.
 - {categories0menu} tag now shows hidden categories if role has moodle/category:viewhiddencategories.
 - Fixed a couple of PHP 5.6 compatibility issues. Note that unit tests are still only compatible with PHP 7.1 and later.
