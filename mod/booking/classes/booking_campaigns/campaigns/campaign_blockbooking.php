@@ -50,6 +50,9 @@ class campaign_blockbooking implements booking_campaign {
     /** @var string $bookingcampaigntype */
     public $bookingcampaigntype = 'campaign_blockbooking';
 
+    /** @var string $bookingcampaigntypestringid */
+    public $bookingcampaigntypestringid = 'campaignblockbooking';
+
     /** @var int $starttime */
     public $starttime = 0;
 
@@ -108,8 +111,8 @@ class campaign_blockbooking implements booking_campaign {
 
         global $DB;
 
-        $mform->addElement('text', 'name', get_string('campaign_name', 'mod_booking'));
-        $mform->addHelpButton('name', 'campaign_name', 'mod_booking');
+        $mform->addElement('text', 'name', get_string('campaignname', 'mod_booking'));
+        $mform->addHelpButton('name', 'campaignname', 'mod_booking');
 
         // Custom field name.
         $records = booking_handler::get_customfields();
@@ -200,7 +203,7 @@ class campaign_blockbooking implements booking_campaign {
      * @return string
      */
     public function get_name_of_campaign_type(bool $localized = true): string {
-        return $localized ? get_string($this->bookingcampaigntype, 'mod_booking') : $this->bookingcampaigntype;
+        return $localized ? get_string($this->bookingcampaigntypestringid, 'mod_booking') : $this->bookingcampaigntype;
     }
 
     /**

@@ -157,7 +157,7 @@ class entities extends field_base {
             // ...cannot be put directly into instance_form_definition of entitiesrelation_handler.
             // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
             /*$mform->addElement('advcheckbox', 'er_saverelationsforoptiondates',
-                get_string('er_saverelationsforoptiondates', 'mod_booking'));*/
+                get_string('ersaverelationsforoptiondates', 'mod_booking'));*/
 
             // Checkbox "Save entity for each date too" must be checked by default.
             // $mform->setDefault('er_saverelationsforoptiondates', 1);
@@ -169,7 +169,7 @@ class entities extends field_base {
             // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
             /* if (entitiesrelation_handler::option_has_dates_with_entity_outliers($optionid)) {
                 $mform->addElement('advcheckbox', 'confirm:er_saverelationsforoptiondates',
-                    get_string('confirm:er_saverelationsforoptiondates', 'mod_booking'));
+                    get_string('confirm:ersaverelationsforoptiondates', 'mod_booking'));
             } */
         }
     }
@@ -239,8 +239,8 @@ class entities extends field_base {
                 $changes = [ 'changes' => [
                         'info' => get_string('entitiesfieldname', 'booking') . get_string('changeinfochanged', 'booking'),
                         'fieldname' => 'entities',
-                        'oldvalue' => isset($oldentity['id']) ? get_string('changesinentity', 'mod_booking', $oldentity) : '',
-                        'newvalue' => !empty($newentityid) ? get_string('changesinentity', 'mod_booking', $newentity) : '',
+                        'oldvalue' => $oldentity,
+                        'newvalue' => $newentity,
                     ],
                 ];
             }
@@ -290,5 +290,30 @@ class entities extends field_base {
                 $data->er_saverelationsforoptiondates = 1;
             }
         }
+    }
+
+    /**
+     * Return values for bookingoption_updated event.
+     *
+     * @param array $changes
+     *
+     * @return array
+     *
+     */
+    public function get_changes_description(array $changes): array {
+        $oldentity = $changes['oldvalue'] ?? [];
+        $newentity = $changes['newvalue'] ?? [];
+
+        $infotext = get_string($changes['fieldname'], 'booking') . get_string('changeinfochanged', 'booking');
+        $oldvalue = isset($oldentity['id']) ? get_string('changesinentity', 'mod_booking', $oldentity) : '';
+        $newvalue = isset($newentity['id']) ? get_string('changesinentity', 'mod_booking', $newentity) : '';
+
+        return [
+            'info' => $infotext,
+            'fieldname' => get_string($changes['fieldname'], 'booking'),
+            'oldvalue' => $oldvalue,
+            'newvalue' => $newvalue,
+        ];
+
     }
 }

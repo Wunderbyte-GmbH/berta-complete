@@ -47,6 +47,9 @@ class subbooking_additionalitem implements booking_subbooking {
     /** @var string $type type of subbooking as the name of this class */
     public $type = 'subbooking_additionalitem';
 
+    /** @var string $typestringid localized string to display type of subbooking at various froms */
+    public $typestringid = 'subbookingadditionalitem';
+
     /** @var string $name given name to this configured subbooking*/
     public $name = '';
 
@@ -98,7 +101,7 @@ class subbooking_additionalitem implements booking_subbooking {
     public function add_subbooking_to_mform(MoodleQuickForm &$mform, array &$formdata) {
 
         $mform->addElement('static', 'subbooking_additionalitem_desc', '',
-            get_string('subbooking_additionalitem_desc', 'mod_booking'));
+            get_string('subbookingadditionalitem_desc', 'mod_booking'));
 
         // Add a description with the potential inclusion of files.
 
@@ -115,7 +118,7 @@ class subbooking_additionalitem implements booking_subbooking {
         $mform->addElement(
             'editor',
             'subbooking_additionalitem_description_editor',
-            get_string('subbooking_additionalitem_description', 'mod_booking'),
+            get_string('subbookingadditionalitemdescription', 'mod_booking'),
             null,
             $textfieldoptions);
         $mform->setType('subbooking_additionalitem_description', PARAM_RAW);
@@ -135,7 +138,7 @@ class subbooking_additionalitem implements booking_subbooking {
      * @return string
      */
     public function get_name_of_subbooking($localized = true): string {
-        return $localized ? get_string($this->type, 'mod_booking') : $this->type;
+        return $localized ? get_string($this->typestringid, 'mod_booking') : $this->type;
     }
 
     /**

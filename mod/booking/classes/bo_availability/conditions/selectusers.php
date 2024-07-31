@@ -225,11 +225,11 @@ class selectusers implements bo_condition {
             ];
 
             $mform->addElement('advcheckbox', 'bo_cond_selectusers_restrict',
-                    get_string('bo_cond_selectusers_restrict', 'mod_booking'));
+                    get_string('bocondselectusersrestrict', 'mod_booking'));
 
             $mform->addElement('autocomplete', 'bo_cond_selectusers_userids',
-                get_string('bo_cond_selectusers_userids', 'mod_booking'), [], $options);
-            $mform->addHelpButton('bo_cond_selectusers_userids', 'bo_cond_selectusers_userids', 'mod_booking');
+                get_string('bocondselectusersuserids', 'mod_booking'), [], $options);
+            $mform->addHelpButton('bo_cond_selectusers_userids', 'bocondselectusersuserids', 'mod_booking');
             $mform->hideIf('bo_cond_selectusers_userids', 'bo_cond_selectusers_restrict', 'notchecked');
 
             $mform->addElement('checkbox', 'bo_cond_selectusers_overrideconditioncheckbox',
@@ -257,8 +257,9 @@ class selectusers implements bo_condition {
                 $fullclassname = get_class($overridecondition); // With namespace.
                 $classnameparts = explode('\\', $fullclassname);
                 $shortclassname = end($classnameparts); // Without namespace.
+                $shortclassname = str_replace("_", "", $shortclassname); // Remove underscroll.
                 $overrideconditionsarray[$overridecondition->id] =
-                    get_string('bo_cond_' . $shortclassname, 'mod_booking');
+                    get_string('bocond' . $shortclassname, 'mod_booking');
             }
 
             // Check for json conditions that might have been saved before.
@@ -274,8 +275,8 @@ class selectusers implements bo_condition {
                             if ($jsoncondition->id != $this->id
                                 && isset($currentcondition->overridable)
                                 && ($currentcondition->overridable == true)) {
-                                $overrideconditionsarray[$jsoncondition->id] = get_string('bo_cond_' .
-                                    $jsoncondition->name, 'mod_booking');
+                                $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
+                                    str_replace("_", "", $jsoncondition->name), 'mod_booking');
                             }
                         }
                     }
@@ -295,7 +296,7 @@ class selectusers implements bo_condition {
         } else {
             // No PRO license is active.
             $mform->addElement('static', 'static:selectusers',
-                get_string('bo_cond_selectusers_restrict', 'mod_booking'),
+                get_string('bocondselectusersrestrict', 'mod_booking'),
                 get_string('proversiononly', 'mod_booking'));
         }
 
@@ -395,8 +396,8 @@ class selectusers implements bo_condition {
     private function get_description_string($isavailable, $full, $settings) {
         global $DB;
         if ($isavailable) {
-            $description = $full ? get_string('bo_cond_selectusers_full_available', 'mod_booking') :
-                get_string('bo_cond_selectusers_available', 'mod_booking');
+            $description = $full ? get_string('bocondselectusersfullavailable', 'mod_booking') :
+                get_string('bocondselectusersavailable', 'mod_booking');
         } else {
             if (!$this->customsettings) {
                 // This description can only works with the right custom settings.
@@ -420,9 +421,9 @@ class selectusers implements bo_condition {
                 $allowedusersstring = implode(', ', $allowedusersstringarr);
             }
 
-            $description = $full ? get_string('bo_cond_selectusers_full_not_available',
+            $description = $full ? get_string('bocondselectusersfullnotavailable',
                 'mod_booking', $allowedusersstring) :
-                get_string('bo_cond_selectusers_not_available', 'mod_booking');
+                get_string('bocondselectusersnotavailable', 'mod_booking');
         }
         return $description;
     }

@@ -293,12 +293,34 @@ class filter_filtercodes extends moodle_text_filter {
         foreach ($fields as $field) {
             // Skip fields that don't exist (likely a typo).
             if (isset($user->$field)) {
-                $profilefields[$field] = (object)['shortname' => $field, 'visible' => '1', 'datatype' => 'text', 'value' => $user->$field];
+                $profilefields[$field] = (object)['shortname' => $field, 'visible' => '1',
+                    'datatype' => 'text', 'value' => $user->$field];
             }
         }
         $lastfields = $fields;
 
         return $profilefields;
+    }
+
+    /**
+     * Retrieves the user's groupings for a course.
+     *
+     * @param integer $courseid The course ID.
+     * @param integer $userid The user ID.
+     * @return array An array of groupings for the specified user in the specified course.
+     */
+    private function getusergroupings($courseid, $userid) {
+        global $DB;
+
+        return $DB->get_records_sql('SELECT gp.id, gp.name, gp.idnumber
+                   FROM {user} u
+                     INNER JOIN {groups_members} gm ON u.id = gm.userid
+                     INNER JOIN {groups} g ON g.id = gm.groupid
+                     INNER JOIN {groupings_groups} gg ON gm.groupid = gg.groupid
+                     INNER JOIN {groupings} gp ON gp.id = gg.groupingid
+                  WHERE g.courseid = ? AND u.id = ?
+               GROUP BY gp.id
+               ORDER BY gp.name ASC', [$courseid, $userid]);
     }
 
     /**
@@ -1451,6 +1473,7 @@ class filter_filtercodes extends moodle_text_filter {
         static $profilefields;
         static $profiledata;
         static $mygroupslist;
+        static $mygroupingslist;
 
         $replace = []; // Array of key/value filterobjects.
 
@@ -1698,7 +1721,7 @@ class filter_filtercodes extends moodle_text_filter {
             // Description: Complete URL of the current page - URL encoded for use as a parameter of a URL.
             // Parameters: None.
             if (stripos($text, '{thisurl_enc}') !== false) {
-                $replace['/\{thisurl_enc\}/i'] = urlencode($url);
+                $replace['/\{thisurl_enc\}/i'] = rawurlencode($url);
             }
         }
 
@@ -3607,6 +3630,29 @@ class filter_filtercodes extends moodle_text_filter {
             $replace['/\{mygroups\}/i'] = $mygroups;
         }
 
+        // Tag {mygroupings}.
+        // Description: List of groupings that the user is in.
+        // Parameters: None.
+        if (stripos($text, '{mygroupings}') !== false) {
+            static $mygroupings;
+
+            if (!isset($mygroupings)) {
+                // Fetch my groups.
+                $context = context_course::instance($PAGE->course->id);
+                if (!isset($mygroupingslist)) {
+                    $mygroupingslist = $this->getusergroupings($PAGE->course->id, $USER->id);
+                }
+                // Process group names through Moodle filters in case they are multi-language.
+                $mygroupings = [];
+                foreach ($mygroupingslist as $grouping) {
+                    $mygroupings[] = format_string($grouping->name, true, ['context' => $context]);
+                }
+                // Format groups into a language string.
+                $mygroupings = $this->formatlist($mygroupings);
+            }
+            $replace['/\{mygroupings\}/i'] = $mygroupings;
+        }
+
         // Tag: {wwwcontactform}.
         // Description: Action URL for ContactForm form submissions.
         // Parameters: None.
@@ -3930,7 +3976,8 @@ class filter_filtercodes extends moodle_text_filter {
             // Requires content between tags.
             if (stripos($text, '{/ifprofile}') !== false) {
                 // Retrieve all custom profile fields and specified core fields.
-                $corefields = ['id', 'username', 'auth', 'idnumber', 'email', 'institution', 'department', 'city', 'country', 'timezone', 'lang'];
+                $corefields = ['id', 'username', 'auth', 'idnumber', 'email', 'institution',
+                    'department', 'city', 'country', 'timezone', 'lang'];
                 $profilefields = $this->getuserprofilefields($USER, $corefields);
 
                 // Find all ifprofile tags.
@@ -4589,6 +4636,64 @@ class filter_filtercodes extends moodle_text_filter {
                 }
             }
 
+            // Tag: {ifingrouping id|idnumber}...{/ifingrouping}.
+            // Description: Display content if the user is a member of the specified grouping.
+            // Required Parameters: group id or idnumber.
+            // Requires content between tags.
+            if (stripos($text, '{ifingrouping') !== false) {
+                if (!isset($mygroupingslist)) {
+                    $mygroupingslist = $this->getusergroupings($PAGE->course->id, $USER->id);
+                }
+                $re = '/{ifingrouping\s+(.*)\}(.*)\{\/ifingrouping\}/isuU';
+                $found = preg_match_all($re, $text, $matches);
+                if ($found > 0) {
+                    foreach ($matches[1] as $groupingid) {
+                        $key = '/{ifingrouping\s+' . $groupingid . '\}(.*)\{\/ifingrouping\}/isuU';
+                        $ismember = false;
+                        foreach ($mygroupingslist as $grouping) {
+                            if ($groupingid == $grouping->id || $groupingid == $grouping->idnumber) {
+                                $ismember = true;
+                                break;
+                            }
+                        }
+                        if ($ismember) { // Just remove the tags.
+                            $replace[$key] = '$1';
+                        } else { // Remove the ifingroup tags and content.
+                            $replace[$key] = '';
+                        }
+                    }
+                }
+            }
+
+            // Tag: {ifnotingroup id|idnumber}...{/ifnotingroup}.
+            // Description: Display content if the user is NOT a member of the specified grouping.
+            // Required Parameters: group id or idnumber.
+            // Requires content between tags.
+            if (stripos($text, '{ifnotingrouping') !== false) {
+                if (!isset($mygroupingslist)) {
+                    $mygroupingslist = $this->getusergroupings($PAGE->course->id, $USER->id);
+                }
+                $re = '/{ifnotingrouping\s+(.*)\}(.*)\{\/ifnotingrouping\}/isuU';
+                $found = preg_match_all($re, $text, $matches);
+                if ($found > 0) {
+                    foreach ($matches[1] as $groupingid) {
+                        $key = '/{ifnotingrouping\s+' . $groupingid . '\}(.*)\{\/ifnotingrouping\}/isuU';
+                        $ismember = false;
+                        foreach ($mygroupingslist as $grouping) {
+                            if ($groupingid == $grouping->id || $groupingid == $grouping->idnumber) {
+                                $ismember = true;
+                                break;
+                            }
+                        }
+                        if ($ismember) { // Remove the ifnotingroup tags and content.
+                            $replace[$key] = '';
+                        } else { // Just remove the tags and keep the content.
+                            $replace[$key] = '$1';
+                        }
+                    }
+                }
+            }
+
             // Tag: {iftenant idnumber|tenantid}...{/iftenant}.
             // Description: Display content only if the user is part of the specified tenant on Moodle Workplace.
             // Required Parameter: tenant idnumber or tenantid.
@@ -4985,46 +5090,6 @@ class filter_filtercodes extends moodle_text_filter {
             unset($chart, $matches, $html, $value, $title);
         }
 
-        // Tag: {urlencode}...{/urlencode}.
-        // Description: URL Encodes the content between the tags for use as a parameter of a URL.
-        // Parameters: None.
-        // Requires content between tags.
-        if (stripos($text, '{urlencode}') !== false) {
-            // Replace {urlencode} tags and content with encoded content.
-            $newtext = preg_replace_callback(
-                '/\{urlencode\}(.*)\{\/urlencode\}/isuU',
-                function ($matches) {
-                    return urlencode($matches[1]);
-                },
-                $text
-            );
-            if ($newtext !== false) {
-                $text = $newtext;
-            }
-        }
-
-        // Tag: {qrcode}...{/qrcode}.
-        // Description: Encodes the content between the tags into a an HTML image tag containing a QR Code of the content.
-        // Parameters: None.
-        // Requires content between tags.
-        if (stripos($text, '{qrcode}') !== false) {
-            // Remove {qrcode}{/qrcode} tags and turn content between the tags into a QR code.
-            $newtext = preg_replace_callback(
-                '/\{qrcode\}(.*)\{\/qrcode\}/isuU',
-                function ($matches) {
-                    $text = html_to_text($matches[1]);
-                    $src = $this->qrcode($text);
-                    $src = '<img src="' . $src . '" style="width:100%;max-width:480px;height:auto;" class="fc-qrcode" alt="'
-                            . $text . '">';
-                    return $src;
-                },
-                $text
-            );
-            if ($newtext !== false) {
-                $text = $newtext;
-            }
-        }
-
         // Tag: {alert stylename}...{/alert}.
         // Description: Wraps content between the tags into a Bootstrap Alert box.
         // Optional Parameters: Stylenames: primary|secondary|success|danger|warning|info|light|dark. Default is 'warning'.
@@ -5125,6 +5190,64 @@ class filter_filtercodes extends moodle_text_filter {
             // No more tags? Put back the escaped tags, if any, and return the string.
             $text = $this->escapedtags($text);
             return $text;
+        }
+
+        // Tag: {urlencode}...{/urlencode}.
+        // Description: URL Encodes the content between the tags for use as a parameter of a URL.
+        // Parameters: None.
+        // Requires content between tags.
+        if (stripos($text, '{urlencode}') !== false) {
+            // Replace {urlencode} tags and content with encoded content.
+            $newtext = preg_replace_callback(
+                '/\{urlencode\}(.*)\{\/urlencode\}/isuU',
+                function ($matches) {
+                    return urlencode($matches[1]);
+                },
+                $text
+            );
+            if ($newtext !== false) {
+                $text = $newtext;
+            }
+        }
+
+        // Tag: {rawurlencode}...{/rawurlencode}.
+        // Description: URL Encodes the content between the tags for use as a parameter of a URL in RFC 3986.
+        // Parameters: None.
+        // Requires content between tags.
+        if (stripos($text, '{rawurlencode}') !== false) {
+            // Replace {urlencode} tags and content with encoded content.
+            $newtext = preg_replace_callback(
+                '/\{rawurlencode\}(.*)\{\/rawurlencode\}/isuU',
+                function ($matches) {
+                    return rawurlencode($matches[1]);
+                },
+                $text
+            );
+            if ($newtext !== false) {
+                $text = $newtext;
+            }
+        }
+
+        // Tag: {qrcode}...{/qrcode}.
+        // Description: Encodes the content between the tags into a an HTML image tag containing a QR Code of the content.
+        // Parameters: None.
+        // Requires content between tags.
+        if (stripos($text, '{qrcode}') !== false) {
+            // Remove {qrcode}{/qrcode} tags and turn content between the tags into a QR code.
+            $newtext = preg_replace_callback(
+                '/\{qrcode\}(.*)\{\/qrcode\}/isuU',
+                function ($matches) {
+                    $text = html_to_text($matches[1]);
+                    $src = $this->qrcode($text);
+                    $src = '<img src="' . $src . '" style="width:100%;max-width:480px;height:auto;" class="fc-qrcode" alt="'
+                        . $text . '">';
+                    return $src;
+                },
+                $text
+            );
+            if ($newtext !== false) {
+                $text = $newtext;
+            }
         }
 
         // Tag: {button URL}...{/button}.

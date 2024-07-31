@@ -40,6 +40,9 @@ class select_student_in_bo implements booking_rule_condition {
     /** @var string $rulename */
     public $conditionname = 'select_student_in_bo';
 
+    /** @var string $conditionnamestringid Id of localized string for name of rule condition*/
+    protected $conditionnamestringid = 'selectstudentinbo';
+
     /** @var string $role */
     public $borole = null;
 
@@ -85,7 +88,7 @@ class select_student_in_bo implements booking_rule_condition {
     public function add_condition_to_mform(MoodleQuickForm &$mform, ?array &$ajaxformdata = null) {
 
         $mform->addElement('static', 'condition_select_student_in_bo', '',
-                get_string('condition_select_student_in_bo_desc', 'mod_booking'));
+                get_string('conditionselectstudentinbo_desc', 'mod_booking'));
 
         $courseroles = [
             -1 => get_string('choose...', 'mod_booking'),
@@ -96,7 +99,7 @@ class select_student_in_bo implements booking_rule_condition {
         ];
 
         $mform->addElement('select', 'condition_select_student_in_bo_borole',
-                get_string('condition_select_student_in_bo_roles', 'mod_booking'), $courseroles);
+                get_string('conditionselectstudentinboroles', 'mod_booking'), $courseroles);
 
     }
 
@@ -107,7 +110,7 @@ class select_student_in_bo implements booking_rule_condition {
      * @return string the name of the rule
      */
     public function get_name_of_condition($localized = true) {
-        return $localized ? get_string($this->conditionname, 'mod_booking') : $this->conditionname;
+        return $localized ? get_string($this->conditionnamestringid, 'mod_booking') : $this->conditionname;
     }
 
     /**

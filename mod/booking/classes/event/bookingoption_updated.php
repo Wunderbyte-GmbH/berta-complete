@@ -55,7 +55,7 @@ class bookingoption_updated extends \core\event\base {
      *
      */
     public static function get_name() {
-        return get_string('bookingoption_updated', 'booking');
+        return get_string('bookingoptionupdated', 'booking');
     }
 
     /**
@@ -85,7 +85,12 @@ class bookingoption_updated extends \core\event\base {
             $html = '';
         }
 
-        return "User with id '{$this->userid}' updated 'booking option' with id '{$this->objectid}'." . $html;
+        $infos = (object) [
+            'userid' => $this->userid,
+            'objectid' => $this->objectid,
+        ];
+        $infostring = get_string('bookingoptionupdateddesc', 'mod_booking', $infos);
+        return $infostring . $html;
     }
 
     /**

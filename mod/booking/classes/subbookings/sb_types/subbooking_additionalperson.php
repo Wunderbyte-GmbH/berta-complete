@@ -50,6 +50,9 @@ class subbooking_additionalperson implements booking_subbooking {
     /** @var string $type type of subbooking as the name of this class */
     public $type = 'subbooking_additionalperson';
 
+    /** @var string $typestringid localized string to display type of subbooking at various froms */
+    public $typestringid = 'subbookingadditionalperson';
+
     /** @var string $name given name to this configured subbooking*/
     public $name = '';
 
@@ -101,7 +104,7 @@ class subbooking_additionalperson implements booking_subbooking {
     public function add_subbooking_to_mform(MoodleQuickForm &$mform, array &$formdata) {
 
         $mform->addElement('static', 'subbooking_additionalperson_desc', '',
-            get_string('subbooking_additionalperson_desc', 'mod_booking'));
+            get_string('subbookingadditionalperson_desc', 'mod_booking'));
 
         // Add a description with the potential inclusion of files.
 
@@ -116,7 +119,7 @@ class subbooking_additionalperson implements booking_subbooking {
         ];
 
         $mform->addElement('editor', 'subbooking_additionalperson_description_editor',
-            get_string('subbooking_additionalperson_description', 'mod_booking'),
+            get_string('subbookingadditionalpersondescription', 'mod_booking'),
             null,
             $textfieldoptions);
         $mform->setType('subbooking_additionalperson_description_editor', PARAM_RAW);
@@ -136,7 +139,7 @@ class subbooking_additionalperson implements booking_subbooking {
      * @return string
      */
     public function get_name_of_subbooking($localized = true): string {
-        return $localized ? get_string($this->type, 'mod_booking') : $this->type;
+        return $localized ? get_string($this->typestringid, 'mod_booking') : $this->type;
     }
 
     /**
@@ -330,7 +333,7 @@ class subbooking_additionalperson implements booking_subbooking {
         $bp = $data->subbooking_addpersons ?? 1;
 
         $templatedata = [
-            'introduction' => get_string('subbooking_bookedpersons', 'mod_booking'),
+            'introduction' => get_string('subbookingbookedpersons', 'mod_booking'),
             'personbooked' => [],
         ];
 

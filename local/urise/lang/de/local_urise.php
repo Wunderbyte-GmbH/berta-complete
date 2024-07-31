@@ -178,6 +178,134 @@ $string['coursesiteacharchive'] = 'Kurse, die ich in vergangenen Semestern unter
 $string['urise:canedit'] = 'Nutzer:in darf verwalten';
 $string['urise:viewdashboard'] = "User kann Dashboard sehen";
 
+
+// Dashboard Vue.
+$string['dashboard_new_bookings'] = 'Buchungen';
+$string['dashboard_ppl_wl'] = 'Personen in Wartelisten';
+$string['dashboard_neue_stornos'] = 'Neue Stornos';
+$string['dashboard_noshows'] = 'Nicht erschienen';
+$string['dashboard_managelocation'] = 'Standorte verwalten';
+
+$string['dashboard_overview'] = 'Übersicht';
+$string['dashboard_bookingfields'] = 'Buchungsoptionsfelder';
+$string['dashboard_stats'] = 'Auswertung';
+$string['dashboard_mydashboard'] = 'Mein Dashboard';
+
+$string['dashboard_zeitraum'] = 'Zeitraum';
+$string['dashboard_organisation'] = 'Organisation';
+$string['dashboard_auswertung'] = 'Auswertung';
+
+
+// Vue strings.
+$string['vue_dashboard_checked'] = 'Default Ausgewählt';
+$string['vue_dashboard_name'] = 'Name';
+$string['vue_dashboard_course_count'] = 'Anzahl der Kurse';
+$string['vue_dashboard_path'] = 'Pfad';
+$string['vue_dashboard_create_oe'] = 'Neue OE erstellen';
+$string['vue_dashboard_assign_role'] = 'Rollen zuweisen';
+$string['vue_dashboard_new_course'] = 'Neuen Kurs erstellen';
+$string['vue_not_found_route_not_found'] = 'Route nicht gefunden';
+$string['vue_not_found_try_again'] = 'Bitte versuchen Sie es später erneut';
+$string['vue_booking_stats_capability'] = 'Berechtigung';
+$string['vue_booking_stats_back'] = 'Zurück';
+$string['vue_booking_stats_save'] = 'Speichern';
+$string['vue_booking_stats_restore'] = 'Zurücksetzten';
+$string['vue_booking_stats_select_all'] = 'Alle auswählen';
+$string['vue_booking_stats_booking_options'] = 'Buchungsoptionen';
+$string['vue_booking_stats_booked'] = 'Gebucht';
+$string['vue_booking_stats_waiting'] = 'Warteliste';
+$string['vue_booking_stats_reserved'] = 'Reserviert';
+$string['vue_booking_stats_realparticipants'] = 'Tatsächliche Teilnehmer';
+$string['vue_capability_options_cap_config'] = 'Berechtigungskonfiguration';
+$string['vue_capability_options_necessary'] = 'notwendig';
+$string['vue_capability_unsaved_changes'] = 'Es gibt ungespeicherte Änderungen';
+$string['vue_capability_unsaved_continue'] = 'Möchten Sie diese Konfiguration wirklich zurücksetzen?';
+$string['vue_booking_stats_restore_confirmation'] = 'Möchten Sie diese Konfiguration wirklich zurücksetzen?';
+$string['vue_booking_stats_yes'] = 'Ja';
+$string['vue_booking_stats_no'] = 'Nein';
+$string['vue_confirm_modal'] = 'Sind Sie sicher, dass Sie zurückgehen möchten?';
+$string['vue_heading_modal'] = 'Bestätigung';
+$string['vue_notification_title_unsave'] = 'Keine ungespeicherten Änderungen erkannt';
+$string['vue_notification_text_unsave'] = 'Es wurden keine ungespeicherten Änderungen erkannt.';
+$string['vue_notification_title_action_success'] = 'Die Konfiguration wurde erfolgreich {$a}';
+$string['vue_notification_text_action_success'] = 'Die Konfiguration wurde erfolgreich {$a}.';
+$string['vue_notification_title_action_fail'] = 'Die Konfiguration wurde nicht erfolgreich {$a}';
+$string['vue_notification_text_action_fail'] = 'Beim Speichern ist ein Fehler aufgetreten. Die Änderungen wurden nicht vorgenommen.';
+$string['vue_dashboard_goto_category'] = 'Zur Kategorie';
+$string['vue_dashboard_booking_instances'] = 'Booking instances';
+
+$string['booking:expertoptionform'] = "Expert option form";
+$string['booking:reducedoptionform1'] = "1. Reduced option form for course category";
+$string['booking:reducedoptionform2'] = "2. Reduced option form for course category";
+$string['booking:reducedoptionform3'] = "3. Reduced option form for course category";
+$string['booking:reducedoptionform4'] = "4. Reduced option form for course category";
+$string['booking:reducedoptionform5'] = "5. Reduced option form for course category";
+
+// Access.
+$string['mod/booking:expertoptionform'] = 'Buchungsoption für ExpertInnen';
+$string['mod/booking:reducedoptionform1'] = 'Buchungsoption reduziert 1';
+$string['mod/booking:reducedoptionform2'] = 'Buchungsoption reduziert 2';
+$string['mod/booking:reducedoptionform3'] = 'Buchungsoption reduziert 3';
+$string['mod/booking:reducedoptionform4'] = 'Buchungsoption reduziert 4';
+$string['mod/booking:reducedoptionform5'] = 'Buchungsoption reduziert 5';
+$string['booking:editoptionformconfig'] = 'Buchungsoptionsfelder bearbeiten';
+$string['booking:bookanyone'] = 'Darf alle Nutzer:innen buchen';
+$string['mod/booking:bookanyone'] = 'JedeN buchen';
+$string['mod/booking:seepersonalteacherinformation'] = 'Detailinfos über Lehrende anzeigen';
+
+// Optionformconfig.php / optionformconfig_form.php.
+$string['optionformconfig'] = 'Formulare für Buchungsoptionen anpassen (PRO)';
+$string['optionformconfig_infotext'] = 'Mit diesem PRO-Feature können Sie sich mit Drag & Drop und den Checkboxen beliebige Buchungsoptionsformulare zusammenstellen.
+Die einzelnen Formulare werden auf bestimmten Kontext-Ebenen (z.B. pro Buchungsinstanz, Systemweit...) definiert. Den jeweiligen Nutzer:innen sind die Formulare nur zugänglich,
+wenn Sie die jeweils entsprechende Berechtigung haben.';
+$string['optionformconfig_getpro'] = 'Mit Booking <span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span> haben Sie die Möglichkeit, mit Drag & Drop individuelle Formulare für bestimmte Nutzer:innen-Gruppen und Kontexte
+(z.B. nur für eine bestimmte Buchungsinstanz) anzulegen.';
+$string['optionformconfigsaved'] = 'Konfiguration für das Buchungsoptionsformular gespeichert.';
+$string['optionformconfigsubtitle'] = '<p>Hier können Sie nicht benötigte Funktionalitäten entfernen, um das Formular für die Erstellung von Buchungsoptionen übersichtlicher zu gestalten.</p>
+<p><strong>ACHTUNG:</strong> Deaktivieren Sie nur Felder, von denen Sie sicher sind, dass Sie sie nicht benötigen!</p>';
+$string['optionformconfig:nobooking'] = 'Sie müssen zumindest eine Buchungsinstanz anlegen, bevor Sie dieses Formular nutzen können!';
+
+$string['optionformconfigsavedsystem'] = 'Ihre Formular-Definition wurde auf dem Kontextlevel System gespeichert';
+$string['optionformconfigsavedcoursecat'] = 'Ihre Formular-Definition wurde auf dem Kontextlevel Kurskategorie gespeichert';
+$string['optionformconfigsavedmodule'] = 'Ihre Formular-Definition wurde auf dem Kontextlevel Modul gespeichert';
+$string['optionformconfigsavedcourse'] = 'Ihre Formular-Definition wurde auf dem Kontextlevel Kurs gespeichert';
+$string['optionformconfigsavedother'] = 'Ihre Formular-Definition wurde auf Kontextlevel {$a} gespeichert';
+
+$string['optionformconfignotsaved'] = 'Es wurde keine besondere Formular-Definition gespeichert';
+
+$string['prepare_import'] = "Bereite den Import vor";
+$string['id'] = "Id";
+$string['json'] = "Sammelfeld für zum Speichern von Informationen";
+$string['returnurl'] = "Adresse für Rückkehr";
+$string['youareusingconfig'] = 'Sie verwenden folgende Formular-Konfiguration: {$a}';
+$string['formconfig'] = 'Anzeige, welches Formular verwendet wird';
+$string['template'] = 'Vorlagen';
+$string['moveoption'] = 'Option verschieben';
+$string['dontmove'] = 'Don\' move';
+$string['moveoption_help'] = 'Option in eine andere Buchungsaktivität verschieben';
+$string['text'] = 'Titel';
+$string['maxanswers'] = 'Limit für Antworten';
+$string['identifier'] = 'Identifikator';
+$string['easy_text'] = 'Einfacher, nicht veränderbarer Text';
+$string['easy_bookingopeningtime'] = 'Einfache Buchungsstartzeit';
+$string['easy_bookingclosingtime'] = 'Einfache Buchungsendzeit';
+$string['easy_availability_selectusers'] = 'Einfache NutzerInnen Voraussetzung';
+$string['easy_availability_previouslybooked'] = 'Einfache bereits gebuchte Voraussetzung';
+$string['invisible'] = 'Unsichtbar';
+$string['annotation'] = 'Interne Anmerkung';
+$string['courseid'] = 'Kurs, in den eingeschrieben wird';
+$string['entitiesfieldname'] = 'Ort(e)';
+$string['entities'] = 'Orte mit Entities Plugin auswählen';
+$string['shoppingcart'] = 'Zahlungsoptionen mit Shopping Cart Plugin definieren';
+$string['optiondates'] = 'Termine';
+$string['actions'] = 'Buchungsaktionen';
+$string['attachment'] = 'Angehängte Dateien';
+$string['howmanyusers'] = 'Beschränkungen';
+$string['recurringoptions'] = 'Wiederkehrende Optionen';
+$string['bookusers'] = 'Feld für den Import, um NutzerInnen zu buchen';
+$string['timemodified'] = 'Bearbeitungszeit';
+$string['waitforconfirmation'] = 'Buchen nur nach Bestätigung';
+
 // Filter.
 $string['organisation'] = 'Organisationseinheit';
 $string['location'] = 'Ort';
@@ -247,6 +375,8 @@ $string['add_sports_division'] = 'Die Sparten zu den Sportarten automatisch hinz
 $string['nosportsdivision'] = 'Keine Sparten auf dieser Website verfügbar';
 
 $string['shortcodes::unifiedlist'] = "Shortcode unified list";
+$string['shortcodes::calendarblock'] = "Shortcode calendarblock";
+
 
 $string['summary'] = 'Allgemein';
 $string['summary_desc'] = 'Enthält die Einstellungsmöglichkeiten und Statistiken der gesamten Plattform';
@@ -276,3 +406,83 @@ $string['aboutoffer'] = "Über das Angebot";
 
 $string['zgcommunities'] = "Interessant für";
 $string['organisationfilter'] = "Angeboten von";
+$string['fromdate'] = "Ab ";
+
+
+
+$string['fbafrikawissenschaftenundorientalistik'] = "FB Afrikawissenschaften und Orientalistik";
+$string['fbaltegeschichte'] = "FB Alte Geschichte";
+$string['fbanglistikundamerikanistik'] = "FB Anglistik und Amerikanistik";
+$string['fbarchälogieundnumismatik'] = "FB Archäologie und Numismatik";
+$string['fbastronomie'] = "FB Astronomie";
+$string['fbbildungswissenschaftsprachwissenschaftundvergleichendeliteraturwissenschaft'] = "FB Bildungswissenschaft, Sprachwissenschaft und vergleichende Literaturwissenschaft";
+$string['fbbiologieundbotanikstandortbiologie'] = "FB Biologie und Botanik, Standort Biologie";
+$string['fbbiologieundbotanikstandortbotanik'] = "FB Biologie und Botanik, Standort Botanik";
+$string['fbbyzantistikundneogräzistik'] = "FB Byzantistik und Neogräzistik";
+$string['fbgeographieundregionalforschung'] = "FB Geographie und Regionalforschung";
+$string['fberdwissenschaftenundmeteorologie'] = "FB Erdwissenschaften und Meteorologie";
+$string['fbeuropaeischeethnologie'] = "FB Europäische Ethnologie";
+$string['fbfinnougristik'] = "FB Finno-Ugristik";
+$string['fbgermanistiknederlandistikundskandinavistik'] = "FB Germanistik, Nederlandistik und Skandinavistik";
+$string['fbgeschichtswissenschaften'] = "FB Geschichtswissenschaften";
+$string['fbjudaistik'] = "FB Judaistik";
+$string['fbklassischephilologiemittelundneulatein'] = "FB Klassische Philologie, Mittel- und Neulatein";
+$string['fbkulturundsozialanthropologie'] = "FB Kultur- und Sozialanthropologie";
+$string['fbkunstgeschichte'] = "FB Kunstgeschichte";
+$string['fbmusikwissenschaft'] = "FB Musikwissenschaft";
+$string['fbostasienwissenschaften'] = "FB Ostasienwissenschaften";
+$string['fbosteuropäischegeschichteundslawistik'] = "FB Osteuropäische Geschichte und Slawistik";
+$string['fbpharmazieundernaehrungswissenschaften'] = "FB Pharmazie und Ernährungswissenschaften";
+$string['fbphilosophieundpsychologie'] = "FB Philosophie und Psychologie";
+$string['zbphysikundchemie'] = "ZB Physik und Chemie";
+$string['fbpublizistik-undkommunikationswissenschaftundinformatik'] = "FB Publizistik- und Kommunikationswissenschaft und Informatik";
+$string['fbrechtswissenschaften'] = "FB Rechtswissenschaften";
+$string['fbromanistik'] = "FB Romanistik";
+$string['fbsoziologieundpolitikwissenschaft'] = "FB Soziologie und Politikwissenschaft";
+$string['fbsportwissenschaft'] = "FB Sportwissenschaft";
+$string['fbsuedasientibetundbuddhismuskunde'] = "FB Südasien-, Tibet- und Buddhismuskunde";
+$string['fbtheaterfilmundmedienwissenschaft'] = "FB Theater-, Film- und Medienwissenschaft";
+$string['fbtheologie'] = "FB Theologie";
+$string['fbtranslationswissenschaft'] = "FB Translationswissenschaft";
+$string['fbwirtschaftswissenschaftenundmathematik'] = "FB Wirtschaftswissenschaften und Mathematik";
+$string['fbzeitgeschichte'] = "FB Zeitgeschichte";
+$string['forschungsundpublikationsservices'] = "Forschungs- und Publikationsservices";
+$string['hauptbibliothek'] = "Hauptbibliothek";
+$string['universitaetsarchiv'] = "Universitätsarchiv";
+$string['advancedresearchschoolinlawandjurisprudence'] = "Advanced Research School in Law and Jurisprudence";
+$string['doctoralschoolmicrobiologyandenvironmentalscience'] = "Doctoral School Microbiology and Environmental Science";
+$string['doctoralschoolofphilologicalandculturalstudies'] = "Doctoral School of Philological and Cultural Studies";
+$string['oskarmorgensterndoctoralschool'] = "Oskar Morgenstern Doctoral School";
+$string['univiedoctoralschoolcomputerscience'] = "UniVie Doctoral School Computer Science";
+$string['viennadoctoralschoolofhistoricalandculturalstudies'] = "Vienna Doctoral School of Historical and Cultural Studies";
+$string['viennadoctoralschoolofphilosophy'] = "Vienna Doctoral School of Philosophy";
+$string['viennadoctoralschoolofsocialsciences'] = "Vienna Doctoral School of Social Sciences";
+$string['viennadoctoralschoolinchemistry'] = "Vienna Doctoral School in Chemistry";
+$string['viennadoctoralschoolofecologyandevolution'] = "Vienna Doctoral School of Ecology and Evolution";
+$string['viennainternationalschoolinearthandspacesciences'] = "Vienna International School in Earth and Space Sciences";
+$string['viennaschoolofmathematicsjointdoctoralschoolwithtuwien'] = "Vienna School of Mathematics (joint Doctoral School with TU Wien)";
+$string['viennadoctoralschoolinphysics'] = "Vienna Doctoral School in Physics";
+$string['viennadoctoralschoolofpharmaceuticalnutritionalandsportsciences'] = "Vienna Doctoral School of Pharmaceutical, Nutritional and Sports Sciences";
+$string['viennabiocenterphdprogramjointdoctoralschooloftheuniversityofviennaandthemedicaluniversityofvienna'] = "Vienna Biocenter PhD Program (joint Doctoral School of the University of Vienna and the Medical University of Vienna)";
+$string['viennadoctoralschoolincognitionbehaviorandneurosciencefrombiologytopsychologyandthehumanities'] = "Vienna Doctoral School in Cognition, Behavior and Neuroscience (from Biology to Psychology and the Humanities)";
+$string['viennadoctoralschooloftheologyandresearchonreligion'] = "Vienna Doctoral School of Theology and Research on Religion";
+$string['viennadoctoralschoolineducation'] = "Vienna Doctoral School in Education";
+$string['organisationskulturundgleichstellung'] = "Organisationskultur und Gleichstellung";
+$string['personalentwicklungundrecruiting'] = "Personalentwicklung und Recruiting";
+$string['centerforteachingandlearning'] = "Center for Teaching and Learning";
+$string['koordinationstudienservices'] = "Koordination Studienservices";
+$string['zentralerinformatikdienst'] = "Zentraler Informatikdienst";
+$string['lppostdoc'] = "LP Postdoc";
+$string['lpfuehrungskräfte'] = "LP Führungskräfte";
+$string['lpallgemeinesuniversitätspersonal'] = "LP Allgemeines Universitätspersonal";
+$string['lpstudierende'] = "LP Studierende";
+$string['lpexterne'] = "LP Externe";
+$string['lpbibliothek'] = "LP Bibliothek";
+
+$string['doctoralschools'] = "Doctoral Schools";
+$string['personalwesenundfrauenfoerderung'] = "Personalwesen und Frauenförderung";
+$string['bibliotheksundarchivwesen'] = "Bibliotheks - und Archivwesen";
+$string['studienserviceundlehrwesen'] = "Studienservice und Lehrwesen";
+
+$string['organisationfilterdefinition'] = "Organisationsfilter";
+$string['organisationfilterdefinition_desc'] = "Der hierarchische Filter für die Organisationsstruktur muss hier eingefügt werden.";

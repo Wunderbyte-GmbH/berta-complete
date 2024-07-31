@@ -99,7 +99,8 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
                 foreach ($botagsarray as $botag) {
                     if (!empty($botag)) {
                         $botagsstring .=
-                            "<span class='urise-table-botag rounded-sm bg-info text-light pl-2 pr-2 pt-1 pb-1 mr-1 d-inline-block text-center'>
+                            "<span class='urise-table-botag rounded-sm bg-info text-light
+                             pl-2 pr-2 pt-1 pb-1 mr-1 d-inline-block text-center'>
                             $botag
                             </span>";
                     } else {
@@ -117,6 +118,25 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
     }
 
     /**
+     * This function is called for each data row to allow processing of the
+     * booking option coursestarttime
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string $sports Returns course start time as a readable string.
+     * @throws coding_exception
+     */
+    public function render_col_coursestarttime($data) {
+        $o = '';
+        // Check if multiple dates.
+        $data = $data->export_for_template($this);
+        if (!empty($data['datestrings']) && count($data['datestrings']) > 1) {
+            $data['firstDate'] = $data['datestrings'][0]['datestring'];
+        }
+        $o .= $this->render_from_template('mod_booking/col_coursestarttime', $data);
+        return $o;
+    }
+
+    /**
      * Renders the booking option description view.
      *
      * This function processes the booking option description data, prepares necessary
@@ -128,6 +148,7 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
     public function render_bookingoption_description_view(bookingoption_description $data) {
         $o = '';
         $data = $data->export_for_template($this);
+        $data['title'] = strip_tags( $data['title']);
         // Prepare Data for template.
         if (!empty($data['bookinginformation'])) {
             $data['bookings'] = $this->prepare_bookings($data['bookinginformation'], $data['modalcounter']);
@@ -173,8 +194,8 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
             if (is_array($settings->customfields['kompetenzen'])) {
 
                 $returnorgas = [];
+                $organisations = shortcodes::get_kompetenzen();
                 foreach ($settings->customfields['kompetenzen'] as $orgaid) {
-                    $organisations = shortcodes::KOMPETENZEN;
 
                     if (isset($organisations[$orgaid])) {
                         $returnorgas[] = html_writer::tag(
@@ -207,7 +228,7 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
 
         if (isset($settings->customfieldsfortemplates) && isset($settings->customfieldsfortemplates['kurssprache'])) {
             $value = $settings->customfieldsfortemplates['kurssprache']['value'];
-            return $value;
+            return format_string($value);
         }
     }
 

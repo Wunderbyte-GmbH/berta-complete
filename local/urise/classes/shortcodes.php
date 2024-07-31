@@ -37,6 +37,7 @@ use mod_booking\customfield\booking_handler;
 use mod_booking\output\page_allteachers;
 use local_urise\output\userinformation;
 use local_urise\table\urise_table;
+use local_urise\table\calendar_table;
 use local_shopping_cart\shopping_cart;
 use local_shopping_cart\shopping_cart_credits;
 use local_wunderbyte_table\filters\types\datepicker;
@@ -52,451 +53,20 @@ use stdClass;
 class shortcodes {
 
     /**
-     * KOMPETENZEN
+     * Retrungs the array of organisations.
      *
-     * @var array]
-     */
-    public const KOMPETENZEN = [
-        'explode' => ',',
-        '1' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Lehrkonzeption & -planung',
-        ],
-        '2' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Lehr- & Lernmethoden',
-        ],
-        '3' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Erstellung Lehr-/Lernmaterialien',
-        ],
-        '4' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Lehren mit digitalen Technologien',
-        ],
-        '5' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Prüfen & Beurteilen',
-        ],
-        '6' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Betreuung schriftlicher Arbeiten',
-        ],
-        '7' => [
-            'parent' => 'Lehrkompetenzen',
-            'localizedname' => 'Weiterentwicklung der Lehre',
-        ],
-        '8' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Wissenschaftliches Arbeiten',
-        ],
-        '9' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Wissenschaftliches Publizieren',
-        ],
-        '10' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Open Science',
-        ],
-        '11' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Wissensaustausch & Innovation',
-        ],
-        '12' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Wissenschaftliche Integrität',
-        ],
-        '13' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Networking in der Wissenschaft',
-        ],
-        '14' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Interdisziplinäre Forschung',
-        ],
-        '15' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Forschungsförderung',
-        ],
-        '16' => [
-            'parent' => 'Forschungskompetenzen',
-            'localizedname' => 'Karriereentwicklung & -planung',
-        ],
-        '17' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Präsentation',
-        ],
-        '18' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Gesprächs- & Verhandlungsführung',
-        ],
-        '19' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Feedback',
-        ],
-        '20' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Moderation',
-        ],
-        '21' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Sprachkenntnisse',
-        ],
-        '22' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Konfliktmanagement',
-        ],
-        '23' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Informations- & Kommunikation',
-        ],
-        '24' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Gender- & Diversitätskompetenz',
-        ],
-        '25' => [
-            'parent' => 'Kommunikation & Kooperation',
-            'localizedname' => 'Kooperationskompetenz',
-        ],
-        '26' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Veranstaltungsorganisation',
-        ],
-        '27' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Arbeitsorganisation',
-        ],
-        '28' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Selbstorganisation',
-        ],
-        '29' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Service- & Kund*innenorientierung',
-        ],
-        '30' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Lösungs- & Zukunftsorientierung',
-        ],
-        '31' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Ressourceneffizienz',
-        ],
-        '32' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Change-Kompetenz',
-        ],
-        '33' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Gesundheitsorientierung',
-        ],
-        '34' => [
-            'parent' => 'Selbst- & Arbeitsorganisation',
-            'localizedname' => 'Lernkompetenz',
-        ],
-        '35' => [
-            'parent' => 'Digitalkompetenzen',
-            'localizedname' => 'IT Security',
-        ],
-        '36' => [
-            'parent' => 'Digitalkompetenzen',
-            'localizedname' => 'Digitale Interaktion',
-        ],
-        '37' => [
-            'parent' => 'Digitalkompetenzen',
-            'localizedname' => 'Umgang mit Informationen & Daten',
-        ],
-        '38' => [
-            'parent' => 'Digitalkompetenzen',
-            'localizedname' => 'Technologienutzung',
-        ],
-        '39' => [
-            'parent' => 'Führungskompetenzen',
-            'localizedname' => 'Educational Leadership & Management',
-        ],
-    ];
-
-    /**
-     * KOMPETENZEN
+     * @return [type]
      *
-     * @var array]
      */
-    public const ORGANISATIONEN = [
-        'explode' => ',',
-        '52' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Afrikawissenschaften und Orientalistik',
-        ],
-        '53' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Alte Geschichte',
-        ],
-        '54' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Anglistik und Amerikanistik',
-        ],
-        '55' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Archälogie und Numismatik',
-        ],
-        '56' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Astronomie',
-        ],
-        '57' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Bildungswissenschaft, Sprachwissenschaft und Vergleichende Literaturwissenschaft',
-        ],
-        '58' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Biologie und Botanik, Standort Biologie',
-        ],
-        '59' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Biologie und Botanik, Standort Botanik',
-        ],
-        '60' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Byzantistik und Neogräzistik',
-        ],
-        '64' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Geographie und Regionalforschung',
-        ],
-        '125' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Erdwissenschaften und Meteorologie',
-        ],
-        '126' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Europäische Ethnologie',
-        ],
-        '124' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Finno-Ugristik',
-        ],
-        '65' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Germanistik, Nederlandistik und Skandinavistik',
-        ],
-        '66' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Geschichtswissenschaften',
-        ],
-        '127' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Judaistik',
-        ],
-        '68' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Klassische Philologie, Mittel - und Neulatein',
-        ],
-        '69' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Kultur - und Sozialanthropologie',
-        ],
-        '70' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Kunstgeschichte',
-        ],
-        '71' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Musikwissenschaft',
-        ],
-        '72' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Ostasienwissenschaften',
-        ],
-        '74' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Osteuropäische Geschichte und Slawistik',
-        ],
-        '75' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Pharmazie und Ernährungswissenschaften',
-        ],
-        '76' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Philosophie und Psychologie',
-        ],
-        '77' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'ZB Physik und Chemie',
-        ],
-        '78' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Publizistik- und Kommunikationswissenschaft und Informatik',
-        ],
-        '79' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Rechtswissenschaften',
-        ],
-        '128' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Romanistik',
-        ],
-        '81' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Soziologie und Politikwissenschaft',
-        ],
-        '82' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Sportwissenschaft',
-        ],
-        '83' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Südasien-, Tibet- und Buddhismuskunde',
-        ],
-        '84' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Theater-, Film- und Medienwissenschaft',
-        ],
-        '85' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Theologie',
-        ],
-        '86' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Translationswissenschaft',
-        ],
-        '87' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Wirtschaftswissenschaften und Mathematik',
-        ],
-        '88' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'FB Zeitgeschichte',
-        ],
-        '121' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'Forschungs- und Publikationsservices',
-        ],
-        '51' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'Hauptbibliothek',
-        ],
-        '43' => [
-            'parent' => 'Bibliotheks - und Archivwesen',
-            'localizedname' => 'Universitätsarchiv',
-        ],
-        '91' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Advanced Research School in Law and Jurisprudence',
-        ],
-        '101' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Doctoral School Microbiology and Environmental Science',
-        ],
-        '110' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Doctoral School of Philological and Cultural Studies',
-        ],
-        '109' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Oskar Morgenstern Doctoral School',
-        ],
-        '95' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'UniVie Doctoral School Computer Science',
-        ],
-        '92' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Historical and Cultural Studies',
-        ],
-        '93' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Philosophy',
-        ],
-        '94' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Social Sciences',
-        ],
-        '97' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School in Chemistry',
-        ],
-        '102' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Ecology and Evolution',
-        ],
-        '98' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna International School in Earth and Space Sciences',
-        ],
-        '99' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna School of Mathematics | Joint Doctoral School with TU Wien',
-        ],
-        '96' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School in Physics',
-        ],
-        '103' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Pharmaceutical, Nutritional and Sport Sciences',
-        ],
-        '105' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna BioCenter PhD Program, joint doctoral school of the University of Vienna and the Medical University of Vienna',
-        ],
-        '106' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School in Cognition, Behavior, and Neuroscience - from Biology to Psychology and the Humanities',
-        ],
-        '107' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School of Theology and Research on Religion',
-        ],
-        '108' => [
-            'parent' => 'Doctoral Schools',
-            'localizedname' => 'Vienna Doctoral School in Education',
-        ],
-        '49' => [
-            'parent' => 'Personalwesen und Frauenförderung',
-            'localizedname' => 'Organisationskultur und Gleichstellung',
-        ],
-        '24' => [
-            'parent' => 'Personalwesen und Frauenförderung',
-            'localizedname' => 'Personalentwicklung und Recruiting',
-        ],
-        '119' => [
-            'parent' => 'Studienservice und Lehrwesen',
-            'localizedname' => 'Center for Teaching and Learning',
-        ],
-        '112' => [
-            'parent' => 'Studienservice und Lehrwesen',
-            'localizedname' => 'Koordination Studienservices',
-        ],
-        '42' => [
-            'parent' => 'Zentraler Informatikdienst',
-            'localizedname' => 'Zentraler Informatikdienst',
-        ],
-        '131' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP PostDoc',
-        ],
-        '132' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP Führungskräfte',
-        ],
-        '133' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP Allgemeines Universitätspersonal',
-        ],
-        '134' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP Studierende',
-        ],
-        '135' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP Externe',
-        ],
-        '136' => [
-            'parent' => 'Zusätzliche Clients für Landing Pages:',
-            'localizedname' => 'LP Bibliothek',
-        ],
-    ];
+    public static function organisations() {
+        $filterstring = get_config('local_urise', 'organisationfilter');
+        $pattern = '/get_string\("([^"]*)", "([^"]*)"\)/';
+        $outputstring = preg_replace_callback($pattern, fn($a) => '"' . get_string($a[1], $a[2]) . '"', $filterstring);
 
+        $filter = json_decode($outputstring, true) ?? [];
+
+        return $filter;
+    }
 
     /**
      * Prints out list of bookingoptions.
@@ -549,6 +119,7 @@ class shortcodes {
         return self::unifiedview($shortcode, $args, $content, $env, $next, false);
     }
 
+
     /**
      * Prints out list of bookingoptions.
      * Arguments can be 'category' or 'perpage'.
@@ -562,6 +133,64 @@ class shortcodes {
      */
     public static function unifiedcards($shortcode, $args, $content, $env, $next) {
         return self::unifiedview($shortcode, $args, $content, $env, $next, true);
+    }
+
+    /**
+     * Prints calenderblock.
+     *
+     * @param string $shortcode
+     * @param array $args
+     * @param string|null $content
+     * @param object $env
+     * @param Closure $next
+     * @return mixed
+     */
+    public static function calendarblock($shortcode, $args, $content, $env, $next) {
+
+        self::fix_args($args);
+
+        // Get bookingids.
+        $booking = self::get_booking($args);
+
+        $bookingids = explode(',', get_config('local_urise', 'multibookinginstances'));
+        $bookingids = array_filter($bookingids, fn($a) => !empty($a));
+
+        $table = self::inittableforcalendar();
+
+        $wherearray = ['bookingid' => $bookingids];
+
+        $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
+
+        if (!empty($additionalwhere)) {
+            $additionalwhere .= " AND ";
+        }
+        // Additional where has to be added here. We add the param later.
+        if (empty($args['all'])) {
+            $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
+        }
+
+        if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
+            $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
+            list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
+        } else {
+            list($fields, $from, $where, $params, $filter) =
+                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
+        }
+
+        $params['timenow'] = strtotime('today 00:00');
+        $table->set_filter_sql($fields, $from, $where, $filter, $params);
+
+        $table->tabletemplate = 'local_urise/urise_calendar';
+        $table->define_sortablecolumns(['coursestarttime']);
+        $table->sortable(true, 'coursestarttime', SORT_ASC);
+        $table->infinitescroll = 0;
+        $table->use_pages = true;
+
+        $out = $table->outhtml(4, true);
+
+        return $out;
+
     }
 
 
@@ -632,11 +261,11 @@ class shortcodes {
             $organisation = '';
         }
 
+        $wherearray = ['bookingid' => $bookingids];
+
         if (!empty($organisation)) {
             $wherearray['organisation'] = $category;
         }
-
-        $wherearray = ['bookingid' => $bookingids];
 
         // Additional where condition for both card and list views
         $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
@@ -645,7 +274,9 @@ class shortcodes {
             $additionalwhere .= " AND ";
         }
         // Additional where has to be added here. We add the param later.
-        $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
+        if (empty($args['all'])) {
+            $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
+        }
 
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
@@ -671,7 +302,7 @@ class shortcodes {
         if ($renderascard) {
             self::generate_table_for_cards($table, $args);
             $table->tabletemplate = 'local_urise/table_card';
-        } else {
+        }  else {
             self::generate_table_for_list($table, $args);
             $table->cardsort = true;
             $table->infinitescroll = $infinitescrollpage;
@@ -746,6 +377,9 @@ class shortcodes {
         $table->showcountlabel = $args['countlabel'];
         $table->showreloadbutton = $args['reload'];
 
+
+        $wherearray = [];
+
         if (!empty($category)) {
             $wherearray['organisation'] = $category;
         };
@@ -770,7 +404,6 @@ class shortcodes {
                     ]
                 );
         } else {
-
             list($fields, $from, $where, $params, $filter) =
                 booking::get_options_filter_sql(0,
                     0,
@@ -993,6 +626,32 @@ class shortcodes {
     }
 
     /**
+     * Init the table for calendar.
+     *
+     * @return wunderbyte_table
+     *
+     */
+    private static function inittableforcalendar() {
+
+        global $PAGE, $USER;
+
+        $tablename = bin2hex(random_bytes(12));
+
+        // It's important to have the baseurl defined, we use it as a return url at one point.
+        $baseurl = $PAGE->url ?? new moodle_url('');
+
+        $table = new calendar_table($tablename);
+
+        $table->define_baseurl($baseurl->out());
+        // Without defining sorting won't work!
+        $table->define_columns(['text']);
+        $table->add_subcolumns('main', ['text', 'category', 'more']);
+        $table->add_subcolumns('header', ['coursestarttime']);
+        $table->add_classes_to_subcolumns('main', ['columnclass' => 'text-primary mt-3'], ['text']);
+        return $table;
+    }
+
+    /**
      * Init the table.
      *
      * @return wunderbyte_table
@@ -1020,7 +679,7 @@ class shortcodes {
         $table->define_baseurl($baseurl->out());
         $table->cardsort = true;
         // Without defining sorting won't work!
-        $table->define_columns(['titleprefix']);
+        $table->define_columns(['titleprefix', 'coursestarttime', 'courseendtime', 'location', 'bookingopeningtime', 'bookingclosingtime']);
         return $table;
     }
 
@@ -1028,37 +687,54 @@ class shortcodes {
      * Define filtercolumns.
      *
      * @param mixed $table
+     * @param mixed $args
      *
      * @return void
      *
      */
-    private static function define_filtercolumns(&$table) {
+    private static function define_filtercolumns(&$table, $args) {
 
-        $standardfilter = new standardfilter('zgcommunities', get_string('zgcommunities', 'local_urise'));
-        $table->add_filter($standardfilter);
+        if (!empty($args['onlyfilterforcolumns'])) {
+            $filtercolumns = explode(',', $args['onlyfilterforcolumns']);
+        } else {
+            $filtercolumns = [];
+        }
 
-        $hierarchicalfilter = new hierarchicalfilter('kompetenzen', get_string('competency', 'local_urise'));
-        $hierarchicalfilter->add_options(self::KOMPETENZEN);
-        $table->add_filter($hierarchicalfilter);
+        if (empty($filtercolumns) || in_array('zgcommunities', $filtercolumns)) {
+            $standardfilter = new standardfilter('zgcommunities', get_string('zgcommunities', 'local_urise'));
+            $table->add_filter($standardfilter);
+        }
 
-        $hierarchicalfilter = new hierarchicalfilter('organisation', get_string('organisationfilter', 'local_urise'));
-        $hierarchicalfilter->add_options(self::ORGANISATIONEN);
-        $table->add_filter($hierarchicalfilter);
+        if (empty($filtercolumns) || in_array('kompetenzen', $filtercolumns)) {
+            $hierarchicalfilter = new hierarchicalfilter('kompetenzen', get_string('competency', 'local_urise'));
+            $hierarchicalfilter->add_options(self::get_kompetenzen());
+            $table->add_filter($hierarchicalfilter);
+        }
 
-        $standardfilter = new standardfilter('dayofweek', get_string('dayofweek', 'local_urise'));
-        $standardfilter->add_options([
-            'monday' => get_string('monday', 'mod_booking'),
-            'tuesday' => get_string('tuesday', 'mod_booking'),
-            'wednesday' => get_string('wednesday', 'mod_booking'),
-            'thursday' => get_string('thursday', 'mod_booking'),
-            'friday' => get_string('friday', 'mod_booking'),
-            'saturday' => get_string('saturday', 'mod_booking'),
-            'sunday' => get_string('sunday', 'mod_booking'),
-        ]);
-        $table->add_filter($standardfilter);
+        if (empty($filtercolumns) || in_array('organisation', $filtercolumns)) {
+            $hierarchicalfilter = new hierarchicalfilter('organisation', get_string('organisationfilter', 'local_urise'));
+            $hierarchicalfilter->add_options(self::organisations());
+            $table->add_filter($hierarchicalfilter);
+        }
 
-        $standardfilter = new standardfilter('location', get_string('location', 'mod_booking'));
-        $table->add_filter($standardfilter);
+        if (empty($filtercolumns) || in_array('dayofweek', $filtercolumns)) {
+            $standardfilter = new standardfilter('dayofweek', get_string('dayofweek', 'local_urise'));
+            $standardfilter->add_options([
+                'monday' => get_string('monday', 'mod_booking'),
+                'tuesday' => get_string('tuesday', 'mod_booking'),
+                'wednesday' => get_string('wednesday', 'mod_booking'),
+                'thursday' => get_string('thursday', 'mod_booking'),
+                'friday' => get_string('friday', 'mod_booking'),
+                'saturday' => get_string('saturday', 'mod_booking'),
+                'sunday' => get_string('sunday', 'mod_booking'),
+            ]);
+            $table->add_filter($standardfilter);
+        }
+
+        if (empty($filtercolumns) || in_array('location', $filtercolumns)) {
+            $standardfilter = new standardfilter('location', get_string('location', 'mod_booking'));
+            $table->add_filter($standardfilter);
+        }
 
         if (get_config('local_urise', 'uriseshortcodesshowfiltercoursetime')) {
 
@@ -1141,7 +817,7 @@ class shortcodes {
         $table->set_display_options($args);
 
         if (!empty($args['filter'])) {
-            self::define_filtercolumns($table);
+            self::define_filtercolumns($table, $args);
         }
 
         if (!empty($args['search'])) {
@@ -1172,15 +848,17 @@ class shortcodes {
             $table->define_sortablecolumns($sortablecolumns);
         }
 
+        $sortorder = $table->return_current_sortorder();
+
         $defaultorder = SORT_ASC; // Default.
         if (!empty($args['sortorder'])) {
             if (strtolower($args['sortorder']) === "desc") {
                 $defaultorder = SORT_DESC;
             }
         }
+
         if (!empty($args['sortby'])) {
             $table->sortable(true, $args['sortby'], $defaultorder);
-            $table->define_sortablecolumns([$args['sortby']]);
         } else {
             $table->sortable(true, 'text', $defaultorder);
         }
@@ -1188,6 +866,18 @@ class shortcodes {
         if (isset($args['requirelogin']) && $args['requirelogin'] == "false") {
             $table->requirelogin = false;
         }
+    }
+
+    /**
+     * Sets columns for calendar.
+     *
+     * @return wunderbyte_table
+     *
+     */
+    private static function generate_table_for_calendar(&$table, $args) {
+        self::fix_args($args);
+        $table->add_subcolumns('main', ['text']);
+        $table->add_subcolumns('header', ['coursestarttime']);
     }
 
     /**
@@ -1203,6 +893,7 @@ class shortcodes {
         // We define it here so we can pass it with the mustache template.
         $table->add_subcolumns('optionid', ['id']);
 
+        $table->add_subcolumns('url', ['url']);
         $table->add_subcolumns('cardimage', ['image']);
         $table->set_tableclass('cardimageclass', 'imagecontainer');
         $table->add_subcolumns('cardheader', ['botags', 'action', 'bookings']);
@@ -1379,5 +1070,175 @@ class shortcodes {
         }
 
         return $additonalwhere;
+    }
+
+    /**
+     * Get kompetenzen filter
+     *
+     * @return array
+     *
+     */
+    public static function get_kompetenzen() {
+
+        return [
+            'explode' => ',',
+            '1' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Lehrkonzeption & -planung',
+            ],
+            '2' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Lehr- & Lernmethoden',
+            ],
+            '3' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Erstellung Lehr-/Lernmaterialien',
+            ],
+            '4' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Lehren mit digitalen Technologien',
+            ],
+            '5' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Prüfen & Beurteilen',
+            ],
+            '6' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Betreuung schriftlicher Arbeiten',
+            ],
+            '7' => [
+                'parent' => 'Lehrkompetenzen',
+                'localizedname' => 'Weiterentwicklung der Lehre',
+            ],
+            '8' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Wissenschaftliches Arbeiten',
+            ],
+            '9' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Wissenschaftliches Publizieren',
+            ],
+            '10' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Open Science',
+            ],
+            '11' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Wissensaustausch & Innovation',
+            ],
+            '12' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Wissenschaftliche Integrität',
+            ],
+            '13' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Networking in der Wissenschaft',
+            ],
+            '14' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Interdisziplinäre Forschung',
+            ],
+            '15' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Forschungsförderung',
+            ],
+            '16' => [
+                'parent' => 'Forschungskompetenzen',
+                'localizedname' => 'Karriereentwicklung & -planung',
+            ],
+            '17' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Präsentation',
+            ],
+            '18' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Gesprächs- & Verhandlungsführung',
+            ],
+            '19' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Feedback',
+            ],
+            '20' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Moderation',
+            ],
+            '21' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Sprachkenntnisse',
+            ],
+            '22' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Konfliktmanagement',
+            ],
+            '23' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Informations- & Kommunikation',
+            ],
+            '24' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Gender- & Diversitätskompetenz',
+            ],
+            '25' => [
+                'parent' => 'Kommunikation & Kooperation',
+                'localizedname' => 'Kooperationskompetenz',
+            ],
+            '26' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Veranstaltungsorganisation',
+            ],
+            '27' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Arbeitsorganisation',
+            ],
+            '28' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Selbstorganisation',
+            ],
+            '29' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Service- & Kund*innenorientierung',
+            ],
+            '30' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Lösungs- & Zukunftsorientierung',
+            ],
+            '31' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Ressourceneffizienz',
+            ],
+            '32' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Change-Kompetenz',
+            ],
+            '33' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Gesundheitsorientierung',
+            ],
+            '34' => [
+                'parent' => 'Selbst- & Arbeitsorganisation',
+                'localizedname' => 'Lernkompetenz',
+            ],
+            '35' => [
+                'parent' => 'Digitalkompetenzen',
+                'localizedname' => 'IT Security',
+            ],
+            '36' => [
+                'parent' => 'Digitalkompetenzen',
+                'localizedname' => 'Digitale Interaktion',
+            ],
+            '37' => [
+                'parent' => 'Digitalkompetenzen',
+                'localizedname' => 'Umgang mit Informationen & Daten',
+            ],
+            '38' => [
+                'parent' => 'Digitalkompetenzen',
+                'localizedname' => 'Technologienutzung',
+            ],
+            '39' => [
+                'parent' => 'Führungskompetenzen',
+                'localizedname' => 'Educational Leadership & Management',
+            ],
+        ];
+
     }
 }

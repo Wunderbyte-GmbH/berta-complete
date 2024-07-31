@@ -47,6 +47,9 @@ class select_users implements booking_rule_condition {
     /** @var string $conditionname */
     public $conditionname = 'select_users';
 
+    /** @var string $conditionnamestringid Id of localized string for name of rule condition*/
+    protected $conditionnamestringid = 'selectusers';
+
     /** @var array $userids */
     public $userids = [];
 
@@ -113,7 +116,7 @@ class select_users implements booking_rule_condition {
         ];
 
         $mform->addElement('autocomplete', 'condition_select_users_userids',
-            get_string('condition_select_users_userids', 'mod_booking'), [], $options);
+            get_string('conditionselectusersuserids', 'mod_booking'), [], $options);
 
     }
 
@@ -124,7 +127,7 @@ class select_users implements booking_rule_condition {
      * @return string the name of the rule
      */
     public function get_name_of_condition($localized = true) {
-        return $localized ? get_string($this->conditionname, 'mod_booking') : $this->conditionname;
+        return $localized ? get_string($this->conditionnamestringid, 'mod_booking') : $this->conditionname;
     }
 
     /**

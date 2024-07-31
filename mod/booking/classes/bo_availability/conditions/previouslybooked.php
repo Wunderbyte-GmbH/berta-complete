@@ -216,14 +216,14 @@ class previouslybooked implements bo_condition {
             }
 
             $mform->addElement('advcheckbox', 'bo_cond_previouslybooked_restrict',
-                    get_string('bo_cond_previouslybooked_restrict', 'mod_booking'));
+                    get_string('bocondpreviouslybookedrestrict', 'mod_booking'));
 
             $previouslybookedoptions = [
                 'tags' => false,
                 'multiple' => false,
             ];
             $mform->addElement('autocomplete', 'bo_cond_previouslybooked_optionid',
-                get_string('bo_cond_previouslybooked_optionid', 'mod_booking'), $bookingoptionarray, $previouslybookedoptions);
+                get_string('bocondpreviouslybookedoptionid', 'mod_booking'), $bookingoptionarray, $previouslybookedoptions);
             $mform->setType('bo_cond_previouslybooked_optionid', PARAM_INT);
             $mform->hideIf('bo_cond_previouslybooked_optionid', 'bo_cond_previouslybooked_restrict', 'notchecked');
 
@@ -252,8 +252,9 @@ class previouslybooked implements bo_condition {
                 $fullclassname = get_class($overridecondition); // With namespace.
                 $classnameparts = explode('\\', $fullclassname);
                 $shortclassname = end($classnameparts); // Without namespace.
+                $shortclassname = str_replace("_", "", $shortclassname); // Remove underscroll.
                 $overrideconditionsarray[$overridecondition->id] =
-                    get_string('bo_cond_' . $shortclassname, 'mod_booking');
+                    get_string('bocond' . $shortclassname, 'mod_booking');
             }
 
             // Check for json conditions that might have been saved before.
@@ -269,8 +270,8 @@ class previouslybooked implements bo_condition {
                             if ($jsoncondition->id != $this->id
                                 && isset($currentcondition->overridable)
                                 && ($currentcondition->overridable == true)) {
-                                $overrideconditionsarray[$jsoncondition->id] = get_string('bo_cond_' .
-                                    $jsoncondition->name, 'mod_booking');
+                                $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
+                                    str_replace("_", "", $jsoncondition->name), 'mod_booking');
                             }
                         }
                     }
@@ -290,7 +291,7 @@ class previouslybooked implements bo_condition {
         } else {
             // No PRO license is active.
             $mform->addElement('static', 'bo_cond_previouslybooked_restrict',
-                get_string('bo_cond_previouslybooked_restrict', 'mod_booking'),
+                get_string('bocondpreviouslybookedrestrict', 'mod_booking'),
                 get_string('proversiononly', 'mod_booking'));
         }
 
@@ -387,8 +388,8 @@ class previouslybooked implements bo_condition {
     private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
 
         if ($isavailable) {
-            $description = $full ? get_string('bo_cond_previouslybooked_full_available', 'mod_booking') :
-                get_string('bo_cond_previouslybooked_available', 'mod_booking');
+            $description = $full ? get_string('bocondpreviouslybookedfullavailable', 'mod_booking') :
+                get_string('bocondpreviouslybookedavailable', 'mod_booking');
         } else {
 
             if (!$this->customsettings) {
@@ -413,8 +414,8 @@ class previouslybooked implements bo_condition {
             ]);
 
             $description = $full ?
-                get_string('bo_cond_previouslybooked_full_not_available', 'mod_booking', $url->out(false)) :
-                get_string('bo_cond_previouslybooked_not_available', 'mod_booking', $url->out(false));
+                get_string('bocondpreviouslybookedfullnotavailable', 'mod_booking', $url->out(false)) :
+                get_string('bocondpreviouslybookednotavailable', 'mod_booking', $url->out(false));
         }
 
         return $description;

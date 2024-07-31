@@ -1,3 +1,36 @@
+## Version 8.6.2 (2024073000)
+* Improvement: Alternative importfields for courseid
+* Improvement: Enable item_bought event from shopping_cart plugin
+* Improvement: Add "skip rule" functionality to booking rules
+* Improvement: Show deleted users on report.php
+* Improvement: Enable custom user profile fields in sign-in sheet
+* Improvement: Use formated strings for config of bo fields and columns selects
+* Improvement: Enable filter formated strings {mlang}
+* Improvement: Add no shows for dashboard
+* Bugfix: Bookingoption changed event containing only relevant data
+* Bugfix: Display title prefix only once
+* Bugfix: Move deleted users to the right place
+
+
+## Version 8.6.1 (2024072900)
+* Bugfix: Refactor underscores in strings
+* Bugfix: remove false format_string
+* Bugfix: Notificationlist and book only on waitinglist combination working.
+* Bugfix: Cohort upload in booking
+
+## Version 8.6.0 (2024072500)
+* Improvement: Integrate Requirements for github workflow tests for Moodle 4.4
+* Improvement: Add btn-primary to "Go to Moodle Course"
+* Improvement: Customize rules reaction on change event as settings
+* Improvement: Add bookingoption_cancelled event to rules list
+* Improvement: Add possibility to add a sum for a customfield in category statistics
+* Improvement: Possibility to select user affected by bookinganswer_cancelled event in rules.
+* Bugfix: Changes tracking for entities
+* Bugfix: Duplication is separated from templates
+* Bugfix: Make sure newly created booking option fields are still shown in the configurations
+* Bugfix: Fix linkbacktocourse shortcode
+* Bugfix: Deleted course does not break the plattform.
+
 ## Version 8.5.0 (2024071801)
 * Improvement: Enable up to 3 bookingrules for free version
 * Improvement: Vue Dashboard

@@ -264,6 +264,7 @@ FilterCodes are meant to be entered as regular text in the Moodle WYSIWYG editor
 * {sectionname} : Display the section name in which the activity is located.
 * {coursecontacts}: List of course contacts with links to their profiles, email address or messaging or phone number, and their user description (there are settings for these). Note: This tag was formerly called {courseteachers}.
 * {mygroups}: Displays a list of groups to which you are a member.
+* {mygroupings}: Displays a list of groupings to which you are a member.
 
 Also, see Courses section below.
 
@@ -299,6 +300,7 @@ Also, see Courses section below.
 * {thisurl} : The complete URL of the current page.
 * {thisurl_enc} : The complete encoded URL of the current page.
 * {urlencode}{/urlencode} : URL encodes any content between the tages.
+* {rawurlencode}{/rawurlencode} : URL encodes any content between the tages according to RFC 3986.
 * {referer} : Referring URL
 * {protocol} : http or https
 * {referrer} : Alias of {referer}
@@ -363,6 +365,8 @@ Note: {if*rolename*} and {ifmin*rolename*} type tags are based on role archetype
 * {ifnotinsection}{/ifnotinsection} : Will only display the enclosed content if the user is not in a section of a course.
 * {ifingroup id|idnumber}{/ifingroup} : Will only display the content if the user is part of the specified course group ID or group ID number.
 * {ifnotingroup id|idnumber}{/ifnotingroup} : Will only display the content if the user is NOT part of the specified course group ID or group ID number.
+* {ifingrouping id|idnumber}{/ifingrouping} : Will only display the content if the user is part of the specified course grouping ID or grouping ID number.
+* {ifnotingrouping id|idnumber}{/ifnotingrouping} : Will only display the content if the user is NOT part of the specified course grouping ID or grouping ID number.
 * {ifvisible}{/ifvisible} : Will only display the content if the course visibility is set to Show.
 * {ifnotvisible}{/ifnotvisible} : Will only display the content if the course visibility is set to Hide.
 * {ifinactivity}{/ifinactivity} : Will only display the content only in course activities.
@@ -1218,6 +1222,7 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * Section Name [{sectionname}]: {sectionname}
 * Contacts in this course [{coursecontacts}]: {coursecontacts}
 * Please help other members of [{mygroups}] who might be struggling: Please help other members of {mygroups} who might be struggling.
+* Please help other members of [{mygroupings}] who might be struggling: Please help other members of {mygroupings} who might be struggling.
 * Available free application disk space [{diskfreespace}]: {diskfreespace}
 * Available free moodledata disk space [{diskfreespacedata}]: {diskfreespacedata}
 * My Enrolled Courses [{mycourses}]: {mycourses}
@@ -1262,6 +1267,7 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * This URL [{thisurl}]: {thisurl}
 * This URL encoded [{thisurl_enc}]: {thisurl_enc}
 * Double encode this URL (useful for whatsurl parameters) [{urlencode}][{thisurl_enc}][{/urlencode}]: {urlencode}{thisurl_enc}{/urlencode}
+* Mailto with Subject <a href="mailto:someone@sample.com?subject=[{rawurlencode}]This is an amazing subject[{/rawurlencode}]>Mailto with Subject</a>
 * Protocol [{protocol}]: {protocol}
 * IP Address [{ipaddress}]: {ipaddress}
 * Moodle session key [{sesskey}]: {sesskey}
@@ -1341,6 +1347,7 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * Is this Moodle Workplace? [{ifworkplace}]Yes[{/ifworkplace}]: {ifworkplace}Yes{/ifworkplace}
 * This is FilterCodes version [{filtercodes}]: {filtercodes} (It be blank if you do not have the Moodle capability to edit this tag.)
 * Are you a member of the ATEAM group [{ifingroup ATEAM}]Yes[{/ifingroup}][{ifnotingroup ATEAM}]No[{/ifnotingroup}] ? : {ifingroup ATEAM}Yes{/ifingroup}{ifnotingroup ATEAM}No{/ifnotingroup} Note: Only works in courses.
+* Are you a member of the MCU grouping [{ifingrouping MCU}]Yes[{/ifingrouping}][{ifnotingrouping MCU}]No[{/ifnotingrouping}] ? : {ifingrouping MCU}Yes{/ifingrouping}{ifnotingrouping MCU}No{/ifnotingrouping} Note: Only works in courses.
 * [{ifvisible}]Notice: Course visibility is set to Show.[{/ifvisible}]: {ifvisible}Notice: Course visibility is set to Show.{/ifvisible}
 * [{ifnotvisible}]Warning: Course visibility is set to Hide.[{/ifnotvisible}]: {ifnotvisible}Warning: Course visibility is set to Hide.{/ifnotvisible}
 * Are you in an activity? [{ifinactivity}]Yes[{/ifinactivity}][{ifnotinactivity}]No[{/ifnotinactivity}]: {ifinactivity}Yes{/ifinactivity}{ifnotinactivity}No{/ifnotinactivity}

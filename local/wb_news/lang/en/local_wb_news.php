@@ -74,6 +74,7 @@ $string['btntext'] = 'Button Text';
 $string['lightmode'] = 'Light Mode';
 $string['cssclasses'] = 'Additionial CSS classes';
 $string['columns'] = 'Columns';
+$string['to_offer'] = 'Show offer';
 
 $string['template'] = 'Template';
 $string['name'] = 'Name';
@@ -82,9 +83,11 @@ $string['slidertemplate'] = 'Slider template';
 $string['tabstemplate'] = 'Tabs template';
 $string['gridtemplate'] = 'Grid template';
 $string['blogtemplate'] = 'Blog template';
+$string['verticalblogtemplate'] = 'Vertical Blog template';
 $string['crosslinkstemplate'] = 'Crosslinks template';
 $string['timelinetemplate'] = 'Timeline template';
 $string['timelinetemplate2'] = 'Timeline Mode2 template';
+$string['imagecolumntemplate'] = 'Image Column';
 
 $string['keyvaluepairs'] = 'Key: Value';
 $string['additionaldata'] = 'Additionaldata for some templates';

@@ -26,6 +26,7 @@
 
 namespace mod_booking;
 
+use cache_helper;
 use core_cohort\reportbuilder\local\entities\cohort;
 use html_writer;
 use local_wunderbyte_table\filters\types\standardfilter;
@@ -591,10 +592,12 @@ class shortcodes {
             $perpage = 100;
         }
 
-        $table = new bulkoperations_table(bin2hex(random_bytes(12)));
+        cache_helper::purge_by_event('changesinwunderbytetable');
+
+        $table = new bulkoperations_table(bin2hex(random_bytes(8)) . '_optionbulkoperationstable');
         $columns = [
             'id' => get_string('id', 'local_wunderbyte_table'),
-            'text' => get_string('text', 'mod_booking'),
+            'text' => get_string('title', 'mod_booking'),
             'action' => get_string('edit'),
         ];
         // Add defined customfields from args to columns.

@@ -24,8 +24,6 @@
  */
 
 use mod_booking\booking_option;
-use mod_booking\booking_rules\booking_rule;
-use mod_booking\booking_rules\booking_rules;
 use mod_booking\booking_rules\rules_info;
 use mod_booking\calendar;
 use mod_booking\elective;
@@ -373,103 +371,8 @@ class mod_booking_observer {
      */
     public static function execute_rule(\core\event\base $event) {
 
-        // We want booking events only.
-        $data = $event->get_data();
-        if ($data['component'] !== 'mod_booking') {
-            return;
-        }
-
-        // TODO: Get name of event and only trigger when the rule is set to listen on this specific event.
-        $optionid = $event->objectid ?? 0;
-        $eventname = "\\" . get_class($event);
-
-        // Only execute rules for bookingoption_changed event according to settings.
-        if (!empty(get_config('booking', 'limitchangestrackinginrules'))
-            && $eventname == '\mod_booking\event\bookingoption_updated') {
-            if (!empty($data['other']['changes'])) {
-                $changes = $data['other']['changes'];
-                foreach ($changes as $index => $change) {
-                    if (empty($change['fieldname'])) {
-                        continue;
-                    }
-                    if (self::ruleevent_excluded_via_config($change['fieldname'])) {
-                        unset($changes[$index]);
-                    }
-                }
-            }
-
-        }
-
-        $contextid = $event->contextid;
-        $records = booking_rules::get_list_of_saved_rules_by_context($contextid, $eventname);
-
-        // Now we check all the existing rules.
-        foreach ($records as $record) {
-
-            $rule = rules_info::get_rule($record->rulename);
-
-            // THIS is the place where we need to add event data to the rulejson!
-            $ruleobj = json_decode($record->rulejson);
-
-            $ruleobj->datafromevent = $data;
-            // We save rulejson again with added event data.
-            $record->rulejson = json_encode($ruleobj);
-            // Save it into the rule.
-            $rule->set_ruledata($record);
-
-            // We only execute if the rule in question listens to the right event.
-            if (!empty($rule->boevent)) {
-                if ($data['eventname'] == $rule->boevent) {
-                    $rule->execute($optionid, 0);
-                }
-            }
-        }
-    }
-
-    /**
-     * Check if event is excluded via config.
-     *
-     * @param mixed $fieldname
-     *
-     * @return bool
-     *
-     */
-    private static function ruleevent_excluded_via_config($fieldname): bool {
-
-        if (empty(get_config('booking', 'limitchangestrackinginrules'))) {
-            return false;
-        }
-
-        switch ($fieldname) {
-            // Teacher.
-            case "teachers":
-                $config = get_config('booking', 'listentoteacherschange');
-                break;
-            // Responsiblecontact.
-            case "responsiblecontact":
-                $config = get_config('booking', 'listentoresponsiblepersonchange');
-                break;
-            // Beginning and ending or location of date.
-            case "dates":
-                $config = get_config('booking', 'listentotimestampchange');
-                break;
-            // Address can be with or without entities plugin.
-            case "address":
-                $config = get_config('booking', 'listentoaddresschange');
-                break;
-            case "entities":
-                $config = get_config('booking', 'listentoaddresschange');
-                break;
-            default:
-                return true;
-        }
-
-        // Empty means excluded from tracking.
-        if (empty($config)) {
-            return true;
-        } else {
-            return false;
-        }
+        rules_info::collect_rules_for_execution($event);
+        rules_info::filter_rules_and_execute();
     }
 
     /**

@@ -31,6 +31,7 @@ Feature: PayUnity basic configuration and useage by user
   @javascript
   Scenario: PayOne: user select two items and pay via card using payunity
     Given I log in as "user1"
+    And Shopping cart has been cleaned for user "user1"
     And Testitem "1" has been put in shopping cart of user "user1"
     And Testitem "2" has been put in shopping cart of user "user1"
     And I visit "/local/shopping_cart/checkout.php"
@@ -72,8 +73,8 @@ Feature: PayUnity basic configuration and useage by user
     ##And I wait until the page is ready
     And I wait to be redirected
     ## Workaround for non-https dev env
-    And I click on "Send anyway" "text"
-    And I wait to be redirected
+    ## And I click on "Send anyway" "text"
+    ## And I wait to be redirected
     ## Workaround for transaction_complete brandcode error - test pass if 2 strings bellow are uncommented
     And I reload the page
     ##And I wait until the page is ready

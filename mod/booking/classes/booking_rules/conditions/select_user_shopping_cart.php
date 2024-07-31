@@ -47,6 +47,9 @@ class select_user_shopping_cart implements booking_rule_condition {
     /** @var string $conditionname */
     public $conditionname = 'select_user_shopping_cart';
 
+    /** @var string $conditionnamestringid Id of localized string for name of rule condition*/
+    protected $conditionnamestringid = 'selectusershoppingcart';
+
     /** @var int $userid the user who triggered an event */
     public $userid = 0;
 
@@ -111,7 +114,7 @@ class select_user_shopping_cart implements booking_rule_condition {
     public function add_condition_to_mform(MoodleQuickForm &$mform, ?array &$ajaxformdata = null) {
 
         $mform->addElement('static', 'condition_select_user_shopping_cart', '',
-                get_string('condition_select_user_shopping_cart_desc', 'mod_booking'));
+                get_string('conditionselectusershoppingcart_desc', 'mod_booking'));
 
     }
 
@@ -122,7 +125,7 @@ class select_user_shopping_cart implements booking_rule_condition {
      * @return string the name of the condition
      */
     public function get_name_of_condition($localized = true) {
-        return $localized ? get_string($this->conditionname, 'mod_booking') : $this->conditionname;
+        return $localized ? get_string($this->conditionnamestringid, 'mod_booking') : $this->conditionname;
     }
 
     /**

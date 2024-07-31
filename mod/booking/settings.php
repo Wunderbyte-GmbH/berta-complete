@@ -100,12 +100,12 @@ if ($ADMIN->fulltree) {
         $expirationdate = wb_payment::decryptlicensekey($licensekey);
         if (!empty($expirationdate)) {
             $licensekeydesc = "<p style='color: green; font-weight: bold'>"
-                .get_string('license_activated', 'mod_booking')
+                .get_string('licenseactivated', 'mod_booking')
                 .$expirationdate
                 .")</p>";
         } else {
             $licensekeydesc = "<p style='color: red; font-weight: bold'>"
-                .get_string('license_invalid', 'mod_booking')
+                .get_string('licenseinvalid', 'mod_booking')
                 ."</p>";
         }
     }
@@ -458,7 +458,7 @@ if ($ADMIN->fulltree) {
     $settings->add(
         new admin_setting_configcheckbox('booking/limitchangestrackinginrules',
                 get_string('limitchangestrackinginrules', 'mod_booking'),
-                get_string('limitchangestrackinginrulesdesc', 'mod_booking'), 0));
+                get_string('limitchangestrackinginrulesdesc', 'mod_booking'), 1));
 
     $limitchangestrackinginrules = get_config('booking', 'limitchangestrackinginrules') == 1;
     if ($limitchangestrackinginrules) {
@@ -644,7 +644,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
         new admin_setting_heading('availabilityinfotexts_heading',
-            get_string('availabilityinfotexts_heading', 'mod_booking'),
+            get_string('availabilityinfotextsheading', 'mod_booking'),
             ''));
 
     // PRO feature.
@@ -653,7 +653,7 @@ if ($ADMIN->fulltree) {
         $settings->add(
             new admin_setting_configcheckbox('booking/bookingplacesinfotexts',
                 get_string('bookingplacesinfotexts', 'mod_booking'),
-                get_string('bookingplacesinfotexts_info', 'booking'), 0));
+                get_string('bookingplacesinfotextsinfo', 'booking'), 0));
 
         $bookingplaceslowpercentages = [
             5 => ' 5%',
@@ -679,7 +679,7 @@ if ($ADMIN->fulltree) {
         $settings->add(
             new admin_setting_configcheckbox('booking/waitinglistinfotexts',
                 get_string('waitinglistinfotexts', 'mod_booking'),
-                get_string('waitinglistinfotexts_info', 'booking'), 0));
+                get_string('waitinglistinfotextsinfo', 'booking'), 0));
 
         $waitinglistlowpercentages = [
             5 => ' 5%',
@@ -705,7 +705,7 @@ if ($ADMIN->fulltree) {
         $settings->add(
             new admin_setting_configcheckbox('booking/waitinglistshowplaceonwaitinglist',
                 get_string('waitinglistshowplaceonwaitinglist', 'mod_booking'),
-                get_string('waitinglistshowplaceonwaitinglist_info', 'booking'), 0));
+                get_string('waitinglistshowplaceonwaitinglistinfo', 'booking'), 0));
     }
 
     // PRO feature: Subbookings.
@@ -822,19 +822,6 @@ if ($ADMIN->fulltree) {
             'mod_booking_signinlogo_footer', 0, $fileoptions);
     $settings->add($setting);
 
-    $name = 'booking/custprofilefields';
-    $visiblename = get_string('signincustfields', 'mod_booking');
-    $description = get_string('signincustfields_desc', 'mod_booking');
-    $profiles = profile_get_custom_fields();
-    $choices = array_map(function ($object) {
-        return $object->name;
-    }, $profiles);
-    if (!empty($choices)) {
-        $setting = new admin_setting_configmulticheckbox($name, $visiblename, $description, [],
-                $choices);
-        $settings->add($setting);
-    }
-
     $name = 'booking/showcustfields';
     $visiblename = get_string('showcustomfields', 'mod_booking');
     $description = get_string('showcustomfields_desc', 'mod_booking');
@@ -851,7 +838,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(
             new admin_setting_heading('mod_booking_signinheading',
-                    get_string('signinextracols_heading', 'mod_booking'), ''));
+                    get_string('signinextracolsheading', 'mod_booking'), ''));
 
     for ($i = 1; $i < 4; $i++) {
         $name = 'booking/signinextracols' . $i;

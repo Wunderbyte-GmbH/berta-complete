@@ -17,7 +17,7 @@
 /**
  * This class contains a list of webservice functions related to the Shopping Cart Module by Wunderbyte.
  *
- * @package    local_urise
+ * @package    mod_booking
  * @copyright  2024 Georg Maißer <info@wunderbyte.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -32,7 +32,7 @@ use external_multiple_structure;
 use external_value;
 use external_single_structure;
 use context_coursecat;
-use local_urise\coursecategories;
+use mod_booking\coursecategories;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -41,7 +41,7 @@ require_once($CFG->libdir . '/externallib.php');
 /**
  * External Service for shopping cart.
  *
- * @package   local_urise
+ * @package   mod_booking
  * @copyright 2024 Wunderbyte GmbH {@link http://www.wunderbyte.at}
  * @author    Georg Maißer
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
@@ -62,12 +62,12 @@ class get_parent_categories extends external_api {
     /**
      * Webservice for shopping_cart class to add a new item to the cart.
      *
-     * @param string $component
-     * @param string $area
+     * @param int $coursecategoryid
      *
      * @return array
      */
     public static function execute(int $coursecategoryid): array {
+
         global $DB;
 
         require_login();
@@ -78,16 +78,24 @@ class get_parent_categories extends external_api {
 
         $records = coursecategories::return_course_categories($params['coursecategoryid']);
 
+        usort($records, fn($a, $b) => strcmp(strtolower($a->name), strtolower($b->name)));
+
         $coursecount = 0;
+        $bookingoptionscount = 0;
+        $bookedcount = 0;
+        $waitinglistcount = 0;
+        $reservedcount = 0;
+        $realparticipants = 0;
+        $noshows = 0;
 
         if (empty($params['coursecategoryid'])) {
             $returnarray = [
                 [
                     'id' => 0,
-                    'name' => get_string('summary', 'local_urise'),
+                    'name' => get_string('dashboard_summary', 'mod_booking'),
                     'contextid' => 1,
                     'coursecount' => $coursecount,
-                    'description' => get_string('summarydescription', 'local_urise'),
+                    'description' => get_string('dashboard_summary_desc', 'mod_booking'),
                     'path' => '',
                     'json' => '',
                 ],
@@ -104,20 +112,62 @@ class get_parent_categories extends external_api {
                 continue;
             }
             $coursecount += $record->coursecount;
+            $record->bookingoptionscount = 0;
+            $record->bookedcount = 0;
+            $record->waitinglistcount = 0;
+            $record->reservedcount = 0;
+            $record->realparticipants = 0;
+            $record->noshows = 0;
 
-            if ($bookingoptions
-                    = coursecategories::return_booking_information_for_coursecategory((int)$record->contextid)) {
+            $sql = "SELECT c.id, c.fullname
+                    FROM {course} c
+                    WHERE c.category=:categoryid";
+            $record->courses = $DB->get_records_sql($sql, ['categoryid' => $record->id], IGNORE_MISSING) ?: [];
 
+            if (
+                $bookingoptions
+                    = coursecategories::return_booking_information_for_coursecategory((int)$record->contextid, 'tatsaechlichetnbib')
+            ) {
+                $multibookingconfig = explode(',', get_config('local_urise', 'multibookinginstances') ?: '');
+                foreach ($bookingoptions as &$value) {
+                    $defaultchecked = false;
+                    if (in_array($value->bookingid, $multibookingconfig)) {
+                        $defaultchecked = true;
+                    }
+                    $value->checked = $defaultchecked;
+
+                    $record->bookingoptionscount += $value->bookingoptions;
+                    $record->bookedcount += $value->booked;
+                    $record->waitinglistcount += $value->waitinglist ?? 0;
+                    $record->reservedcount += $value->reserved ?? 0;
+                    $record->realparticipants += $value->realparticipants ?? 0;
+                    $record->noshows += $value->noshows ?? 0;
+
+                }
                 $record->json = json_encode([
-                    'booking' => array_values($bookingoptions)
+                    'booking' => array_values($bookingoptions),
                 ]);
             }
-
             $returnarray[] = (array)$record;
+
+            $bookingoptionscount += $record->bookingoptionscount;
+            $bookedcount += $record->bookedcount;
+            $waitinglistcount += $record->waitinglistcount;
+            $reservedcount += $record->reservedcount;
+            $realparticipants += $record->realparticipants;
+            $noshows += $record->noshows;
         }
 
-        // We set the combined coursecount.
-        $returnarray[0]['coursecount'] = $coursecount;
+        // We set the combined coursecount, if there is a general tab.
+        if (isset($returnarray[0]) && $returnarray[0]['id'] == 0) {
+            $returnarray[0]['coursecount'] = $coursecount;
+            $returnarray[0]['bookingoptionscount'] = $bookingoptionscount;
+            $returnarray[0]['bookedcount'] = $bookedcount;
+            $returnarray[0]['waitinglistcount'] = $waitinglistcount;
+            $returnarray[0]['reservedcount'] = $reservedcount;
+            $returnarray[0]['realparticipants'] = $realparticipants;
+            $returnarray[0]['noshows'] = $noshows;
+        }
 
         return $returnarray;
     }
@@ -130,15 +180,29 @@ class get_parent_categories extends external_api {
     public static function execute_returns(): external_multiple_structure {
         return new external_multiple_structure(
             new external_single_structure(
-                array(
+                [
                     'id' => new external_value(PARAM_INT, 'Item id', VALUE_DEFAULT, 0),
-                    'name' => new external_value(PARAM_TEXT, 'Item name', VALUE_DEFAULT, ''),
+                    'name' => new external_value(PARAM_RAW, 'Item name', VALUE_DEFAULT, ''),
                     'contextid' => new external_value(PARAM_TEXT, 'Contextid', VALUE_DEFAULT, 1),
                     'coursecount' => new external_value(PARAM_TEXT, 'Coursecount', VALUE_DEFAULT, 0),
-                    'description' => new external_value(PARAM_TEXT, 'description', VALUE_DEFAULT, ''),
+                    'bookingoptionscount' => new external_value(PARAM_TEXT, 'Bookingoptions count', VALUE_DEFAULT, 0),
+                    'bookedcount' => new external_value(PARAM_TEXT, 'Booked count', VALUE_DEFAULT, 0),
+                    'waitinglistcount' => new external_value(PARAM_TEXT, 'Waitinglist count', VALUE_DEFAULT, 0),
+                    'reservedcount' => new external_value(PARAM_TEXT, 'Reserved count', VALUE_DEFAULT, 0),
+                    'realparticipants' => new external_value(PARAM_TEXT, 'Real participants count', VALUE_DEFAULT, 0),
+                    'noshows' => new external_value(PARAM_TEXT, 'Number of noshows at event', VALUE_DEFAULT, 0),
+                    'description' => new external_value(PARAM_RAW, 'description', VALUE_DEFAULT, ''),
                     'path' => new external_value(PARAM_TEXT, 'path', VALUE_DEFAULT, ''),
+                    'courses' => new external_multiple_structure(
+                        new external_single_structure(
+                            [
+                                'id' => new external_value(PARAM_INT, 'Course ID'),
+                                'fullname' => new external_value(PARAM_TEXT, 'Full course name'),
+                            ]
+                        ), 'List of courses', VALUE_OPTIONAL
+                    ),
                     'json' => new external_value(PARAM_RAW, 'json', VALUE_DEFAULT, '{}'),
-                )
+                ]
             )
         );
     }

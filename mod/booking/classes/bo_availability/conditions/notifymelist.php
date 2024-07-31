@@ -108,7 +108,12 @@ class notifymelist implements bo_condition {
             if (isset($bookinginformation['notbooked'])) {
                 if ($bookinginformation['notbooked']['fullybooked'] === false) {
                     $isavailable = true;
+                } else if ($bookinginformation['notbooked']['freeonwaitinglist'] ?? 0 > 0) {
+                    $isavailable = true;
                 }
+            } else if (isset($bookinganswer->usersonwaitinglist[$userid])) {
+                // If the user is already booked on waitinglist, this is also true.
+                $isavailable = true;
             }
 
         }
@@ -246,11 +251,11 @@ class notifymelist implements bo_condition {
      */
     private function get_description_string($isavailable, $full) {
         if ($isavailable) {
-            $description = $full ? get_string('bo_cond_alreadybooked_full_available', 'mod_booking') :
-                get_string('bo_cond_alreadybooked_available', 'mod_booking');
+            $description = $full ? get_string('bocondalreadybookedfullavailable', 'mod_booking') :
+                get_string('bocondalreadybookedavailable', 'mod_booking');
         } else {
-            $description = $full ? get_string('bo_cond_alreadybooked_full_not_available', 'mod_booking') :
-                get_string('bo_cond_alreadybooked_not_available', 'mod_booking');
+            $description = $full ? get_string('bocondalreadybookedfullnotavailable', 'mod_booking') :
+                get_string('bocondalreadybookednotavailable', 'mod_booking');
         }
         return $description;
     }

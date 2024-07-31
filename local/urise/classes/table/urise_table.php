@@ -146,7 +146,7 @@ class urise_table extends wunderbyte_table {
 
         if (isset($settings->customfieldsfortemplates) && isset($settings->customfieldsfortemplates['kurssprache'])) {
             $value = $settings->customfieldsfortemplates['kurssprache']['value'];
-            return $value;
+            return format_string($value);
         }
     }
 
@@ -254,6 +254,30 @@ class urise_table extends wunderbyte_table {
         }
 
         return $title;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * text value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string $string Return name of the booking option.
+     * @throws dml_exception
+     */
+    public function col_url($values) {
+
+        $booking = singleton_service::get_instance_of_booking_by_bookingid($values->bookingid);
+        $buyforuser = price::return_user_to_buy_for();
+
+        if ($booking) {
+            $url = new moodle_url('/mod/booking/optionview.php', ['optionid' => $values->id,
+                                                                  'cmid' => $booking->cmid,
+                                                                  'userid' => $buyforuser->id]);
+        } else {
+            $url = '#';
+        }
+
+        return $url;
     }
 
     /**
@@ -381,7 +405,7 @@ class urise_table extends wunderbyte_table {
 
                 $returnorgas = [];
                 foreach ($settings->customfields['kompetenzen'] as $orgaid) {
-                    $organisations = shortcodes::KOMPETENZEN;
+                    $organisations = shortcodes::get_kompetenzen();
 
                     if (isset($organisations[$orgaid])) {
                         $returnorgas[] = html_writer::tag(
@@ -433,7 +457,7 @@ class urise_table extends wunderbyte_table {
 
                 $returnorgas = [];
                 foreach ($settings->customfields['organisation'] as $orgaid) {
-                    $organisations = shortcodes::ORGANISATIONEN;
+                    $organisations = shortcodes::organisations();
 
                     if (isset($organisations[$orgaid])) {
                         $returnorgas[] = html_writer::tag(
@@ -820,7 +844,7 @@ class urise_table extends wunderbyte_table {
 
             if (!$ret = $cache->get($cachekey)) {
                 $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
-                $output = singleton_service::get_renderer('local_urise');
+                $output = singleton_service::get_renderer('mod_booking');
                 $ret = $output->render_col_coursestarttime($data);
                 $cache->set($cachekey, $ret);
             }

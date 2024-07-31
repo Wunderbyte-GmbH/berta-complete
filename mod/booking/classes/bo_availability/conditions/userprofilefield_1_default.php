@@ -280,10 +280,10 @@ class userprofilefield_1_default implements bo_condition {
                 }
 
                 $mform->addElement('advcheckbox', 'bo_cond_userprofilefield_1_default_restrict',
-                    get_string('bo_cond_userprofilefield_1_default_restrict', 'mod_booking'));
+                    get_string('boconduserprofilefield1defaultrestrict', 'mod_booking'));
 
                 $mform->addElement('select', 'bo_cond_userprofilefield_field',
-                    get_string('bo_cond_userprofilefield_field', 'mod_booking'), $userprofilefieldsarray);
+                    get_string('boconduserprofilefieldfield', 'mod_booking'), $userprofilefieldsarray);
                 $mform->hideIf('bo_cond_userprofilefield_field', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
 
                 $operators = [
@@ -299,12 +299,12 @@ class userprofilefield_1_default implements bo_condition {
                     '(!)' => get_string('isnotempty', 'mod_booking'),
                 ];
                 $mform->addElement('select', 'bo_cond_userprofilefield_operator',
-                    get_string('bo_cond_userprofilefield_operator', 'mod_booking'), $operators);
+                    get_string('boconduserprofilefieldoperator', 'mod_booking'), $operators);
                 $mform->hideIf('bo_cond_userprofilefield_operator', 'bo_cond_userprofilefield_field', 'eq', 0);
                 $mform->hideIf('bo_cond_userprofilefield_operator', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
 
                 $mform->addElement('text', 'bo_cond_userprofilefield_value',
-                    get_string('bo_cond_userprofilefield_value', 'mod_booking'));
+                    get_string('boconduserprofilefieldvalue', 'mod_booking'));
                 $mform->setType('bo_cond_userprofilefield_value', PARAM_RAW);
                 $mform->hideIf('bo_cond_userprofilefield_value', 'bo_cond_userprofilefield_field', 'eq', 0);
                 $mform->hideIf('bo_cond_userprofilefield_value', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
@@ -336,8 +336,9 @@ class userprofilefield_1_default implements bo_condition {
                     $fullclassname = get_class($overridecondition); // With namespace.
                     $classnameparts = explode('\\', $fullclassname);
                     $shortclassname = end($classnameparts); // Without namespace.
+                    $shortclassname = str_replace("_", "", $shortclassname); // Remove underscroll.
                     $overrideconditionsarray[$overridecondition->id] =
-                        get_string('bo_cond_' . $shortclassname, 'mod_booking');
+                        get_string('bocond' . $shortclassname, 'mod_booking');
                 }
 
                 // Check for json conditions that might have been saved before.
@@ -353,8 +354,8 @@ class userprofilefield_1_default implements bo_condition {
                                 if ($jsoncondition->id != $this->id
                                     && isset($currentcondition->overridable)
                                     && ($currentcondition->overridable == true)) {
-                                    $overrideconditionsarray[$jsoncondition->id] = get_string('bo_cond_' .
-                                        $jsoncondition->name, 'mod_booking');
+                                    $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
+                                        str_replace("_", "", $jsoncondition->name), 'mod_booking');
                                 }
                             }
                         }
@@ -374,7 +375,7 @@ class userprofilefield_1_default implements bo_condition {
         } else {
             // No PRO license is active.
             $mform->addElement('static', 'bo_cond_userprofilefield_1_default_restrict',
-                get_string('bo_cond_userprofilefield_1_default_restrict', 'mod_booking'),
+                get_string('boconduserprofilefield1defaultrestrict', 'mod_booking'),
                 get_string('proversiononly', 'mod_booking'));
         }
 
@@ -476,8 +477,8 @@ class userprofilefield_1_default implements bo_condition {
      */
     private function get_description_string($isavailable, $full, $settings) {
         if ($isavailable) {
-            $description = $full ? get_string('bo_cond_userprofilefield_full_available', 'mod_booking') :
-                get_string('bo_cond_userprofilefield_available', 'mod_booking');
+            $description = $full ? get_string('boconduserprofilefieldfullavailable', 'mod_booking') :
+                get_string('boconduserprofilefieldavailable', 'mod_booking');
         } else {
 
             if (!$this->customsettings) {
@@ -492,10 +493,10 @@ class userprofilefield_1_default implements bo_condition {
                 }
             }
 
-            $description = $full ? get_string('bo_cond_userprofilefield_full_not_available',
+            $description = $full ? get_string('boconduserprofilefieldfullnotavailable',
                 'mod_booking',
                 $this->customsettings) :
-                get_string('bo_cond_userprofilefield_not_available', 'mod_booking');
+                get_string('boconduserprofilefieldnotavailable', 'mod_booking');
         }
         return $description;
     }

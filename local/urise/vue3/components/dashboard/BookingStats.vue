@@ -1,17 +1,38 @@
 <template>
   <div v-if="bookingstats.json && bookingstats.json.booking">
+    <h5>{{store.state.strings.vue_dashboard_booking_instances}}</h5>
     <table class="table mt-2">
-      <thead>
+      <thead class="thead-light">
         <tr>
-          <th>Name</th>
-          <th>Booking Options</th>
-          <th>Booked</th>
-          <th>Waiting List</th>
-          <th>Reserved</th>
+          <th>{{ store.state.strings.vue_dashboard_checked }}</th>
+          <th>{{ store.state.strings.vue_dashboard_name }}</th>
+          <th>{{ store.state.strings.vue_booking_stats_booking_options }}</th>
+          <th>{{ store.state.strings.vue_booking_stats_booked }}</th>
+          <th>{{ store.state.strings.vue_booking_stats_waiting }}</th>
+          <th>{{ store.state.strings.vue_booking_stats_reserved }}</th>
+          <th v-if="showRealParticipants">{{ store.state.strings.vue_booking_stats_realparticipants }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="bookingStat in bookingstats.json.booking" :key="'bookingstats' + bookingStat.id">
+        <tr
+          v-for="bookingStat in bookingstats.json.booking"
+          :key="'bookingstats' + bookingStat.id"
+        >
+          <td>
+            <div class="custom-control custom-switch">
+              <input type="checkbox" class="custom-control-input" :id="'checkbox_' + bookingStat.id"  
+              :checked="bookingStat.checked"
+              @change="handleCheckboxChange(bookingStat)">
+              <label class="custom-control-label" :for="'checkbox_' + bookingStat.id"></label>
+            </div>
+            <!-- <input
+              :id="'checkbox_' + bookingStat.id"
+              type="checkbox"
+              class="form-check-input mr-2" role="switch"
+              :checked="bookingStat.checked"
+              @change="handleCheckboxChange(bookingStat)"
+            > -->
+          </td>
           <td>
             <a :href="'/mod/booking/view.php?id=' + bookingStat.id">
               {{ bookingStat.name }}
@@ -21,6 +42,7 @@
           <td>{{ bookingStat.booked }}</td>
           <td>{{ bookingStat.waitinglist }}</td>
           <td>{{ bookingStat.reserved }}</td>
+          <td v-if="showRealParticipants">{{ bookingStat.realparticipants }}</td>
         </tr>
       </tbody>
     </table>
@@ -29,11 +51,34 @@
 
 <script setup>
 
-const props = defineProps({
-  bookingstats: {
-    type: Array,
-    default: null,
-  },
-});
+  import { useStore } from 'vuex'
+  import { computed } from 'vue';
+  const store = useStore();
+
+  const props = defineProps({
+    bookingstats: {
+      type: Object,
+      default: null,
+    },
+  });
+
+  const handleCheckboxChange = async (bookingStat) => {
+    await store.dispatch('setCheckedBookingInstance', bookingStat)
+  }
+
+  const showRealParticipants = computed(() => {
+    console.log('participans', props.bookingstats.json.booking.some(stat => stat.realparticipants > 0));
+    return props.bookingstats.json.booking.some(stat => stat.realparticipants > 0);
+  });
 
 </script>
+
+
+
+<style lang="scss" scoped>
+ @import './scss/custom.scss';
+
+  .thead-light th {
+    background: $vuelightcontent;
+  }
+</style>

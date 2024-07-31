@@ -242,8 +242,9 @@ class booking_time implements bo_condition {
             $fullclassname = get_class($overridecondition); // With namespace.
             $classnameparts = explode('\\', $fullclassname);
             $shortclassname = end($classnameparts); // Without namespace.
+            $shortclassname = str_replace("_", "", $shortclassname); // Remove underscroll.
             $overrideconditionsarray[$overridecondition->id] =
-                get_string('bo_cond_' . $shortclassname, 'mod_booking');
+                get_string('bocond' . $shortclassname, 'mod_booking');
         }
 
         // Check for json conditions that might have been saved before.
@@ -259,8 +260,8 @@ class booking_time implements bo_condition {
                         if ($jsoncondition->id != MOD_BOOKING_BO_COND_BOOKING_TIME
                             && isset($currentcondition->overridable)
                             && ($currentcondition->overridable == true)) {
-                            $overrideconditionsarray[$jsoncondition->id] = get_string('bo_cond_' .
-                                $jsoncondition->name, 'mod_booking');
+                            $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
+                                str_replace("_", "", $jsoncondition->name), 'mod_booking');
                         }
                     }
                 }
@@ -324,7 +325,7 @@ class booking_time implements bo_condition {
      */
     private function get_description_string($isavailable, $full, $settings) {
         if ($isavailable) {
-            $description = get_string('bo_cond_booking_time_available', 'mod_booking');
+            $description = get_string('bocondbookingtimeavailable', 'mod_booking');
         } else {
             // Localized time format.
             switch(current_language()) {
@@ -343,18 +344,18 @@ class booking_time implements bo_condition {
             if (!empty($openingtime) && time() < $openingtime) {
                 $openingdatestring = date($timeformat, $openingtime);
                 $description .= $full ?
-                    get_string('bo_cond_booking_opening_time_full_not_available', 'mod_booking', $openingdatestring) :
-                    get_string('bo_cond_booking_opening_time_not_available', 'mod_booking', $openingdatestring);
+                    get_string('bocondbookingopeningtimefullnotavailable', 'mod_booking', $openingdatestring) :
+                    get_string('bocondbookingopeningtimenotavailable', 'mod_booking', $openingdatestring);
             }
             if (!empty($closingtime) && time() > $closingtime) {
                 $closingdatestring = date($timeformat, $closingtime);
                 $description .= $full ?
-                    get_string('bo_cond_booking_closing_time_full_not_available', 'mod_booking', $closingdatestring) :
-                    get_string('bo_cond_booking_closing_time_not_available', 'mod_booking', $closingdatestring);
+                    get_string('bocondbookingclosingtimefullnotavailable', 'mod_booking', $closingdatestring) :
+                    get_string('bocondbookingclosingtimenotavailable', 'mod_booking', $closingdatestring);
             }
             // Fallback: If description is still empty, we still want to show that it's not available.
             if (empty($description)) {
-                $description = get_string('bo_cond_booking_time_not_available', 'mod_booking');
+                $description = get_string('bocondbookingtimenotavailable', 'mod_booking');
             }
         }
 

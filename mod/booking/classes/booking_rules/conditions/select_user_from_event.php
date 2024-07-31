@@ -47,6 +47,9 @@ class select_user_from_event implements booking_rule_condition {
     /** @var string $conditionname */
     public $conditionname = 'select_user_from_event';
 
+    /** @var string $conditionnamestringid Id of localized string for name of rule condition*/
+    protected $conditionnamestringid = 'selectuserfromevent';
+
     /** @var string $conditiontype */
     public $userfromeventtype = '0';
 
@@ -128,11 +131,12 @@ class select_user_from_event implements booking_rule_condition {
             'bookingoption_completed',
             'custom_message_sent',
             'bookingoption_confirmed',
+            'bookinganswer_cancelled',
             // More events yet to come...
         ];
 
         $mform->addElement('static', 'condition_select_user_from_event', '',
-                get_string('condition_select_user_from_event_desc', 'mod_booking'));
+                get_string('conditionselectuserfromevent_desc', 'mod_booking'));
 
         // We need to check if the event supports relateduserid (affected user of the event).
         $userfromeventoptions["0"] = get_string('choose...', 'mod_booking');
@@ -143,7 +147,7 @@ class select_user_from_event implements booking_rule_condition {
         $userfromeventoptions["userid"] = get_string('userwhotriggeredevent', 'mod_booking');
 
         $mform->addElement('select', 'condition_select_user_from_event_type',
-                get_string('condition_select_user_from_event_type', 'mod_booking'), $userfromeventoptions);
+                get_string('conditionselectuserfromeventtype', 'mod_booking'), $userfromeventoptions);
 
     }
 
@@ -154,7 +158,7 @@ class select_user_from_event implements booking_rule_condition {
      * @return string the name of the condition
      */
     public function get_name_of_condition($localized = true) {
-        return $localized ? get_string($this->conditionname, 'mod_booking') : $this->conditionname;
+        return $localized ? get_string($this->conditionnamestringid, 'mod_booking') : $this->conditionname;
     }
 
     /**
