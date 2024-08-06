@@ -15,24 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * The bookingoptionwaitinglist_booked event.
+ * The bookinganswer_waitingforconfirmation event.
  *
  * @package mod_booking
- * @copyright 2024 Wunderbyte, http://www.wunderbyte.at
+ * @copyright 2024 Wunderbyte
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 namespace mod_booking\event;
 
 /**
- * The bookingoptionwaitinglist_booked event class.
+ * The bookinganswer_waitingforconfirmation event class.
  *
  * @property-read array $other { Extra information about event. Acesss an instance of the booking module }
- * @since Moodle 3.8
+ * @since Moodle 2.7
  * @copyright 2024 Wunderbyte
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class bookingoptionwaitinglist_booked extends \core\event\base {
+class bookinganswer_waitingforconfirmation extends \core\event\base {
 
     /**
      * Init
@@ -53,7 +53,7 @@ class bookingoptionwaitinglist_booked extends \core\event\base {
      *
      */
     public static function get_name() {
-        return get_string('bookingoptionwaitinglistbooked', 'mod_booking');
+        return get_string('bookinganswerwaitingforconfirmation', 'booking');
     }
 
     /**
@@ -68,11 +68,8 @@ class bookingoptionwaitinglist_booked extends \core\event\base {
             'relateduserid' => $this->data['relateduserid'],
             'objectid' => $this->objectid,
         ];
-        if ($this->userid != $this->data['relateduserid']) {
-            return get_string('bookingoptionbookedotheruserwaitinglistdesc', 'mod_booking', $data);
-        } else {
-            return get_string('bookingoptionbookedsameuserwaitinglistdesc', 'mod_booking', $data);
-        }
+        return get_string('bookinganswerwaitingforconfirmationdesc', 'mod_booking', $data);
+
     }
 
     /**
