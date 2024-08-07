@@ -15,23 +15,27 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Lexa theme.
+ * Behat data generator for local_entities.
  *
- * @package    theme_lexa
- * @copyright  2024 G J Barnard.
- *               {@link https://gjbarnard.co.uk}
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
+ * @package   local_entities
+ * @category  test
+ * @copyright 2024 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Andrii Semenets
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class behat_local_entities_generator extends behat_generator_base {
 
-defined('MOODLE_INTERNAL') || die;
-
-$plugin->version   = 2024071901;
-$plugin->requires = 2023100900.00;
-$plugin->supported = [403, 403];
-$plugin->component = 'theme_lexa';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '403.0.6';
-$plugin->dependencies = [
-    'theme_boost'  => 2023100900,
-    'theme_boost_union'  => 2023102033,
-];
+    /**
+     * Get a list of the entities that Behat can create using the generator step.
+     *
+     * @return array
+     */
+    protected function get_creatable_entities(): array {
+        return [
+            'entities' => [
+                'datagenerator' => 'entities',
+                'required' => ['name'],
+            ],
+        ];
+    }
+}

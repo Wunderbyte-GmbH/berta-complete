@@ -14,24 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_entities\settings_manager;
+
 /**
- * Lexa theme.
+ * Class local_entities_generator for generation of dummy data
  *
- * @package    theme_lexa
- * @copyright  2024 G J Barnard.
- *               {@link https://gjbarnard.co.uk}
- * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
+ * @package local_entities
+ * @category test
+ * @copyright 2024 Wunderbyte GmbH <info@wunderbyte.at>
+ * @author Andrii Semenets
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+class local_entities_generator extends testing_module_generator {
 
-defined('MOODLE_INTERNAL') || die;
+    /**
+     * Create entities.
+     *
+     * @param array $data
+     * @return int
+     */
+    public function create_entities(array $data): int {
 
-$plugin->version   = 2024071901;
-$plugin->requires = 2023100900.00;
-$plugin->supported = [403, 403];
-$plugin->component = 'theme_lexa';
-$plugin->maturity = MATURITY_ALPHA;
-$plugin->release = '403.0.6';
-$plugin->dependencies = [
-    'theme_boost'  => 2023100900,
-    'theme_boost_union'  => 2023102033,
-];
+        $data = (object)(array) $data;
+        $sm = new settings_manager();
+        $id = $sm->create_entity($data);
+        return $id;
+    }
+}
