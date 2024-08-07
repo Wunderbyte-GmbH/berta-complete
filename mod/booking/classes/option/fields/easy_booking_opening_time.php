@@ -28,7 +28,6 @@ use core_course_external;
 use mod_booking\booking_option_settings;
 use mod_booking\option\fields_info;
 use mod_booking\option\field_base;
-use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -42,13 +41,13 @@ use stdClass;
  * @author Georg Maißer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class easytext extends field_base {
+class easy_booking_opening_time extends field_base {
 
     /**
      * This ID is used for sorting execution.
      * @var int
      */
-    public static $id = MOD_BOOKING_OPTION_FIELD_EASY_TEXT;
+    public static $id = MOD_BOOKING_OPTION_FIELD_EASY_BOOKINGOPENINGTIME;
 
     /**
      * Some fields are saved with the booking option...
@@ -66,9 +65,9 @@ class easytext extends field_base {
 
     /**
      * An int value to define if this field is standard or used in a different context.
-     * @var int
+     * @var array
      */
-    public static $fieldcategories = [MOD_BOOKING_OPTION_FIELD_EASY];
+    public static $fieldcategories = []; // MOD_BOOKING_OPTION_FIELD_EASY.
 
     /**
      * Additionally to the classname, there might be others keys which should instantiate this class.
@@ -81,7 +80,8 @@ class easytext extends field_base {
      * @var array
      */
     public static $incompatiblefields = [
-        MOD_BOOKING_OPTION_FIELD_TEXT,
+        MOD_BOOKING_OPTION_FIELD_BOOKINGOPENINGTIME,
+        MOD_BOOKING_OPTION_FIELD_AVAILABILITY,
     ];
 
     /**
@@ -98,6 +98,19 @@ class easytext extends field_base {
         stdClass &$newoption,
         int $updateparam,
         $returnvalue = null): array {
+
+        $key = 'bookingopeningtime';
+        $value = $formdata->{$key} ?? null;
+
+        if (empty($formdata->restrictanswerperiodopening)) {
+            $newoption->{$key} = 0;
+        } else {
+            if (!empty($value)) {
+                $newoption->{$key} = $value;
+            } else {
+                $newoption->{$key} = 0;
+            }
+        }
 
         return [];
     }
@@ -123,10 +136,15 @@ class easytext extends field_base {
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata, array $optionformconfig) {
 
-        $settings = singleton_service::get_instance_of_booking_option_settings($formdata['id']);
-        $titlewithprefix = $settings->get_title_with_prefix();
+        // The form is not locked and can be used normally.
+        $mform->addElement('advcheckbox', 'restrictanswerperiodopening',
+                get_string('restrictanswerperiodopening', 'mod_booking'));
+        $mform->setType('restrictanswerperiodopening', PARAM_INT);
+        $mform->disabledIf('bookingopeningtime', 'restrictanswerperiodopening', 'neq', "1");
 
-        $mform->addElement('html', get_string('easyavailability:heading', 'local_musi', $titlewithprefix));
+        $mform->addElement('date_time_selector', 'bookingopeningtime',
+            get_string('easyavailability:openingtime', 'local_musi'));
+        $mform->setType('bookingopeningtime', PARAM_INT);
     }
 
     /**
@@ -138,5 +156,11 @@ class easytext extends field_base {
      */
     public static function set_data(stdClass &$data, booking_option_settings $settings) {
 
+        if (!isset($data->bookingopeningtime)
+            && !empty($settings->bookingopeningtime)) {
+
+            $data->bookingopeningtime = $settings->bookingopeningtime;
+            $data->restrictanswerperiodopening = 1;
+        }
     }
 }
