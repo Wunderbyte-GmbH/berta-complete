@@ -1,9 +1,16 @@
 Version Information
 ===================
 
+Version 403.0.7
+---------------
+1. Tidied selection of theme settings in 'Appearance'.
+2. Add 'hideuseruserrole' general setting to show / not show the user's role in the navbar.
+
 Version 403.0.6
 ---------------
 1. Added primary menu adjustment when page is scrolled JS.
+2. Show only a footer list if it has content.
+3. Use theme lang string for 'Social' in the footer.
 
 Version 403.0.5
 ---------------

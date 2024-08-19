@@ -808,33 +808,6 @@ class bo_info {
             $extraclasses = 'w-100';
         }
 
-        // The book only on details page avoid js and allows booking only on the details page.
-        if (
-            get_config('booking', 'bookonlyondetailspage')
-            && !modechecker::is_ajax_or_webservice_request()
-        ) {
-            $currenturl = $PAGE->url->out_omit_querystring(); // Get the current URL without the query string
-            // Define the target URL path you want to check.
-            $targetpath = '/mod/booking/optionview.php';
-
-            // Check if the current URL matches the target path.
-            if (strpos($currenturl, $targetpath) === false) {
-
-                $returnurl = $PAGE->url->out();
-
-                // The current page is not /mod/booking/optionview.php.
-                $url = new moodle_url("/mod/booking/optionview.php", [
-                    "optionid" => (int)$settings->id,
-                    "cmid" => (int)$settings->cmid,
-                    "userid" => (int)$userid,
-                    'returnto' => 'url',
-                    'returnurl' => $returnurl,
-                ]);
-                $link = $url->out(false);
-                $nojs = true;
-            }
-        }
-
         $data = [
             'itemid' => $settings->id,
             'area' => $area,
@@ -859,7 +832,10 @@ class bo_info {
 
         // Only if the user can not book anyways, we want to show him the price he or she should see.
         $context = context_module::instance($settings->cmid);
-        if (!has_capability('mod/booking:bookforothers', $context)) {
+        if (
+            (!has_capability('mod/booking:bookforothers', $context)
+            || get_config('booking', 'bookonlyondetailspage'))
+            && $settings->useprice) {
             $priceitems = price::get_price('option', $settings->id, $user);
             if (count($priceitems) > 0) {
                 $data['sub'] = [
@@ -876,7 +852,7 @@ class bo_info {
             $data['fullwidth'] = true;
         }
 
-        if ($includeprice) {
+        if ($includeprice && $settings->useprice) {
             if ($price = price::get_price('option', $settings->id, $user)) {
                 $data['price'] = [
                     'price' => $price['price'],

@@ -200,6 +200,7 @@ FilterCodes are meant to be entered as regular text in the Moodle WYSIWYG editor
 * {siteyear} : 4-digit current year.
 * {sitename} : Full name of the website.
 * {sitesummary} : Text from site summary.
+* {sitelogourl} : URL of the the site logo.
 * {now dateTimeFormat} : Display's the current date. For information on the optional dateTimeFormat format, see Supported dateTimeFormats Formats in the [FAQ](#faq) section of this documentation.
 * {coursecount} : Total number of courses on this Moodle site (not including Frontpage).
 * {diskfreespace} : Display the amount of free disk space for the application folder. The infinite symbol will be displayed if greater than about 84,703.29 Yottabytes (YB), or if it fails to get the size from the operating system.
@@ -1182,6 +1183,7 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * Current 4-digit year [{siteyear}]: {siteyear}
 * Fullname of website [{sitename}]: {sitename}
 * Site summary [{sitesummary}]: {sitesummary}
+* URL of the Site Logo: [{sitelogourl}]: {sitelogourl}
 * You first accessed the site on [{firstaccessdate strftimedatetime}]: {firstaccessdate strftimedatetime}
 * You last logged in on [{lastlogin strftimedatetime}]: {lastlogin strftimedatetime}
 * Course or Site full name [{coursename}]: {coursename}
@@ -1267,7 +1269,7 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * This URL [{thisurl}]: {thisurl}
 * This URL encoded [{thisurl_enc}]: {thisurl_enc}
 * Double encode this URL (useful for whatsurl parameters) [{urlencode}][{thisurl_enc}][{/urlencode}]: {urlencode}{thisurl_enc}{/urlencode}
-* Mailto with Subject <a href="mailto:someone@sample.com?subject=[{rawurlencode}]This is an amazing subject[{/rawurlencode}]>Mailto with Subject</a>
+* Mailto with Subject mailto:someone@example.com?subject=[{rawurlencode}]This is an amazing subject[{/rawurlencode}]>Mailto with Subject: mailto:someone@example.com?subject={rawurlencode}This is an amazing subject[{/rawurlencode}
 * Protocol [{protocol}]: {protocol}
 * IP Address [{ipaddress}]: {ipaddress}
 * Moodle session key [{sesskey}]: {sesskey}
@@ -1527,6 +1529,11 @@ Michael Milette - Author and Lead Developer
 
 Big thank you to the following contributors. (Please let me know if I forgot to include you in the list):
 
+* 28Smiles (Leon Camus): Bug fix for {qrcode} and {urlencode} tags (2024).
+* 28Smiles (Leon Camus): New {ifingouping} tag (2024).
+* 28Smiles (Leon Camus): New {ifnotingrouping} tag (2024).
+* 28Smiles (Leon Camus): New {mygroupings} tag (2024).
+* 28Smiles (Leon Camus): New {rawurlencode} tag (2024).
 * Premergency: New {ifprofile id is "999"} tag (2024).
 * suzyzan: Fixed deprecation notice relating to trim() function in PHP 8.1 (2023).
 * richardvi/HZ University of Applied Sciences (premium supporter): Added support for locally assigned on module/activity custom roles to {ifcustomrole} (2023).

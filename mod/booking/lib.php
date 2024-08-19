@@ -99,17 +99,15 @@ define('MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND', 3);
 define('MOD_BOOKING_MSGCONTRPARAM_VIEW_CONFIRMATION', 4);
 
 // Define booking availability condition ids.
-define('MOD_BOOKING_BO_COND_ISLOGGEDINPRICE', 190);
-define('MOD_BOOKING_BO_COND_ISLOGGEDIN', 180);
 define('MOD_BOOKING_BO_COND_CONFIRMCANCEL', 170);
 define('MOD_BOOKING_BO_COND_ALREADYBOOKED', 150);
 define('MOD_BOOKING_BO_COND_ALREADYRESERVED', 140);
 define('MOD_BOOKING_BO_COND_ISCANCELLED', 130);
 define('MOD_BOOKING_BO_COND_ISBOOKABLE', 120);
 define('MOD_BOOKING_BO_COND_ONWAITINGLIST', 110);
+define('MOD_BOOKING_BO_COND_BOOKONDETAIL', 106);
 define('MOD_BOOKING_BO_COND_CANCELMYSELF', 105);
 define('MOD_BOOKING_BO_COND_NOTIFYMELIST', 100);
-define('MOD_BOOKING_BO_COND_ALLOWEDTOBOOKININSTANCE', 95); // We might want to moove this up?
 define('MOD_BOOKING_BO_COND_FULLYBOOKED', 90);
 define('MOD_BOOKING_BO_COND_MAX_NUMBER_OF_BOOKINGS', 80);
 define('MOD_BOOKING_BO_COND_OPTIONHASSTARTED', 70);
@@ -128,6 +126,10 @@ define('MOD_BOOKING_BO_COND_JSON_SELECTUSERS', 14);
 define('MOD_BOOKING_BO_COND_JSON_PREVIOUSLYBOOKED', 13);
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMUSERPROFILEFIELD', 12);
 define('MOD_BOOKING_BO_COND_JSON_USERPROFILEFIELD', 11);
+
+define('MOD_BOOKING_BO_COND_ISLOGGEDINPRICE', 6);
+define('MOD_BOOKING_BO_COND_ISLOGGEDIN', 5);
+define('MOD_BOOKING_BO_COND_ALLOWEDTOBOOKININSTANCE', 4); // We might want to moove this up?
 
 define('MOD_BOOKING_BO_COND_ASKFORCONFIRMATION', 0);
 
@@ -380,7 +382,7 @@ function booking_pluginfile($course, $cm, $context, $filearea, $args, $forcedown
 function booking_user_outline($course, $user, $mod, $booking) {
     global $DB;
     if ($answer = $DB->get_record('booking_answers',
-            ['bookingid' => $booking->id, 'userid' => $user->id])) {
+            ['bookingid' => $booking->id, 'userid' => $user->id, 'waitinglist' => 0])) {
         $result = new stdClass();
         $result->info = "'" . format_string(booking_get_option_text($booking, $answer->optionid)) .
                  "'";
