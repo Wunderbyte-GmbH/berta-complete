@@ -68,7 +68,7 @@
   <div class="{{cardimageclass}}">
      {{#url}}
       {{#value}}
-        <a href="{{{value}}}" class="stretched-link"></a>
+        <a href="{{{value}}}" class="booking-card-image-link">
           {{/value}}
       {{/url}}
     {{#cardimage}}
@@ -78,7 +78,7 @@
         {{^value}}
             <div class="placeholderimage">
             <div class="m-3 d-flex justify-conten-center align-items-center flex-column">
-              <i class="fa-regular fa-image placeholdericon"></i>
+              <i class="fa-regular fa-image placeholdericon text-dark"></i>
               <h4 class="pt-2" >
                 {{#str}} optionnoimage, mod_booking {{/str}}
               </h4>
@@ -86,8 +86,13 @@
             </div>
         {{/value}}
     {{/cardimage}}
+    {{#url}}
+      {{#value}}
+        </a>
+          {{/value}}
+      {{/url}}
   </div>
-  <div class="d-flex flex-column flex-grow-1" style="z-index: 99">
+  <div class="d-flex flex-column flex-grow-1">
     <div class="mod-booking-card-header mt-4 row w-100 mx-auto d-flex align-items-center mt-1 px-2">
       {{#cardheader}}
         {{#columnclass}}<div class="{{.}}{{#key}} {{key}}{{/key}}">{{/columnclass}}

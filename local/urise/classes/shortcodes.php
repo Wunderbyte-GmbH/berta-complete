@@ -392,12 +392,14 @@ class shortcodes {
         $table->showcountlabel = $args['countlabel'];
         $table->showreloadbutton = $args['reload'];
 
-
         $wherearray = [];
 
-        if (!empty($category)) {
-            $wherearray['organisation'] = $category;
-        };
+        // Additional where condition for both card and list views
+        $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
+
+        // We want to show booking options also when the user was deleted from them. but only, if the booking option is canceled now.
+
+        $additionalwhere .= ' ((waitinglist <> ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 0) OR (waitinglist = ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 1))';
 
         // If we want to find only the teacher relevant options, we chose different sql.
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
@@ -416,7 +418,9 @@ class shortcodes {
                         MOD_BOOKING_STATUSPARAM_RESERVED,
                         MOD_BOOKING_STATUSPARAM_WAITINGLIST,
                         MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
-                    ]
+                        MOD_BOOKING_STATUSPARAM_DELETED,
+                    ],
+                    $additionalwhere
                 );
         } else {
             list($fields, $from, $where, $params, $filter) =
@@ -433,7 +437,9 @@ class shortcodes {
                         MOD_BOOKING_STATUSPARAM_RESERVED,
                         MOD_BOOKING_STATUSPARAM_WAITINGLIST,
                         MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
-                    ]
+                        MOD_BOOKING_STATUSPARAM_DELETED,
+                    ],
+                    $additionalwhere
                 );
         }
 
@@ -730,6 +736,12 @@ class shortcodes {
             $table->add_filter($standardfilter);
         }
 
+        if (empty($filtercolumns) || in_array('bibliothekszielgruppe', $filtercolumns)) {
+            $standardfilter = new standardfilter('bibliothekszielgruppe', get_string('bibliothekszielgruppe', 'local_urise'));
+            $standardfilter->add_options(self::get_bibliothekszielgruppe());
+            $table->add_filter($standardfilter);
+        }
+
         if (empty($filtercolumns) || in_array('kompetenzen', $filtercolumns)) {
             $hierarchicalfilter = new hierarchicalfilter('kompetenzen', get_string('competency', 'local_urise'));
             $hierarchicalfilter->add_options(self::get_kompetenzen());
@@ -848,7 +860,7 @@ class shortcodes {
         if (!empty($args['search'])) {
             $table->define_fulltextsearchcolumns([
                 'titleprefix', 'text', 'organisation', 'description', 'location',
-                'teacherobjects', 'botags']);
+                'teacherobjects', 'botags', 'inhalte', 'zielgruppe']);
         }
 
         if (!empty($args['sort'])) {
@@ -890,6 +902,12 @@ class shortcodes {
 
         if (isset($args['requirelogin']) && $args['requirelogin'] == "false") {
             $table->requirelogin = false;
+        }
+
+        if (!empty($args['showfilterbutton'])) {
+            $table->showfilterbutton = true;
+        } else {
+            $table->showfilterbutton = false;
         }
     }
 
@@ -1078,9 +1096,22 @@ class shortcodes {
                                 $additonalwhere .= " AND ";
                             }
 
-                            $value = "'%$value%'";
+                            $values = explode(',', $value);
 
-                            $additonalwhere .= " $key LIKE $value ";
+                            if (!empty($values)) {
+                                $additonalwhere .= " ( ";
+                            }
+
+                            foreach ($values as $vkey => $vvalue) {
+
+                                $additonalwhere .= $vkey > 0 ? ' OR ' : '';
+                                $vvalue = "'%$vvalue%'";
+                                $additonalwhere .= " $key LIKE $vvalue ";
+                            }
+
+                            if (!empty($values)) {
+                                $additonalwhere .= " ) ";
+                            }
 
                         } else {
                             $argument = strip_tags($argument);
@@ -1267,6 +1298,26 @@ class shortcodes {
                 'parent' => 'Sonstige',
                 'localizedname' => 'Sonstige Kompetenzen',
             ],
+        ];
+
+    }
+
+    /**
+     * Get Bibliothekszielgruppen filter
+     *
+     * @return array
+     *
+     */
+    public static function get_bibliothekszielgruppe() {
+
+        return [
+            'explode' => ',',
+            '1' => get_string('students', 'local_urise'),
+            '2' => get_string('doctoralcandidates', 'local_urise'),
+            '3' => get_string('lecturers', 'local_urise'),
+            '4' => get_string('researchers', 'local_urise'),
+            '5' => get_string('pupilsandteachers', 'local_urise'),
+            '6' => get_string('generalpublic', 'local_urise'),
         ];
 
     }
