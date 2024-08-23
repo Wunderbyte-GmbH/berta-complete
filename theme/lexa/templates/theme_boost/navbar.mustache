@@ -76,8 +76,8 @@
 
     <div class="navbar-row navbar-dark bg-blue d-flex flex-row lexa-nav-first-row">
 
-        <a href="{{#alternativelogolinkurl}}{{{alternativelogolinkurl}}}{{/alternativelogolinkurl}}{{^alternativelogolinkurl}}{{{ config.homeurl }}}{{/alternativelogolinkurl}}" class="navbar-brand navbar-brand-first-row align-items-center m-0 mr-4 p-0 aabtn {{#bottombar.drawer}} d-flex {{/bottombar.drawer}} {{^bottombar.drawer}} d-none d-md-flex {{/bottombar.drawer}} ">
-            <img src="{{output.get_logo_url_plain}}" class="logo ml-1 mr-1" alt="{{sitename}}">
+        <a id="lexa-navbar-brand-first-row" href="{{#alternativelogolinkurl}}{{{alternativelogolinkurl}}}{{/alternativelogolinkurl}}{{^alternativelogolinkurl}}{{{ config.homeurl }}}{{/alternativelogolinkurl}}" class="navbar-brand navbar-brand-first-row align-items-center m-0 mr-4 p-0 aabtn d-flex">
+            <img src="{{output.get_logo_url_plain}}" class="logo" alt="{{sitename}}">
         </a>
 
         <ul class="navbar-nav d-none d-md-flex my-1 px-1">
@@ -141,8 +141,8 @@
         </div>
     </div>
     <div id="lexa-navbar-scrolled" class="navbar-row navbar-light bg-white lexa-nav-second-row">
-        <a href="{{#alternativelogolinkurl}}{{{alternativelogolinkurl}}}{{/alternativelogolinkurl}}{{^alternativelogolinkurl}}{{{ config.homeurl }}}{{/alternativelogolinkurl}}" id="lexa-navbar-brand" class="navbar-brand navbar-brand-second-row d-flex align-items-center m-0 p-0 aabtn">
-            <img src="{{output.get_compact_second_logo_url}}" class="logo ml-1 mr-1" alt="{{sitename}}">
+        <a id="lexa-navbar-brand-second-row" href="{{#alternativelogolinkurl}}{{{alternativelogolinkurl}}}{{/alternativelogolinkurl}}{{^alternativelogolinkurl}}{{{ config.homeurl }}}{{/alternativelogolinkurl}}" class="navbar-brand navbar-brand-second-row d-flex align-items-center m-0 p-0 aabtn">
+            <img src="{{output.get_compact_second_logo_url}}" class="logo" alt="{{sitename}}">
         </a>
 
         {{#primarymoremenu}}
@@ -151,7 +151,7 @@
         </div>
         {{/primarymoremenu}}
 
-        <div id="lexa-navbar-scrolled-only" class="navbar-nav ml-auto mr-2 d-none justify-content-end">
+        <div id="lexa-navbar-scrolled-only" class="navbar-nav ml-0 mr-auto ml-md-auto mr-md-2">
             <div id="lexa-npo-two">
             </div>
             <div class="d-none d-md-flex align-items-stretch usermenu-container" data-region="usermenu">
