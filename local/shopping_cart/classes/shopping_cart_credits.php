@@ -43,14 +43,16 @@ class shopping_cart_credits {
      * Returns the current balance of the given user.
      *
      * @param int $userid
+     * @param string $costcenter
      * @return array
      */
-    public static function get_balance(int $userid): array {
+    public static function get_balance(int $userid, string $costcenter = ''): array {
 
         global $CFG, $DB;
 
         // Just in case, we do not find it in credits table.
         $currency = get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR';
+        $samecostcenterforcredits = get_config('local_shopping_cart', 'samecostcenterforcredits') ?? 0;
 
         $currencies = self::credits_get_used_currencies($userid);
         if (empty($currencies)) {
@@ -60,12 +62,21 @@ class shopping_cart_credits {
             throw new moodle_exception('nomulticurrencysupportyet', 'local_shopping_cart');
         }
 
-        // Get the latest balance.
-        if (!$balancerecord = $DB->get_record_sql("SELECT balance, currency
-            FROM {local_shopping_cart_credits}
-            WHERE userid = :userid
-            ORDER BY id DESC
-            LIMIT 1", ['userid' => $userid])) {
+        $params = ['userid' => $userid];
+        $additionalsql = '';
+        if (!empty($samecostcenterforcredits)) {
+            $additionalsql = " AND COALESCE(NULLIF(costcenter, ''), '') = :costcenter ";
+            $params['costcenter'] = $costcenter;
+        }
+
+        $sql = 'SELECT balance, currency
+        FROM {local_shopping_cart_credits}
+        WHERE userid = :userid' . $additionalsql . '
+        ORDER BY id DESC
+        LIMIT 1';
+
+        // Get the latest balance of the given costcenter.
+        if (!$balancerecord = $DB->get_record_sql($sql, $params)) {
 
             $balance = 0;
         } else {
@@ -73,20 +84,80 @@ class shopping_cart_credits {
             $currency = $balancerecord->currency;
         }
 
-        if ($CFG->debug == DEBUG_DEVELOPER) {
-            // Only in developer mode, we check if balance matches with total sum of credits.
-            if (!$sumofcredits = $DB->get_field_sql("SELECT SUM(credits) sumofcredits
-                FROM {local_shopping_cart_credits}
-                WHERE userid =:userid", ['userid' => $userid])) {
+        if (
+            $CFG->debug == DEBUG_DEVELOPER
+            && empty($samecostcenterforcredits)
+        ) {
 
+            $sql = "SELECT SUM(credits) sumofcredits
+            FROM {local_shopping_cart_credits}
+            WHERE userid =:userid";
+            // Only in developer mode, we check if balance matches with total sum of credits.
+            if (!$sumofcredits = $DB->get_field_sql($sql, ['userid' => $userid])) {
                 $sumofcredits = 0;
             }
             if (round($sumofcredits, 2) != round($balance, 2)) {
-                throw new moodle_exception(get_string('creditnotmatchbalance', 'local_shopping_cart', strval($userid)));
+                throw new moodle_exception(get_string(
+                    'creditnotmatchbalance',
+                    'local_shopping_cart',
+                    strval($userid)
+                ));
             }
         }
 
         return [round($balance, 2), $currency];
+    }
+
+
+    /**
+     * Returns the current balance of the given user.
+     *
+     * @param int $userid
+     * @return array
+     */
+    public static function get_balance_for_all_costcenters(int $userid): array {
+
+        global $CFG, $DB;
+
+        $params = ['userid' => $userid];
+        $sql = 'SELECT id, balance, currency, costcenter
+                FROM {local_shopping_cart_credits}
+                WHERE userid = 5
+                AND id IN (
+                    SELECT MAX(id)
+                    FROM {local_shopping_cart_credits}
+                    WHERE userid = :userid
+                    GROUP BY COALESCE(NULLIF(costcenter, \'\'), \'\')
+                )
+                ORDER BY costcenter ASC';
+
+        // Get the latest balance of the given costcenter.
+        if (!$balancerecords = $DB->get_records_sql($sql, $params)) {
+            return [];
+        }
+
+        $translations = get_config('local_shopping_cart', 'costcenterstrings');
+        $translationsarray = [];
+        if (!empty($translations)) {
+            $translations = explode(PHP_EOL, $translations);
+
+            foreach ($translations as $translation) {
+                $kvpair = explode(',', $translation);
+
+                if (($kvpair[0] ?? false) && ($kvpair[1] ?? false)) {
+                    $translationsarray[$kvpair[0]] = $kvpair[1];
+                }
+            }
+        }
+
+        $returnarray = array_map(fn($a) => [
+            'id' => $a->id,
+            'costcenter' => $translationsarray[$a->costcenter] ?? $a->costcenter,
+            'balance' => round($a->balance, 2),
+            'currency' => $a->currency,
+        ], $balancerecords);
+
+        return $returnarray;
     }
 
     /**
@@ -194,12 +265,13 @@ class shopping_cart_credits {
     public static function add_credit(
         int $userid,
         float $credit,
-        string $currency
+        string $currency,
+        string $costcenter = ''
     ): array {
 
         global $DB, $USER;
 
-        list($balance, $newcurrency) = self::get_balance($userid);
+        list($balance, $newcurrency) = self::get_balance($userid, $costcenter);
 
         $now = time();
 
@@ -212,6 +284,7 @@ class shopping_cart_credits {
         $data->usermodified = $USER->id;
         $data->timemodified = $now;
         $data->timecreated = $now;
+        $data->costcenter = $costcenter;
 
         if ($data->balance >= 0) {
             $DB->insert_record('local_shopping_cart_credits', $data);
@@ -220,17 +293,17 @@ class shopping_cart_credits {
             throw new moodle_exception('negativebalancenotallowed');
         }
 
-        list($newbalance, $currency) = self::get_balance($userid);
+        list($newbalance, $currency) = self::get_balance($userid, $costcenter);
 
         if ($newbalance >= 0) {
             // We add the right cache even if it is 0.
 
             $cartstore = cartstore::instance($userid);
-            $cartstore->set_credit($newbalance, $currency);
+            $cartstore->set_credit($newbalance, $currency, $costcenter);
 
         }
 
-        return [$newbalance, $currency];
+        return [$newbalance, $currency, $costcenter];
     }
 
     /**
@@ -378,41 +451,5 @@ class shopping_cart_credits {
             $currencies[] = $record->currency;
         }
         return $currencies;
-    }
-
-    /**
-     * Correct credits.
-     * @param stdClass $data the form data
-     */
-    public static function creditsmanager_correct_credits(stdClass $data) {
-        global $USER;
-
-        $currency = get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR';
-
-        // Add credits.
-        try {
-            self::add_credit($data->userid, $data->creditsmanagercredits, $currency);
-
-            // Log it to ledger.
-            // Also record this in the ledger table.
-            $ledgerrecord = new stdClass();
-            $now = time();
-            $ledgerrecord->userid = $data->userid;
-            $ledgerrecord->itemid = 0;
-            $ledgerrecord->price = 0;
-            $ledgerrecord->credits = (float) $data->creditsmanagercredits;
-            $ledgerrecord->currency = $currency;
-            $ledgerrecord->componentname = 'local_shopping_cart';
-            $ledgerrecord->payment = $data->payment ?? LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_CORRECTION;
-            $ledgerrecord->paymentstatus = LOCAL_SHOPPING_CART_PAYMENT_SUCCESS;
-            $ledgerrecord->usermodified = $USER->id;
-            $ledgerrecord->timemodified = $now;
-            $ledgerrecord->timecreated = $now;
-            $ledgerrecord->annotation = $data->creditsmanagerreason;
-            shopping_cart::add_record_to_ledger_table($ledgerrecord);
-        } catch (moodle_exception $e) {
-            return false;
-        }
-        return true;
     }
 }

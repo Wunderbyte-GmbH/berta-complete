@@ -220,6 +220,8 @@ $string['confirmzeropricecheckout'] = 'Bestätige';
 $string['confirmzeropricecheckoutbody'] = 'Für diese Buchung ist keine Zahlung notwendig.
 Wollen Sie fortfahren und direkt buchen?';
 $string['confirmzeropricecheckouttitle'] = 'Jetzt buchen';
+$string['costcenterstrings'] = 'Übersetzungen für Kostenstellen';
+$string['costcenterstrings_desc'] = 'Übersetzungen für Kostenstellen';
 $string['credit'] = 'Guthaben:';
 $string['creditnotmatchbalance'] = 'Summe der Guthaben in Tabelle local_shopping_cart_credits stimmt nicht mit dem letzten Saldo (balance) überein!
 Möglicherweise haben Sie doppelte oder fehlerhafte Einträge in der credits-Tabelle für den User mit userid {$a}.';
@@ -234,6 +236,8 @@ $string['creditsmanagercredits_help'] = 'Wenn Sie "Guthaben korrigieren" gewähl
 Beispiel: Ein/e Benutzer/in hat 110 Euro Guthaben, sollte aber nur 100 Euro Guthaben haben. In diesem Fall beträgt der Korrekturwert -10.
 Wenn Sie "Guthaben zurückbezahlen" ausgewählt haben, geben Sie hier den zurückzubezahlenden Betrag ein und geben Sie an, ob Sie in bar oder
 per Banküberweisung zurückbezahlen möchten.';
+$string['creditsmanagercreditscostcenter'] = 'Kostenstelle der das Guthaben zugeordnet wird';
+$string['creditsmanagercreditscostcenter_help'] = 'Wählen Sie die Kostenstellen, für welche das Guthaben in Zukunft eingelöst werden kann. Wenn Sie dieses Feld leer lassen, hängt es von den Einstellungen ab, ob es für alle oder nur für eine bestimmte Kostenstelle eingelöst werden kann.';
 $string['creditsmanagermode'] = 'Was möchten Sie tun?';
 $string['creditsmanagerreason'] = 'Grund';
 $string['creditsmanagersuccess'] = 'Guthabenbuchung wurde durchgeführt.';
@@ -251,6 +255,8 @@ Sie können die folgenden Platzhalter verwenden: [[title]], [[date]], [[totalsum
 Lassen Sie das Feld leer, um die Standard-Vorlage zu verwenden.';
 $string['de'] = "Deutschland";
 $string['deductible'] = 'Abziehbar:';
+$string['defaultcostcenterforcredits'] = 'Standard Kostenstelle zur Einlösung von Guthaben';
+$string['defaultcostcenterforcredits_desc'] = 'Ist keine Kostenstelle angegeben, können Guthaben für Artikel dieser Kostenstelle eingelöst werden. Wird hier kein Wert eingegeben, können Guthaben ohne angegebene Kostenstelle für alle Artikel eingelöst werden.';
 $string['defaulttaxcategory'] = 'Standard Steuerkategorie';
 $string['defaulttaxcategory_desc'] =
         'Standard-Steuerkategorie, die verwendet wird, wenn das Cart-Item diese nicht explizit angibt (z.B. "A")';
@@ -386,6 +392,7 @@ $string['modulename'] = 'Warenkorb';
 $string['mt'] = "Malta";
 $string['mycart'] = 'Mein Warenkorb';
 $string['nl'] = "Niederlande";
+$string['nocostcenter'] = 'Keine Kostenstelle';
 $string['nofixedpercentage'] = 'Kein fixer Prozentsatz';
 $string['noinstallments'] = "Aktuell keine Ratenzahlungen";
 $string['noitemsincart'] = 'Es gibt keine Artikel im Warenkorb';
@@ -506,6 +513,8 @@ $string['rounddiscounts_desc'] = 'Rabatte auf ganze Zahlen runden (mathematisch,
 $string['samecostcenter'] = 'Nur eine Kostenstelle pro Zahlungsvorgang';
 $string['samecostcenter_desc'] = 'Alle Items im Warenkorb müssen die selbe Kostenstelle haben.
 Items mit unterschiedlichen Kostenstellen müssen separat gebucht werden.';
+$string['samecostcenterforcredits'] = 'Guthaben nur für selbe Kostenstellen verwenden';
+$string['samecostcenterforcredits_desc'] = 'Wenn diese Einstellung aktiviert ist und einE NutzerIn Guthaben erhält, so kann dieses Guthaben nur für Artikel der selben Kostenstelle verwendet werden.';
 $string['saveinvoicenumber'] = 'Nur Rechnungsnummer speichern';
 $string['sch_paymentaccountid'] = "Wechsle das Zahlungsanbieter-Konto";
 $string['se'] = "Schweden";

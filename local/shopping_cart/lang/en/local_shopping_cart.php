@@ -225,6 +225,8 @@ $string['confirmterms'] = "I accept the terms and conditions";
 $string['confirmzeropricecheckout'] = 'Confirm';
 $string['confirmzeropricecheckoutbody'] = 'You do not have to pay anything. Do you want to proceed and book?';
 $string['confirmzeropricecheckouttitle'] = 'Book now';
+$string['costcenterstrings'] = 'Translations for costcenters';
+$string['costcenterstrings_desc'] = 'Translations for costcenters';
 $string['credit'] = 'Credit:';
 $string['creditnotmatchbalance'] = 'Sum of credits in table local_shopping_cart_credits does not match with latest balance!
                                     There might be duplicate entries or corrupted records in the credits table for userid {$a}';
@@ -238,6 +240,8 @@ $string['creditsmanagercredits'] = 'Correction value or credits to pay back';
 $string['creditsmanagercredits_help'] = 'If you have chosen "Correct credits" then enter the correction value here.
 Example: A user has 110 EUR in credits but should actually have 100 EUR in credits. In this case the correction value is -10.
 If you have chosen "Pay back credits" then enter the amount to pay back and choose if you want to pay back via cash or bank transfer.';
+$string['creditsmanagercreditscostcenter'] = 'Costcenter to which the credit is assigned to';
+$string['creditsmanagercreditscostcenter_help'] = 'Select the costcenter for which the credit can be redeemed in the future. If you leave this field empty, it depends on your plugin-settings whether it can be redeemed for all or only for a specific costcenter.';
 $string['creditsmanagermode'] = 'What do you want to do?';
 $string['creditsmanagerreason'] = 'Reason';
 $string['creditsmanagersuccess'] = 'Credits have been booked successfully';
@@ -255,6 +259,8 @@ $string['dailysumspdfhtml:description'] = 'Enter HTML to create the daily sums P
 Leave this empty to use the default template.';
 $string['de'] = "Germany";
 $string['deductible'] = 'Deductible:';
+$string['defaultcostcenterforcredits'] = 'Default costcenter to redeem credits';
+$string['defaultcostcenterforcredits_desc'] = 'If no cost center is specified, credits can be redeemed for items from this cost center. If no value is entered here, credits without defined costcenters can be used for any item.';
 $string['defaulttaxcategory'] = 'Default tax category';
 $string['defaulttaxcategory_desc'] = 'Default tax category to be used when not explicitly declared by cart item (i.e. "A")';
 $string['definefeesforcostcenters'] = 'Specify prices according to cost centers.';
@@ -391,6 +397,7 @@ $string['modulename'] = 'Shopping Cart';
 $string['mt'] = "Malta";
 $string['mycart'] = 'My Cart';
 $string['nl'] = "Netherlands";
+$string['nocostcenter'] = 'No costcenter';
 $string['nofixedpercentage'] = 'No fixed percentage';
 $string['noinstallments'] = "Currently there are no open installment payments";
 $string['noitemsincart'] = 'There are no items in the cart';
@@ -575,6 +582,8 @@ $string['rounddiscounts_desc'] = 'Round discounts to full numbers (no decimals)'
 $string['samecostcenter'] = 'Only one cost center per payment';
 $string['samecostcenter_desc'] = 'All payment items in shopping cart need to have the same cost center.
 Items with different cost centers need to be booked separately.';
+$string['samecostcenterforcredits'] = 'Use credits only for the same costcenter';
+$string['samecostcenterforcredits_desc'] = 'If this setting is turned on and a user receives credits, these credits can only be used for items with the same costcenter.';
 $string['saveinvoicenumber'] = 'Just save invoice number';
 $string['sch_paymentaccountid'] = "Change the payment account";
 $string['se'] = "Sweden";
