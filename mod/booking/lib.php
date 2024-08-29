@@ -105,8 +105,10 @@ define('MOD_BOOKING_BO_COND_ALREADYRESERVED', 140);
 define('MOD_BOOKING_BO_COND_ISCANCELLED', 130);
 define('MOD_BOOKING_BO_COND_ISBOOKABLE', 120);
 define('MOD_BOOKING_BO_COND_ONWAITINGLIST', 110);
-define('MOD_BOOKING_BO_COND_BOOKONDETAIL', 106);
+
 define('MOD_BOOKING_BO_COND_CANCELMYSELF', 105);
+define('MOD_BOOKING_BO_COND_BOOKONDETAIL', 104);
+
 define('MOD_BOOKING_BO_COND_NOTIFYMELIST', 100);
 define('MOD_BOOKING_BO_COND_FULLYBOOKED', 90);
 define('MOD_BOOKING_BO_COND_MAX_NUMBER_OF_BOOKINGS', 80);
@@ -1125,23 +1127,27 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
                     navigation_node::TYPE_CUSTOM, null, 'nav_moveoptionto');
         } */
 
-        if (has_capability ('mod/booking:readresponses', $context) || booking_check_if_teacher($option)) {
-            $completion = new \completion_info($course);
-            if ($booking->enablecompletion > 0 &&
-                ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC ||
-                $completion->is_enabled($cm) == COMPLETION_TRACKING_MANUAL)) {
-                $navref->add(get_string('confirmuserswith', 'booking'),
-                    new moodle_url('/mod/booking/confirmactivity.php', ['id' => $cm->id, 'optionid' => $optionid]),
-                    navigation_node::TYPE_CUSTOM, null, 'nav_confirmuserswith');
+        // Won't be checked if it's a template.
+        if ($booking) {
+            if (has_capability ('mod/booking:readresponses', $context) || booking_check_if_teacher($option)) {
+                $completion = new \completion_info($course);
+                if ($booking->enablecompletion > 0 &&
+                    ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC ||
+                    $completion->is_enabled($cm) == COMPLETION_TRACKING_MANUAL)) {
+                    $navref->add(get_string('confirmuserswith', 'booking'),
+                        new moodle_url('/mod/booking/confirmactivity.php', ['id' => $cm->id, 'optionid' => $optionid]),
+                        navigation_node::TYPE_CUSTOM, null, 'nav_confirmuserswith');
+                }
+            }
+            if (has_capability('mod/booking:updatebooking', context_module::instance($cm->id)) &&
+                    $booking->conectedbooking > 0) {
+                $navref->add(get_string('editotherbooking', 'booking'),
+                        new moodle_url('/mod/booking/otherbooking.php',
+                            ['id' => $cm->id, 'optionid' => $optionid]),
+                        navigation_node::TYPE_CUSTOM, null, 'nav_editotherbooking');
             }
         }
-        if (has_capability('mod/booking:updatebooking', context_module::instance($cm->id)) &&
-                $booking->conectedbooking > 0) {
-            $navref->add(get_string('editotherbooking', 'booking'),
-                    new moodle_url('/mod/booking/otherbooking.php',
-                        ['id' => $cm->id, 'optionid' => $optionid]),
-                    navigation_node::TYPE_CUSTOM, null, 'nav_editotherbooking');
-        }
+
         if (has_capability('mod/booking:updatebooking', $context)) {
             $navref->add(get_string('deletethisbookingoption', 'mod_booking'),
                     new moodle_url('/mod/booking/report.php',

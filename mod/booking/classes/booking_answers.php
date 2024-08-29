@@ -130,7 +130,8 @@ class booking_answers {
                 ba.timemodified,
                 ba.optionid,
                 ba.timecreated,
-                ba.json
+                ba.json,
+                ba.places
             FROM {booking_answers} ba
             WHERE ba.optionid = :optionid
             AND ba.waitinglist < 5
@@ -165,7 +166,7 @@ class booking_answers {
                         $this->usersonwaitinglist[$answer->userid] = $answer;
                         break;
                     case MOD_BOOKING_STATUSPARAM_RESERVED:
-                        if (count($this->usersonlist) < $this->bookingoptionsettings->maxanswers) {
+                        if (self::count_places($this->usersonlist) < $this->bookingoptionsettings->maxanswers) {
                             $this->usersonlist[$answer->userid] = $answer;
                         } else {
                             $this->usersonwaitinglist[$answer->userid] = $answer;
@@ -265,9 +266,9 @@ class booking_answers {
 
         $returnarray = [];
 
-        $returnarray['waiting'] = count($this->usersonwaitinglist);
-        $returnarray['booked'] = count($this->usersonlist);
-        $returnarray['reserved'] = count($this->usersreserved);
+        $returnarray['waiting'] = self::count_places($this->usersonwaitinglist);
+        $returnarray['booked'] = self::count_places($this->usersonlist);
+        $returnarray['reserved'] = self::count_places($this->usersreserved);
 
         $returnarray['onnotifylist'] = $this->user_on_notificationlist($userid);
 
@@ -348,7 +349,7 @@ class booking_answers {
      * Verify if a user is actually on the booked list or not.
      *
      * @param int $userid
-     * @return void
+     * @return bool
      */
     public function user_on_notificationlist(int $userid) {
 
@@ -448,11 +449,16 @@ class booking_answers {
         // PRO feature: Availability info texts for booking places and waiting list.
         // Booking places.
         $context = context_system::instance();
-        if (!has_capability('mod/booking:updatebooking', $context) &&
-            get_config('booking', 'bookingplacesinfotexts')
-            && !empty($bookinginformation['maxanswers'])) {
 
-            $bookinginformation['showbookingplacesinfotext'] = true;
+        if (
+            !empty($bookinginformation['maxanswers'])
+        ) {
+            if (
+                !has_capability('mod/booking:updatebooking', $context)
+                && get_config('booking', 'bookingplacesinfotexts')
+            ) {
+                $bookinginformation['showbookingplacesinfotext'] = true;
+            }
 
             $bookingplaceslowpercentage = get_config('booking', 'bookingplaceslowpercentage');
             $actualpercentage = ($bookinginformation['freeonlist'] / $bookinginformation['maxanswers']) * 100;
@@ -475,11 +481,15 @@ class booking_answers {
             }
         }
         // Waiting list places.
-        if (!has_capability('mod/booking:updatebooking', $context) &&
-            get_config('booking', 'waitinglistinfotexts')
-            && !empty($bookinginformation['maxoverbooking'])) {
+        if (
+            !empty($bookinginformation['maxoverbooking'])
+        ) {
 
-            $bookinginformation['showwaitinglistplacesinfotext'] = true;
+            if (!has_capability('mod/booking:updatebooking', $context)
+                && get_config('booking', 'waitinglistinfotexts')
+            ) {
+                $bookinginformation['showwaitinglistplacesinfotext'] = true;
+            }
 
             $waitinglistlowpercentage = get_config('booking', 'waitinglistlowpercentage');
             $actualwlpercentage = ($bookinginformation['freeonwaitinglist'] /
@@ -512,7 +522,7 @@ class booking_answers {
             return false;
         }
 
-        if (count($this->usersonlist) >= $this->bookingoptionsettings->maxanswers) {
+        if (self::count_places($this->usersonlist) >= $this->bookingoptionsettings->maxanswers) {
             return true;
         } else {
             return false;
@@ -530,7 +540,7 @@ class booking_answers {
             return false;
         }
 
-        if (count($this->usersonwaitinglist) >= $this->bookingoptionsettings->maxoverbooking) {
+        if (self::count_places($this->usersonwaitinglist) >= $this->bookingoptionsettings->maxoverbooking) {
             return true;
         } else {
             return false;
@@ -598,5 +608,22 @@ class booking_answers {
         ];
 
         return [$fields, $from, $where, $params];
+    }
+
+    /**
+     * Function to sum up places value.
+     * If no places key is found, we use 1.
+     *
+     * @param array $users
+     *
+     * @return int
+     *
+     */
+    public static function count_places(array $users) {
+        $sum = array_reduce($users, function ($carry, $item) {
+            return $carry + ($item->places ?? 1);
+        }, 0);
+
+        return $sum;
     }
 }
