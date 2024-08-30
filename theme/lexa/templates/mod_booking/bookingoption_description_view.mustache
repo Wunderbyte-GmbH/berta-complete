@@ -151,9 +151,6 @@
             {{#description}}
             <div class="mb-6">
             <div class="content"><p>{{{.}}}</p></div>
-            <span class="badge bg-gray badge-pill">
-                {{ organisation }}
-            </span>
             </div>
             {{/description}}
             {{#datesexist}}
@@ -226,7 +223,7 @@
                 {{{.}}}
             </div>
              {{/methoden}}
-             {{#teachers.length}}
+             {{#teachers.0}}
                <div class="my-6 detailteacher">
                 <h2 class="font-weight-normal"> {{#str}} teachers, local_urise {{/str}}</h2>
                 {{#teachers}}
@@ -247,7 +244,7 @@
                  <i class="fa-solid fa-arrow-right ml-1"></i></a>
                  {{/teachers}}
                 </div>
-            {{/teachers.length}}
+            {{/teachers.0}}
             {{#location}}
             <div class="my-6 location">
                 <h2 class="font-weight-normal"> {{#str}} location, local_urise {{/str}}</h2>
@@ -350,6 +347,11 @@
                             </span>
                         </div>
                         {{/competency}}
+                        {{#organisation }}
+                            <span class="badge bg-gray badge-pill">
+                                {{ . }}
+                            </span>
+                        {{/organisation }}
                         {{#bookingopeningtime}}
                         <div>
                             <span>
