@@ -38,7 +38,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class shopping_cart_credits {
-
     /**
      * Returns the current balance of the given user.
      *
@@ -77,7 +76,6 @@ class shopping_cart_credits {
 
         // Get the latest balance of the given costcenter.
         if (!$balancerecord = $DB->get_record_sql($sql, $params)) {
-
             $balance = 0;
         } else {
             $balance = $balancerecord->balance;
@@ -88,7 +86,6 @@ class shopping_cart_credits {
             $CFG->debug == DEBUG_DEVELOPER
             && empty($samecostcenterforcredits)
         ) {
-
             $sql = "SELECT SUM(credits) sumofcredits
             FROM {local_shopping_cart_credits}
             WHERE userid =:userid";
@@ -179,7 +176,7 @@ class shopping_cart_credits {
             $usecredit = self::use_credit_fallback($usecredit, $userid);
         }
 
-        list($balance, $currency) = self::get_balance($userid);
+        [$balance, $currency] = self::get_balance($userid);
 
         // If there is no price key, we need to calculate it from items.
         if (!isset($data['price']) && isset($data['items'])) {
@@ -206,7 +203,6 @@ class shopping_cart_credits {
 
         // Now we account for discounts.
         if (isset($data['discount'])) {
-
             // If setting to round discounts is turned on, we round to full int.
             $discountprecision = get_config('local_shopping_cart', 'rounddiscounts') ? 0 : 2;
             $data['discount'] = round($data['discount'], $discountprecision);
@@ -215,15 +211,15 @@ class shopping_cart_credits {
 
             $context = context_system::instance();
             // Right now, only the cashier has the right to use discounts.
-            if (!has_capability('local/shopping_cart:cashier', $context)) {
-
+            if (
+                !has_capability('local/shopping_cart:cashier', $context)
+            ) {
                 $data['price'] = $data['price'] + $data['discount'];
             }
         }
 
         // Only if the user has any credit at all, we apply the function.
         if ($balance > 0) {
-
             // We always calculate the deductible.
             if ($data['price'] <= $balance) {
                 $deductible = $data['price'];
@@ -233,12 +229,10 @@ class shopping_cart_credits {
 
             // We reduce the price if we use the credit.
             if ($usecredit) {
-
                 $remainingtotal = $data['price'] - $deductible;
                 $remainingcredit = $balance - $deductible;
 
                 $data['usecredit'] = true;
-
             } else {
                 $remainingcredit = $balance;
                 $remainingtotal = $data['price'];
@@ -256,11 +250,13 @@ class shopping_cart_credits {
      * Adds the given credit to the current users balance.
      * This is somewhat expensive, as we always run checks on the consistency of the ledger.
      * Returns the total balance of the user.
-     *
      * @param int $userid
      * @param float $credit
      * @param string $currency
+     * @param string $costcenter
+     *
      * @return array
+     *
      */
     public static function add_credit(
         int $userid,
@@ -271,7 +267,7 @@ class shopping_cart_credits {
 
         global $DB, $USER;
 
-        list($balance, $newcurrency) = self::get_balance($userid, $costcenter);
+        [$balance, $newcurrency] = self::get_balance($userid, $costcenter);
 
         $now = time();
 
@@ -293,14 +289,13 @@ class shopping_cart_credits {
             throw new moodle_exception('negativebalancenotallowed');
         }
 
-        list($newbalance, $currency) = self::get_balance($userid, $costcenter);
+        [$newbalance, $currency] = self::get_balance($userid, $costcenter);
 
         if ($newbalance >= 0) {
             // We add the right cache even if it is 0.
 
             $cartstore = cartstore::instance($userid);
             $cartstore->set_credit($newbalance, $currency, $costcenter);
-
         }
 
         return [$newbalance, $currency, $costcenter];
@@ -342,11 +337,13 @@ class shopping_cart_credits {
      * @param int $method
      * @return bool
      */
-    public static function credit_paid_back(int $userid,
-        int $method = LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH) {
+    public static function credit_paid_back(
+        int $userid,
+        int $method = LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH
+    ) {
         global $USER;
 
-        list($balance, $currency) = self::get_balance($userid);
+        [$balance, $currency] = self::get_balance($userid);
 
         $data = [];
 
@@ -357,7 +354,7 @@ class shopping_cart_credits {
         self::use_credit($userid, $data);
 
         // Also record this in the ledger table.
-        $ledgerrecord = new stdClass;
+        $ledgerrecord = new stdClass();
         $now = time();
         $ledgerrecord->userid = $userid;
         $ledgerrecord->itemid = 0;

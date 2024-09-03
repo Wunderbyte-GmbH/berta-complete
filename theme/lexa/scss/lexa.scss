@@ -1,9 +1,32 @@
 // Font.
+// From https://www.fontsquirrel.com/fonts/roboto.
+// Define all fonts for use if required.
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 100;
+    src: unquote("url('[[font:theme|Roboto-Thin-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 100;
+    src: unquote("url('[[font:theme|Roboto-ThinItalic-webfont.woff]]') format('woff')");
+}
+
 @font-face {
     font-family: 'Roboto';
     font-style: normal;
     font-weight: 300;
     src: unquote("url('[[font:theme|Roboto-Light-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 300;
+    src: unquote("url('[[font:theme|Roboto-LightItalic-webfont.woff]]') format('woff')");
 }
 
 @font-face {
@@ -15,6 +38,13 @@
 
 @font-face {
     font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 400;
+    src: unquote("url('[[font:theme|Roboto-Italic-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
     font-style: normal;
     font-weight: 500;
     src: unquote("url('[[font:theme|Roboto-Medium-webfont.woff]]') format('woff')");
@@ -22,9 +52,37 @@
 
 @font-face {
     font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 500;
+    src: unquote("url('[[font:theme|Roboto-MediumItalic-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
     font-style: normal;
     font-weight: 700;
     src: unquote("url('[[font:theme|Roboto-Black-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 700;
+    src: unquote("url('[[font:theme|Roboto-BlackItalic-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: normal;
+    font-weight: 900;
+    src: unquote("url('[[font:theme|Roboto-Bold-webfont.woff]]') format('woff')");
+}
+
+@font-face {
+    font-family: 'Roboto';
+    font-style: italic;
+    font-weight: 900;
+    src: unquote("url('[[font:theme|Roboto-BoldItalic-webfont.woff]]') format('woff')");
 }
 
 // Colour - general.
@@ -36,6 +94,34 @@
     .usermenu .login a {
         color: $white;
     }
+}
+
+// Alerts.
+.alert-danger,
+.environmenttable .error {
+    background-color: $danger;
+    border-color: $danger;
+    color: $system_error_600;
+}
+
+.alert-info {
+    background-color: $info;
+    border-color: $info;
+    color: $primary;
+}
+
+.alert-success,
+.environmenttable .ok {
+    background-color: $success;
+    border-color: $success;
+    color: $system_positive_800;
+}
+
+.alert-warning,
+.environmenttable .warn {
+    background-color: $warning;
+    border-color: $warning;
+    color: $system_warning_600;
 }
 
 // Navbar.
@@ -623,13 +709,42 @@ body.limitedwidth #page.drawers .footer-popover {
     right: 5px;
 }
 
-#page-footer {
-    .copyright {
+// Boost union override.
+#footnote {
+    p {
         margin-bottom: 0;
-        padding-bottom: 1rem;
     }
 }
 
+@media (max-width: 575.98px) {
+    #footnote {
+        border-top: none;
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 576px) and (max-width: 767.98px) {
+    #footnote {
+        border-top: none;
+        padding-left: 0;
+        padding-right: 0;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (min-width: 768px) {
+    body:not(.backgroundimage):not(.loginbackgroundimage) #footnote {
+        border-top: none;
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+// Other.
 .booking-button-area .booking-button-mainarea.urisebutton:not(#page-mod-booking-optionview .booking-button-area .booking-button-mainarea.urisebutton),
  .booking-button-area .booking-button-area.urisebutton:not(#page-mod-booking-optionview .booking-button-area .booking-button-area.urisebutton) {
     /* eslint-disable-next-line */
