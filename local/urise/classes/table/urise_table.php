@@ -16,6 +16,8 @@
 
 namespace local_urise\table;
 use local_urise\shortcodes;
+use mod_booking\booking_answers;
+use mod_booking\local\modechecker;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -233,13 +235,26 @@ class urise_table extends wunderbyte_table {
      */
     public function col_text($values) {
 
+        global $PAGE;
+
         $booking = singleton_service::get_instance_of_booking_by_bookingid($values->bookingid);
         $buyforuser = price::return_user_to_buy_for();
 
         if ($booking) {
-            $url = new moodle_url('/mod/booking/optionview.php', ['optionid' => $values->id,
-                                                                  'cmid' => $booking->cmid,
-                                                                  'userid' => $buyforuser->id]);
+            if (!modechecker::is_ajax_or_webservice_request()) {
+                $returnurl = $PAGE->url->out();
+            } else {
+                $returnurl = '/';
+            }
+
+            // The current page is not /mod/booking/optionview.php.
+            $url = new moodle_url("/mod/booking/optionview.php", [
+                "optionid" => (int)$values->id,
+                "cmid" => (int)$booking->cmid,
+                "userid" => (int)$buyforuser->id,
+                'returnto' => 'url',
+                'returnurl' => $returnurl,
+            ]);
         } else {
             $url = '#';
         }
@@ -477,18 +492,6 @@ class urise_table extends wunderbyte_table {
             }
         }
 
-        $context = context_module::instance($settings->cmid);
-
-        // The error message should only be shown to admins.
-        if (has_capability('moodle/site:config', $context)) {
-
-            $message = get_string('youneedcustomfieldsport', 'local_urise');
-
-            $message = "<div class='alert alert-danger'>$message</div>";
-
-            return $message;
-        }
-
         // Normal users won't notice the problem.
         return '';
     }
@@ -662,12 +665,15 @@ class urise_table extends wunderbyte_table {
         $settings = singleton_service::get_instance_of_booking_option_settings($values->optionid, $values);
         $bookinganswers = singleton_service::get_instance_of_booking_answers($settings, 0);
 
-        if (count($bookinganswers->usersonlist) > 0) {
+        if (booking_answers::count_places($bookinganswers->usersonlist) > 0) {
             // Add a link to redirect to the booking option.
-            $link = new moodle_url($CFG->wwwroot . '/mod/booking/report.php', array(
-                'id' => $values->cmid,
-                'optionid' => $values->optionid
-            ));
+            $link = new moodle_url(
+                $CFG->wwwroot . '/mod/booking/report.php',
+                [
+                    'id' => $values->cmid,
+                    'optionid' => $values->optionid,
+                ]
+            );
             // Use html_entity_decode to convert "&amp;" to a simple "&" character.
             if ($CFG->version >= 2023042400) {
                 // Moodle 4.2 needs second param.

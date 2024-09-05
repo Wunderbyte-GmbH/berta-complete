@@ -80,7 +80,8 @@ abstract class field_base implements fields {
         stdClass &$formdata,
         stdClass &$newoption,
         int $updateparam,
-        $returnvalue = ''): array {
+        $returnvalue = ''
+    ): array {
 
         $key = fields_info::get_class_name(static::class);
         $value = $formdata->{$key} ?? null;
@@ -219,7 +220,7 @@ abstract class field_base implements fields {
         $key = empty($key) ? $classname : $key;
         $value = empty($value) ? ($formdata->{$key} ?? '') : $value;
 
-        $mockdata = empty($mockdata) ? new stdClass : $mockdata;
+        $mockdata = empty($mockdata) ? new stdClass() : $mockdata;
 
         // Check if there were changes and return these.
         if (!empty($formdata->id) && isset($value)) {
@@ -274,8 +275,12 @@ abstract class field_base implements fields {
         $newvalue = $changes['newvalue'];
         $fieldname = $changes['fieldname'];
 
+        $infotext = get_string($changes['fieldname'], 'booking') . get_string('changeinfochanged', 'booking');
+
         if ((empty($oldvalue) && empty($newvalue)) || $oldvalue == $newvalue) {
-            return [];
+            return [
+                'info' => $infotext . ".",
+            ];
         }
 
         $areaswithuseridstoresolve = [
@@ -288,9 +293,8 @@ abstract class field_base implements fields {
             'courseendtime',
         ];
 
-        $infotext = get_string($changes['fieldname'], 'booking') . get_string('changeinfochanged', 'booking');
         $changes = [
-            'info' => $infotext,
+            'info' => $infotext . ":",
             'oldvalue' => $oldvalue,
             'newvalue' => $newvalue,
         ];

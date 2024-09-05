@@ -209,11 +209,6 @@ class shortcodes {
     public static function unifiedview($shortcode, $args, $content, $env, $next, $renderascard = false) {
         global $DB;
 
-        // TODO: Define capability.
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-        /* if (!has_capability('moodle/site:config', $env->context)) {
-            return '';
-        } */
         self::fix_args($args);
         $booking = self::get_booking($args);
 
@@ -264,33 +259,25 @@ class shortcodes {
 
         $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
 
-        if (!isset($args['organisation']) || !$category = ($args['organisation'])) {
-            $organisation = '';
-        }
-
         $wherearray = ['bookingid' => $bookingids];
-
-        if (!empty($organisation)) {
-            $wherearray['organisation'] = $category;
-        }
 
         // Additional where condition for both card and list views
         $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
 
-        if (!empty($additionalwhere)) {
-            $additionalwhere .= " AND ";
-        }
         // Additional where has to be added here. We add the param later.
         if (empty($args['all'])) {
+            if (!empty($additionalwhere)) {
+                $additionalwhere .= " AND ";
+            }
             $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
         }
 
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
-            list($fields, $from, $where, $params, $filter) =
+            [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
         } else {
-            list($fields, $from, $where, $params, $filter) =
+            [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
         }
 
@@ -325,10 +312,11 @@ class shortcodes {
         }
 
         $table->showfilterontop = $args['filterontop'];
+        $table->showcountlabel = true;
 
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
-            list($idstring, $encodedtable, $out) = $table->lazyouthtml($perpage, true);
+            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
             return $out;
         }
 
@@ -336,7 +324,6 @@ class shortcodes {
 
         return $out;
     }
-
 
     /**
      * Prints out list of bookingoptions.
@@ -347,18 +334,20 @@ class shortcodes {
      * @param string|null $content
      * @param object $env
      * @param Closure $next
-     * @return void
+     * @return string
      */
     public static function unifiedmybookingslist($shortcode, $args, $content, $env, $next) {
 
-        global $DB, $USER, $CFG;
-
-        require_once($CFG->dirroot . '/mod/booking/lib.php');
+        global $USER;
 
         self::fix_args($args);
+        $booking = self::get_booking($args);
 
-        if (!isset($args['category']) || !$category = ($args['category'])) {
-            $category = '';
+        $bookingids = explode(',', get_config('local_urise', 'multibookinginstances'));
+        $bookingids = array_filter($bookingids, fn($a) => !empty($a));
+
+        if (empty($bookingids)) {
+            return get_string('nobookinginstancesselected', 'local_urise');
         }
 
         if (!isset($args['image']) || !$showimage = ($args['image'])) {
@@ -369,15 +358,9 @@ class shortcodes {
             $args['countlabel'] = false;
         }
 
-        if (empty($args['reload'])) {
-            $args['reload'] = false;
-        }
-
         if (empty($args['filterontop'])) {
             $args['filterontop'] = false;
         }
-
-        $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
 
         if (
             !isset($args['perpage'])
@@ -385,27 +368,51 @@ class shortcodes {
             || !$perpage = ($args['perpage'])
         ) {
             $perpage = 100;
+        } else {
+            $infinitescrollpage = 0;
         }
 
-        $table = self::inittableforcourses();
+        if (empty($args['initcourses'])) {
+            $args['initcourses'] = false;
+        } else {
+            $args['initcourses'] = true;
+        }
+        if ($args['initcourses'] === false) {
+            $table = self::inittableforcourses();
+        } else {
+            $table = self::inittableforcourses(false);
+        }
 
         $table->showcountlabel = $args['countlabel'];
+
+        if (empty($args['reload'])) {
+            $args['reload'] = false;
+        }
         $table->showreloadbutton = $args['reload'];
 
-        $wherearray = [];
+        $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
+
+        $wherearray = ['bookingid' => $bookingids];
 
         // Additional where condition for both card and list views
         $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
 
-        // We want to show booking options also when the user was deleted from them. but only, if the booking option is canceled now.
-
         $additionalwhere .= ' ((waitinglist <> ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 0) OR (waitinglist = ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 1))';
+
+        // Additional where has to be added here. We add the param later.
+        if (empty($args['all'])) {
+            if (!empty($additionalwhere)) {
+                $additionalwhere .= " AND ";
+            }
+            $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
+        }
 
         // If we want to find only the teacher relevant options, we chose different sql.
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
-            list($fields, $from, $where, $params, $filter) =
-                booking::get_options_filter_sql(0,
+            [$fields, $from, $where, $params, $filter] =
+                booking::get_options_filter_sql(
+                    0,
                     0,
                     '',
                     null,
@@ -423,8 +430,9 @@ class shortcodes {
                     $additionalwhere
                 );
         } else {
-            list($fields, $from, $where, $params, $filter) =
-                booking::get_options_filter_sql(0,
+            [$fields, $from, $where, $params, $filter] =
+                booking::get_options_filter_sql(
+                    0,
                     0,
                     '',
                     null,
@@ -443,14 +451,18 @@ class shortcodes {
                 );
         }
 
+        $params['timenow'] = strtotime('today 00:00');
         $table->set_filter_sql($fields, $from, $where, $filter, $params);
 
-        $table->use_pages = true;
+        $table->use_pages = empty($args['showpagination']) ? false : true;
 
         if ($showimage !== false) {
             $table->set_tableclass('cardimageclass', 'pr-0 pl-1');
-
             $table->add_subcolumns('cardimage', ['image']);
+        }
+
+        if (empty($args['showpagination'])) {
+            $args['showpagination'] = true;
         }
 
         self::set_table_options_from_arguments($table, $args);
@@ -459,25 +471,16 @@ class shortcodes {
             $table->tabletemplate = 'local_urise/table_card';
         } else {
             self::generate_table_for_list($table, $args);
+            $table->infinitescroll = $infinitescrollpage;
             $table->tabletemplate = 'local_urise/table_list';
         }
 
-        $table->cardsort = true;
-
-        // This allows us to use infinite scrolling, No pages will be used.
-        $table->infinitescroll = $infinitescrollpage;
-
         $table->showfilterontop = $args['filterontop'];
-        $table->showfilterbutton = false;
-
-        // We override the cache, because the my cache has to be invalidated with every booking.
-        $table->define_cache('mod_booking', 'mybookingoptionstable');
+        $table->showcountlabel = true;
 
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
-
-            list($idstring, $encodedtable, $out) = $table->lazyouthtml($perpage, true);
-
+            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
             return $out;
         }
 
@@ -754,6 +757,29 @@ class shortcodes {
             $table->add_filter($hierarchicalfilter);
         }
 
+        if (empty($filtercolumns) || in_array('kurssprache', $filtercolumns)) {
+            $standardfilter = new standardfilter('kurssprache', get_string('kurssprache', 'local_urise'));
+            $standardfilter->add_options([
+                1 => get_string('german', 'local_urise'),
+                2 => get_string('english', 'local_urise'),
+            ]);
+            $table->add_filter($standardfilter);
+        }
+
+        if (empty($filtercolumns) || in_array('format', $filtercolumns)) {
+            $standardfilter = new standardfilter('format', get_string('format', 'local_urise'));
+            $standardfilter->add_options([
+                1 => get_string('onsite', 'local_urise'),
+                2 => get_string('hybrid', 'local_urise'),
+                3 => get_string('blendedlearningonsite', 'local_urise'),
+                4 => get_string('blendedlearningonline', 'local_urise'),
+                5 => get_string('blendedlearningonline', 'local_urise'),
+                6 => get_string('onsite', 'local_urise'),
+                7 => get_string('selfpaced', 'local_urise'),
+            ]);
+            $table->add_filter($standardfilter);
+        }
+
         if (empty($filtercolumns) || in_array('dayofweek', $filtercolumns)) {
             $standardfilter = new standardfilter('dayofweek', get_string('dayofweek', 'local_urise'));
             $standardfilter->add_options([
@@ -884,8 +910,6 @@ class shortcodes {
             }
             $table->define_sortablecolumns($sortablecolumns);
         }
-
-        $sortorder = $table->return_current_sortorder();
 
         $defaultorder = SORT_ASC; // Default.
         if (!empty($args['sortorder'])) {
@@ -1139,167 +1163,166 @@ class shortcodes {
         return [
             'explode' => ',',
             '1' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Lehrkonzeption & -planung',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('lehrkonzeptionplanung', 'local_urise'),
             ],
             '2' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Lehr- & Lernmethoden',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('lehrundlernmethoden', 'local_urise'),
             ],
             '3' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Erstellung Lehr-/Lernmaterialien',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('erstellunglehrlernmaterialien', 'local_urise'),
             ],
             '4' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Lehren mit digitalen Technologien',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('lehrenmitdigitalentechnologien', 'local_urise'),
             ],
             '5' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Prüfen & Beurteilen',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('pruefenbeurteilen', 'local_urise'),
             ],
             '6' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Betreuung schriftlicher Arbeiten',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('betreuungschriftlicherarbeiten', 'local_urise'),
             ],
             '7' => [
-                'parent' => 'Lehrkompetenzen',
-                'localizedname' => 'Weiterentwicklung der Lehre',
+                'parent' => get_string('lehrkompetenzen', 'local_urise'),
+                'localizedname' => get_string('weiterentwicklungderlehre', 'local_urise'),
             ],
             '8' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Wissenschaftliches Arbeiten',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('wissenschaftlichesarbeiten', 'local_urise'),
             ],
             '9' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Wissenschaftliches Publizieren',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('wissenschaftlichespublizieren', 'local_urise'),
             ],
             '10' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Open Science',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('openscience', 'local_urise'),
             ],
             '11' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Wissensaustausch & Innovation',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('wissensaustauschinnovation', 'local_urise'),
             ],
             '12' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Wissenschaftliche Integrität',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('wissenschaftlicheintegritaet', 'local_urise'),
             ],
             '13' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Networking in der Wissenschaft',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('networkinginderwissenschaft', 'local_urise'),
             ],
             '14' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Interdisziplinäre Forschung',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('interdisziplinaereforschung', 'local_urise'),
             ],
             '15' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Forschungsförderung',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('forschungsfoerderung', 'local_urise'),
             ],
             '16' => [
-                'parent' => 'Forschungskompetenzen',
-                'localizedname' => 'Karriereentwicklung & -planung',
+                'parent' => get_string('forschungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('karriereentwicklungplanung', 'local_urise'),
             ],
             '17' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Präsentation',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('praesentation', 'local_urise'),
             ],
             '18' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Gesprächs- & Verhandlungsführung',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('gespraechsverhandlungsfuehrung', 'local_urise'),
             ],
             '19' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Feedback',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('feedback', 'local_urise'),
             ],
             '20' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Moderation',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('moderation', 'local_urise'),
             ],
             '21' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Sprachkenntnisse',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('sprachkenntnisse', 'local_urise'),
             ],
             '22' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Konfliktmanagement',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('konfliktmanagement', 'local_urise'),
             ],
             '23' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Informations- & Kommunikation',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('informationskommunikation', 'local_urise'),
             ],
             '24' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Gender- & Diversitätskompetenz',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('genderdiversitaetskompetenz', 'local_urise'),
             ],
             '25' => [
-                'parent' => 'Kommunikation & Kooperation',
-                'localizedname' => 'Kooperationskompetenz',
+                'parent' => get_string('kommunikationkooperation', 'local_urise'),
+                'localizedname' => get_string('kooperationskompetenz', 'local_urise'),
             ],
             '26' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Veranstaltungsorganisation',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('veranstaltungsorganisation', 'local_urise'),
             ],
             '27' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Arbeitsorganisation',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('arbeitsorganisation', 'local_urise'),
             ],
             '28' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Selbstorganisation',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('selbstorganisation', 'local_urise'),
             ],
             '29' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Service- & Kund*innenorientierung',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('servicekundinnenorientierung', 'local_urise'),
             ],
             '30' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Lösungs- & Zukunftsorientierung',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('loesungszukunftsorientierung', 'local_urise'),
             ],
             '31' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Ressourceneffizienz',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('ressourceneffizienz', 'local_urise'),
             ],
             '32' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Change-Kompetenz',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('changekompetenz', 'local_urise'),
             ],
             '33' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Gesundheitsorientierung',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('gesundheitsorientierung', 'local_urise'),
             ],
             '34' => [
-                'parent' => 'Selbst- & Arbeitsorganisation',
-                'localizedname' => 'Lernkompetenz',
+                'parent' => get_string('selbstundarbeitsorganisation', 'local_urise'),
+                'localizedname' => get_string('lernkompetenz', 'local_urise'),
             ],
             '35' => [
-                'parent' => 'Digitalkompetenzen',
-                'localizedname' => 'IT Security',
+                'parent' => get_string('digitalkompetenzen', 'local_urise'),
+                'localizedname' => get_string('itsecurity', 'local_urise'),
             ],
             '36' => [
-                'parent' => 'Digitalkompetenzen',
-                'localizedname' => 'Digitale Interaktion',
+                'parent' => get_string('digitalkompetenzen', 'local_urise'),
+                'localizedname' => get_string('digitaleinteraktion', 'local_urise'),
             ],
             '37' => [
-                'parent' => 'Digitalkompetenzen',
-                'localizedname' => 'Umgang mit Informationen & Daten',
+                'parent' => get_string('digitalkompetenzen', 'local_urise'),
+                'localizedname' => get_string('umgangmitinformationenunddaten', 'local_urise'),
             ],
             '38' => [
-                'parent' => 'Digitalkompetenzen',
-                'localizedname' => 'Technologienutzung',
+                'parent' => get_string('digitalkompetenzen', 'local_urise'),
+                'localizedname' => get_string('technologienutzung', 'local_urise'),
             ],
             '39' => [
-                'parent' => 'Führungskompetenzen',
-                'localizedname' => 'Educational Leadership & Management',
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('educationalleadershipandmanagement', 'local_urise'),
             ],
             '40' => [
-                'parent' => 'Sonstige',
-                'localizedname' => 'Sonstige Kompetenzen',
+                'parent' => get_string('sonstige', 'local_urise'),
+                'localizedname' => get_string('sonstigekompetenzen', 'local_urise'),
             ],
         ];
-
     }
 
     /**

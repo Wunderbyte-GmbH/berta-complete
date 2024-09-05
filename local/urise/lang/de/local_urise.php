@@ -82,6 +82,17 @@ $string['sportsdivisions'] = 'Sparten';
 $string['titleprefix'] = 'Kursnummer';
 $string['unknown'] = 'Unbekannt';
 
+$string['format'] = "Kursformat";
+$string['german'] = 'Deutsch';
+$string['english'] = 'Englisch';
+$string['onsite'] = 'Vor Ort';
+$string['hybrid'] = 'Hybrid';
+$string['blendedlearningonsite'] = 'Blended Learning mit Vor-Ort-Terminen';
+$string['blendedlearningonline'] = 'Blended Learning mit Online-Terminen';
+$string['blendedlearningonline'] = 'Blended Learning mit Hybrid-Terminen';
+$string['onsite'] = 'Online-Termin';
+$string['selfpaced'] = 'Selbstlernkurs';
+
 // Errors.
 $string['error:starttime'] = 'Start muss vor dem Ende sein.';
 $string['error:endtime'] = 'Ende muss nach dem Start sein.';
@@ -410,7 +421,7 @@ $string['zgcommunities'] = "Interessant für";
 $string['organisationfilter'] = "Angeboten von";
 $string['fromdate'] = "Ab ";
 
-
+$string['kurssprache'] = 'Kurssprache';
 
 $string['fbafrikawissenschaftenundorientalistik'] = "FB Afrikawissenschaften und Orientalistik";
 $string['fbaltegeschichte'] = "FB Alte Geschichte";
@@ -492,7 +503,56 @@ $string['organisationfilterdefinition_desc'] = "Der hierarchische Filter für di
 $string['bibliothekszielgruppe'] = 'Bibliothekszielgruppe';
 $string['students'] = 'Studierende';
 $string['doctoralcandidates'] = 'Doktorand*innen';
-$string['lecturers'] = 'Uni-Lehrende{';
+$string['lecturers'] = 'Uni-Lehrende';
 $string['researchers'] = 'Forschende';
 $string['pupilsandteachers'] = 'Schüler*innen und Lehrer*innen';
 $string['generalpublic'] = 'Interessierte Öffentlichkeit';
+
+// Kompetenzen.
+$string['lehrkompetenzen'] = "Lehrkompetenzen";
+$string['lehrkonzeptionplanung'] = 'Lehrkonzeption & -planung';
+$string['lehrundlernmethoden'] = 'Lehr- & Lernmethoden';
+$string['erstellunglehrlernmaterialien'] = 'Erstellung Lehr-/Lernmaterialien';
+$string['lehrenmitdigitalentechnologien'] = 'Lehren mit digitalen Technologien';
+$string['pruefenbeurteilen'] = 'Prüfen & Beurteilen';
+$string['betreuungschriftlicherarbeiten'] = 'Betreuung schriftlicher Arbeiten';
+$string['weiterentwicklungderlehre'] = 'Weiterentwicklung der Lehre';
+$string['forschungskompetenzen'] = "Forschungskompetenzen";
+$string['wissenschaftlichesarbeiten'] = 'Wissenschaftliches Arbeiten';
+$string['wissenschaftlichespublizieren'] = 'Wissenschaftliches Publizieren';
+$string['openscience'] = 'Open Science';
+$string['wissensaustauschinnovation'] = 'Wissensaustausch & Innovation';
+$string['wissenschaftlicheintegritaet'] = 'Wissenschaftliche Integrität';
+$string['networkinginderwissenschaft'] = 'Networking in der Wissenschaft';
+$string['interdisziplinaereforschung'] = 'Interdisziplinäre Forschung';
+$string['forschungsfoerderung'] = 'Forschungsförderung';
+$string['karriereentwicklungplanung'] = 'Karriereentwicklung & -planung';
+$string['kommunikationkooperation'] = "Kommunikation & Kooperation";
+$string['praesentation'] = 'Präsentation';
+$string['gespraechsverhandlungsfuehrung'] = 'Gesprächs- & Verhandlungsführung';
+$string['feedback'] = 'Feedback';
+$string['moderation'] = 'Moderation';
+$string['sprachkenntnisse'] = 'Sprachkenntnisse';
+$string['konfliktmanagement'] = 'Konfliktmanagement';
+$string['informationskommunikation'] = 'Informations- & Kommunikation';
+$string['genderdiversitaetskompetenz'] = 'Gender- & Diversitätskompetenz';
+$string['kooperationskompetenz'] = 'Kooperationskompetenz';
+$string['selbstundarbeitsorganisation'] = "Selbst- & Arbeitsorganisation";
+$string['veranstaltungsorganisation'] = 'Veranstaltungsorganisation';
+$string['arbeitsorganisation'] = 'Arbeitsorganisation';
+$string['selbstorganisation'] = 'Selbstorganisation';
+$string['servicekundinnenorientierung'] = 'Service- & Kund*innenorientierung';
+$string['loesungszukunftsorientierung'] = 'Lösungs- & Zukunftsorientierung';
+$string['ressourceneffizienz'] = 'Ressourceneffizienz';
+$string['changekompetenz'] = 'Change-Kompetenz';
+$string['gesundheitsorientierung'] = 'Gesundheitsorientierung';
+$string['lernkompetenz'] = 'Lernkompetenz';
+$string['digitalkompetenzen'] = "Digitalkompetenzen";
+$string['itsecurity'] = 'IT Security';
+$string['digitaleinteraktion'] = 'Digitale Interaktion';
+$string['umgangmitinformationenunddaten'] = 'Umgang mit Informationen & Daten';
+$string['technologienutzung'] = 'Technologienutzung';
+$string['fuehrungskompetenzen'] = "Führungskompetenzen";
+$string['educationalleadershipandmanagement'] = 'Educational Leadership & Management';
+$string['sonstige'] = "Sonstige";
+$string['sonstigekompetenzen'] = 'Sonstige Kompetenzen';

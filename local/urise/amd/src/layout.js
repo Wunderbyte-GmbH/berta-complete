@@ -55,11 +55,20 @@ function adjustHeights() {
         const cards = document.querySelectorAll('.mod-booking-card');
         // Assuming you have a container for the cards.
         const container = document.querySelector('.wunderbyte-table-grid.rows-container');
+
+        if (!cards || !container || !cards[0]) {
+            return;
+        }
+
         const cardWidth = cards[0].offsetWidth;
         const containerWidth = container.offsetWidth;
 
         // Calculate the number of cards per row
         const numberOfCardsInRow = Math.floor(containerWidth / cardWidth);
+
+        if (numberOfCardsInRow < 1) {
+            return;
+        }
 
         // Reset heights
         cards.forEach(function(card) {
