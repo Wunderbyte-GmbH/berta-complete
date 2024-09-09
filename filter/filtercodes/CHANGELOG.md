@@ -1,8 +1,10 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [2.5.2] 2024-08-28 (dev)
+## [2.5.2] 2024-09-03 (dev)
 ### Added
+- New {menulanguages} tag.
+- New {infoform} tag.
 - New {keyboard}...{/keyboard} tag.
 - New {menuwishlist} tag.
 - New {sitelogourl} tag.
@@ -17,6 +19,7 @@ All notable changes to this project will be documented in this file.
 - New {ifnotgrouping groupingid}...{/ifnotgrouping} tag.
 - New {mygroupings} tag.
 ### Updated
+- Refactoring in preparations for Moodle 4.5.
 - Added more documentation to README.md.
 - Fixed links and updated table of contents in README.md.
 - The {thisurl_enc} tag is now compliant with RFC 3986.
