@@ -141,6 +141,7 @@ if ($PAGE->pagetype == 'site-index') {
 
 $secondarynavigation = false;
 $overflow = '';
+
 if (($notcoursecategorypage) && ($siteindexsecondarynav) && ($PAGE->has_secondary_navigation())) {
     $tablistnav = $PAGE->has_tablist_secondary_navigation();
     $moremenu = new \core\navigation\output\more_menu($PAGE->secondarynav, 'nav-tabs', true, $tablistnav);
@@ -150,6 +151,7 @@ if (($notcoursecategorypage) && ($siteindexsecondarynav) && ($PAGE->has_secondar
         $overflow = $overflowdata->export_for_template($OUTPUT);
     }
 }
+
 
 // Load the navigation from boost_union primary navigation, the extended version of core primary navigation.
 // It includes the smart menus and menu items, for multiple locations.
@@ -181,6 +183,26 @@ $bodyattributes = $OUTPUT->body_attributes($extraclasses); // In the original la
 
 $header = $PAGE->activityheader;
 $headercontent = $header->export_for_template($renderer);
+
+foreach ($primarymenu['moremenu']['nodearray'] as $nodearray) {
+    if (is_object($nodearray) && $nodearray->text == "Communities") {
+        $nodearray->text = "Communities";
+        $nodearray->isshortcode = "true";
+        unset($nodearray->children);
+        $nodearray->haschildren = "true";
+        $nodearray->shortcode = format_text("[navbarhtml category=communities]");
+    }
+}
+
+foreach ($primarymenu['moremenu']['nodearray'] as $nodearray) {
+    if (is_object($nodearray) && $nodearray->text == "Support") {
+        $nodearray->text = "Support";
+        $nodearray->isshortcode = "true";
+        unset($nodearray->children);
+        $nodearray->haschildren = "true";
+        $nodearray->shortcode = format_text("[navbar category=support]");
+    }
+}
 
 $templatecontext = [
     'sitename' => format_string($SITE->shortname, true, ['context' => context_course::instance(SITEID), "escape" => false]),

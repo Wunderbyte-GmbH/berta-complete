@@ -178,6 +178,7 @@ class actions_info {
      * @param stdClass $data
      */
     public static function delete_action(stdClass $data) {
+        global $USER;
 
         // Todo: Actually delete information from option.
 
@@ -197,6 +198,8 @@ class actions_info {
             $context = context_module::instance($data->cmid);
 
             booking_option::update($optionvalues, $context, MOD_BOOKING_UPDATE_OPTIONS_PARAM_REDUCED);
+
+            booking_option::trigger_updated_event($context, $optionvalues->optionid, $USER->id, $USER->id, 'actions');
         }
 
     }
@@ -217,8 +220,6 @@ class actions_info {
         $cmid = $formdata['cmid'] ?? 0;
 
         // TODO: Get existing actions not from table but from json of this option.
-
-        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
 
         $boactions = booking_option::get_value_of_json_by_key($optionid, 'boactions');
 

@@ -28,6 +28,8 @@ use mod_booking\bo_actions\actions_info;
 use mod_booking\booking_option;
 use mod_booking\booking_option_settings;
 use mod_booking\option\field_base;
+use mod_booking\option\fields_info;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -101,9 +103,10 @@ class actions extends field_base {
         } else {
             $boactions = $formdata->boactions ?? [];
         }
-
         booking_option::add_data_to_json($newoption, 'boactions', $boactions);
 
+        // Changes will only be reported in a separately triggered changes event ...
+        // ... (in action class for save or update, in actions_info for deletion).
         return [];
     }
 
@@ -119,7 +122,6 @@ class actions extends field_base {
 
         // Actions are not yet finished - so we hide them for now.
         // Add booking actions mform elements.
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
         actions_info::add_actions_to_mform($mform, $formdata);
     }
 

@@ -203,8 +203,8 @@ abstract class field_base implements fields {
         field_base $self,
         $mockdata = '',
         string $key = '',
-        $value = ''): array {
-
+        $value = ''
+    ): array {
         if (!isset($self)) {
             return [];
         }
@@ -291,6 +291,15 @@ abstract class field_base implements fields {
         $areaswithtimestampstoresolve = [
             'coursestarttime',
             'courseendtime',
+            'bookingclosingtime',
+            'bookingopeningtime',
+            'canceluntil',
+        ];
+
+        $checkboxvalues = [
+            'waitforconfirmation',
+            'disablebookingusers',
+            'disablecancel',
         ];
 
         $changes = [
@@ -335,11 +344,16 @@ abstract class field_base implements fields {
             // In some cases, values are timestamps that need to be made human readable.
             $changes['oldvalue'] = empty($oldvalue) ? "" : userdate($oldvalue, get_string('strftimedatetime', 'langconfig'));
             $changes['newvalue'] = empty($newvalue) ? "" : userdate($newvalue, get_string('strftimedatetime', 'langconfig'));
+        } else if (in_array($fieldname, $checkboxvalues)) {
+            // In some cases, values are 1/0 meaning on/off.
+            $changes['oldvalue'] = empty($oldvalue) ? get_string('off', 'mod_booking') : get_string('on', 'mod_booking');
+            $changes['newvalue'] = empty($newvalue) ? get_string('off', 'mod_booking') : get_string('on', 'mod_booking');
         }
 
         $changes['fieldname'] = get_string($fieldname, 'mod_booking');
         return $changes;
     }
+
     /**
      * Appends the information about a given user(id) to the string.
      *

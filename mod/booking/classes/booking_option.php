@@ -218,6 +218,45 @@ class booking_option {
     }
 
     /**
+     * Trigger the bookingoption_updated event with fieldname if given.
+     *
+     * @param context $context
+     * @param int $optionid
+     * @param int $userid
+     * @param int $relateduserid
+     * @param string $fieldname
+     *
+     * @return void
+     *
+     */
+    public static function trigger_updated_event(
+        context $context,
+        int $optionid,
+        int $userid,
+        int $relateduserid,
+        string $fieldname = "") {
+
+        $data = [
+            'context' => $context,
+            'objectid' => $optionid,
+            'userid' => $userid,
+            'relateduserid' => $relateduserid,
+        ];
+        if (!empty($fieldname)) {
+            $data['other'] = [
+                'changes' => [
+                    (object)[
+                        'fieldname' => $fieldname,
+                    ],
+                ],
+            ];
+        }
+        $event = \mod_booking\event\bookingoption_updated::create($data);
+        $event->trigger();
+        cache_helper::purge_by_event('setbackeventlogtable');
+    }
+
+    /**
      * This calculates number of user that can be booked to the connected booking option
      * Looks for max participant in the connected booking given the optionid
      *
@@ -850,7 +889,9 @@ class booking_option {
             // 1. Update, enrol and inform users who have switched from the waiting list to status "booked".
             $usersonwaitinglist = array_replace([], $ba->usersonwaitinglist);
             $noofuserstobook =
-                $settings->maxanswers - booking_answers::count_places($ba->usersonlist) - booking_answers::count_places($ba->usersreserved);
+                $settings->maxanswers
+                - booking_answers::count_places($ba->usersonlist)
+                - booking_answers::count_places($ba->usersreserved);
 
             // We want to enrol people who have been waiting longer first.
             usort($usersonwaitinglist, fn($a, $b) => $a->timemodified < $b->timemodified ? -1 : 1);
@@ -2588,7 +2629,7 @@ class booking_option {
                     return [
                         'name' => null,
                         'value' => get_string('onlineoptiondate', 'mod_booking'),
-                ];
+                    ];
                 } else {
                     // We are booked on the web site, we check if we show the real link.
                     if (!$this->show_conference_link($sessionid)) {
@@ -3429,7 +3470,9 @@ class booking_option {
         });
         $changes = array_merge($feedbackpost, $feedbackformchanges);
         $cmid = $originaloption->cmid ?? $data->cmid ?? 0;
-        if (!empty($changes)) {
+        // Only react on changes if update is triggered via formsave (see comment at beginning of function - cases A) & B))...
+        // ... since otherwise previous data is unreliable.
+        if (!empty($changes) && $updateparam == MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT) {
 
             // If we have no cmid, it's most possibly a template.
             if (!empty($cmid) && $newoption->bookingid != 0) {
