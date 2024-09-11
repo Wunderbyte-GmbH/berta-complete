@@ -156,8 +156,8 @@ $string['blockoperator_help'] = '<b>Block above</b> ... Online booking will be b
 of bookings is reached. Booking will only be possible for a cashier or admin afterwards.<br>
 <b>Block below</b> ... Online booking will be blocked until the given percentage
 of bookings is reached. Before that happens, booking is only possible for cashier or admin.';
-$string['boactioncancelbooking_desc'] = "Wird verwendet, wenn eine Option mehrmals gekauft werden können soll.";
-$string['boactioncancelbookingvalue'] = "Aktiviere sofortige Ausbuchung";
+$string['boactioncancelbookingdesc'] = "Used for options which can be bought multiple times";
+$string['boactioncancelbookingvalue'] = "Activate immediate cancelation";
 $string['boactionname'] = "Name of action";
 $string['boactions'] = 'Actions after booking ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>' . ' ' . '<span class="badge bg-danger text-light"><i class="fa fa-flask" aria-hidden="true"></i> Experimental</span>';
 $string['boactions_desc'] = "Booking actions after booking are still an EXPERIMENTAL feature. You can try them if you want.
@@ -555,22 +555,22 @@ $string['btncancelname'] = 'Name of button: Cancel booking';
 $string['btnviewavailable'] = "View available options";
 $string['bulkoperations'] = 'Zeige Liste von Buchungsoptionen um Massenoperationen zu ermöglichen';
 $string['bulkoperationsheader'] = 'Update data for selected bookingoption(s)';
-$string['cachedefbookedusertable'] = 'Booked users table (cache)';
-$string['cachedefbookingoptions'] = 'Booking options (cache)';
-$string['cachedefbookingoptionsanswers'] = 'Booking options answers (cache)';
-$string['cachedefbookingoptionsettings'] = 'Booking option settings (cache)';
-$string['cachedefbookingoptionstable'] = 'Tables of booking options with hashed sql queries (cache)';
-$string['cachedefcachedbookinginstances'] = 'Booking instances (cache)';
-$string['cachedefcachedpricecategories'] = 'Booking price categories (cache)';
-$string['cachedefcachedprices'] = 'Prices in booking (cache)';
-$string['cachedefcachedsemesters'] = 'Semesters (cache)';
-$string['cachedefcachedteachersjournal'] = 'Teaches journal (Cache)';
-$string['cachedefconditionforms'] = 'Condition Forms (Cache)';
-$string['cachedefconfirmbooking'] = 'Booking confirmed (Cache)';
-$string['cachedefcustomformuserdata'] = 'Custom form user data (Cache)';
-$string['cachedefelectivebookingorder'] = 'Elective booking order (Cache)';
-$string['cachedefeventlogtable'] = 'Event log table (Cache)';
-$string['cachedefsubbookingforms'] = 'Subbooking Forms (Cache)';
+$string['cachedef_bookedusertable'] = 'Booked users table (cache)';
+$string['cachedef_bookingoptions'] = 'Booking options (cache)';
+$string['cachedef_bookingoptionsanswers'] = 'Booking options answers (cache)';
+$string['cachedef_bookingoptionsettings'] = 'Booking option settings (cache)';
+$string['cachedef_bookingoptionstable'] = 'Tables of booking options with hashed sql queries (cache)';
+$string['cachedef_cachedbookinginstances'] = 'Booking instances (cache)';
+$string['cachedef_cachedpricecategories'] = 'Booking price categories (cache)';
+$string['cachedef_cachedprices'] = 'Prices in booking (cache)';
+$string['cachedef_cachedsemesters'] = 'Semesters (cache)';
+$string['cachedef_cachedteachersjournal'] = 'Teaches journal (Cache)';
+$string['cachedef_conditionforms'] = 'Condition Forms (Cache)';
+$string['cachedef_confirmbooking'] = 'Booking confirmed (Cache)';
+$string['cachedef_customformuserdata'] = 'Custom form user data (Cache)';
+$string['cachedef_electivebookingorder'] = 'Elective booking order (Cache)';
+$string['cachedef_eventlogtable'] = 'Event log table (Cache)';
+$string['cachedef_subbookingforms'] = 'Subbooking Forms (Cache)';
 $string['caladdascourseevent'] = 'Add to calendar (visible only to course participants)';
 $string['caladdassiteevent'] = 'Add to calendar (visible to all users)';
 $string['caldonotadd'] = 'Do not add to course calendar';
@@ -678,6 +678,8 @@ $string['completedcomments'] = 'Only with completed activity';
 $string['completedratings'] = 'Only with completed activity';
 $string['completionmodule'] = 'Upon completion of the selected course activity, enable bulk deletion of user bookings';
 $string['completionmodule_help'] = 'Display bulk deletion button for booking answers, if another course module has been completed. The bookings of users will be deleted with a click of a button on the report page! Only activities with completion enabled can be selected from the list.';
+$string['completionoptioncompletedcminfo'] = 'Complete an option';
+$string['completionoptioncompletedform'] = 'At least one of the booked options has to be marked as completed';
 $string['conditionselectstudentinbo_desc'] = 'Select all students of the booking option (affected by the rule) having a certain role.';
 $string['conditionselectstudentinboroles'] = 'Choose role';
 $string['conditionselectteacherinbo_desc'] = 'Select the teachers of the booking option (affected by the rule).';
@@ -2097,6 +2099,8 @@ $string['uselegacymailtemplates_desc'] = 'This function is deprecated and will b
  <span class="text-danger"><b>Be careful:</b> If you uncheck this box, your email templates in your booking-instances won\'t be shown and used anymore.</span>';
 $string['usenotificationlist'] = 'Use notification list';
 $string['useprice'] = 'Only book with price';
+$string['useprotoenablemorerules'] = 'You need Booking PRO, to be able to add more rules.
+<a href="https://wunderbyte.at/kontakt" target="_blank">Contact Wunderbyte</a>, if you want to buy a pro license.';
 $string['useraffectedbyevent'] = 'User affected by the event';
 $string['usercalendarentry'] = 'You are booked for <a href="{$a}">this session</a>.';
 $string['usercalendarurl'] = "usercalendarurl";

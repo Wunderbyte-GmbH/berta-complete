@@ -51,13 +51,11 @@ use stdClass;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class dates {
-
     /**
      * Construct dates class
      *
      */
     public function __construct() {
-
     }
 
     /**
@@ -122,7 +120,8 @@ class dates {
                 'semesterid',
                 get_string('chooseperiod', 'mod_booking'),
                 $semestersarray,
-                $semesteridoptions);
+                $semesteridoptions
+            );
 
             $mform->addHelpButton('semesterid', 'chooseperiod', 'mod_booking');
             $mform->setType('semesterid', PARAM_INT);
@@ -542,6 +541,7 @@ class dates {
         $datestosave = [];
         $datestodelete = [];
         $datestoupdate = [];
+        $newvalues = [];
         // Olddates don't contain location yet.
         foreach ($newoptiondates as $optiondate) {
 
@@ -557,6 +557,8 @@ class dates {
                 if (!optiondate::compare_optiondates((array)$oldoptiondate, $optiondate)) {
                     // If one of the dates is not exactly the same, we need to delete the current option and add a new one.
                     $datestoupdate[] = $optiondate;
+                } else {
+                    $newvalues[] = $optiondate;
                 }
                 unset($olddates[$oldoptiondate->id]); // Olddates is unset here but we still need it!
 
@@ -613,12 +615,12 @@ class dates {
             || in_array('dates', MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING)) {
             return [];
         }
-
+        $newvalue = array_merge($newvalues, $datestosave);
         $changes = [
             'changes' => [
                 'fieldname' => 'dates',
                 'oldvalue' => $memory,
-                'newvalue' => $datestosave,
+                'newvalue' => $newvalue,
             ],
         ];
         return $changes;
