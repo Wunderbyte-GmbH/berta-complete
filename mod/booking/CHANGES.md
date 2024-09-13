@@ -1,3 +1,20 @@
+## Version 8.6.17 (2024091001)
+* Improvement: Display isloggedinprice rather than info that booking is not yet available
+* Improvement: hand over condition data to bookit button
+* Improvement: Add format_string for customfield names
+* Improvement: Change values of customfields via bulkoperations
+* Improvement: add customfield filter for bulkoperations
+* Improvement: Catch throwables for all event descriptions
+* Bugfix: Fix handling in case urise is not installed.
+* Bugfix: make field::set_data work in bulk operations
+* Bugfix: Revert false language in string files
+* Bugfix: cachedef lang files need underscore
+
+## Version 8.6.16 (2024091001)
+* Bugfix: type correction
+* Bugfix: bookingoption_updated empty objects handling
+* Bugfix: Fix try catch for bookingoption description
+
 ## Version 8.6.15 (2024091000)
 * Improvmenet: Also count course status and return
 * Improvement: Fixes for signinsheet generator

@@ -15,24 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Base class for a single booking option availability condition.
- *
- * All bo condition types must extend this class.
+ * Already booked condition (item has been booked).
  *
  * @package mod_booking
  * @copyright 2022 Wunderbyte GmbH
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace mod_booking\bo_availability\conditions;
+namespace mod_booking\bo_availability\conditions;
 
-use context_system;
 use mod_booking\bo_availability\bo_condition;
 use mod_booking\bo_availability\bo_info;
-use mod_booking\booking_answers;
 use mod_booking\booking_option_settings;
 use mod_booking\singleton_service;
 use MoodleQuickForm;
+use context_module;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -45,13 +42,12 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  *
  *
  * @package mod_booking
- * @copyright 2022 Wunderbyte GmbH
+ * @copyright 2024 Wunderbyte GmbH
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class askforconfirmation implements bo_condition {
-
+class capbookingchoose implements bo_condition {
     /** @var int $id Standard Conditions have hardcoded ids. */
-    public $id = MOD_BOOKING_BO_COND_ASKFORCONFIRMATION;
+    public $id = MOD_BOOKING_BO_COND_CAPBOOKINGCHOOSE;
 
     /**
      * Needed to see if class can take JSON.
@@ -79,39 +75,14 @@ class askforconfirmation implements bo_condition {
      */
     public function is_available(booking_option_settings $settings, int $userid, bool $not = false): bool {
 
-        // We only block when we are NOT on the waiting list...
-        // And when it's set in the option.
+        global $DB;
 
-        $isavailable = true;
+        // This check can be overridden by a json condition.
+        // Therefore, we use it's logic.
 
-        // Get the booking answers for this instance.
-        $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
-        $bookinginformation = $bookinganswer->return_all_booking_information($userid);
-
-        // The following conditions have to be met.
-        // - User must not be on waitinglist
-        // - AND: Ask for confirmation must be turned on.
-        // - OR: A price is set and it's fully booked already.
-        if (!isset($bookinginformation['onwaitinglist'])
-            && (!empty($settings->waitforconfirmation)
-            || (!empty($settings->jsonobject->useprice))
-                && (isset($bookinginformation['notbooked']['fullybooked']) &&
-                $bookinginformation['notbooked']['fullybooked'] === true
-                && ($settings->maxoverbooking > booking_answers::count_places($bookinganswer->usersonwaitinglist))))) {
-
-            if (!empty(get_config('booking', 'allowoverbooking'))
-                && has_capability('mod/booking:canoverbook', context_system::instance())) {
-                $isavailable = true;
-            } else {
-                $isavailable = false;
-            }
-        }
-
-        if ($not) {
-            $isavailable = !$isavailable;
-        }
-
-        return $isavailable;
+        $allowedtobookininstance = new allowedtobookininstance();
+        $allowedtobookininstance->apply_customdata($settings);
+        return $allowedtobookininstance->is_available($settings, $userid, $not);
     }
 
     /**
@@ -168,7 +139,7 @@ class askforconfirmation implements bo_condition {
 
         $description = $this->get_description_string($isavailable, $full);
 
-        return [$isavailable, $description, MOD_BOOKING_BO_PREPAGE_BOOK, MOD_BOOKING_BO_BUTTON_MYBUTTON];
+        return [$isavailable, $description, MOD_BOOKING_BO_PREPAGE_NONE, MOD_BOOKING_BO_BUTTON_JUSTMYALERT];
     }
 
     /**
@@ -191,56 +162,8 @@ class askforconfirmation implements bo_condition {
      * @param int $userid optional user id
      * @return array
      */
-    public function render_page(int $optionid, int $userid = 0) {
-
-        if (!empty($userid)) {
-            $user = singleton_service::get_instance_of_user($userid);
-        }
-
-        $data1 = new bookingoption_description($optionid, null, MOD_BOOKING_DESCRIPTION_WEBSITE, true, false, $user ?? null);
-
-        $template = 'mod_booking/bookingoption_description_prepagemodal_bookit';
-
-        $dataarray[] = [
-            'data' => $data1->get_returnarray(),
-        ];
-
-        $templates[] = $template;
-
-        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
-
-        list($template, $data2) = booking_bookit::render_bookit_template_data($settings, $userid ?? 0, false);
-        $data2 = reset($data2);
-        $template = reset($template);
-
-        $dataarray[] = [
-            'data' => $data2->data,
-        ];
-
-        $templates[] = $template;
-
-        // Only if the option is not yet booked, we set buttontype to 1 (continue is disabled).
-        $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
-
-        // Inactive Continue Button.
-        // We don't use this functionality right now.
-        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-        /* if ($bookinganswer->user_status($USER->id) == MOD_BOOKING_STATUSPARAM_NOTBOOKED) {
-            $buttontype = 1;
-        } else {
-            $buttontype = 0;
-        } */
-        $buttontype = 0;
-
-        $response = [
-            // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-            /* 'json' => json_encode($dataarray), */
-            'template' => implode(',', $templates),
-            'buttontype' => $buttontype, // This means that the continue button is disabled.
-            'data' => $dataarray,
-        ];
-
-        return $response;
+    public function render_page(int $optionid, int $userid = 0): array {
+        return [];
     }
 
     /**
@@ -264,15 +187,9 @@ class askforconfirmation implements bo_condition {
         bool $fullwidth = true
     ): array {
 
-        global $USER;
-
-        if ($userid === null) {
-            $userid = $USER->id;
-        }
         $label = $this->get_description_string(false, $full);
 
-        return bo_info::render_button($settings, $userid, $label, 'btn btn-secondary mt-1 mb-1', false, $fullwidth,
-            'button', 'option', false, 'noforward');
+        return bo_info::render_button($settings, $userid, $label, 'alert alert-success', true, $fullwidth, 'alert', 'option');
     }
 
     /**
@@ -283,11 +200,13 @@ class askforconfirmation implements bo_condition {
      * @return string
      */
     private function get_description_string($isavailable, $full): string {
-
-        // In this case, we dont differentiate between availability, because when it blocks...
-        // ... it just means that it can be booked. Blocking has a different functionality here.
-        $description = get_string('bocondaskforconfirmationnotavailable', 'mod_booking');
-
+        if ($isavailable) {
+            $description = $full ? get_string('bocondcapbookingchoosefullavailable', 'mod_booking') :
+                get_string('bocondcapbookingchooseavailable', 'mod_booking');
+        } else {
+            $description = $full ? get_string('bocondcapbookingchoosefullnotavailable', 'mod_booking') :
+                get_string('bocondcapbookingchoosenotavailable', 'mod_booking');
+        }
         return $description;
     }
 }

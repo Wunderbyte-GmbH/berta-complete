@@ -273,6 +273,12 @@ class shortcodes {
             false,
         );
 
+        // Possibility to add customfieldfilter.
+        $customfieldfilter = explode(',', ($args['customfieldfilter'] ?? ''));
+        if (!empty($customfieldfilter)) {
+            self::apply_customfieldfilter($table, $customfieldfilter);
+        }
+
         $table->showcountlabel = false;
 
         // If "rightside" is in the "exclude" array, then we do not show the rightside area (containing the "Book now" button).
@@ -283,6 +289,36 @@ class shortcodes {
         $out = $table->outhtml($perpage, true);
 
         return $out;
+    }
+
+    /**
+     * Add customfield filter as defined shortnames in args to table.
+     *
+     * @param mixed $table
+     * @param array $args
+     *
+     * @return void
+     *
+     */
+    private static function apply_customfieldfilter(&$table, $args) {
+        if (empty($args)) {
+            return;
+        }
+        $customfields = booking_handler::get_customfields();
+        if (empty($customfields)) {
+            return;
+        }
+        foreach ($customfields as $customfield) {
+            if (!isset($customfield->shortname)) {
+                continue;
+            }
+            if (!in_array($customfield->shortname, $args)) {
+                continue;
+            }
+            // Check for multi fields, explode values as settings for standardfilter.
+            $standardfilter = new standardfilter($customfield->shortname, format_string($customfield->name));
+            $table->add_filter($standardfilter);
+        }
     }
 
     /**
@@ -632,6 +668,10 @@ class shortcodes {
         foreach ($filtercolumns as $key => $localized) {
             $standardfilter = new standardfilter($key, $localized);
             $table->add_filter($standardfilter);
+        }
+        $customfieldfilter = explode(',', ($args['customfieldfilter'] ?? ''));
+        if (!empty($customfieldfilter)) {
+            self::apply_customfieldfilter($table, $customfieldfilter);
         }
 
         $table->showfilterontop = true;
