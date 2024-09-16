@@ -64,6 +64,7 @@ $string['collapsedescriptionmaxlength'] = 'Beschreibungen einklappen (Zeichenanz
 $string['collapsedescriptionmaxlength_desc'] = 'Geben Sie die maximale Anzahl an Zeichen, die eine Beschreibung haben darf, ein.
 Beschreibungen, die länger sind werden eingeklappt.';
 $string['dayofweek'] = 'Wochentag';
+$string['reihenprogramm'] = "Reihen/Programme";
 $string['editavailabilityanddescription'] = 'Verfügbarkeit & Beschreibung bearbeiten';
 $string['editavailability'] = 'Verfügbarkeit bearbeiten';
 $string['editdescription'] = 'Beschreibung bearbeiten';
@@ -578,3 +579,12 @@ $string['jointevent'] = "Gemeinsame Veranstaltung";
 $string['editteachers'] = "Lehrende bearbeiten";
 
 $string['search'] = "Suchbegriff eingeben";
+
+$string['basicqualification'] = "";
+$string['teachingcompetence'] = "Teaching Competence";
+$string['teachingconversations'] = "";
+$string['tailoredsupport'] = "";
+$string['qualificationforstudent'] = "";
+$string['coachingforstaff'] = "";
+$string['studyworkshops'] = "Studierwerkstätten";
+$string['mentoring'] = "Mentoring";

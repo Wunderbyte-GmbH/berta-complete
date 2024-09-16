@@ -221,7 +221,7 @@ $string['confirmzeropricecheckoutbody'] = 'Für diese Buchung ist keine Zahlung 
 Wollen Sie fortfahren und direkt buchen?';
 $string['confirmzeropricecheckouttitle'] = 'Jetzt buchen';
 $string['costcenterstrings'] = 'Übersetzungen für Kostenstellen';
-$string['costcenterstrings_desc'] = 'Übersetzungen für Kostenstellen';
+$string['costcenterstrings_desc'] = 'Übersetzungen für Kostenstellen: Pro Kostenstelle eine Zeile in dem Format: <br>kostenstelle1,Klarname für Kostenstelle 1<br>kostenstelle2,Klarname für Kostenstelle 2';
 $string['credit'] = 'Guthaben:';
 $string['creditnotmatchbalance'] = 'Summe der Guthaben in Tabelle local_shopping_cart_credits stimmt nicht mit dem letzten Saldo (balance) überein!
 Möglicherweise haben Sie doppelte oder fehlerhafte Einträge in der credits-Tabelle für den User mit userid {$a}.';

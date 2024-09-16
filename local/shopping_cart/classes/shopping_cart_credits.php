@@ -322,6 +322,7 @@ class shopping_cart_credits {
         $data->userid = $userid;
         $data->credits = -$checkoutdata['deductible'];
         $data->balance = $checkoutdata['remainingcredit']; // Balance hold the new balance after this transaction.
+        $data->costcenter = $checkoutdata['costcenter'] ?? '';
         $data->currency = $checkoutdata['currency'];
         $data->usermodified = $USER->id;
         $data->timemodified = $now;
@@ -330,7 +331,7 @@ class shopping_cart_credits {
         $DB->insert_record('local_shopping_cart_credits', $data);
 
         $cartstore = cartstore::instance($userid);
-        $cartstore->set_credit($data->balance, $data->currency);
+        $cartstore->set_credit($data->balance, $data->currency, $data->costcenter);
     }
 
     /**
@@ -338,21 +339,28 @@ class shopping_cart_credits {
      *
      * @param int $userid
      * @param int $method
+     * @param string $costcenter
+     *
      * @return bool
      */
     public static function credit_paid_back(
         int $userid,
-        int $method = LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH
+        int $method = LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH,
+        string $costcenter = ''
     ) {
         global $USER;
 
-        [$balance, $currency] = self::get_balance($userid);
+        [$balance, $currency] = self::get_balance($userid, $costcenter);
 
         $data = [];
 
         $data['deductible'] = round($balance, 2);
         $data['remainingcredit'] = 0;
         $data['currency'] = $currency;
+
+        if (!empty($costcenter)) {
+            $data['costcenter'] = $costcenter;
+        }
 
         self::use_credit($userid, $data);
 
@@ -364,6 +372,7 @@ class shopping_cart_credits {
         $ledgerrecord->price = (float) (-1.0) * $data['deductible'];
         $ledgerrecord->credits = (float) (-1.0) * $data['deductible'];
         $ledgerrecord->currency = $currency;
+        $ledgerrecord->costcenter = $costcenter;
         $ledgerrecord->componentname = 'local_shopping_cart';
         $ledgerrecord->payment = $method;
         $ledgerrecord->paymentstatus = LOCAL_SHOPPING_CART_PAYMENT_SUCCESS;

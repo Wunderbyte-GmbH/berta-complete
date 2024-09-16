@@ -63,6 +63,7 @@ $string['collapsedescriptionoff'] = 'Do not collapse descriptions';
 $string['collapsedescriptionmaxlength'] = 'Collapse descriptions (max. length)';
 $string['collapsedescriptionmaxlength_desc'] = 'Enter the maximum length of characters of a description. Descriptions having more characters will be collapsed.';
 $string['dayofweek'] = 'Weekday';
+$string['reihenprogramm'] = "Series/Programs";
 $string['editavailabilityanddescription'] = 'Edit availability & description';
 $string['editavailability'] = 'Edit availability';
 $string['editdescription'] = 'Edit description';
@@ -488,7 +489,7 @@ $string['phdstudents'] = "PhD Students";
 $string['postdoc'] = "Postdocs";
 $string['fuehrungskraefte'] = "Executive staff";
 $string['allgemeinespersonal'] = "General staff";
-$string['wissenschaftlichespersonal'] = "Academic university staff";
+$string['wissenschaftlichespersonal'] = "Academic staff";
 $string['studierende'] = "Students";
 $string['interessierteoeffentlichkeit'] = "General public";
 
@@ -566,3 +567,12 @@ $string['jointevent'] = "Joint event";
 $string['editteachers'] = "Edit teachers";
 
 $string['search'] = "Suchbegriff eingeben";
+
+$string['basicqualification'] = "Basic Qualification for Staff New to Teaching";
+$string['teachingcompetence'] = "Teaching Competence";
+$string['teachingconversations'] = "Teaching Conversations";
+$string['tailoredsupport'] = "Tailored Support for Teachers";
+$string['qualificationforstudent'] = "Qualification for Student Multipliers";
+$string['coachingforstaff'] = "Coaching for Staff New to Teaching";
+$string['studyworkshops'] = "Study Workshops";
+$string['mentoring'] = "Mentoring";
