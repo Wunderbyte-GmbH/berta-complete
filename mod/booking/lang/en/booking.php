@@ -194,8 +194,10 @@ $string['bocondbookingtime'] = 'Only bookable within a certain time';
 $string['bocondbookingtimeavailable'] = 'Within normal booking times.';
 $string['bocondbookingtimenotavailable'] = 'Not within normal booking times.';
 $string['bocondbookitbutton'] = 'bookitbutton: Show the normal booking button.';
-$string['bocondcapbookingchoosenotavailable'] = 'No right to book';
+$string['bocondcapbookingchooseavailable'] = 'Right to book';
+$string['bocondcapbookingchoosefullavailable'] = 'Right to book on this booking instance';
 $string['bocondcapbookingchoosefullnotavailable'] = 'No right to book on this booking instance';
+$string['bocondcapbookingchoosenotavailable'] = 'No right to book';
 $string['bocondcustomform'] = 'Fill out form';
 $string['bocondcustomformavailable'] = 'Book it';
 $string['bocondcustomformfullavailable'] = 'Booking is possible';
@@ -611,7 +613,7 @@ $string['canceldependenton'] = 'Cancellation period dependent on';
 $string['canceldependenton_desc'] = 'Choose the date that should be used as "start" for the setting
 "Disallow users to cancel their booking n days before start. Minus means, that users can still cancel n
 days AFTER course start.".<br>
-This will also set the <i>service period</i> of courses in shopping cart accordingly (if shopping cart is installed).';
+This will also set the <i>service period</i> of courses in shopping cart accordingly (if shopping cart is installed). This also affects installment payments. You can take out the semester in the Dates section of a booking option, if you want to use the coursestart instead of the semesterstart.';
 $string['cancellationsettings'] = 'Cancellation settings ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
 $string['cancelmyself'] = 'Undo my booking';
 $string['canceloption'] = "Cancel boooking option";
