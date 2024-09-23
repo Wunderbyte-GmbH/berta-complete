@@ -30,7 +30,9 @@ global $CFG;
 use mod_booking\booking_option;
 use mod_booking\booking_campaigns\campaigns_info;
 use mod_booking\singleton_service;
+use mod_booking\semester;
 use mod_booking\bo_availability\bo_info;
+use mod_booking\price as Mod_bookingPrice;
 use local_shopping_cart\shopping_cart;
 use local_shopping_cart\local\cartstore;
 
@@ -72,7 +74,7 @@ class mod_booking_generator extends testing_module_generator {
      *
      */
     public function create_instance($record = null, ?array $options = null) {
-        global $CFG;
+        global $CFG, $DB;
 
         require_once($CFG->dirroot . '/mod/booking/lib.php');
 
@@ -99,6 +101,15 @@ class mod_booking_generator extends testing_module_generator {
                 $record->{$name} = $value;
             }
         }
+
+        // To set default semester is mandatory.
+        $semesterid = semester::get_semester_with_highest_id();
+        if (!empty($record->semester)) {
+            if (!$semesterid = $DB->get_field('booking_semesters', 'id', ['identifier' => $record->semester])) {
+                throw new Exception('The specified booking semester with name "' . $record->semester . '" does not exist');
+            }
+        }
+        $record->semesterid = $semesterid;
 
         return parent::create_instance($record, $options);
     }
@@ -158,21 +169,14 @@ class mod_booking_generator extends testing_module_generator {
             //$semester = new semester($record->semesterid);
         }
 
-        // Prepare prices for being used in option(s) if exist.
-        $pricecategories = $DB->get_records('booking_pricecategories', ['disabled' => 0]);
-        if (!empty($pricecategories)) {
-            foreach ($pricecategories as $pricecat) {
-                $catname = "pricegroup_".$pricecat->identifier;
-                // We apply default values only if form does not contain it.
-                if (empty($record->{$catname})) {
-                    $record->{$catname} = ["bookingprice_".$pricecat->identifier => (float) $pricecat->defaultvalue];
-                }
-            }
-        }
-
         // Create / save booking option(s).
         if ($record->id = booking_option::update($record, $context)) {
             $record->optionid = $record->id;
+
+            // Add price (via API).
+            $price = new Mod_bookingPrice('option', $record->id);
+            $price->set_data($record);
+            booking_option::update($record, $context);
         }
 
         return $record;

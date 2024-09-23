@@ -5,7 +5,6 @@ Feature: Enabling installments as admin configuring installments as a teacher an
     Given the following "users" exist:
       | username | firstname | lastname | email                | idnumber |
       | teacher1 | Teacher   | 1        | teacher1@example.com | T1       |
-      | admin1   | Admin     | 1        | admin1@example.com   | A1       |
       | student1 | Student   | 1        | student1@example.com | S1       |
       | student2 | Student   | 2        | student2@example.com | S2       |
     And the following "courses" exist:
@@ -15,12 +14,8 @@ Feature: Enabling installments as admin configuring installments as a teacher an
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | teacher1 | C1     | manager        |
-      | admin1   | C1     | manager        |
       | student1 | C1     | student        |
       | student2 | C1     | student        |
-    And the following "activities" exist:
-      | activity | course | name        | intro                | bookingmanager | eventtype | Default view for booking options | Send confirmation e-mail |
-      | booking  | C1     | BookingInst | Booking Installments | teacher1       | Webinar   | All bookings                     | Yes                      |
     And the following "mod_booking > pricecategories" exist:
       | ordernum | identifier | name  | defaultvalue | disabled | pricecatsortorder |
       | 1        | default    | Price | 88           | 0        | 1                 |
@@ -38,6 +33,9 @@ Feature: Enabling installments as admin configuring installments as a teacher an
     And the following "local_shopping_cart > plugin setup" exist:
       | account  |
       | Account1 |
+    And the following "activities" exist:
+      | activity | course | name        | intro                | bookingmanager | eventtype | Default view for booking options | Send confirmation e-mail |
+      | booking  | C1     | BookingInst | Booking Installments | teacher1       | Webinar   | All bookings                     | Yes                      |
     ## Default - enable installments by admin.
     And I log in as "admin"
     And the following config values are set as admin:

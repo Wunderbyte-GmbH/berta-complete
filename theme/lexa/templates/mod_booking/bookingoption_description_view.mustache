@@ -150,8 +150,8 @@
         {{/editurl}}
         </div>
     </div>
-        <div class="row mod-booking-row">
-            <div class="col-md-7">
+        <div class="row mod-booking-row lexa-block">
+            <div class="col-md-7 lexa-ib">
                 <div class="d-flex mb-3 align-items-center justify-content-start">
                 <span class="mr-2">{{{ bookings }}}</span>
                 <span class="mr-2">{{{ botags }}}</span>
@@ -161,11 +161,11 @@
                 </div>
                 {{#description}}
                 <div class="mb-6">
-                <div class="content"><p>{{{.}}}</p></div>
+                <div class="content"><span class="lexa-input">{{{.}}}</span></div>
                 </div>
                 {{/description}}
                 {{#datesexist}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} optiondates, local_urise {{/str}}</h2>
                         {{#showcollapse}}
                         <div class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#collapseDates"
@@ -205,37 +205,37 @@
                 </div>
                 {{/datesexist}}
                 {{#voraussetzungen}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} requirements, local_urise {{/str}}</h2>
-                    {{{.}}}
+                     <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/voraussetzungen}}
                 {{#zielgruppe}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} targetaud, local_urise {{/str}}</h2>
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/zielgruppe}}
                 {{#kursziel}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} goals, local_urise {{/str}}</h2>
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/kursziel}}
                 {{#inhalte}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} coursecontent, local_urise {{/str}}</h2>
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/inhalte}}
                 {{#methoden}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} coursemethods, local_urise {{/str}}</h2>
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/methoden}}
                 {{#teachers.0}}
-                <div class="my-6 detailteacher">
+                <div class="my-7 detailteacher">
                     <h2 class="font-weight-normal"> {{#str}} teachers, local_urise {{/str}}</h2>
                     {{#teachers}}
                     <div class="profile-card d-flex mt-5 align-items-center mb-3">
@@ -247,7 +247,7 @@
                         <!-- Placeholder for profile icon -->
                         <div class="profile-info">
                         <h5>{{{firstname}}} {{{lastname}}}</h5>
-                        <p>{{{description}}}</p>
+                        <p class="lexa-input">{{{description}}}</p>
                         </div>
                     </div>
                     <a href="{{{teacherurl}}}" class="btn btn-outline-dark bg-white gradienthover">
@@ -257,27 +257,27 @@
                     </div>
                 {{/teachers.0}}
                 {{#location}}
-                <div class="my-6 location">
+                <div class="my-7 location">
                     <h2 class="font-weight-normal"> {{#str}} location, local_urise {{/str}}</h2>
                     {{#entities}}
                         {{{description}}}
                     {{/entities}}
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                     </a>
                 </div>
                 {{/location}}
                 {{#sonstigeinfos}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} additionalinfo, local_urise {{/str}}</h2>
-                    {{{.}}}
+                    <span class="lexa-input">{{{.}}}</span>
                 </div>
                 {{/sonstigeinfos}}
                 {{#responsiblecontactuser}}
-                <div class="my-6">
+                <div class="my-7">
                     <h2 class="font-weight-normal"> {{#str}} orgacontact, local_urise {{/str}}</h2>
                     <div>
-                    <p>{{{firstname}}} {{{lastname}}}</p>
-                    <p>{{{description}}}</p>
+                    <p class="lexa-input">{{{firstname}}} {{{lastname}}}</p>
+                    <p class="lexa-input">{{{description}}}</p>
                     <p>
                 <i class="fa-solid fa-fw fa-envelope"></i>
                 <a href="mailto:{{{email}}}">{{{email}}}</a>
@@ -286,7 +286,7 @@
                 </div>
                 {{/responsiblecontactuser}}
             </div>
-            <div class="col-md-5">
+            <div class="col-md-5 lexa-ib lexa-sticky-column" >
                 <div class="card price-card border-0">
                     {{#imageurl}}
                     <img class="w-100 uriseimage" src="{{imageurl}}" alt="{{title}}">
@@ -397,7 +397,7 @@
                             </div>
                             {{/competency}}
                             {{#organisation }}
-                                <span class="badge bg-gray badge-pill">
+                                <span class="badge bg-gray badge-pill" style="white-space: normal;">
                                     {{ . }}
                                 </span>
                             {{/organisation }}
