@@ -435,6 +435,7 @@ $string['bookingduration'] = 'Dauer';
 $string['bookingfailed'] = 'Buchung gescheitert';
 $string['bookingfull'] = 'Ausgebucht';
 $string['bookingfulldidntregister'] = 'Es wurden nicht alle Nutzer:innen übertragen, da die Option bereits ausgebucht ist!';
+$string['bookingidfilter'] = 'Buchungsinstanz';
 $string['bookingimages'] = 'Header-Bilder für Buchungsoptionen hochladen - diese müssen exakt den selben Namen haben, wie der jeweilige Wert, den das ausgewählte benutzerdefinierte Feld in der jeweiligen Buchungsoption hat.';
 $string['bookingimagescustomfield'] = 'Benutzerdefiniertes Feld von Buchungsoptionen, mit dem die Header-Bilder gematcht werden';
 $string['bookinginstance'] = 'Buchungsinstanz';
@@ -909,6 +910,7 @@ Da das Duplizieren asynchron über einen Adhoc-Task gemacht wird, stellen Sie bi
 $string['duplicatename'] = 'Diese Bezeichnung für eine Buchungsoption existiert bereits. Bitte wählen Sie eine andere.';
 $string['duplication'] = 'Duplizierung';
 $string['duplicationrestore'] = 'Buchungsinstanzen: Duplizieren, Backup und Wiederherstellen';
+$string['duplicationrestorebookings'] = 'Buchungsoptionen inkludieren ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
 $string['duplicationrestoredesc'] = 'Hier können Sie einstellen, welche Informationen beim Duplizieren bzw. beim Backup / Wiederherstellen von Buchungsinstanzen inkludiert werden sollen.';
 $string['duplicationrestoreentities'] = 'Entities inkludieren';
 $string['duplicationrestoreoption'] = 'Buchungsoptionen: Duplizieren ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
@@ -1246,6 +1248,7 @@ $string['linktoteachersinstancereport'] = '<p><a href="{$a}" target="_self">&gt;
 $string['listentoaddresschange'] = "Reagieren auf Änderungen des Ortes der Buchungsoption";
 $string['listentoresponsiblepersonchange'] = "Reagieren auf Änderungen der verantwortlichen Person der Buchungsoption";
 $string['listentoteacherschange'] = "Reagieren auf Änderungen des Lehrerenden der Buchungsoption";
+$string['listentotextchange'] = "Reagieren auf Änderungen des Textes der Buchungsoption";
 $string['listentotimestampchange'] = "Reagieren auf Änderungen der Zeitpunktes (und Tages) der Buchungsoption";
 $string['location'] = 'Ort';
 $string['location_help'] = 'Sie können den Namen des Orts manuell eingeben oder aus einer Liste von

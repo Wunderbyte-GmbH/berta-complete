@@ -76,7 +76,10 @@
     {{#canpayback}}
 
     {{#costcentercredits}}
-        <div class="d-flex w-100 justify-content-between">
+        <div class="d-flex w-100 justify-content-between costcenterlabel"
+            {{#costcenterlabel}} data-costcenter="{{.}}" {{/costcenterlabel}}
+            {{^costcenterlabel}} data-costcenter="{{#str}} nocostcenter, local_shopping_cart {{/str}}" {{/costcenterlabel}}
+            >
             <div>
             {{#str}} paymentmethodcredits, local_shopping_cart {{/str}}:<br>
             <span class="costcenter">
@@ -95,7 +98,10 @@
                 </h5>
             </div>
         </div>
-        <div class="shopping_cart_history_payback_buttons">
+        <div class="shopping_cart_history_payback_buttons"
+            {{#costcenterlabel}} data-costcenter="{{.}}" {{/costcenterlabel}}
+            {{^costcenterlabel}} data-costcenter="{{#str}} nocostcenter, local_shopping_cart {{/str}}" {{/costcenterlabel}}
+            >
             <button type="button" class="shopping_cart_history_paidback_button btn btn-secondary btn-sm"
                 data-userid='{{userid}}'
                 data-method='6'
@@ -124,6 +130,30 @@
         <span class="getrefundforcredit">
             {{#str}} getrefundforcredit, local_shopping_cart {{/str}}
         </span>
+            {{#costcentercredits}}
+                <div class="d-flex w-100 justify-content-between costcenterlabel"
+                    {{#costcenterlabel}} data-costcenter="{{.}}" {{/costcenterlabel}}
+                    {{^costcenterlabel}} data-costcenter="{{#str}} nocostcenter, local_shopping_cart {{/str}}" {{/costcenterlabel}}
+                    >
+                    <div>
+                    {{#str}} paymentmethodcredits, local_shopping_cart {{/str}}:<br>
+                    <span class="costcenter">
+                        {{#costcenterlabel}} {{.}} {{/costcenterlabel}}
+                        {{^costcenterlabel}} {{#str}} nocostcenter, local_shopping_cart {{/str}} {{/costcenterlabel}}
+                    </span>
+                    </div>
+                    <div class="costcentercredits">
+                        <h5>
+                            <span class="credit_total">
+                                {{balance}}
+                            </span>
+                            <span class="currency_credit">
+                                {{currency}}
+                            </span>
+                        </h5>
+                    </div>
+                </div>
+            {{/costcentercredits}}
     {{/canpayback}}
 </li>
 {{/costcentercredits.0}}

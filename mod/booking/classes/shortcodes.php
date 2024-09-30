@@ -29,6 +29,7 @@ namespace mod_booking;
 use cache_helper;
 use core_cohort\reportbuilder\local\entities\cohort;
 use html_writer;
+use local_wunderbyte_table\filters\types\intrange;
 use local_wunderbyte_table\filters\types\standardfilter;
 use mod_booking\booking;
 use mod_booking\customfield\booking_handler;
@@ -432,6 +433,9 @@ class shortcodes {
             unset($table->subcolumns['rightside']);
         }
 
+        $table->sort_default_column = 'coursestarttime';
+        $table->sort_default_order = SORT_ASC;
+
         $out = $table->outhtml($perpage, true);
 
         return $out;
@@ -669,9 +673,20 @@ class shortcodes {
             $standardfilter = new standardfilter($key, $localized);
             $table->add_filter($standardfilter);
         }
+
+        self::apply_bookinginstance_filter($table);
+
         $customfieldfilter = explode(',', ($args['customfieldfilter'] ?? ''));
         if (!empty($customfieldfilter)) {
             self::apply_customfieldfilter($table, $customfieldfilter);
+        }
+        // Add defined intrange filter. You might need to purge your caches to make this work.
+        if (isset($args['intrangefilter'])) {
+            $intrangecolumns = explode(",", $args['intrangefilter']);
+            foreach ($intrangecolumns as $colname) {
+                $intrangefilter = new intrange($colname);
+                $table->add_filter($intrangefilter);
+            }
         }
 
         $table->showfilterontop = true;
@@ -725,8 +740,6 @@ class shortcodes {
         return $out;
     }
 
-
-
     /**
      * Base function for standard table configuration
      *
@@ -744,5 +757,26 @@ class shortcodes {
         // phpcs:ignore
         //$table->define_columns(['titleprefix']);
         return $table;
+    }
+
+    /**
+     * Add filter displaying the possible instances of mod booking.
+     *
+     * @param mixed $table
+     *
+     * @return void
+     *
+     */
+    private static function apply_bookinginstance_filter(&$table) {
+        $bookinginstances = singleton_service::get_all_booking_instances();
+
+        $filterarray = [];
+        foreach ($bookinginstances as $b) {
+            $filterarray[$b->id] = $b->name . " (ID: $b->id)";
+        }
+
+        $instancefilter = new standardfilter('bookingid', get_string('bookingidfilter', 'mod_booking'));
+        $instancefilter->add_options($filterarray);
+        $table->add_filter($instancefilter);
     }
 }

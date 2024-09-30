@@ -26,6 +26,7 @@
 namespace local_wunderbyte_table\output;
 
 use core_plugin_manager;
+use local_wunderbyte_table\editfilter;
 use local_wunderbyte_table\local\settings\tablesettings;
 use local_wunderbyte_table\wunderbyte_table;
 use renderable;
@@ -90,7 +91,7 @@ class table implements renderable, templatable {
     private $pagination = [];
 
     /**
-     * Categories are used for filter
+     * categories are used for filter
      *
      * @var array
      */
@@ -574,14 +575,25 @@ class table implements renderable, templatable {
     }
 
     /**
-     * Prepare data for use in a template
+     * Returns prepared data
      *
      * @param renderer_base $output
      * @return array
      */
     public function export_for_template(renderer_base $output) {
+        return $this->return_as_list();
+    }
+
+    /**
+     * Prepare data for use in a template
+     *
+     * @param renderer_base $output
+     * @return array
+     */
+    public function return_as_list() {
         global $CFG;
-        $data = [
+
+          $data = [
             'idstring' => $this->idstring,
             'uniqueid' => $this->uniqueid,
             'encodedtable' => $this->encodedtable,
@@ -614,84 +626,84 @@ class table implements renderable, templatable {
             'showspinner' => true,
             ];
 
-        // Only if we want to show the searchfield, we actually add the key.
-        if ($this->search) {
-            $data['search'] = true;
-            if ($CFG->version >= 2023042400) {
-                // Moodle 4.2 uses Fontawesome 6.
-                $data['searchiconclasses'] = 'fa-solid fa-magnifying-glass wunderbyteTableSearchIcon';
-            } else {
-                // For older versions, use Fontawesome 4.
-                $data['searchiconclasses'] = 'fa fa-search fa-xl mt-2';
-            }
-        }
+          // Only if we want to show the searchfield, we actually add the key.
+          if ($this->search) {
+              $data['search'] = true;
+              if ($CFG->version >= 2023042400) {
+                  // Moodle 4.2 uses Fontawesome 6.
+                  $data['searchiconclasses'] = 'fa-solid fa-magnifying-glass wunderbyteTableSearchIcon';
+              } else {
+                  // For older versions, use Fontawesome 4.
+                  $data['searchiconclasses'] = 'fa fa-search fa-xl mt-2';
+              }
+          }
 
-        // Only if we want to show the sortelements, we actually add the key.
-        if (!empty($this->sort)) {
-            if (!$this->cardsort) {
-                $data['sort'] = $this->sort;
-            } else {
-                $data['cardsort'] = $this->sort;
-            }
-        }
+          // Only if we want to show the sortelements, we actually add the key.
+          if (!empty($this->sort)) {
+              if (!$this->cardsort) {
+                  $data['sort'] = $this->sort;
+              } else {
+                  $data['cardsort'] = $this->sort;
+              }
+          }
 
-        // Only if we want to show the searchfield, we actually add the key.
-        if ($this->showreloadbutton) {
-            $data['reload'] = true;
-        }
+          // Only if we want to show the searchfield, we actually add the key.
+          if ($this->showreloadbutton) {
+              $data['reload'] = true;
+          }
 
-        // Only if we want to show the searchfield, we actually add the key.
-        if ($this->edittable) {
-            $data['edit'] = true;
-        }
+          // Only if we want to show the searchfield, we actually add the key.
+          if ($this->edittable) {
+              $data['edit'] = true;
+          }
 
-        if ($this->showcountlabel) {
-            $data['countlabel'] = true;
-        }
+          if ($this->showcountlabel) {
+              $data['countlabel'] = true;
+          }
 
-        if (!empty($this->stickyheader)) {
-            $data['stickyheader'] = $this->stickyheader;
-        }
+          if (!empty($this->stickyheader)) {
+              $data['stickyheader'] = $this->stickyheader;
+          }
 
-        if (!empty($this->tableheight)) {
-            $data['tableheight'] = $this->tableheight;
-        }
+          if (!empty($this->tableheight)) {
+              $data['tableheight'] = $this->tableheight;
+          }
 
-        // Only if we want to show the print elements, we actually add the key.
-        if ($this->showdownloadbutton) {
-            $data['print'] = true;
-            $data['printoptions'] = $this->printoptions;
-            if (!empty($this->applyfilterondownload)) {
-                $data['applyfilterondownload'] = "1";
-            }
-        }
+          // Only if we want to show the print elements, we actually add the key.
+          if ($this->showdownloadbutton) {
+              $data['print'] = true;
+              $data['printoptions'] = $this->printoptions;
+              if (!empty($this->applyfilterondownload)) {
+                  $data['applyfilterondownload'] = "1";
+              }
+          }
 
-        if (!empty($this->categories)) {
-            // If there there is a filterobject, we check if on load filters should be hidden or displayed (default).
-            if ($this->categories['filterinactive'] == true) {
-                $data['showcomponentstoggle'] = false;
-                $data['showfilterbutton'] = $this->showfilterbutton;
-                $data['filterdeactivated'] = true;
-            } else {
-                $data['showcomponentstoggle'] = true;
-                $data['showfilterbutton'] = $this->showfilterbutton;
-            }
-        }
+          if (!empty($this->categories)) {
+              // If there there is a filterobject, we check if on load filters should be hidden or displayed (default).
+              if ($this->categories['filterinactive'] == true) {
+                  $data['showcomponentstoggle'] = false;
+                  $data['showfilterbutton'] = $this->showfilterbutton;
+                  $data['filterdeactivated'] = true;
+              } else {
+                  $data['showcomponentstoggle'] = true;
+                  $data['showfilterbutton'] = $this->showfilterbutton;
+              }
+          }
 
-        if (!empty($this->actionbuttons)) {
-            $data['showactionbuttons'] = $this->actionbuttons;
-        }
+          if (!empty($this->actionbuttons)) {
+              $data['showactionbuttons'] = $this->actionbuttons;
+          }
 
-        if (class_exists('local_shopping_cart\shopping_cart')) {
-            $data['shoppingcartisavailable'] = true;
-        }
+          if (class_exists('local_shopping_cart\shopping_cart')) {
+              $data['shoppingcartisavailable'] = true;
+          }
 
-        // We need a param to check in the css if the version is minimum 4.2.
-        if ($CFG->version >= 2023042400) {
-            $data['moodleversionminfourtwo'] = 'moodleversionminfourtwo';
-        }
+          // We need a param to check in the css if the version is minimum 4.2.
+          if ($CFG->version >= 2023042400) {
+              $data['moodleversionminfourtwo'] = 'moodleversionminfourtwo';
+          }
 
-        return $data;
+            return $data;
     }
 
     /**
@@ -840,9 +852,18 @@ class table implements renderable, templatable {
                 if (isset($filterarray[$tempfiltercolumn])) {
                     // We create an array to fetch human readable data.
                     $filtercounts = count((array)$filterarray[$tempfiltercolumn]);
+                    // This is the localized string used as a key... not sure if thats intended.
                     $filtercountarray[$potentialfiltercolumn['name']] = $filtercounts;
                     $tableobject[$tokey]['filtercounter']
                         = $filtercounts > 0 ? $filtercounts : false;
+
+                    $filterclass = $potentialfiltercolumn['wbfilterclass'];
+                    $filter = new $filterclass($tempfiltercolumn, $potentialfiltercolumn['name']);
+                    $filter::prepare_filter_for_rendering($tableobject, $filterarray, $tokey);
+                    // TODO: Migrate these functions to the concerned filter classes and get rid of the following condition.
+                    if (strpos($potentialfiltercolumn['wbfilterclass'], 'intrange') !== false) {
+                        continue;
+                    }
 
                     foreach ($filterarray[$tempfiltercolumn] as $sfkey => $filter) {
 
@@ -928,5 +949,42 @@ class table implements renderable, templatable {
 
         $categories['categories'] = $tableobject;
         return $categories;
+    }
+
+    /**
+     * Reduce filter columns.
+     *
+     * @param array $onlyfilterforcolumns
+     *
+     * @return void
+     *
+     */
+    public function filter_filter($onlyfilterforcolumns = []) {
+        if (!empty($onlyfilterforcolumns)) {
+            $lefthierarchy = [];
+            $righthierarchy = [];
+            foreach ($this->categories['categories'] as $key => $value) {
+                if (
+                    $value["columnname"] !== 'id'
+                    && !in_array($value["columnname"], $onlyfilterforcolumns)
+                ) {
+                    unset($this->categories['categories'][$key]);
+                }
+            }
+            $this->categories['categories'] = array_values($this->categories['categories']);
+            foreach ($this->categories['categories'] as $catkey => $category) {
+                $left = true;
+                foreach ($category['hierarchy'] as $value) {
+                    if ($left) {
+                        $lefthierarchy[] = $value;
+                    } else {
+                        $righthierarchy[] = $value;
+                    }
+                    $left = !$left;
+                }
+                $this->categories['categories'][$catkey]['lefthierarchy'] = array_values($lefthierarchy);
+                $this->categories['categories'][$catkey]['righthierarchy'] = array_values($righthierarchy);
+            }
+        }
     }
 }

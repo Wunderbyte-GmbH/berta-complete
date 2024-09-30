@@ -23,6 +23,7 @@
  */
 
 namespace local_wunderbyte_table;
+use mod_booking\singleton_service;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -338,6 +339,12 @@ class wunderbyte_table extends table_sql {
     public $context;
 
     /**
+     * We need to store the context in the class.
+     * @var int
+     */
+    public $paramcounter = 1;
+
+    /**
      * Constructor. Does store uniqueid as hashed value and the actual classname.
      * The $uniqueid should be composed by ASCII alphanumeric characters, underlines and spaces only!
      * It is recommended to avoid of usage of simple single words like "table" to reduce chance of affecting by Moodle`s core CSS
@@ -427,6 +434,84 @@ class wunderbyte_table extends table_sql {
         $output = $PAGE->get_renderer('local_wunderbyte_table');
         return $output->render_table($tableobject, $component . "/" . $template);
     }
+
+
+    /**
+     * With this function, the table can be returned as html without lazy loading.
+     * Can be overridden in child class with own renderer.
+     *
+     * @param int $pagesize
+     * @param bool $useinitialsbar
+     * @param string $downloadhelpbutton
+     * @param array $onlyfilters
+     * @return string
+     */
+    public function filterouthtml($pagesize, $useinitialsbar, $downloadhelpbutton = '', $onlyfilters = []) {
+
+        global $PAGE, $CFG;
+        $this->pagesize = $pagesize;
+        $this->useinitialsbar = $useinitialsbar;
+        $this->downloadhelpbutton = $downloadhelpbutton;
+
+        // In the following function we return the template we want to use.
+        // This function also checks, if there is a special container template present. If so, we use it instead.
+        [$component, $template] = $this->return_component_and_template();
+
+        $tableobject = $this->printtable($pagesize, $useinitialsbar);
+
+        $tableobject->filter_filter($onlyfilters);
+
+        $output = $PAGE->get_renderer('local_wunderbyte_table');
+        return $output->render_table($tableobject, $component . "/" . $template);
+    }
+
+    /**
+     * With this function, the table can be returned as html without lazy loading.
+     * Can be overridden in child class with own renderer.
+     *
+     * @param int $pagesize
+     * @param bool $useinitialsbar
+     * @param string $downloadhelpbutton
+     * @param array $onlyfilters
+     * @return string
+     */
+    public function calendarouthtml($pagesize, $useinitialsbar, $downloadhelpbutton = '') {
+
+        global $PAGE, $OUTPUT;
+        $this->pagesize = 30;
+        $this->useinitialsbar = $useinitialsbar;
+        $this->downloadhelpbutton = $downloadhelpbutton;
+
+        // In the following function we return the template we want to use.
+        // This function also checks, if there is a special container template present. If so, we use it instead.
+        [$component, $template] = $this->return_component_and_template();
+
+        $tableobject = $this->printtable($pagesize, $useinitialsbar);
+        $data = $tableobject->return_as_list();
+
+        $rawdata = $this->rawdata;
+        $rowswithdates = [];
+        foreach ($rawdata as $rowraw) {
+
+            $rowdata = singleton_service::get_instance_of_booking_option_settings($rowraw->id);
+            if (count($rowdata->sessions) > 0) {
+                foreach ($rowdata->sessions as $session) {
+                    $url = new moodle_url('/mod/booking/optionview.php', ['optionid' => $rowdata->id,
+                                                                              'cmid' => $rowdata->cmid]);
+                    $session->url = $url->out(false);
+                    array_push($rowswithdates, $session );
+                }
+            }
+
+        }
+        $data['rowswithdates'] = json_encode($rowswithdates);
+        $allrows = $data['table']['rows'];
+        $data['table']['rows'] = array_slice($allrows, 0, 4);
+
+        return $OUTPUT->render_from_template($component . "/" . $template, $data);
+
+    }
+
 
     /**
      * A version of the out function which does not actually echo but just returns the html plus the idnumber.
@@ -1121,6 +1206,9 @@ class wunderbyte_table extends table_sql {
     public function apply_filter(string $filter, string &$searchtext = '') {
 
         global $DB;
+        $lang = current_language();
+        $key = $this->tablecachehash . $lang . "_filterjson";
+        $filtersettings = editfilter::return_filtersettings($this, $key);
 
         if ($filter !== "" && !$filterobject = json_decode($filter)) {
             throw new moodle_exception('invalidfilterjson', 'local_wunderbyte_table');
@@ -1216,7 +1304,7 @@ class wunderbyte_table extends table_sql {
         $filter = '';
         $paramkey = 'param';
 
-        // This handles the case of flexoverlap filter.
+        // This handles the case of flexoverlap filter. Datepicker.
         $foobject = [];
         foreach ($filterobject as $categorykey => $categoryvalue) {
             if (!is_object($categoryvalue)) {
@@ -1235,7 +1323,7 @@ class wunderbyte_table extends table_sql {
                 }
             }
         }
-        // Define the filter string.
+        // Define the filter string. Datepicker.
         if (count($foobject) > 1) {
             $sc = array_keys($foobject)[0]; // Startcolumn.
             $ec = array_keys($foobject)[1]; // Endcolumn.
@@ -1283,18 +1371,30 @@ class wunderbyte_table extends table_sql {
             if (!empty($categoryvalue)) {
                 // For the first filter in a category we append AND.
                 $filter .= " AND ( ";
-                $paramcounter = 1;
                 $categorycounter = 1;
 
+                $filtersetting = $filtersettings[$categorykey];
+                $classname = $filtersetting['wbfilterclass'];
+
+                $class = new $classname($categorykey, $filtersetting['localizedname']);
+                $class->apply_filter($filter, $categorykey, $categoryvalue, $this);
+
+                // TODO: Use apply_filter method for all other filter types.
+                // Eventually we will get rid of the following section.
+                // ... for the moment, make sure to escape it for classes already implementing the new way.
+                if (strpos($classname, "intrange") || strpos($classname, "standard")) {
+                    $filter .= " ) ";
+                    continue;
+                }
+
                 // We check if we are applying a timestamp comparison which is stored in an object.
+                // TODO: Better check if its a datepicker.
                 $datecomparison = false;
                 if (is_object($categoryvalue)) {
                     $datecomparison = true;
                 }
 
                 foreach ($categoryvalue as $key => $value) {
-                    // We use the while function to find a param we can actually use.
-                    $paramsvaluekey = $paramkey . $paramcounter;
 
                     if ($datecomparison == false) {
                         // If there are more than one filter per category they will be concatenated via OR.
@@ -1304,82 +1404,24 @@ class wunderbyte_table extends table_sql {
                         $filter .= $categorycounter == 1 ? "" : " AND ";
                     }
 
-                    while (isset($this->sql->params[$paramkey . $paramcounter])) {
-                        $paramcounter++;
-                        $paramsvaluekey = $paramkey . $paramcounter;
-                    }
-
                     if ($datecomparison == true) {
                         $filter .= $categorykey . ' ' . key((array) $value) . ' ' . current((array) $value);
                     } else if (isset($this->subcolumns['datafields'][$categorykey]['explode'])
                     || isset($this->subcolumns['datafields'][$categorykey]['jsonattribute'])) {
+                        $paramsvaluekey = $this->set_params("%" . $value ."%");
                         $filter .= $DB->sql_like("$categorykey", ":$paramsvaluekey", false);
-                        $this->sql->params[$paramsvaluekey] = "%$value%";
                     } else if (is_numeric($value)) {
 
                         // Here we check if it's an hourslist filter.
                         if (isset($this->subcolumns['datafields'][$categorykey]['local_wunderbyte_table\filters\types\hourlist'])) {
+                            $paramsvaluekey = $this->set_params((string) ($value + $delta), false);
                             $filter .= filter::apply_hourlist_filter($categorykey, ":$paramsvaluekey");
 
                             $delta = filter::get_timezone_offset();
-                            $value = $value + $delta;
-
-                            $this->sql->params[$paramsvaluekey] = "". $value;
                         } else {
+                            $paramsvaluekey = $this->set_params((string) $value, false);
                             $filter .= $DB->sql_like($DB->sql_concat($categorykey), ":$paramsvaluekey", false);
-                            $this->sql->params[$paramsvaluekey] = "". $value;
                         }
-                    } else {
-
-                        // We want to find the value in an array of values.
-                        // Therefore, we have to use or as well.
-                        // First, make sure we have enough params we can use..
-
-                        $filter .= " ( ";
-
-                        while (isset($this->sql->params[$paramkey . $paramcounter])) {
-                            $paramcounter++;
-                            $paramsvaluekey = $paramkey . $paramcounter;
-                        }
-
-                        $escapecharacter = self::return_escape_character($value);
-                        $filter .= $DB->sql_like("$categorykey", ":$paramsvaluekey", false, false, false, $escapecharacter);
-                        $this->sql->params[$paramsvaluekey] = "$value";
-
-                        $filter .= " OR ";
-
-                        // Make sure again we have enough params we can use..
-                        while (isset($this->sql->params[$paramkey . $paramcounter])) {
-                            $paramcounter++;
-                            $paramsvaluekey = $paramkey . $paramcounter;
-                        }
-
-                        $filter .= $DB->sql_like("$categorykey", ":$paramsvaluekey", false, false, false, $escapecharacter);
-                        $this->sql->params[$paramsvaluekey] = "$value,%";
-
-                        $filter .= " OR ";
-
-                        // Make sure again we have enough params we can use..
-                        while (isset($this->sql->params[$paramkey . $paramcounter])) {
-                            $paramcounter++;
-                            $paramsvaluekey = $paramkey . $paramcounter;
-                        }
-
-                        $filter .= $DB->sql_like("$categorykey", ":$paramsvaluekey", false, false, false, $escapecharacter);
-                        $this->sql->params[$paramsvaluekey] = "%,$value";
-
-                        $filter .= " OR ";
-
-                        // Make sure again we have enough params we can use..
-                        while (isset($this->sql->params[$paramkey . $paramcounter])) {
-                            $paramcounter++;
-                            $paramsvaluekey = $paramkey . $paramcounter;
-                        }
-
-                        $filter .= $DB->sql_like("$categorykey", ":$paramsvaluekey", false, false, false, $escapecharacter);
-                        $this->sql->params[$paramsvaluekey] = "%,$value,%";
-
-                        $filter .= " ) ";
                     }
                     $categorycounter++;
                 }
@@ -1430,21 +1472,8 @@ class wunderbyte_table extends table_sql {
         $filterarray = [];
 
         foreach ($searcharray as $searchword) {
-
-            // Make sure we can use the param.
-            $originalparamsvaluekey = 'param';
-            $paramsvaluekey = $originalparamsvaluekey;
-
-            $counter = 1;
-
-            while (isset($this->sql->params[$paramsvaluekey])) {
-                $paramsvaluekey = $originalparamsvaluekey . $counter;
-                $counter++;
-            }
-
+            $paramsvaluekey = $this->set_params("%" . $searchword . "%", true);
             $filterarray[] = $DB->sql_like("wbfulltextsearch", ":$paramsvaluekey", false);
-            $this->sql->params[$paramsvaluekey] = "%$searchword%";
-
         }
 
         // Now we have the filterarray with all the filters for every word.
@@ -1709,7 +1738,7 @@ class wunderbyte_table extends table_sql {
      * @param string $paramvalue
      * @return string
      */
-    private static function return_escape_character($paramvalue) {
+    public static function return_escape_character($paramvalue) {
 
         $values = ['\\', '@', '~', '[', ']'];
 
@@ -1841,5 +1870,31 @@ class wunderbyte_table extends table_sql {
                 }
             }
         }
+    }
+
+    /** Set params with key for table.
+     * You can use extra quotes added to the string or set the param without additional quotes.
+     *
+     *
+     * @param string $value
+     * @param bool $useextraquotes
+     *
+     * @return string
+     *
+     */
+    public function set_params(string $value, bool $useextraquotes = true): string {
+
+        $paramsvaluekey = 'param1';
+        while (isset($this->sql->params['param' . $this->paramcounter])) {
+            $this->paramcounter++;
+            $paramsvaluekey = 'param' . $this->paramcounter;
+        }
+        if ($useextraquotes) {
+            $this->sql->params[$paramsvaluekey] = "$value";
+        } else {
+            $this->sql->params[$paramsvaluekey] = $value;
+        }
+
+        return $paramsvaluekey;
     }
 }

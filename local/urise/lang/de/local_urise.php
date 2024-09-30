@@ -83,7 +83,7 @@ $string['sportsdivisions'] = 'Sparten';
 $string['titleprefix'] = 'Kursnummer';
 $string['unknown'] = 'Unbekannt';
 
-$string['format'] = "Kursformat";
+$string['format'] = "Format";
 $string['german'] = 'Deutsch';
 $string['english'] = 'Englisch';
 $string['onsite'] = 'Vor Ort';
@@ -419,7 +419,7 @@ $string['showdates'] = "Termine anzeigen";
 $string['teachers'] = "Trainer*in";
 $string['gotoprofile'] = "Zum Profil";
 $string['buchungsbedingungen'] = "Buchungsbedingungen";
-$string['orgacontact'] = "Kontakt der Anbieter*innen";
+$string['orgacontact'] = "Kontakt für inhaltliche Rückfragen";
 $string['aboutoffer'] = "Über das Angebot";
 
 $string['zgcommunities'] = "Interessant für";

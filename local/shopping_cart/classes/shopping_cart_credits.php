@@ -43,9 +43,10 @@ class shopping_cart_credits {
      *
      * @param int $userid
      * @param string $costcenter
+     * @param bool $withempty
      * @return array
      */
-    public static function get_balance(int $userid, string $costcenter = ''): array {
+    public static function get_balance(int $userid, string $costcenter = '', $withempty = true): array {
 
         global $CFG, $DB;
 
@@ -69,7 +70,10 @@ class shopping_cart_credits {
         $params['costcenter'] = $costcenter;
         if (!empty($samecostcenterforcredits)) {
             $defaultcostcenter = get_config('local_shopping_cart', 'defaultcostcenterforcredits');
-            if (empty($defaultcostcenter) || $defaultcostcenter == $costcenter) {
+            if (
+                $withempty
+                && (empty($defaultcostcente) || ($defaultcostcenter == $costcenter))
+            ) {
                 $defaultcostcentersql = " OR COALESCE(NULLIF(costcenter, ''), '') = '' ";
             } else {
                 $defaultcostcentersql = '';
@@ -95,7 +99,7 @@ class shopping_cart_credits {
             $balance = 0;
         } else {
             $balance = $balancerecord->balance ?? 0;
-            $currency = $balancerecord->currency ?? 0;
+            $currency = $balancerecord->currency ?? 'EUR';
         }
 
         return [round($balance, 2), $currency];
@@ -119,13 +123,13 @@ class shopping_cart_credits {
         $sql = 'SELECT id, balance, currency, costcenter
                 FROM {local_shopping_cart_credits}
                 WHERE userid = :userid
+                AND balance <> 0
                 AND id IN (
                     SELECT MAX(id)
                     FROM {local_shopping_cart_credits}
                     WHERE userid = :userid1
                     GROUP BY COALESCE(NULLIF(costcenter, \'\'), \'\')
                 )
-
                 ORDER BY costcenter ASC';
 
         // Get the latest balance of the given costcenter.
@@ -177,7 +181,7 @@ class shopping_cart_credits {
             $usecredit = self::use_credit_fallback($usecredit, $userid);
         }
 
-        if (empty($data['costcenter'])) {
+        if (empty($data['costcenter']) && !empty($data['items'] )) {
             foreach ($data['items'] as $item) {
                 $item = (array)$item;
                 $data['costcenter'] = empty($data['costcenter']) ? ($item['costcenter'] ?? '') : $data['costcenter'];
@@ -275,7 +279,7 @@ class shopping_cart_credits {
 
         global $DB, $USER;
 
-        [$balance, $newcurrency] = self::get_balance($userid, $costcenter);
+        [$balance, $newcurrency] = self::get_balance($userid, $costcenter, false);
 
         $now = time();
 
@@ -315,9 +319,10 @@ class shopping_cart_credits {
      *
      * @param int $userid
      * @param array $checkoutdata
+     * @param bool $fallbackonempty
      * @return void
      */
-    public static function use_credit(int $userid, $checkoutdata) {
+    public static function use_credit(int $userid, $checkoutdata, $fallbackonempty = true) {
 
         global $DB, $USER;
 
@@ -328,9 +333,11 @@ class shopping_cart_credits {
             $balances = self::get_balance_for_all_costcenters($userid);
 
             foreach ($balances as $balance) {
-                if (empty($balance['costcenter'])) {
-                    $emptycostcenterbalance = $balance['balance'];
-                    continue;
+                if ($fallbackonempty) {
+                    if (empty($balance['costcenter'])) {
+                        $emptycostcenterbalance = $balance['balance'];
+                        continue;
+                    }
                 }
                 if ($balance['costcenter'] == ($checkoutdata['costcenter'] ?? '')) {
                     $matchingcostcenterbalance = $balance['balance'];
@@ -419,7 +426,7 @@ class shopping_cart_credits {
     ) {
         global $USER;
 
-        [$balance, $currency] = self::get_balance($userid, $costcenter);
+        [$balance, $currency] = self::get_balance($userid, $costcenter, false);
 
         $data = [];
 
@@ -431,7 +438,7 @@ class shopping_cart_credits {
             $data['costcenter'] = $costcenter;
         }
 
-        self::use_credit($userid, $data);
+        self::use_credit($userid, $data, false);
 
         // Also record this in the ledger table.
         $ledgerrecord = new stdClass();

@@ -82,7 +82,9 @@ function applyChangelistener(nodelist, selector, idstring, encodedtable) {
       } else {
         el.dataset.idstring2 = idstring;
       }
-      el.addEventListener("change", (e) => toggleFilterelement(e, selector, idstring, encodedtable));
+      ["change", "keyup"].forEach(event => {
+        el.addEventListener(event, (e) => toggleFilterelement(e, selector, idstring, encodedtable));
+      });
     });
   }
 }
@@ -149,13 +151,19 @@ export function initializeResetFilterButton(selector, idstring, encodedtable) {
   setTimeout(() => {
     // Check if Checkbox corresponds to datepicker
     if (e.target.dataset.dateelement == 'dateelement') {
-      getDates(e, idstring);
+      getDates(e, selector, idstring);
+    } else if (e.target.dataset.intrangeelement && e.target.dataset.intrangeelement.includes('intrangeelement')) {
+      getIntRange(e, selector, idstring);
+      // eslint-disable-next-line no-console
+      console.log("intrangeelement");
     } else {
       getChecked(e.target.name, selector, idstring);
     }
 
     // Reload the filtered elements via ajax.
     const filterobjects = getFilterObjects(idstring);
+          // eslint-disable-next-line no-console
+          console.log("filterobjects: " + filterobjects);
     const searchstring = getSearchInput(idstring);
     const sort = getSortSelection(idstring);
 
@@ -177,9 +185,10 @@ export function initializeResetFilterButton(selector, idstring, encodedtable) {
 /**
  * Check if the checkbox of the filterparam is checked and if so write values from date- and timepicker into checked variable.
  * @param {*} e
+ * @param {*} selector
  * @param {*} idstring
  */
-export function getDates(e, idstring) {
+export function getDates(e, selector, idstring) {
 
   let name = e.target.dataset.columnname;
   let filtercontainer = e.target.closest(".datepickerform");
@@ -220,6 +229,7 @@ export function getDates(e, idstring) {
       }
     );
   }
+  updateFilterCounter(name, selector, idstring);
 }
 
 /**
@@ -535,7 +545,6 @@ export function updateDownloadUrlWithFilterSearchSort(idstring, filterobjects, s
 export function getChecked(name, selector, idstring) {
 
   // We might have more than one Table, therefore we first have to get all tables.
-
   const wbTable = document.querySelector(selector);
 
   checked[idstring][name] = Array.from(
@@ -555,6 +564,47 @@ export function getChecked(name, selector, idstring) {
 }
 
 /**
+ * Gets the values of the checked intrange filter.
+ * @param {*} e
+ * @param {*} selector
+ * @param {*} idstring
+ */
+export function getIntRange(e, selector, idstring) {
+
+  // We might have more than one Table, therefore we first have to get all tables.
+  let filtercontainer = e.target.closest(".intrangeform");
+
+  let from = filtercontainer.querySelector('input[id*="intrangefilter_intrange-start"]');
+  let fromvalue = from.value;
+  let to = filtercontainer.querySelector('input[id*="intrangefilter_intrange-end"]');
+  let tovalue = to.value;
+  let colname = e.target.dataset.columnname;
+
+
+  // Add the alert if not all entries are ints (or empty).
+  const isInt = (str) => (!isNaN(parseInt(str)) && isFinite(str)) || (str.trim() === '') || (str === null);
+
+  const alertelement = filtercontainer.querySelector('div[id*="intrangefilter_alert"]');
+  if (!isInt(fromvalue)
+      || !isInt(tovalue)) {
+
+      alertelement.removeAttribute('hidden');
+  } else {
+      alertelement.setAttribute('hidden', 'true');
+  }
+
+  if (fromvalue.length > 0 || tovalue.length > 0) {
+    checked[idstring][colname] = fromvalue + "," + tovalue;
+  }
+
+  // If there are no checked boxes, unset the key when the checkbox is unchecked.
+  if (!filtercontainer.querySelector('input[data-intrangeelement="intrangeelement-checkbox"]').checked) {
+    delete checked[idstring][colname];
+  }
+  updateFilterCounter(colname, selector, idstring);
+}
+
+/**
  * Returns json of active filters as json.
  * @param {*} idstring
  * @returns {string}
@@ -564,6 +614,9 @@ export function getFilterObjects(idstring) {
   if (!(idstring in checked)) {
     return '';
   }
+
+  // eslint-disable-next-line no-console
+  console.log(idstring);
 
   let hasvalues = false;
 
@@ -618,13 +671,18 @@ export const renderFilter = (filterjson, idstring, encodedtable) => {
  * @param {*} selector
  * @param {*} idstring
  *
- * @return void]
  *
  */
 function updateFilterCounter(name, selector, idstring) {
 
   const wbTable = document.querySelector(selector);
-  const counter = checked[idstring][name] ? checked[idstring][name].length : 0;
+
+  let counter = checked[idstring][name] ? checked[idstring][name].length : 0;
+  if ((counter > 0 && typeof checked[idstring][name] === 'string') ||
+      typeof checked[idstring][name] === 'object') {
+        // Handle different cases of filters here (datepicker, intrange).
+    counter = 1;
+  }
 
   const labelElement = wbTable.querySelector('[data-ident=' + name + '] span.filtercounter');
 

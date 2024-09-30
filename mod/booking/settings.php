@@ -510,9 +510,22 @@ if ($ADMIN->fulltree) {
     $limitchangestrackinginrules = get_config('booking', 'limitchangestrackinginrules') == 1;
     if ($limitchangestrackinginrules) {
         $settings->add(
-            new admin_setting_configcheckbox('booking/listentotimestampchange',
-                    get_string('listentotimestampchange', 'mod_booking'),
-                    '', 1));
+            new admin_setting_configcheckbox(
+                'booking/listentotextchange',
+                get_string('listentotextchange', 'mod_booking'),
+                '',
+                1
+                )
+        );
+
+        $settings->add(
+            new admin_setting_configcheckbox(
+                'booking/listentotimestampchange',
+                get_string('listentotimestampchange', 'mod_booking'),
+                '',
+                1
+                )
+            );
 
         $settings->add(
             new admin_setting_configcheckbox('booking/listentoteacherschange',
@@ -662,6 +675,12 @@ if ($ADMIN->fulltree) {
 
     if ($proversion) {
         $settings->add(
+            new admin_setting_configcheckbox('booking/duplicationrestorebookings',
+                    get_string('duplicationrestorebookings', 'mod_booking'), '', 1));
+    }
+
+    if ($proversion) {
+        $settings->add(
             new admin_setting_heading('duplicationrestoreoption',
                 get_string('duplicationrestoreoption', 'mod_booking'),
                 get_string('duplicationrestoreoption_desc', 'mod_booking')));
@@ -708,6 +727,7 @@ if ($ADMIN->fulltree) {
                 get_string('bookingplacesinfotextsinfo', 'booking'), 0));
 
         $bookingplaceslowpercentages = [
+            0 => ' 0%',
             5 => ' 5%',
             10 => '10%',
             15 => '15%',
