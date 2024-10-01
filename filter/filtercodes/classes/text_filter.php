@@ -5380,43 +5380,6 @@ class text_filter extends \core_filters\text_filter {
             }
         }
 
-        // Tag: {infoform cmid fieldname}.
-        // Description: Display a form field with the value of the specified field in the specified course module.
-        // Required Parameters: cmid=course module id, fieldname=short field name.
-        // Dependency: The mod_infoform course module plugin. Otherwise tags will be removed.
-        if (stripos($text, '{infoform ') !== false) {
-            static $infoforminstalled = null;
-            if ($infoforminstalled === null) {
-                $pluginmanager = \core_plugin_manager::instance();
-                $infoforminstalled = $pluginmanager->get_plugin_info('mod_infoform') !== null;
-            }
-            if ($infoforminstalled) {
-                $newtext = preg_replace_callback(
-                    '/\{infoform\s+(\d+)\s+(\w+)\}/isuU',
-                    function ($matches) {
-                        global $DB, $USER;
-                        $cmid = $matches[1];
-                        $data = $DB->get_record('infoform_data', ['cmid' => $cmid, 'userid' => $USER->id], '*');
-                        if ($data) {
-                            $fieldname = $matches[2];
-                            $data = json_decode($data->response);
-                            if (isset($data->$fieldname)) {
-                                return $data->$fieldname;
-                            } else {
-                                return '';
-                            }
-                        } else {
-                            return '';
-                        }
-                    },
-                    $text
-                );
-                if ($newtext !== false) {
-                    $text = $newtext;
-                }
-            }
-        }
-
         /* ---------------- Apply the rest of the FilterCodes tags. ---------------*/
 
         $this->replacetags($text, $replace);

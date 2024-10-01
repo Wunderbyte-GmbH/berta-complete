@@ -97,6 +97,7 @@ $string['allusersbooked'] = 'All {$a} selected users have successfully been assi
 $string['alreadyonlist'] = 'You will be notified';
 $string['alreadypassed'] = 'Already passed';
 $string['always'] = 'Always';
+$string['andotherfield'] = "AND additional field";
 $string['annotation'] = 'Internal annotation';
 $string['answer'] = "Answer";
 $string['answered'] = 'Answered';
@@ -216,13 +217,17 @@ $string['bocondcustomformurlerror'] = "The URL is not valid or does not start wi
 $string['bocondcustomformvalue'] = 'Value';
 $string['bocondcustomformvalue_help'] = 'When a dropdown menu is selected, please enter one value per line. The values and displayed values can be entered separately, for example, "1 => My first value => number_of_availability" etc.';
 $string['bocondcustomuserprofilefieldavailable'] = 'Book it';
+$string['bocondcustomuserprofilefieldconnectsecondfield'] = 'Connect with other profile field';
 $string['bocondcustomuserprofilefieldfield'] = 'Profile field';
+$string['bocondcustomuserprofilefieldfield2'] = 'Second profile field';
 $string['bocondcustomuserprofilefieldfullavailable'] = 'Booking is possible';
 $string['bocondcustomuserprofilefieldfullnotavailable'] = 'Only users with custom user profile field {$a->profilefield} set to value {$a->value} are allowed to book.
     <br>But you have the right to book a user anyways.';
 $string['bocondcustomuserprofilefieldnotavailable'] = 'Not allowed to book';
 $string['bocondcustomuserprofilefieldoperator'] = 'Operator';
+$string['bocondcustomuserprofilefieldoperator2'] = 'Operator (2nd field)';
 $string['bocondcustomuserprofilefieldvalue'] = 'Value';
+$string['bocondcustomuserprofilefieldvalue2'] = 'Value (2nd field)';
 $string['bocondenrolledincohorts'] = 'User is enrolled in certain cohort(s)';
 $string['bocondenrolledincohortsavailable'] = 'Book it';
 $string['bocondenrolledincohortsfullavailable'] = 'Booking is possible';
@@ -413,6 +418,7 @@ $string['bookingaction'] = "Action";
 $string['bookingactionadd'] = "Add action";
 $string['bookingactionsheader'] = 'Actions after booking [EXPERIMENTAL]';
 $string['bookingafteractionsfailed'] = 'Actions after booking failed';
+$string['bookingandcancelling'] = 'Booking und Cancelling';
 $string['bookinganswercancelled'] = 'Booking option cancelled for/by user';
 $string['bookinganswerwaitingforconfirmation'] = 'Pre-registration for booking option received';
 $string['bookinganswerwaitingforconfirmationdesc'] = 'User with id {$a->relateduserid} has registered for bookingoption with id {$a->objectid}.';
@@ -663,6 +669,7 @@ $string['checkdelimiter'] = 'Check if data is separated via the selected symbol.
 $string['checkdelimiteroremptycontent'] = 'Check if data is given and separated via the selected symbol.';
 $string['checkoutidentifier'] = "Ordernumber";
 $string['choose...'] = 'Choose...';
+$string['choosedifferentvalue'] = 'Choose different value than in first field';
 $string['choosepdftitle'] = 'Select a title for the sign-in sheet';
 $string['chooseperiod'] = 'Select time period';
 $string['chooseperiod_help'] = 'Select a time period within to create the date series.';
@@ -892,6 +899,7 @@ $string['delnotificationactivitycompletion'] = 'You deleted {$a->del} of {$a->al
 $string['department'] = 'Department';
 $string['description'] = 'Description';
 $string['details'] = 'Details';
+$string['disablebookingforinstance'] = 'Disable booking for all options of this instance';
 $string['disablebookingusers'] = 'Disable booking of users - hide Book now button';
 $string['disablecancel'] = "Disable cancellation of this booking option";
 $string['disablecancelforinstance'] = "Disable cancellation for the whole booking instance.
@@ -1463,6 +1471,8 @@ $string['onlyaddsubbookingsonsavedoption'] = "You need to save this booking opti
 $string['onlythisbookingoption'] = 'Only this booking option';
 $string['onlyusersfrominstitution'] = 'You can only add users from this institution: {$a}';
 $string['onwaitinglist'] = 'You are on the waiting list';
+$string['openbookingdetailinsametab'] = 'Display detailview directly when clicking on the title of the booking option';
+$string['openbookingdetailinsametab_desc'] = "In the course list, clicking on the title of the booking option will lead to it's detail view. If you select this option, users will see this new page immediately. Otherwise the detail view will open in a new tab.";
 $string['openformat'] = 'open format';
 $string['optional'] = 'optional';
 $string['optionannotation'] = 'Internal annotation';
@@ -1525,6 +1535,7 @@ $string['optionvisibledirectlink'] = 'Normal users can only see this option with
 $string['organizatorname'] = 'Organizer name';
 $string['organizatorname_help'] = 'You can either enter the organizer name manually or choose from a list of previous organizers.
                                     You can choose one organizer only. Once you save, the organizer will be added to the list.';
+$string['orotherfield'] = 'OR additional field';
 $string['otherbookingaddrule'] = 'Add new rule';
 $string['otherbookinglimit'] = "Limit";
 $string['otherbookinglimit_help'] = "How many users you accept from option. If 0, you can accept unlimited users.";
@@ -1676,6 +1687,7 @@ $string['problemsofcohortorgroupbooking'] = '<br><p>Not all users could be booke
 <li>{$a->notenrolledusers} users are not enrolled in the course</li>
 <li>{$a->notsubscribedusers} users not booked for other reasons</li>
 </ul>';
+$string['problemwithdate'] = 'Please verify dates';
 $string['profilepicture'] = 'Profile picture';
 $string['progressbars'] = 'Progress bars of time passed ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
 $string['progressbars_desc'] = 'Get a visual representation of the time which has already passed for a booking option.';
@@ -2109,6 +2121,7 @@ $string['uselegacymailtemplates'] = 'Still use legacy mail templates';
 $string['uselegacymailtemplates_desc'] = 'This function is deprecated and will be removed in the near future. We strongly encourage you to migrate your templates & settings to <a href="{$a}">Booking Rules</a>.
  <span class="text-danger"><b>Be careful:</b> If you uncheck this box, your email templates in your booking-instances won\'t be shown and used anymore.</span>';
 $string['usenotificationlist'] = 'Use notification list';
+$string['useonlyonefield'] = 'No additional field';
 $string['useprice'] = 'Only book with price';
 $string['useprotoenablemorerules'] = 'You need Booking PRO, to be able to add more rules.
 <a href="https://wunderbyte.at/kontakt" target="_blank">Contact Wunderbyte</a>, if you want to buy a pro license.';

@@ -96,6 +96,7 @@ $string['allusersbooked'] = 'Alle {$a} Nutzer:innen wurden erfolgreich für dies
 $string['alreadyonlist'] = 'Sie werden benachrichtigt';
 $string['alreadypassed'] = 'Bereits vergangen';
 $string['always'] = 'Immer';
+$string['andotherfield'] = "UND weiteres Feld";
 $string['annotation'] = 'Interne Anmerkung';
 $string['answer'] = "Antwort";
 $string['answered'] = 'Beantwortet';
@@ -213,13 +214,17 @@ $string['bocondcustomformurlerror'] = "Die URL ist nicht valide oder beginnt nic
 $string['bocondcustomformvalue'] = 'Wert';
 $string['bocondcustomformvalue_help'] = 'Wenn ein DropDown Menü ausgewählt ist bitte einen Wert pro Zeile eingeben. Die Werte und angezeigte Werte können getrennt eingegeben werden, also z.b. "1 => Mein erster Wert => anzahl_der_möglichkeiten" usw.';
 $string['bocondcustomuserprofilefieldavailable'] = 'Buchen';
+$string['bocondcustomuserprofilefieldconnectsecondfield'] = 'Mit weiterem Profilfeld verbinden';
 $string['bocondcustomuserprofilefieldfield'] = 'Profilfeld';
+$string['bocondcustomuserprofilefieldfield2'] = 'Zweites Profilfeld';
 $string['bocondcustomuserprofilefieldfullavailable'] = 'Buchen möglich';
 $string['bocondcustomuserprofilefieldfullnotavailable'] = 'Nur Benutzer:innen, bei denen das benutzerdefinierte Profilfeld
  {$a->profilefield} auf den Wert {$a->value} gesetzt ist, dürfen buchen.<br>Sie haben aber das Recht dennoch zu buchen.';
 $string['bocondcustomuserprofilefieldnotavailable'] = 'Buchen nicht möglich';
 $string['bocondcustomuserprofilefieldoperator'] = 'Operator';
+$string['bocondcustomuserprofilefieldoperator2'] = 'Operator (2. Feld)';
 $string['bocondcustomuserprofilefieldvalue'] = 'Wert';
+$string['bocondcustomuserprofilefieldvalue2'] = 'Wert (2. Feld)';
 $string['bocondenrolledincohorts'] = 'Benutzer:in ist in bestimmte(n) globale(n) Gruppe(n) eingeschrieben';
 $string['bocondenrolledincohortsavailable'] = 'Buchen';
 $string['bocondenrolledincohortsfullavailable'] = 'Buchen möglich';
@@ -402,6 +407,7 @@ $string['booking:viewreports'] = 'Zugang um gewisse Buchungsberichte zu sehen';
 $string['bookingaction'] = "Aktion";
 $string['bookingactionadd'] = "Füge Aktion hinzu";
 $string['bookingafteractionsfailed'] = 'Actions nach der Buchung gescheitert';
+$string['bookingandcancelling'] = 'Buchen und Stornieren';
 $string['bookinganswercancelled'] = 'Buchungsoption von/für Nutzer:in storniert';
 $string['bookinganswerwaitingforconfirmation'] = 'Voranmeldung für Buchungsoption eingetroffen';
 $string['bookinganswerwaitingforconfirmationdesc'] = 'Nutzer:in mit id {$a->relateduserid} hat sich für die Buchungsoption mit ID {$a->objectid} vorangemeldet.';
@@ -651,6 +657,7 @@ $string['checkdelimiter'] = 'Überprüfen Sie die Spaltennamen durch das angegeb
 $string['checkdelimiteroremptycontent'] = 'Überprüfen Sie ob Daten vorhanden und durch das angegebene Zeichen getrennt sind.';
 $string['checkoutidentifier'] = "Bestellnummer";
 $string['choose...'] = 'Auswählen...';
+$string['choosedifferentvalue'] = 'Wählen Sie einen anderen Wert als im oberen Feld';
 $string['choosepdftitle'] = 'Wählen Sie einen Titel für die Unterschriftenliste';
 $string['chooseperiod'] = 'Zeitraum auswählen';
 $string['chooseperiod_help'] = 'Wählen Sie den Zeitraum innerhalb dessen die Terminserie erstellt werden soll.';
@@ -882,6 +889,7 @@ $string['deleteuserfrombooking'] = 'Buchung für Nutzer:innen wirklich storniere
 $string['department'] = 'Abteilung';
 $string['description'] = 'Beschreibung';
 $string['details'] = 'Details';
+$string['disablebookingforinstance'] = 'Keine Option dieser Buchungsinstanz soll buchbar sein';
 $string['disablebookingusers'] = 'Buchung von Teilnehmer:innen deaktivieren - "Jetzt buchen" Button unsichtbar schalten';
 $string['disablecancel'] = "Stornieren dieser Buchungsoption nicht möglich";
 $string['disablecancelforinstance'] = "Stornieren für die gesamte Instanz deaktivieren.
@@ -1455,6 +1463,8 @@ $string['onlyaddsubbookingsonsavedoption'] = "Sie müssen diese neue Buchungsopt
 $string['onlythisbookingoption'] = 'Nur diese Buchungsoption';
 $string['onlyusersfrominstitution'] = 'Sie können nur Nutzerinnen von dieser Instition hinzufügen: {$a}';
 $string['onwaitinglist'] = 'Sie sind auf der Warteliste';
+$string['openbookingdetailinsametab'] = 'Beim Klick auf Titel der Buchungsoption direkt öffnen';
+$string['openbookingdetailinsametab_desc'] = 'In der Kursliste wird beim Klick auf den Titel der Buchungsoption die Detailansicht geöffnet. Wenn Sie diese Option anwählen, wir der/die NutzerIn dabei direkt zu dieser Seite geleitet. Wird der Haken nicht gesetzt, öffnet sich die Detailansicht in einem neuen Tab.';
 $string['openformat'] = 'offenes Format';
 $string['optional'] = 'optional';
 $string['optionannotation'] = 'Interne Anmerkung';
@@ -1519,6 +1529,7 @@ $string['organizatorname'] = 'Name des Organisators';
 $string['organizatorname_help'] = 'Sie können den Namen des Organisators/der Organisatorin manuell eingeben oder aus einer Liste von
                                     früheren Organisator:innen auswählen. Sie können nur eine/n Organisator/in angeben. Sobald
                                     Sie speichern, wird der/die Organisator/in zur Liste hinzugefügt.';
+$string['orotherfield'] = 'ODER weiteres Feld';
 $string['otherbookingaddrule'] = 'Neue Buchungsoption hinzufügen';
 $string['otherbookinglimit'] = "Limit";
 $string['otherbookinglimit_help'] = "Anzahl der Nutzer:innen die von dieser Buchungsoption akzeptiert werden. 0 bedeutet unlimitiert.";
@@ -1617,6 +1628,7 @@ $string['problemsofcohortorgroupbooking'] = '<br><p>Es konnten nicht alle Buchun
 <li>{$a->notenrolledusers} Nutzer:innen sind nicht in den Kurs eingeschrieben</li>
 <li>{$a->notsubscribedusers} Nutzer:innen konnten aus anderen Gründen nicht gebucht werden</li>
 </ul>';
+$string['problemwithdate'] = 'Bitte die Daten überprüfen';
 $string['profilepicture'] = 'Profilbild';
 $string['progressbars'] = 'Fortschrittsbalken für bereits vergangene Zeit ' . '<span class="badge bg-success text-light"><i class="fa fa-cogs" aria-hidden="true"></i> PRO</span>';
 $string['progressbars_desc'] = 'Mit diesem Feature erhalten Sie eine visuelle Darstellung der bereits vergangenen Zeit von Buchungsoptionen.';
@@ -2033,6 +2045,7 @@ $string['uselegacymailtemplates'] = 'Weiterhin veraltete E-Mail-Vorlagen verwend
 $string['uselegacymailtemplates_desc'] = 'Diese Funktion ist veraltet und wird in naher Zukunft entfernt. Wir empfehlen Ihnen dringend, Ihre Vorlagen und Einstellungen zu <a href="{$a}">Buchungs Regeln</a> zu migrieren.
 <span class="text-danger"><b>Vorsicht:</b> Wenn Sie dieses Kästchen deaktivieren, werden Ihre E-Mail-Vorlagen in Ihren Buchungsinstanzen nicht mehr angezeigt und verwendet.</span>';
 $string['usenotificationlist'] = 'Verwende Benachrichtigungsliste';
+$string['useonlyonefield'] = 'Kein weiteres Feld';
 $string['useprice'] = 'Nur mit Preis buchbar';
 $string['useprotoenablemorerules'] = 'Sie benötigen Booking PRO, um weitere Regeln hinzu zu fügen.
 <a href="https://wunderbyte.at/kontakt" target="_blank">Kontaktieren Sie Wunderbyte</a>, wenn Sie eine Lizenz erwerben möchten.';

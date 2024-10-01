@@ -355,7 +355,7 @@ class mod_booking_mod_form extends moodleform_mod {
             'indexnumber' => get_string('indexnumber', 'mod_booking'),
         ];
 
-        $reportfields = [
+        $reportfields = [ // This is the download file.
             'optionid' => get_string("optionid", "booking"),
             'booking' => get_string("bookingoptionname", "booking"),
             'institution' => get_string("institution", "booking"),
@@ -372,7 +372,13 @@ class mod_booking_mod_form extends moodleform_mod {
             'status' => get_string('presence', 'mod_booking'), 'groups' => get_string("group"),
             'notes' => get_string('notes', 'mod_booking'),
             'idnumber' => get_string("idnumber"),
+            'timecreated' => get_string('timecreated', 'mod_booking'),
         ];
+
+        if (class_exists('local_shopping_cart\shopping_cart')) {
+            $reportfields['price'] = get_string('price', 'mod_booking');
+            $responsesfields['price'] = get_string('price', 'mod_booking');
+        }
 
         $optionsfields = [
             'description' => get_string('description', 'mod_booking'),
@@ -740,6 +746,14 @@ class mod_booking_mod_form extends moodleform_mod {
             $mform->addHelpButton('activitycompletiontext', 'placeholders', 'booking');
             $mform->disabledIf('activitycompletiontext', 'mailtemplatessource', 'eq', 1);
         }
+        // Booking and cancelling actions.
+        $mform->addElement('header', 'bookingandcancelling',
+                get_string('bookingandcancelling', 'mod_booking'));
+
+        $mform->addElement('advcheckbox', 'disablebooking', get_string('disablebookingforinstance', 'mod_booking'));
+        $mform->setType('disablebooking', PARAM_INT);
+        $mform->setDefault('disablebooking', (int) booking::get_value_of_json_by_key((int) $bookingid, "disablebooking"));
+
         // Miscellaneous settings.
         $mform->addElement('header', 'miscellaneoussettingshdr',
                 get_string('advancedoptions', 'mod_booking'));

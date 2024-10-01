@@ -891,6 +891,16 @@ class booking {
                         $headers[] = get_string("idnumber");
                     }
                     break;
+                case 'price': // This is only possible, if local shoppingcart is installed.
+                    $columns[] = 'price';
+                    $headers[] = get_string('price', 'mod_booking');
+                    $columns[] = 'currency';
+                    $headers[] = get_string('currency', 'local_shopping_cart');
+                    break;
+                case 'timecreated':
+                    $columns[] = 'timecreated';
+                    $headers[] = get_string('timecreated', 'mod_booking');
+                    break;
             }
         }
         return [$columns, $headers, $userprofilefields];
