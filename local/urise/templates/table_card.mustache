@@ -64,7 +64,7 @@
 
 {{#table}}
 
-<div class="wunderbyte-table-grid no-overflow rows-container">
+<div class="wunderbyte-table-grid rows-container">
   {{#rows}}
     {{> local_urise/table_card_row }}
   {{/rows}}
@@ -72,7 +72,9 @@
 
 {{/table}}
 
-<div class="mt-4">{{> local_wunderbyte_table/component_pagination }}</div>
+{{^nopages}}
+    <div class="mt-4">{{> local_wunderbyte_table/component_pagination }}</div>
+{{/nopages}}
 
 {{^norecords}}
 {{#js}}

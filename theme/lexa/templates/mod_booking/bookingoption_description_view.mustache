@@ -157,7 +157,7 @@
                 <span class="mr-2">{{{ botags }}}</span>
                 </div>
                 <div class="mb-2">
-                <h2 class="font-weight-normal" >{{title}}</h2>
+                <h2 class="font-weight-normal" >{{{title}}}</h2>
                 </div>
                 {{#description}}
                 <div class="mb-6">
@@ -169,7 +169,7 @@
                     <h2 class="font-weight-normal"> {{#str}} optiondates, local_urise {{/str}}</h2>
                         {{#showcollapse}}
                         <div class="btn btn-secondary" type="button" data-toggle="collapse" data-target="#collapseDates"
-                        aria-expanded="false" aria-controls="collapseDates"">{{#str}} showdates, local_urise {{/str}}</div>
+                        aria-expanded="false" aria-controls="collapseDates">{{#str}} showdates, local_urise {{/str}}</div>
                         {{/showcollapse}}
                         <div class=" {{#showcollapse}}collapse{{/showcollapse}} mt-3" id="collapseDates">
                         {{#dates}}
@@ -295,8 +295,18 @@
                         <div class="row mod-booking-row">
                         <div class="col-md-11 m-auto detailview">
                             <p class="mb-3 font-weight-bold">{{#str}} aboutoffer, local_urise {{/str}}</p>
+                            {{#showdates}}
+                                <div class="row">
+                                    <span>
+                                        <i class="fa fa-clock-o text-primary fa-fw  showdatesicon mr-2" aria-hidden="true"></i>
+                                    </span>
+                                    <span class=" showdates">
+                                        {{{.}}}
+                                    </span>
+                                </div>
+                            {{/showdates}}
                             {{#dayofweektime}}
-                            <div class="mb-1">
+                            <div class="mb-1-lexa">
                                 <span>
                                     <span class="icon-container">
                                       <!-- Original <i> tag replaced with SVG -->
@@ -310,13 +320,11 @@
                                     {{#str}} dayofweektime, mod_booking {{/str}}
                                 </span>
                                     {{.}}
-                                <span>
-                                    {{#unitstring}} ({{.}}) {{/unitstring}}
-                                </span>
+                                <span>{{#unitstring}} ({{.}}) {{/unitstring}}</span>
                             </div>
                             {{/dayofweektime}}
                             {{#kurssprache}}
-                            <div class="mb-1">
+                            <div class="mb-1-lexa">
                                     <span class="icon-container">
                                       <!-- Original <i> tag replaced with SVG -->
                                       <svg xmlns="http://www.w3.org/2000/svg"  width="100%" height="100%"  viewBox="0 0 24 24" fill="none">
@@ -335,13 +343,11 @@
                                 <span class="d-md-none">
                                     {{#str}} institution, mod_booking {{/str}}:
                                 </span>
-                                <span>
-                                    {{{.}}}
-                                </span>
+                                <span>{{{.}}}</span>
                             </div>
                             {{/kurssprache}}
                             {{#format}}
-                            <div class="mb-1">
+                            <div class="mb-1-lexa">
                             <span class="icon-container">
                               <!-- Original <i> tag replaced with SVG -->
                               <svg xmlns="http://www.w3.org/2000/svg"  width="100%" height="100%"  viewBox="0 0 26 25" fill="none">
@@ -363,13 +369,11 @@
                                 <span class="d-md-none">
                                     {{#str}} institution, mod_booking {{/str}}:
                                 </span>
-                                <span>
-                                    {{{.}}}
-                                </span>
+                                <span>{{{.}}}</span>
                             </div>
                             {{/format}}
                             {{#competency}}
-                            <div class="mb-1">
+                            <div class="mb-1-lexa">
                                 <span class="icon-container">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 25 23" fill="none">
                                        <path d="M5.20557 7.86726H21.7262" stroke="#0063A6" stroke-width="2.225" stroke-linecap="round" stroke-linejoin="round"/>
@@ -391,16 +395,6 @@
                                     {{ . }}
                                 </span>
                             {{/organisation }}
-                            {{#showdates}}
-                                <div class="row">
-                                    <span>
-                                        <i class="fa fa-clock-o text-primary fa-fw  showdatesicon mr-2" aria-hidden="true"></i>
-                                    </span>
-                                    <span class=" showdates">
-                                        {{{.}}}
-                                    </span>
-                                </div>
-                            {{/showdates}}
                             {{#bookingopeningtime}}
                             <div>
                                 <span>

@@ -256,10 +256,11 @@ class shortcodes {
 
         if ($renderascard) {
             self::generate_table_for_cards($table, $args);
+            $table->tabletemplate = 'local_urise/table_card';
             if ($args['showpagination'] == "true") {
-                $table->tabletemplate = 'local_urise/table_card';
+                $table->showpagination = true;
             } else {
-                $table->tabletemplate = 'local_urise/table_card_no_pagination';
+                $table->showpagination = false;
             }
         } else {
             self::generate_table_for_list($table, $args);
@@ -865,7 +866,7 @@ class shortcodes {
                 get_string('apply_filter', 'local_wunderbyte_table'),
                 'now',
                 'now + 1 year',
-                ['flexoverlap']
+                ['within']
             );
 
             $table->add_filter($datepicker);
@@ -885,7 +886,7 @@ class shortcodes {
                 get_string('apply_filter', 'local_wunderbyte_table'),
                 'now',
                 'now + 1 year',
-                ['flexoverlap']
+                ['within']
             );
 
             $table->add_filter($datepicker);

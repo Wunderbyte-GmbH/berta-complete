@@ -245,11 +245,18 @@ class table implements renderable, templatable {
     private $pagesize = 10;
 
     /**
-     * Errormessage
+     * Info about filter applied.
      *
      * @var string
      */
     private $filtercountstring = '';
+
+    /**
+     * Searchtext.
+     *
+     * @var string
+     */
+    public $searchtext = '';
 
     /**
      * Constructor.
@@ -322,7 +329,7 @@ class table implements renderable, templatable {
         if (!empty($table->fulltextsearchcolumns)) {
             $this->search = true;
         }
-
+        $this->searchtext = $table->searchtext;
         // To get the current sortcolum, we need to get the user prefs.
         $prefs = $SESSION->flextable[$table->uniqueid] ?? [];
         $sortcolumns = isset($prefs['sortby']) ? array_slice($prefs['sortby'], 0, 1) : [];
@@ -459,7 +466,9 @@ class table implements renderable, templatable {
 
         // Create pagination data.
         // We show ellipsis if there are more than the specified number of pages.
-        if ($table->use_pages && $table->infinitescroll == 0) {
+        if (!$table->showpagination) {
+            $this->pagination['nopages'] = 'nopages';
+        } else if ($table->use_pages && $table->infinitescroll == 0) {
             $pages = [];
             $numberofpages = ceil($table->totalrows / $table->pagesize);
             if ($numberofpages < 2) {
@@ -609,13 +618,14 @@ class table implements renderable, templatable {
                     'filteredrecords' => $this->totalrows,
                 ]),
             'filtercount' => $this->filtercountstring,
+            'searchtext' => $this->searchtext,
             'searchtextapplied' => $this->search,
             'pages' => $this->pagination['pages'] ?? null,
             'disableprevious' => $this->pagination['disableprevious'] ?? null,
             'disablenext' => $this->pagination['disablenext'] ?? null,
             'previouspage' => $this->pagination['previouspage'] ?? null,
             'nextpage' => $this->pagination['nextpage'] ?? null,
-            'nopages' => $this->pagination['nopages'] ?? null,
+            'nopages' => $this->pagination['nopages'] === 'nopages' ? true : false,
             'infinitescroll' => $this->pagination['infinitescroll'] ?? null,
             'sesskey' => sesskey(),
             'filter' => $this->categories ?? null,
@@ -933,22 +943,43 @@ class table implements renderable, templatable {
                 }
             }
         }
+        $this->add_readable_info_about_filter_and_search($filtercountarray, $table);
+        $categories['categories'] = $tableobject;
+        return $categories;
+    }
 
+    /**
+     * Create string with human readable informations and add it to $this->filtercountstring.
+     *
+     * @param mixed $filtercountarray
+     * @param mixed $table
+     *
+     * @return void
+     *
+     */
+    private function add_readable_info_about_filter_and_search($filtercountarray, $table) {
         // We collect human readable informations about applied filters.
         $filtercolumns = implode(', ', array_keys($filtercountarray));
         $filtersum = array_sum($filtercountarray);
-
+        $string = "";
         if ($filtersum > 0) {
-            $this->filtercountstring = get_string('filtercountmessage',
+            $string .= " | " .
+            get_string('filtercountmessage',
             'local_wunderbyte_table',
                 (object)[
                     'filtercolumns' => $filtercolumns,
                     'filtersum' => $filtersum,
                 ]);
         }
-
-        $categories['categories'] = $tableobject;
-        return $categories;
+        if (!empty($table->searchtext)) {
+            if (!empty($string)) {
+                $string .= " & ";
+            } else {
+                $string .= " | ";
+            }
+            $string .= get_string('searchcountmessage', 'local_wunderbyte_table', $table->searchtext);
+        }
+        $this->filtercountstring = $string . " | ";
     }
 
     /**

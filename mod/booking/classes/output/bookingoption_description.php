@@ -554,7 +554,7 @@ class bookingoption_description implements renderable, templatable {
         if ($this->customfields) {
             foreach ($this->customfields as $key => $value) {
                 if (!isset($returnarray[$key])) {
-                    $printvalue = is_array($value) ? reset($value) : $value;
+                    $printvalue = is_array($value) ? implode(',', $value) : $value;
 
                     $type = $settings->customfieldsfortemplates[$key]['type'];
 
@@ -563,11 +563,7 @@ class bookingoption_description implements renderable, templatable {
                             $returnarray[$key] = format_text($printvalue);
                             break;
                         default:
-                            if (is_array($value)) {
-                                $returnarray[$key] = array_map('format_string', $value);
-                            } else {
-                                $returnarray[$key] = format_string($printvalue);
-                            }
+                            $returnarray[$key] = format_string($printvalue);
                             break;
                     }
                 }
