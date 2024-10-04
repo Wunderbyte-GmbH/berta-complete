@@ -1601,10 +1601,6 @@ border-radius: 10px !important;
     display: inline-block;
 }
 
-.gradienthover.invertarrow:hover .fa-arrow-right {
-        filter: invert(1);
-}
-
 .wb_news_card_infoslides .card-title {
     font-size: 26px;
     font-style: normal;
@@ -1910,4 +1906,26 @@ h4 {
 
 .wunderbyteTableFilter .form-check-input {
   margin-left: 10px;
+}
+
+.urisegroupicon {
+    width: 21px;
+    height: 21px;
+}
+.col-ap-availableplaces {
+    padding: 4px 8px;
+}
+
+.infoslideimg {
+    margin-bottom: 40px;
+    
+  }
+  
+.infoslideimg .wb_news-headerimage {
+    height: 100%;
+    width: auto;
+}
+
+#lexa-navbar-brand-first-row .logo {
+    padding: 5px 0;
 }
