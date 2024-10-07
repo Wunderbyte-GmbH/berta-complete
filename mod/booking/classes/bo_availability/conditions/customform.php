@@ -34,6 +34,7 @@ use mod_booking\booking_option_settings;
 use mod_booking\local\mobile\customformstore;
 use mod_booking\singleton_service;
 use mod_booking\utils\wb_payment;
+use moodle_url;
 use MoodleQuickForm;
 use stdClass;
 
@@ -209,6 +210,7 @@ class customform implements bo_condition {
                 'select' => get_string('select', 'mod_booking'),
                 'url' => get_string('bocondcustomformurl', 'mod_booking'),
                 'mail' => get_string('bocondcustomformmail', 'mod_booking'),
+                'deleteinfoscheckboxuser' => get_string('bocondcustomformdeleteinfoscheckboxuser', 'mod_booking'),
             ];
 
             // We add four potential elements.
@@ -218,7 +220,7 @@ class customform implements bo_condition {
             while ($counter <= 20) {
                 $buttonarray = [];
 
-                // Create a select to chose which tpye of form element to display.
+                // Create a select to chose which type of form element to display.
                 $buttonarray[] =& $mform->createElement('select', 'bo_cond_customform_select_1_' . $counter,
                     get_string('formtype', 'mod_booking'), $formelementsarray);
 
@@ -235,6 +237,12 @@ class customform implements bo_condition {
                 $mform->hideIf('bo_cond_customform_label_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
                     'eq', 0);
+                $mform->hideIf( // For deleteinfoscheckboxuser, we don't need to fill out any information.
+                    'bo_cond_customform_label_1_' . $counter,
+                'bo_cond_customform_select_1_' . $counter,
+                'eq',
+                'deleteinfoscheckboxuser'
+                );
 
                 // We need to create all possible elements and hide them via "hideif" right now.
                 $mform->addElement('textarea', 'bo_cond_customform_value_1_' . $counter,
@@ -249,6 +257,12 @@ class customform implements bo_condition {
                 $mform->hideIf('bo_cond_customform_value_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
                     'eq', 'advcheckbox');
+                $mform->hideIf(
+                    'bo_cond_customform_value_1_' . $counter,
+                    'bo_cond_customform_select_1_' . $counter,
+                    'eq',
+                    'deleteinfoscheckboxuser'
+                );
 
                 // We need to create all possible elements and hide them via "hideif" right now.
                 $mform->addElement('advcheckbox', 'bo_cond_customform_notempty_1_' . $counter,
@@ -256,6 +270,7 @@ class customform implements bo_condition {
 
                 // We need a few rules. We don't show label...
                 // ... when no element is chosen, when upper button is not checked.
+                // Or if it's only the checkbox for users to delete their own data.
                 $mform->hideIf('bo_cond_customform_notempty_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
                 $mform->hideIf('bo_cond_customform_notempty_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
@@ -263,6 +278,12 @@ class customform implements bo_condition {
                 $mform->hideIf('bo_cond_customform_notempty_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
                     'eq', 'static');
+                $mform->hideIf(
+                    'bo_cond_customform_notempty_1_' . $counter,
+                    'bo_cond_customform_select_1_' . $counter,
+                    'eq',
+                    'deleteinfoscheckboxuser'
+                );
 
                 if (!empty($previous)) {
                     $mform->hideIf('formgroupelement_1_' . $counter,
@@ -274,6 +295,24 @@ class customform implements bo_condition {
                 $counter++;
             }
 
+            $url = new moodle_url('/mod/booking/edit_rules.php');
+            $mform->addElement(
+                'advcheckbox',
+                'bo_cond_customform_deleteinfoscheckboxadmin',
+                "",
+                get_string('deleteinfoscheckboxadmin',
+                'mod_booking',
+                $url->out()));
+            $mform->hideIf(
+                'bo_cond_customform_deleteinfoscheckboxadmin',
+                'bo_cond_customform_restrict',
+                'notchecked'
+            );
+            $mform->hideIf(
+                'bo_cond_customform_deleteinfoscheckboxadmin',
+            'bo_cond_customform_select_1_1',
+            'eq',
+            0);
         } else {
             // No PRO license is active.
             $mform->addElement('static', 'bo_cond_customform_restrict',
@@ -335,6 +374,7 @@ class customform implements bo_condition {
         $conditionobject->id = MOD_BOOKING_BO_COND_JSON_CUSTOMFORM;
         $conditionobject->name = $shortclassname;
         $conditionobject->class = $classname;
+        $conditionobject->deleteinfoscheckboxadmin = $fromform->bo_cond_customform_deleteinfoscheckboxadmin ?? 0;
 
         $conditionobject->formsarray = [];
 
@@ -410,6 +450,9 @@ class customform implements bo_condition {
                 $key = 'bo_cond_customform_notempty_' . $formcounter . '_' . $counter;
                 $defaultvalues->{$key} = $formelement->notempty ?? 0;
             }
+        }
+        if (isset($acdefault->deleteinfoscheckboxadmin) && !empty($acdefault->deleteinfoscheckboxadmin)) {
+            $defaultvalues->bo_cond_customform_deleteinfoscheckboxadmin = $acdefault->deleteinfoscheckboxadmin;
         }
     }
 

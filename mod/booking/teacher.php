@@ -42,10 +42,10 @@ $teacherid = required_param('teacherid', PARAM_INT);
 
 // Check if optionid is valid.
 $PAGE->set_context($context);
+$PAGE->set_url('/mod/booking/teacher.php?teacherid=' . $teacherid);
 
 $title = get_string('teacher', 'mod_booking');
 
-$PAGE->set_url('/mod/booking/teacher.php');
 $PAGE->navbar->add($title);
 $PAGE->set_title(format_string($title));
 $PAGE->set_heading($title);

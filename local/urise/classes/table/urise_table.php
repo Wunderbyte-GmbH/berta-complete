@@ -108,9 +108,7 @@ class urise_table extends wunderbyte_table {
 
         $settings = singleton_service::get_instance_of_booking_option_settings($values->id, $values);
         if (
-            !isloggedin()
-            || isguestuser()
-            || empty($settings->imageurl)
+            empty($settings->imageurl)
         ) {
             return '';
         }
@@ -310,11 +308,7 @@ class urise_table extends wunderbyte_table {
             && isloggedin()
             && !isguestuser()
         ) {
-            if (!modechecker::is_ajax_or_webservice_request()) {
-                $returnurl = $PAGE->url->out(false);
-            } else {
-                $returnurl = '/';
-            }
+            $returnurl = $this->baseurl->out(false);
 
             // The current page is not /mod/booking/optionview.php.
             $url = new moodle_url("/mod/booking/optionview.php", [
@@ -826,26 +820,9 @@ class urise_table extends wunderbyte_table {
      * @throws coding_exception
      */
     public function col_coursestarttime($values) {
-        $coursestarttime = $values->coursestarttime;
-        if (empty($coursestarttime)) {
-            return '';
-        }
 
-        switch (current_language()) {
-            case 'de':
-                $renderedcoursestarttime = date('d.m.Y, H:i', $coursestarttime);
-                break;
-            default:
-                $renderedcoursestarttime = date('M d, Y, H:i', $coursestarttime);
-                break;
-        }
-
-        if ($this->is_downloading()) {
-            $ret = $renderedcoursestarttime;
-        } else {
-            $ret = get_string('coursestarttime', 'mod_booking') . ": " . $renderedcoursestarttime;
-        }
-        return $ret;
+        // We don't use this column here, so just return an empty string.
+        return '';
     }
 
     /**
@@ -857,26 +834,9 @@ class urise_table extends wunderbyte_table {
      * @throws coding_exception
      */
     public function col_courseendtime($values) {
-        $courseendtime = $values->courseendtime;
-        if (empty($courseendtime)) {
-            return '';
-        }
 
-        switch (current_language()) {
-            case 'de':
-                $renderedcourseendtime = date('d.m.Y, H:i', $courseendtime);
-                break;
-            default:
-                $renderedcourseendtime = date('M d, Y, H:i', $courseendtime);
-                break;
-        }
-
-        if ($this->is_downloading()) {
-            $ret = $renderedcourseendtime;
-        } else {
-            $ret = get_string('courseendtime', 'mod_booking') . ": " . $renderedcourseendtime;
-        }
-        return $ret;
+        // We don't use this column here, so just return an empty string.
+        return '';
     }
 
 
@@ -905,12 +865,12 @@ class urise_table extends wunderbyte_table {
             // Use the renderer to output this column.
             $lang = current_language();
 
-            $cachekey = "sessiondates$optionid$lang";
+            $cachekey = "ursessiondates$optionid$lang";
             $cache = cache::make($this->cachecomponent, $this->rawcachename);
 
             if (!$ret = $cache->get($cachekey)) {
                 $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
-                $output = singleton_service::get_renderer('mod_booking');
+                $output = singleton_service::get_renderer('local_urise');
                 $ret = $output->render_col_coursestarttime($data);
                 $cache->set($cachekey, $ret);
             }
@@ -1094,7 +1054,15 @@ class urise_table extends wunderbyte_table {
         echo $output->render_bookingoptions_wbtable($table);
     }
 
-    private function add_return_url(string $urlstring):string {
+    /**
+     * Add returnurl.
+     *
+     * @param string $urlstring
+     *
+     * @return string
+     *
+     */
+    private function add_return_url(string $urlstring): string {
 
         $returnurl = $this->baseurl->out();
 
@@ -1105,9 +1073,10 @@ class urise_table extends wunderbyte_table {
         $url = new moodle_url(
             $urlcomponents['path'],
             array_merge(
-                $params, [
-                'returnto' => 'url',
-                'returnurl' => $returnurl
+                $params,
+                [
+                    'returnto' => 'url',
+                    'returnurl' => $returnurl,
                 ]
             )
         );

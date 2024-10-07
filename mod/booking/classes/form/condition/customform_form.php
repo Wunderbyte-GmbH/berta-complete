@@ -140,6 +140,12 @@ class customform_form extends dynamic_form {
                 $customform = $condition;
             }
         }
+        $deleteform = false;
+        if (isset($customform->deleteinfoscheckboxadmin)) {
+            $deleteformvalue = $customform->deleteinfoscheckboxadmin ?? 0;
+            $mform->addElement('hidden', 'deleteinfoscheckboxadmin', $deleteformvalue);
+            $deleteform = true; // If admin checkbox is set, no need to check for usercheckbox.
+        }
 
         foreach ($customform->formsarray as $formkey => $formvalue) {
             $formelements = [];
@@ -233,6 +239,20 @@ class customform_form extends dynamic_form {
                             format_string($formelementvalue->label) ?? "Label " . $counter
                         );
                         $mform->setDefault('customform_mail_' . $counter, $formelementvalue->value);
+                        break;
+                    case 'deleteinfoscheckboxuser':
+                        if ($deleteform) {
+                            // Only one will be rendered rendered.
+                            break;
+                        }
+                        $identifier = 'customform_' . $formelementvalue->formtype;
+                        $deleteform = true;
+                        $mform->addElement(
+                            'advcheckbox',
+                            $identifier,
+                            get_string('bocondcustomformdeleteinfoscheckboxusertext', 'mod_booking'),
+                            get_string('apply', 'mod_booking')
+                        );
                         break;
                 }
 

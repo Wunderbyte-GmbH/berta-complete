@@ -198,8 +198,10 @@ $string['bocondcapbookingchoosefullnotavailable'] = 'Kein Recht auf dieser Insta
 $string['bocondcapbookingchoosenotavailable'] = 'Buchen nicht möglich';
 $string['bocondcustomform'] = 'Formular ausfüllen';
 $string['bocondcustomformavailable'] = 'Buchen';
-$string['bocondcustomformfullavailable'] = 'Booking is possible';
-$string['bocondcustomformfullnotavailable'] = 'Booking is possible';
+$string['bocondcustomformdeleteinfoscheckboxuser'] = 'Checkbox um Angaben zu löschen';
+$string['bocondcustomformdeleteinfoscheckboxusertext'] = 'Möchten Sie, dass Ihre hier gemachten Angaben nach Abschluss der Veranstaltung gelöscht werden?';
+$string['bocondcustomformfullavailable'] = 'Buchen ist möglich';
+$string['bocondcustomformfullnotavailable'] = 'Buchen ist nicht möglich';
 $string['bocondcustomformfullybooked'] = 'Die Option "{$a}" ist bereits voll gebucht.';
 $string['bocondcustomformlabel'] = "Bezeichnung";
 $string['bocondcustomformmail'] = "E-Mail";
@@ -381,6 +383,7 @@ $string['booking:deleteresponses'] = 'Buchungen löschen';
 $string['booking:downloadresponses'] = 'Buchungen herunterladen';
 $string['booking:editbookingrules'] = "Regeln bearbeiten (Pro)";
 $string['booking:editoptionformconfig'] = 'Buchungsoptionsfelder bearbeiten';
+$string['booking:editteacherdescription'] = 'Beschreibung der Lehrenden bearbeiten';
 $string['booking:expertoptionform'] = "Expert Buchungsoptions Formular";
 $string['booking:limitededitownoption'] = 'Weniger als addeditownoption, nur sehr beschränktes Editieren eigener Optionen erlaubt.';
 $string['booking:manageoptiondates'] = 'Bearbeite Termine';
@@ -862,8 +865,10 @@ $string['deletebookinglong'] = 'Wollen Sie diese Buchung wirklich löschen?';
 $string['deletebookingrule'] = 'Regel löschen';
 $string['deletebookingruleconfirmtext'] = 'Wollen Sie die folgende Regel wirklich löschen?';
 $string['deletecategory'] = 'Löschen';
+$string['deleteconditionsfrombookinganswer'] = 'Userdaten aus Buchungsformular löschen';
 $string['deletecustomfield'] = 'Feld löschen?';
 $string['deletecustomfield_help'] = 'Achtung: Wenn Sie diese Checkbox aktivieren, wird das zugehörige Feld beim Speichern gelöscht!';
+$string['deletedatafrombookinganswer'] = 'Userdaten aus Buchungsformular löschen';
 $string['deletedbookingusermessage'] = 'Guten Tag {$a->participant},
 Die Buchung für {$a->title} wurde erfolgreich storniert
 ';
@@ -880,6 +885,10 @@ Link: {$a->bookinglink}
 $string['deletedtextsubject'] = 'Storno von {$a->title}, User: {$a->participant}';
 $string['deletedusers'] = 'Gelöschte Nutzer:innen';
 $string['deleteholiday'] = 'Eintrag löschen';
+$string['deleteinfoscheckboxadmin'] = 'Die vom User angegebenen Daten löschen, nachdem die Option beendet wurde.
+<div class="alert alert-warning style="margin-left: 200px;">
+<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+<span>Für die Ausführung muss eine entsprechende <a target="_blank" href="{$a}">Buchung Regel</a> aktiviert werden</span></div>';
 $string['deleteoptiondate'] = 'Termin entfernen';
 $string['deleterule'] = 'Löschen';
 $string['deletesemester'] = 'Semester löschen';
@@ -1044,6 +1053,8 @@ $string['errortoomanydecimals'] = 'Sie können maximal 2 Nachkommastellen angebe
 $string['eventalreadyover'] = 'Diese Veranstaltung ist bereits vorüber.';
 $string['eventdesc:bookinganswercancelled'] = 'Nutzer:in "{$a->user}" hat Nutzer:in "{$a->relateduser}" aus "{$a->title}" storniert.';
 $string['eventdesc:bookinganswercancelledself'] = 'Nutzer:in "{$a->user}" hat "{$a->title}" storniert.';
+$string['eventdesc:bookinganswercustomformconditionsdeleted'] = 'Nutzer:in "{$a->user}" hat die Daten zu Customform Bedingungen von {$a->relateduser} der Buchungsantwort mit ID "{$a->bookinganswerid}" gelöscht.';
+$string['eventdesc:bookinganswerupdated'] = 'Nutzer:in "{$a->user}" hat bei "{$a->title}" Werte der Spalte "{$a->column}" geändert.';
 $string['eventdescription'] = "eventdescription";
 $string['eventduration'] = 'Dauer';
 $string['eventpoints'] = 'Punkte';
@@ -1079,6 +1090,7 @@ $string['filterbtn'] = 'Filtern';
 $string['filterenddate'] = 'Bis';
 $string['filterstartdate'] = 'Von';
 $string['firstname'] = "Vorname";
+$string['firstnamerelated'] = "Vorname betroffene Person";
 $string['forcourse'] = 'für Kurs';
 $string['format'] = 'Format';
 $string['formconfig'] = 'Anzeige, welches Formular verwendet wird';
@@ -1220,6 +1232,7 @@ $string['keepusersbookedonreducingmaxanswers_desc'] = 'Benutzer:innen weiterhin 
 auch wenn das Limit der verfügbaren Plätze reduziert wird. Beispiel: Ein Kurs hat 5 Plätze.
 Das Limit wird auf 3 reduziert. Die 5 Nutzer:innen, die schon gebucht haben, bleiben trotzdem im Status "gebucht".';
 $string['lastname'] = "Nachname";
+$string['lastnamerelated'] = "Nachname betroffene Person";
 $string['lblacceptingfrom'] = 'Bezeichnung für: Annehmen von';
 $string['lblbooking'] = 'Bezeichnung für: Buchung';
 $string['lblbooktootherbooking'] = 'Bezeichnung für den Button "Zu anderer Buchungsoption hinzufügen"';
@@ -2150,12 +2163,12 @@ $string['whichviewerror'] = 'Die Standardansicht muss auch in den Ansichten der 
 $string['withselected'] = 'Ausgewählte Nutzer:innen';
 $string['wrongdataallfields'] = 'Bitte alle Felder ausfüllen!';
 $string['wronglabels'] = 'Die importierten Spaltennamen entsprechen nicht der Vorgabe. {$a} kann nicht importiert werden.';
+$string['xusersarebooked'] = '{$a} Nutzer:innen sind gebucht';
 $string['yes'] = 'Ja';
 $string['youareediting'] = 'Sie bearbeiten "<b>{$a}</b>".';
 $string['youareusingconfig'] = 'Sie verwenden folgende Formular-Konfiguration: {$a}';
 $string['yourplaceonwaitinglist'] = 'Sie sind auf Platz {$a} auf der Warteliste';
 $string['yourselection'] = 'Ihre Auswahl';
-$string['xusersarebooked'] = '{$a} Nutzer:innen sind gebucht';
 $string['zoommeeting'] = 'Zoom-Meeting';
 
 // phpcs:disable

@@ -201,8 +201,10 @@ $string['bocondcapbookingchoosefullnotavailable'] = 'No right to book on this bo
 $string['bocondcapbookingchoosenotavailable'] = 'No right to book';
 $string['bocondcustomform'] = 'Fill out form';
 $string['bocondcustomformavailable'] = 'Book it';
+$string['bocondcustomformdeleteinfoscheckboxuser'] = 'Checkbox to delete answers';
+$string['bocondcustomformdeleteinfoscheckboxusertext'] = 'Would you like the information provided here to be deleted after the event is over?';
 $string['bocondcustomformfullavailable'] = 'Booking is possible';
-$string['bocondcustomformfullnotavailable'] = 'Booking is possible';
+$string['bocondcustomformfullnotavailable'] = 'Booking is not possible';
 $string['bocondcustomformfullybooked'] = 'The option "{$a}" is already fully booked.';
 $string['bocondcustomformlabel'] = "Label";
 $string['bocondcustomformmail'] = "E-Mail";
@@ -389,6 +391,7 @@ $string['booking:deleteresponses'] = 'Delete responses';
 $string['booking:downloadresponses'] = 'Download responses';
 $string['booking:editbookingrules'] = "Edit rules (Pro)";
 $string['booking:editoptionformconfig'] = 'Edit option config form';
+$string['booking:editteacherdescription'] = 'Edit teacher description';
 $string['booking:expertoptionform'] = "Expert option form";
 $string['booking:limitededitownoption'] = 'Less than addeditownoption, only allows very limited actions';
 $string['booking:managecomments'] = 'Manage comments';
@@ -869,8 +872,10 @@ $string['deletebookinglong'] = 'Do you really want to delete this booking?';
 $string['deletebookingrule'] = 'Delete rule';
 $string['deletebookingruleconfirmtext'] = 'Do you really want to delete the following rule?';
 $string['deletecategory'] = 'Delete';
+$string['deleteconditionsfrombookinganswer'] = 'Delete userdata from booking form';
 $string['deletecustomfield'] = 'Delete custom field?';
 $string['deletecustomfield_help'] = 'Caution: Setting this checkbox will delete the associated custom field when saving.';
+$string['deletedatafrombookinganswer'] = 'Delete userdata from booking form';
 $string['deletedbookingusermessage'] = 'Hello {$a->participant},
 Your booking for {$a->title} ({$a->startdate} {$a->starttime}) has been cancelled.
 ';
@@ -887,6 +892,11 @@ Booking link: {$a->bookinglink}
 $string['deletedtextsubject'] = 'Deleted booking: {$a->title} by {$a->participant}';
 $string['deletedusers'] = 'Deleted users';
 $string['deleteholiday'] = 'Delete holiday';
+$string['deleteinfoscheckboxadmin'] = 'Delete the data provided by the user after the option has ended.
+<div class="alert alert-warning style="margin-left: 200px;">
+<i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
+<span> A corresponding <a target="_blank" href="{$a}">booking rule</a> must be configured to execute this option!</span>
+</div>';
 $string['deleteoptiondate'] = 'Remove date';
 $string['deleteresponsesactivitycompletion'] = 'Delete all users with completed activity: {$a}';
 $string['deleterule'] = 'Delete';
@@ -955,8 +965,8 @@ $string['editotherbooking'] = 'Other booking rules';
 $string['editrule'] = "Edit";
 $string['editsubbooking'] = 'Edit subbooking';
 $string['edittag'] = 'Edit';
-$string['editteacherslink'] = 'Edit teachers';
 $string['editteachers'] = 'Edit';
+$string['editteacherslink'] = 'Edit teachers';
 $string['educationalunitinminutes'] = 'Length of an educational unit (minutes)';
 $string['educationalunitinminutes_desc'] = 'Enter the length of an educational unit in minutes. It will be used to calculate the performed teaching units.';
 $string['elective'] = "Elective";
@@ -1055,6 +1065,8 @@ $string['errortoomanydecimals'] = 'Only 2 decimals are allowed.';
 $string['eventalreadyover'] = 'This event is already over.';
 $string['eventdesc:bookinganswercancelled'] = 'The user "{$a->user}" cancelled "{$a->relateduser}" from "{$a->title}".';
 $string['eventdesc:bookinganswercancelledself'] = 'The user "{$a->user}" cancelled "{$a->title}".';
+$string['eventdesc:bookinganswercustomformconditionsdeleted'] = 'The user "{$a->user}" deleted data about the condition customform of {$a->relateduser} in bookinanswer with ID "{$a->bookinganswerid}".';
+$string['eventdesc:bookinganswerupdated'] = 'The user "{$a->user}" updated "{$a->title}" in column "{$a->column}".';
 $string['eventdescription'] = "eventdescription";
 $string['eventduration'] = 'Event duration';
 $string['eventpoints'] = 'Points';
@@ -1088,6 +1100,7 @@ $string['filterbtn'] = 'Filter';
 $string['filterenddate'] = 'Until';
 $string['filterstartdate'] = 'From';
 $string['firstname'] = "firstname";
+$string['firstnamerelated'] = "firstname related person";
 $string['forcourse'] = 'for course';
 $string['format'] = 'format';
 $string['formconfig'] = 'Show which form is used.';
@@ -1228,6 +1241,7 @@ $string['keepusersbookedonreducingmaxanswers'] = 'Keep users booked on limit red
 $string['keepusersbookedonreducingmaxanswers_desc'] = 'Keep users booked even when the limit of bookable places (maxanswers) is reduced.
 Example: A booking option has 5 spots. The limit is reduced to 3. The 5 users who have already booked will still remain booked.';
 $string['lastname'] = "lastname";
+$string['lastnamerelated'] = "lastname related person";
 $string['lblacceptingfrom'] = 'Name of label: Accepting from';
 $string['lblbooking'] = 'Name of label: Booking';
 $string['lblbooktootherbooking'] = 'Name of button: Book users to other booking option';
@@ -2228,12 +2242,12 @@ $string['whichviewerror'] = 'You have to include the default view in: Views to s
 $string['withselected'] = 'With selected users:';
 $string['wrongdataallfields'] = 'Please, fill out all fields!';
 $string['wronglabels'] = 'Imported CSV not containing the right labels. Column {$a} can not be imported.';
+$string['xusersarebooked'] = '{$a} users are booked';
 $string['yes'] = 'Yes';
 $string['youareediting'] = 'You are editing "<b>{$a}</b>".';
 $string['youareusingconfig'] = 'Your are using the following form configuration: {$a}';
 $string['yourplaceonwaitinglist'] = 'You are on place {$a} on the waitinglist';
 $string['yourselection'] = 'Your selection';
-$string['xusersarebooked'] = '{$a} users are booked';
 $string['zoommeeting'] = 'Zoom meeting';
 
 // phpcs:disable
