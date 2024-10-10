@@ -1,80 +1,81 @@
 [submodule "mod/booking"]
-        path = mod/booking
-        url = https://github.com/Wunderbyte-GmbH/moodle-mod_booking.git
-        branch = urise
+	path = mod/booking
+	url = https://github.com/Wunderbyte-GmbH/moodle-mod_booking.git
+	branch = urise
 [submodule "auth/saml2"]
-        path = auth/saml2
-        url = https://github.com/Wunderbyte-GmbH/moodle-auth_saml2.git
-        branch = MOODLE_39_STABLE
+	path = auth/saml2
+	url = https://github.com/Wunderbyte-GmbH/moodle-auth_saml2.git
+	branch = MOODLE_39_STABLE
 [submodule "local/wunderbyte_table"]
-        path = local/wunderbyte_table
-        url = https://github.com/Wunderbyte-GmbH/moodle-local_wunderbyte_table.git
-        branch = urise
+	path = local/wunderbyte_table
+	url = https://github.com/Wunderbyte-GmbH/moodle-local_wunderbyte_table.git
+	branch = urise
 [submodule "customfield/field/dynamic"]
-        path = customfield/field/dynamic
-        url = https://github.com/soorajsingh/moodle-customfield_dynamic.git
-        branch = master
+	path = customfield/field/dynamic
+	url = https://github.com/soorajsingh/moodle-customfield_dynamic.git
+	branch = master
 [submodule "local/entities"]
-        path = local/entities
-        url = https://github.com/Wunderbyte-GmbH/moodle-local_entities.git
-        branch = urise
+	path = local/entities
+	url = https://github.com/Wunderbyte-GmbH/moodle-local_entities.git
+	branch = urise
 [submodule "local/shopping_cart"]
-        path = local/shopping_cart
-        url = https://github.com/Wunderbyte-GmbH/moodle-local_shopping_cart.git
-        branch = urise
+	path = local/shopping_cart
+	url = https://github.com/Wunderbyte-GmbH/moodle-local_shopping_cart.git
+	branch = urise
 [submodule "payment/gateway/payunity"]
-        path = payment/gateway/payunity
-        url = https://github.com/Wunderbyte-GmbH/moodle-payment_gw_payunity.git
-        branch = USI
+	path = payment/gateway/payunity
+	url = https://github.com/Wunderbyte-GmbH/moodle-payment_gw_payunity.git
+	branch = USI
 [submodule "admin/tool/forcedcache"]
-        path = admin/tool/forcedcache
-        url = https://github.com/catalyst/moodle-tool_forcedcache.git
-        branch = MOODLE_40_STABLE
+	path = admin/tool/forcedcache
+	url = https://github.com/catalyst/moodle-tool_forcedcache.git
+	branch = MOODLE_40_STABLE
 [submodule "blocks/configurable_reports"]
-        path = blocks/configurable_reports
-        url = https://github.com/jleyva/moodle-block_configurablereports.git
-        branch = MOODLE_36_STABLE
+	path = blocks/configurable_reports
+	url = https://github.com/jleyva/moodle-block_configurablereports.git
+	branch = MOODLE_36_STABLE
 [submodule "filter/shortcodes"]
-        path = filter/shortcodes
-        url = https://github.com/branchup/moodle-filter_shortcodes.git
+	path = filter/shortcodes
+	url = https://github.com/branchup/moodle-filter_shortcodes.git
 [submodule "local/urise"]
-        path = local/urise
-        url = git@github.com:Wunderbyte-GmbH/moodle_local_urise.git
-        branch = urise
+	path = local/urise
+	url = git@github.com:Wunderbyte-GmbH/moodle_local_urise.git
+	branch = urise
 [submodule "theme/lexa"]
-        path = theme/lexa
-        url = https://github.com/Wunderbyte-GmbH/moodle-theme_lexa.git
-        branch = MOODLE_404
+	path = theme/lexa
+	url = https://github.com/Wunderbyte-GmbH/moodle-theme_lexa.git
+        branch = MOOOLE_404
 [submodule "theme/boost_union"]
-        path = theme/boost_union
-        url = https://github.com/moodle-an-hochschulen/moodle-theme_boost_union
-        branch = MOODLE_404_STABLE
+	path = theme/boost_union
+	url = https://github.com/moodle-an-hochschulen/moodle-theme_boost_union.git
+	branch = MOODLE_404_STABLE
 [submodule "filter/filtercodes"]
-        path = filter/filtercodes
-        url = git@github.com:michael-milette/moodle-filter_filtercodes.git
+	path = filter/filtercodes
+	url = https://github.com/michael-milette/moodle-filter_filtercodes.git
 [submodule "local/wb_news"]
-        path = local/wb_news
-        url = https://github.com/Wunderbyte-GmbH/moodle-local_wb_news.git
+	path = local/wb_news
+	url = https://github.com/Wunderbyte-GmbH/moodle-local_wb_news.git
+	branch = main
 [submodule "payment/gateway/payone"]
-        path = payment/gateway/payone
-        url = git@github.com:Wunderbyte-GmbH/moodle-paygw_payone.git
-        branch = urise
+	path = payment/gateway/payone
+	url = git@github.com:Wunderbyte-GmbH/moodle-paygw_payone.git
+	branch = urise
 [submodule "customfield/field/dynamicformat"]
-        path = customfield/field/dynamicformat
-        url = git@github.com:Wunderbyte-GmbH/moodle-customfield_dynamicformat.git
-        branch = main
+	path = customfield/field/dynamicformat
+	url = git@github.com:Wunderbyte-GmbH/moodle-customfield_dynamicformat.git
+	branch = main
 [submodule "customfield/field/textformat"]
-        path = customfield/field/textformat
-        url = git@github.com:Wunderbyte-GmbH/moodle-customfield_textformat.git
-        branch = master
+	path = customfield/field/textformat
+	url = git@github.com:Wunderbyte-GmbH/moodle-customfield_textformat.git
+	branch = master
 [submodule "local/wb_faq"]
-        path = local/wb_faq
-        url = https://github.com/Wunderbyte-GmbH/moodle-local_wb_faq.git
-        branch = main
+	path = local/wb_faq
+	url = https://github.com/Wunderbyte-GmbH/moodle-local_wb_faq.git
+	branch = main
 [submodule "customfield/field/textregex"]
-        path = customfield/field/textregex
-        url = https://github.com/benyovszky/moodle-customfield_textregex.git
+	path = customfield/field/textregex
+	url = https://github.com/benyovszky/moodle-customfield_textregex.git
 [submodule "mod/organizer"]
-        path = mod/organizer
-        url = git@github.com:academic-moodle-cooperation/moodle-mod_organizer.git
-        branch = MOODLE_403_STABLE
+	path = mod/organizer
+	url = git@github.com:academic-moodle-cooperation/moodle-mod_organizer.git
+	branch = MOODLE_403_STABLE
