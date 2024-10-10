@@ -1,0 +1,60 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template local_urise/dashboard
+
+    Classes required for JS:
+    * none
+
+    Data attributes required for JS:
+    * data-region
+
+    Example context (json):
+    {
+        "coursecategoriesnav": [
+            "label": "mylabel",
+            "identifier": "identifier"
+        ],
+        "coursecategories": [
+            "identifier": "identifier",
+            "label": "mylabel",
+            "cards" : [],
+            "showactive": "show active"
+        ]
+
+    }
+}}
+
+<ul class="nav nav-tabs" id="{{identifier}}" role="tablist">
+    {{#coursecategoriesnav}}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="{{identifier}}-tab" data-toggle="tab" data-target="#{{identifier}}" type="button" role="tab" aria-controls="{{identifier}}" aria-selected="true">{{label}}</button>
+        </li>
+    {{/coursecategoriesnav}}
+</ul>
+
+<div class="tab-content" id="myTabContent">
+    {{#coursecategoriesnav}}
+        <div class="tab-pane fade {{showactive}}" id="{{identifier}}" role="tabpanel" aria-labelledby="{{identifier}}-tab">
+            <div class="card-group">
+                {{#cards}}
+                    {{> local_urise/dashboard_card }}
+                {{/cards}}
+            <div>
+        </div>
+  {{/coursecategoriesnav}}
+</div>

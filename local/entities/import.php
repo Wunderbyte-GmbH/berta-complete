@@ -1,0 +1,85 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * Import options or just add new users from CSV
+ *
+ * @package local_entities
+ * @copyright 2022 Wunderbyte GmbH <info@wunderbyte.at>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+namespace local_entities;
+
+require_once(__DIR__ . '/../../config.php');
+require_once("lib.php");
+require_once($CFG->libdir . '/completionlib.php');
+require_once($CFG->libdir . "/csvlib.class.php");
+
+use local_entities\form\import_form;
+use moodle_url;
+use context_system;
+use local_entities\local\views\secondary;
+use html_writer;
+
+$PAGE->set_context(context_system::instance());
+
+require_login();
+
+global $OUTPUT;
+
+$PAGE->set_context(context_system::instance());
+
+$url = new moodle_url('/local/entities/import.php');
+$PAGE->set_url($url);
+
+$context = context_system::instance();
+require_capability('mod/booking:updatebooking', $context);
+
+$secondarynav = new secondary($PAGE);
+$secondarynav->initialise();
+$PAGE->set_secondarynav($secondarynav);
+$PAGE->set_secondary_navigation(true);
+
+// Return URL to return to if form is cancelled.
+$entitiesurl = new moodle_url('/local/entities/entities.php');
+$returnurl = $entitiesurl->out(false);
+
+$PAGE->navbar->add(get_string("import", "local_entities"));
+
+$PAGE->set_title(get_string("import", "local_entities"));
+$PAGE->set_heading(get_string("import", "local_entities"));
+$PAGE->set_pagelayout('standard');
+
+echo $OUTPUT->header();
+
+$importform = new import_form(null, null, 'post', '', [], true);
+
+$importform->set_data_for_dynamic_submission();
+echo html_writer::div($importform->render(), '', [
+    'id' => 'importformcontainer',
+    'data-returnurl' => $returnurl,
+]);
+
+// Check for conflicts.
+csv_import::check_for_import_conflicts();
+
+$PAGE->requires->js_call_amd(
+    'local_entities/import',
+    'init'
+);
+
+echo $OUTPUT->footer();

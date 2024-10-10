@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+  <XMLDB PATH="local/entities/db" VERSION="20211130" COMMENT="XMLDB file for Moodle local/entities">
+    <TABLES>
+        <TABLE NAME="local_entities" COMMENT="entities">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="name" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="shortname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="description" TYPE="text" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" />
+				<FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" />
+				<FIELD NAME="status" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" />
+				<FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" />
+				<FIELD NAME="parentid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="pricefactor" TYPE="number" LENGTH="10" NOTNULL="false" DEFAULT="1" SEQUENCE="false" DECIMALS="2"/>
+                <FIELD NAME="sortorder" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="cfitemid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="openinghours" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Openinghours for this entitiy, in JSON format. Null if no restrictions."/>
+                <FIELD NAME="maxallocation" TYPE="int" LENGTH="10" NOTNULL="false" DEFAULT="0" SEQUENCE="false" COMMENT="How many bookings on one entity? 0 is no limit."/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="cfitemid" UNIQUE="false" FIELDS="cfitemid"/>
+                <INDEX NAME="parentid" UNIQUE="false" FIELDS="parentid"/>
+            </INDEXES>
+        </TABLE>
+        <TABLE NAME="local_entities_address" COMMENT="Address connected to entities">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="entityidto" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" />
+                <FIELD NAME="country" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="city" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="postcode" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="streetname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false"/>
+				<FIELD NAME="streetnumber" TYPE="char" LENGTH="32" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="maplink" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Link to a map (e.g. Google Maps or OpenStreetMap)"/>
+                <FIELD NAME="mapembed" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Embed-code (HTML) to embed a map of the address."/>
+                <FIELD NAME="floor" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Which floor is the location on."/>
+                <FIELD NAME="entrance" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="More information on the address."/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+                <KEY NAME="entityidto" TYPE="foreign" FIELDS="entityidto" REFTABLE="local_entities" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="local_entities_contacts" COMMENT="Contacts connected to entities">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="entityidto" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" />
+                <FIELD NAME="givenname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="surname" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="mail" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+                <KEY NAME="entityidto" TYPE="foreign" FIELDS="entityidto" REFTABLE="local_entities" REFFIELDS="id"/>
+            </KEYS>
+        </TABLE>
+        <TABLE NAME="local_entities_relations" COMMENT="Entities realtions used in other plugins">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true" />
+                <FIELD NAME="entityid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" />
+                <FIELD NAME="component" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Full name of moodle component, e.g. mod_booking"/>
+                <FIELD NAME="area" TYPE="char" LENGTH="30" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" />
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false" />
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id" />
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="idx_componentareainstanceid" UNIQUE="false" FIELDS="component, area, instanceid"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+  </XMLDB>

@@ -1,0 +1,6 @@
+.pre-commit-config.yaml
+values.
+*.iml
+.idea
+.DS_Store
+._*
