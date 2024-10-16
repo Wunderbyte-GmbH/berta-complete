@@ -71,7 +71,7 @@
            <div class="background d-flex justify-content-center align-items-center">
                <div class="container mw-90 d-flex justify-content-center">
                     <div class="row mb-2 w-100 d-flex justify-content-center flex-column">
-                         <h1 class="font-weight-light text-center mb-4 text-light">
+                         <h1 class="lexa-h1 text-center mb-4 text-light">
                          {{#str}} searchheadertext, local_urise {{/str}}
                          </h1>
                          {{> local_urise/component_search }}
@@ -82,11 +82,17 @@
      </div>
      <div class="wunderbyte_table_container {{#showfilterontop}}showontop{{/showfilterontop}}">
           {{#showfilterontop}}
-          <div class="filterheader">
-               <aside class="wunderbyte_table_components{{^showcomponentstoggle}} inactive{{/showcomponentstoggle}}">
+            <div class="filterheader blockmobile">
+          
+           <div class="filtermobile">
+           <button class="filtermobilebutton gradienthover lexa-b1" data-toggle="collapse" data-target="#collapseMobileFilter" type="button" aria-expanded="false" aria-controls="collapseMobileFilter">
+                  <i class="fas fa-sliders-h mr-2"></i>
+                    {{#str}} filter, local_urise {{/str}}
+               </button>
+          </div><div class="collapse showfilterdesktop" id="collapseMobileFilter">          <aside class="wunderbyte_table_components{{^showcomponentstoggle}} inactive{{/showcomponentstoggle}}">
                     {{> local_wunderbyte_table/component_filter }}
                     {{> local_wunderbyte_table/component_infinitescroll }}
-               </aside>
+               </aside></div>
           </div>
           {{/showfilterontop}}
           {{^showfilterontop}}

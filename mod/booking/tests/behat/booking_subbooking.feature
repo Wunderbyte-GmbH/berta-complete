@@ -79,7 +79,7 @@ Feature: Enabling subboking as admin configuring subboking as a teacher and book
     And I should see "Start" in the ".allbookingoptionstable_r1" "css_element"
 
   @javascript
-  Scenario: Add subbooking via DB to a booking option and verify as students
+  Scenario: Add subbooking person via DB to a booking option and verify as students
     Given the following "mod_booking > subbookings" exist:
       | name    | type                        | option        | block | json                                                                                                                                     |
       | Partner | subbooking_additionalperson | Test option 1 | 0     | {"name":"Partner(s)","type":"subbooking_additionalperson","data":{"description":"You can invite your partner:","descriptionformat":"1"}} |
@@ -110,3 +110,92 @@ Feature: Enabling subboking as admin configuring subboking as a teacher and book
     And I should see "Test option 1" in the ".modal-dialog.modal-xl .condition-confirmation" "css_element"
     And I follow "Close"
     And I should see "Start" in the ".allbookingoptionstable_r1" "css_element"
+
+  @javascript
+  Scenario: Add subbooking item without price via DB to a booking option and verify as students
+    Given the following "mod_booking > subbookings" exist:
+      | name | type                      | option        | block | json                                                                                                                                                                                                |
+      | item | subbooking_additionalitem | Test option 1 | 0     | {"name":"MyItem","type":"subbooking_additionalitem","data":{"description":"item descr","descriptionformat":"1","useprice":"0","subbookingadditemformlink":"0","subbookingadditemformlinkvalue":""}} |
+    ## Verify subbokings working: book as stundet with subbokings
+    When I am on the "Course 1" course page logged in as student1
+    And I follow "My booking"
+    And I wait until the page is ready
+    Then I should see "Test option 1" in the ".allbookingoptionstable_r1" "css_element"
+    And I click on "Book now" "text" in the ".allbookingoptionstable_r1 .booknow" "css_element"
+    And I wait "1" seconds
+    And I should see "Do you want to book Test option 1?" in the ".modal-dialog.modal-xl .modalMainContent" "css_element"
+    And I click on "Book now" "text" in the ".modal-dialog.modal-xl .booking-button-area" "css_element"
+    And I click on "Click again to confirm booking" "text" in the ".modal-dialog.modal-xl .booking-button-area" "css_element"
+    And I should see "Start" in the ".modal-dialog.modal-xl .booking-button-area" "css_element"
+    And I follow "Continue"
+    And I should see "Supplementary bookings" in the ".modal-dialog.modal-xl .modalHeader" "css_element"
+    And I should see "MyItem" in the ".modal-dialog.modal-xl .modalMainContent" "css_element"
+    And I click on "Book now" "text" in the ".modal-dialog.modal-xl .booking-button-area" "css_element"
+    And I should see "Start" in the ".modal-dialog.modal-xl .booking-button-area" "css_element"
+    And I follow "Continue"
+    And I should see "Thank you! You have successfully booked" in the ".modal-dialog.modal-xl .condition-confirmation" "css_element"
+    And I should see "Test option 1" in the ".modal-dialog.modal-xl .condition-confirmation" "css_element"
+    And I follow "Close"
+    And I should see "Start" in the ".allbookingoptionstable_r1" "css_element"
+
+  @javascript
+  Scenario: Add subbooking item when price set via DB to a booking option and verify as students
+    Given the following "core_payment > payment accounts" exist:
+      | name           |
+      | Account1       |
+    And the following "local_shopping_cart > payment gateways" exist:
+      | account  | gateway | enabled | config                                                                                |
+      | Account1 | paypal  | 1       | {"brandname":"Test paypal","clientid":"Test","secret":"Test","environment":"sandbox"} |
+    And the following "local_shopping_cart > plugin setup" exist:
+      | account  | cancelationfee |
+      | Account1 | 0              |
+    And the following "local_shopping_cart > user credits" exist:
+      | user     | credit | currency |
+      | teacher1 | 200    | EUR      |
+    And the following "mod_booking > pricecategories" exist:
+      | ordernum | identifier | name  | defaultvalue | disabled | pricecatsortorder |
+      | 1        | default    | Price | 88           | 0        | 1                 |
+      | 2        | discount1  | Disc1 | 77           | 0        | 2                 |
+    And the following "mod_booking > options" exist:
+      | booking    | text           | course | description | optiondateid_1 | daystonotify_1 | coursestarttime_1 | courseendtime_1 | useprice |
+      | My booking | Option-subitem | C1     | Subitem     | 0              | 0              | ## +2 days ##     | ## +3 days ##   | 1        |
+    And the following "mod_booking > subbookings" exist:
+      | name | type                      | option         | block | json                                                                                                                                                                                                |
+      | item | subbooking_additionalitem | Option-subitem | 0     | {"name":"MyItem","type":"subbooking_additionalitem","data":{"description":"item descr","descriptionformat":"1","useprice":"1","subbookingadditemformlink":"0","subbookingadditemformlinkvalue":""}} |
+    And the following "mod_booking > prices" exist:
+      | itemname | area       | pricecategoryidentifier | price | currency |
+      | item     | subbooking | default                 | 55    | EUR      |
+      | item     | subbooking | discount1               | 44    | EUR      |
+    ## Verify subbokings working: book as stundet with subboking item.
+    When I am on the "Course 1" course page logged in as teacher1
+    And I follow "My booking"
+    And I wait until the page is ready
+    Then I should see "Option-subitem" in the ".allbookingoptionstable_r1" "css_element"
+    And I click on "Add to cart" "text" in the ".allbookingoptionstable_r1 .booknow" "css_element"
+    And I wait "1" seconds
+    And I should see "Do you want to book Option-subitem?" in the ".modal-dialog.modal-xl .modalMainContent" "css_element"
+    And I click on "Add to cart" "text" in the ".modal-dialog.modal-xl .modalButtonAreaContainer .pricecontainer" "css_element"
+    And I follow "Continue"
+    And I click on "Add to cart" "text" in the ".modal-dialog.modal-xl .modalMainContent .pricecontainer" "css_element"
+    And I follow "Continue"
+    And I should see "Thank you! You have successfully put Option-subitem into the shopping cart." in the ".modal-dialog.modal-xl .modalMainContent" "css_element"
+    ##And I follow "Proceed to checkout"
+    And I click on "Proceed to checkout" "text" in the ".modal-dialog.modal-xl .modalFooter" "css_element"
+    And I wait to be redirected
+    ## Verify prices and credits
+    And I should see "Option-subitem" in the ".shopping-cart-checkout-items-container" "css_element"
+    And I should see "88.00 EUR" in the ".shopping-cart-checkout-items-container" "css_element"
+    And I should see "MyItem" in the ".shopping-cart-checkout-items-container" "css_element"
+    And I should see "55.00 EUR" in the ".shopping-cart-checkout-items-container" "css_element"
+    And I should see "143.00 EUR" in the ".sc_price_label .sc_initialtotal" "css_element"
+    And I should see "Use credit: 200.00 EUR" in the ".sc_price_label .sc_credit" "css_element"
+    And I should see "143.00 EUR" in the ".sc_price_label .sc_deductible" "css_element"
+    And I should see "57.00 EUR" in the ".sc_price_label .sc_remainingcredit" "css_element"
+    And I should see "0 EUR" in the ".sc_totalprice" "css_element"
+    And I press "Checkout"
+    And I wait "1" seconds
+    And I press "Confirm"
+    And I wait until the page is ready
+    And I should see "Payment successful!"
+    And I should see "Option-subitem" in the ".payment-success ul.list-group" "css_element"
+    And I should see "MyItem" in the ".payment-success ul.list-group" "css_element"

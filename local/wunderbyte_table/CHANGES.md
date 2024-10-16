@@ -1,3 +1,26 @@
+## Version 2.0.23 (2024101600)
+* Bugfix: Strip leading zeros from intrange filter input
+* Bugfix: standardfilter for ints (ids etc)
+* Bugfix: Correctly count values for explode filter
+* Bugfix: display filtercount label for standardfilter correctly
+
+## Version 2.0.22 (2024101101)
+* Improvement: Added support for filterview mobile changes
+* Bugfix: Fix wrong calculation of morethanonetable
+* Bugfix: Fallback for empty variables in timespan filter
+
+## Version 2.0.21 (2024101100)
+* Bugfix: Filter for json dataattributes
+* Bugfix: Fallback empty calendar
+
+## Version 2.0.20 (2024100900)
+* Bugfix: Avoid pipe if no filter/searchtext is selected
+* Bugfix: Fallback for empty data in event
+
+## Version 2.0.19 (2024100701)
+* Bugfix for filters addressing two columns
+* Bugfix: fetch other data from event correctly
+
 ## Version 2.0.18 (2024100700)
 * Bugfix: Don't throw an error just because a column is not supported by the datepicker.
 

@@ -419,7 +419,7 @@ booking-button-area.btn-secondary:disabled {
 }
 
 .urise-avail {
-    border: 2px solid black;
+    border: 1px solid black;
     padding: 0.25rem;
     border-radius: 0.5rem;
 }
@@ -565,7 +565,7 @@ a.booking-card-image-link:hover {
     list-style-type: none !important;
 }
 
-.course-content .activity-altcontent ul {
+.wunderbyte-table-container .course-content .activity-altcontent ul {
     /* eslint-disable-next-line */
     list-style-type: none !important;
 }

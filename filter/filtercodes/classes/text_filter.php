@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die;
-
 /**
  * Main filter code for FilterCodes.
  *
@@ -25,13 +23,23 @@ defined('MOODLE_INTERNAL') || die;
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace filter_filtercodes;
+
+defined('MOODLE_INTERNAL') || die;
+
 use block_online_users\fetcher;
-use \core_table\local\filter\integer_filter;
-use \core_user\table\participants_filterset;
-use \core_user\table\participants_search;
+use core_table\local\filter\integer_filter;
+use core_user\table\participants_filterset;
+use core_user\table\participants_search;
 use Endroid\QrCode\QrCode;
 
 require_once($CFG->dirroot . '/course/renderer.php');
+
+if (class_exists('\core_filters\text_filter')) {
+    class_alias('\core_filters\text_filter', 'filtercodes_base_text_filter');
+} else {
+    class_alias('\moodle_text_filter', 'filtercodes_base_text_filter');
+}
 
 /**
  * Extends the moodle_text_filter class to provide plain text support for new tags.
@@ -39,7 +47,7 @@ require_once($CFG->dirroot . '/course/renderer.php');
  * @copyright  2017-2024 TNG Consulting Inc. - www.tngconsulting.ca
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class text_filter extends \core_filters\text_filter {
+class text_filter extends \filtercodes_base_text_filter {
     /** @var object $archetypes Object array of Moodle archetypes. */
     public $archetypes = [];
     /** @var array $customroles array of Roles key is shortname and value is the id */
@@ -313,14 +321,14 @@ class text_filter extends \core_filters\text_filter {
         global $DB;
 
         return $DB->get_records_sql('SELECT gp.id, gp.name, gp.idnumber
-                   FROM {user} u
-                     INNER JOIN {groups_members} gm ON u.id = gm.userid
-                     INNER JOIN {groups} g ON g.id = gm.groupid
-                     INNER JOIN {groupings_groups} gg ON gm.groupid = gg.groupid
-                     INNER JOIN {groupings} gp ON gp.id = gg.groupingid
-                  WHERE g.courseid = ? AND u.id = ?
-               GROUP BY gp.id
-               ORDER BY gp.name ASC', [$courseid, $userid]);
+            FROM {user} u
+                INNER JOIN {groups_members} gm ON u.id = gm.userid
+                INNER JOIN {groups} g ON g.id = gm.groupid
+                INNER JOIN {groupings_groups} gg ON gm.groupid = gg.groupid
+                INNER JOIN {groupings} gp ON gp.id = gg.groupingid
+            WHERE g.courseid = ? AND u.id = ?
+            GROUP BY gp.id
+            ORDER BY gp.name ASC', [$courseid, $userid]);
     }
 
     /**
@@ -600,7 +608,7 @@ class text_filter extends \core_filters\text_filter {
                                 . ');height:100px;max-width:300px;padding-top:50%;background-size:cover;'
                                 . 'background-repeat:no-repeat;background-position:center;"></div>
                         <div class="card-title pt-1 pr-3 pb-1 pl-3 m-0"><span class="sr-only">' . get_string('course') . ': </span>'
-                                 . $course->get_formatted_name() . '</div>
+                                . $course->get_formatted_name() . '</div>
                         </a>
                     </div>
                     ';
@@ -648,14 +656,16 @@ class text_filter extends \core_filters\text_filter {
                     $category = $DB->get_record('course_categories', ['id' => $course->category]);
                     $category = $category->name;
 
-                    $course->summary == null ? '' : $course->summary;
+                    $summary = $course->summary == null ? '' : $course->summary;
                     $summary = substr($summary, -4) == '<br>' ? substr($summary, 0, strlen($summary) - 4) : $summary;
 
                     $content .= '
                     <tr class="fc-coursecard-table">
-                    <td class="text-coursename"><a href="' . $courseurl . '">' . $course->get_formatted_name() . '</a></td>
-                    <td class="text-coursecategory">' . $category . '</td>
-                    <td class="text-coursename" style="white-space:normal;">' . $summary . '</td>
+                    <td class="text-coursename col-sm-12 col-md-3 d-block d-md-table-cell"><a href="' . $courseurl . '">'
+                        . $course->get_formatted_name() . '</a></td>
+                    <td class="text-coursecategory col-sm-12 col-md-2 d-block d-md-table-cell">' . $category . '</td>
+                    <td class="text-coursename col-sm-12 col-md-7 d-block d-md-table-cell" style="word-wrap:break-word;">'
+                        . $summary . '</td>
                     </tr>
                     ';
                     break;
@@ -687,9 +697,12 @@ class text_filter extends \core_filters\text_filter {
                     <table class="table table-hover table-responsive">
                         <thead>
                             <tr>
-                                <th scope="col">' . get_string('course') . '</th>
-                                <th scope="col">' . get_string('category') . '</th>
-                                <th scope="col">' . get_string('description') . '</th>
+                                <th scope="col" class="col-12 col-md-3 d-block d-md-table-cell">'
+                                    . get_string('course') . '</th>
+                                <th scope="col" class="col-12 col-md-2 d-block d-md-table-cell">'
+                                    . get_string('category') . '</th>
+                                <th scope="col" class="col-12 col-md-7 d-block d-md-table-cell">'
+                                    . get_string('description') . '</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1075,11 +1088,11 @@ class text_filter extends \core_filters\text_filter {
                     . "://{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
                     $url .= (strpos($url, '?') ? '&' : '?');
 
-                    // Get list of available languages
+                    // Get list of available languages.
                     $availablelanguages = get_string_manager()->get_list_of_translations();
                     if (count($availablelanguages) > 1) {
                         foreach ($availablelanguages as $langcode => $langname) {
-                            // Create a link for each language
+                            // Create a link for each language.
                             $menu .= '-' . $langname . '|' . $url . 'lang=' . $langcode . PHP_EOL;
                         }
                         if (!empty($menu)) {
@@ -1568,6 +1581,7 @@ class text_filter extends \core_filters\text_filter {
         static $profiledata;
         static $mygroupslist;
         static $mygroupingslist;
+        static $mycohorts;
 
         $replace = []; // Array of key/value filterobjects.
 
@@ -2366,7 +2380,7 @@ class text_filter extends \core_filters\text_filter {
 
         // Substitutions.
 
-        $u = $USER;
+        $u = clone $USER;
         if (!isloggedin() || isguestuser()) {
             $u->firstname = get_string('defaultfirstname', 'filter_filtercodes');
             $u->lastname = get_string('defaultsurname', 'filter_filtercodes');
@@ -3242,7 +3256,8 @@ class text_filter extends \core_filters\text_filter {
                 // Add request a course link.
                 $context = \context_system::instance();
                 if (!empty($CFG->enablecourserequests) && has_capability('moodle/course:request', $context)) {
-                    $link = '<a href="' . (new \moodle_url('/course/request.php'))->out() . '">' . get_string('requestcourse') . '</a>';
+                    $link = '<a href="' . (new \moodle_url('/course/request.php'))->out() . '">'
+                        . get_string('requestcourse') . '</a>';
                 } else {
                     $link = '';
                 }
@@ -3964,12 +3979,16 @@ class text_filter extends \core_filters\text_filter {
                             $iscompleted = false;
 
                             // Only process valid IDs.
-                            if (($cm = get_coursemodule_from_id('', $cmid, 0)) !== false) {
+                            if (($cm = \get_coursemodule_from_id('', $cmid, 0)) !== false) {
                                 // Get the completion data for this activity if it exists.
                                 try {
                                     $data = $completion->get_data($cm, true, $USER->id);
                                     $iscompleted = ($data->completionstate == COMPLETION_COMPLETE);
-                                } catch (Exception $e) {
+                                } catch (\moodle_exception $e) {
+                                    // Handle Moodle-specific exceptions.
+                                    unset($e);
+                                    continue;
+                                } catch (\Exception $e) {
                                     unset($e);
                                     continue;
                                 }
@@ -4007,11 +4026,15 @@ class text_filter extends \core_filters\text_filter {
                             $iscompleted = false;
 
                             // Only process valid IDs.
-                            if (($cm = get_coursemodule_from_id('', $cmid, 0)) !== false) {
+                            if (($cm = \get_coursemodule_from_id('', $cmid, 0)) !== false) {
                                 // Get the completion data for this activity.
                                 try {
                                     $data = $completion->get_data($cm, true, $USER->id);
                                     $iscompleted = ($data->completionstate == COMPLETION_COMPLETE);
+                                } catch (\moodle_exception $e) {
+                                    // Handle Moodle-specific exceptions.
+                                    unset($e);
+                                    continue;
                                 } catch (Exception $e) {
                                     unset($e);
                                     continue;
@@ -4259,7 +4282,6 @@ class text_filter extends \core_filters\text_filter {
             // Parameters: id name or id number of the cohort.
             // Requires content between tags.
             if (stripos($text, '{ifincohort ') !== false) {
-                static $mycohorts;
                 if (empty($mycohorts)) { // Cache list of cohorts.
                     require_once($CFG->dirroot . '/cohort/lib.php');
                     $mycohorts = cohort_get_user_cohorts($USER->id);
@@ -4273,6 +4295,32 @@ class text_filter extends \core_filters\text_filter {
                             };
                         }
                         return '';
+                    },
+                    $text
+                );
+                if ($newtext !== false) {
+                    $text = $newtext;
+                }
+            }
+
+            // Tag: {ifnotincohort idname|idnumber}...{/ifnotincohort}.
+            // Description: Will display content if the user is not part of the specified cohort.
+            // Parameters: id name or id number of the cohort.
+            // Requires content between tags.
+            if (stripos($text, '{ifnotincohort ') !== false) {
+                if (empty($mycohorts)) { // Cache list of cohorts.
+                    require_once($CFG->dirroot . '/cohort/lib.php');
+                    $mycohorts = cohort_get_user_cohorts($USER->id);
+                }
+                $newtext = preg_replace_callback(
+                    '/\{ifnotincohort ([\w\-]*)\}(.*)\{\/ifnotincohort\}/isuU',
+                    function ($matches) use ($mycohorts) {
+                        foreach ($mycohorts as $cohort) {
+                            if ($cohort->idnumber == $matches[1] || $cohort->id == $matches[1]) {
+                                return ''; // User is in the cohort, so return an empty string.
+                            }
+                        }
+                        return $matches[2]; // User is not in the cohort, so return the content.
                     },
                     $text
                 );
