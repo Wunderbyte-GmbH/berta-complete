@@ -1390,55 +1390,29 @@ class wunderbyte_table extends table_sql {
                 $filter .= " AND ( ";
                 $categorycounter = 1;
 
-                $filtersetting = $filtersettings[$categorykey];
+                $filtersetting = $filtersettings[$categorykey] ?? [];
                 // For filters treating two columns (i.e. datepickers), this will return empty.
-                $classname = $filtersetting['wbfilterclass'];
+                $classname = $filtersetting['wbfilterclass'] ?? "";
 
                 if (!empty($classname)) {
                     $class = new $classname($categorykey, $filtersetting['localizedname']);
                     $class->apply_filter($filter, $categorykey, $categoryvalue, $this);
 
-                    // TODO: Use apply_filter method for all other filter types.
+                    // TODO: Use apply_filter method for the remaining filter type datepicker.
                     // Eventually we will get rid of the following section.
                     // ... for the moment, make sure to escape it for classes already implementing the new way.
-                    if (strpos($classname, "intrange") || strpos($classname, "standard")) {
+                    if (!strpos($classname, "datepicker")) {
                         $filter .= " ) ";
                         continue;
                     }
                 }
 
-                // We check if we are applying a timestamp comparison which is stored in an object.
-                // TODO: Better check if its a datepicker.
-                $datecomparison = false;
-                if (is_object($categoryvalue)) {
-                    $datecomparison = true;
-                }
-
                 foreach ($categoryvalue as $key => $value) {
 
-                    if ($datecomparison == false) {
-                        // If there are more than one filter per category they will be concatenated via OR.
-                        $filter .= $categorycounter == 1 ? "" : " OR ";
-                    } else {
-                        // Except if we filter for time values, in which case they will be concatenated via AND.
-                        $filter .= $categorycounter == 1 ? "" : " AND ";
-                    }
+                    // Time values will be concatenated via AND.
+                    $filter .= $categorycounter == 1 ? "" : " AND ";
 
-                    if ($datecomparison == true) {
-                        $filter .= $categorykey . ' ' . key((array) $value) . ' ' . current((array) $value);
-                    } else if (is_numeric($value)) {
-
-                        // Here we check if it's an hourslist filter.
-                        if (isset($this->subcolumns['datafields'][$categorykey]['local_wunderbyte_table\filters\types\hourlist'])) {
-                            $paramsvaluekey = $this->set_params((string) ($value + $delta), false);
-                            $filter .= filter::apply_hourlist_filter($categorykey, ":$paramsvaluekey");
-
-                            $delta = filter::get_timezone_offset();
-                        } else {
-                            $paramsvaluekey = $this->set_params((string) $value, false);
-                            $filter .= $DB->sql_like($DB->sql_concat($categorykey), ":$paramsvaluekey", false);
-                        }
-                    }
+                    $filter .= $categorykey . ' ' . key((array) $value) . ' ' . current((array) $value);
                     $categorycounter++;
                 }
                 $filter .= " ) ";

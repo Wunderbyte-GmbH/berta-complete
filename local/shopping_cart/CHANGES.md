@@ -1,3 +1,11 @@
+## Version 0.9.35 (2024101702)
+* Bugfix: Function to check for rebookings not breaking checkout
+* Bugfix: Correctly trigger item_notbought event
+
+## Version 0.9.34 (2024101700)
+* Improvement: Disable rebooking without new item and display modal about checkout failures
+* Improvement: New phpunit test class to test credits
+
 ## Version 0.9.33 (2024100700)
 * Improvement: Server callback verify_purchase improvement, triggers now transaction_complete
 * Bugfix: User Serverside callback only for checking, not actual verification

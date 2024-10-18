@@ -591,6 +591,12 @@ export function getIntRange(e, selector, idstring) {
       alertelement.removeAttribute('hidden');
   } else {
       alertelement.setAttribute('hidden', 'true');
+
+      // Stripping leading zeros.
+      fromvalue = parseInt(fromvalue, 10);
+      fromvalue = fromvalue.toString();
+      tovalue = parseInt(tovalue, 10);
+      tovalue = tovalue.toString();
   }
 
   if (fromvalue.length > 0 || tovalue.length > 0) {
@@ -678,9 +684,10 @@ function updateFilterCounter(name, selector, idstring) {
   const wbTable = document.querySelector(selector);
 
   let counter = checked[idstring][name] ? checked[idstring][name].length : 0;
-  if ((counter > 0 && typeof checked[idstring][name] === 'string') ||
-      typeof checked[idstring][name] === 'object') {
+  if ((counter > 0 && (typeof checked[idstring][name] === 'string') ||
+      (typeof checked[idstring][name] === 'object' && !Array.isArray(checked[idstring][name])))) {
         // Handle different cases of filters here (datepicker, intrange).
+        // TODO: Find a better marker for difference of filters.
     counter = 1;
   }
 

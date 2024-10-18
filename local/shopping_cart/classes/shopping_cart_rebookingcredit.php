@@ -353,4 +353,32 @@ class shopping_cart_rebookingcredit {
         }
 
     }
+
+    /**
+     * Rebooking can only be done if there is a new item selected.
+     *
+     * @param mixed $data
+     *
+     * @return boolean
+     *
+     */
+    public static function check_if_enough_items_for_rebooking($data): bool {
+        $newitems = 0;
+        if (!isset($data["items"]) || !is_array($data)) {
+            return true;
+        }
+
+        foreach ($data["items"] as $item) {
+            $item = (array)$item;
+            $area = $item['area'] ?? "";
+            $rebookingelements = ['rebookitem', 'rebookingfee'];
+            if (!empty($area) && !in_array($area, $rebookingelements)) {
+                $newitems++;
+            }
+        }
+        if (empty($newitems)) {
+            return false;
+        }
+        return true;
+    }
 }
