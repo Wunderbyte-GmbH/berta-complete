@@ -344,7 +344,10 @@ class cartstore {
 
         // If the paymentaccountid is not set yet, we just use the one we transmitted here.
         $storedpaymentaccountid = $data['paymentaccountid'] ?? $paymentaccountid;
-        if ($storedpaymentaccountid != $paymentaccountid) {
+        if (
+            !empty($data['items'])
+            && ($storedpaymentaccountid != $paymentaccountid)
+        ) {
             return false;
         }
         $data['paymentaccountid'] = $paymentaccountid;
@@ -580,9 +583,10 @@ class cartstore {
     public function same_costcenter(string $currentcostcenter) {
         $costcenterincart = '';
 
+        $escapeitems = ['bookingfee', 'rebookingcredit', 'rebookingfee'];
         $items = $this->get_items();
         foreach ($items as $itemincart) {
-            if ($itemincart['area'] == 'bookingfee' || $itemincart['area'] == 'rebookingcredit') {
+            if (in_array($itemincart['area'], $escapeitems)) {
                 // We only need to check for "real" items, booking fee does not apply.
                 continue;
             } else {

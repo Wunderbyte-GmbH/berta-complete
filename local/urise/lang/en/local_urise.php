@@ -258,6 +258,8 @@ $string['mod/booking:reducedoptionform5'] = 'Reduced booking option 5';
 $string['mod/booking:bookanyone'] = 'Book anyone';
 $string['mod/booking:seepersonalteacherinformation'] = 'See personal teacher information';
 
+$string['more'] = 'more';
+
 // Optionformconfig.php / optionformconfig_form.php.
 $string['optionformconfig'] = 'Configure booking option forms (PRO)';
 $string['optionformconfig_infotext'] = 'With this PRO feature, you can create your individual booking option forms by using drag & drop
@@ -481,7 +483,7 @@ $string['personalentwicklungundrecruiting'] = "Personnel Development";
 $string['centerforteachingandlearning'] = "Center for Teaching and Learning";
 $string['koordinationstudienservices'] = "Coordination of Student Services";
 $string['zentralerinformatikdienst'] = "Vienna University Computer Center";
-$string['lppostdoc'] = "LP Postdoc";
+$string['lppostdoc'] = "LP PostDocs";
 $string['lpfuehrungskraefte'] = "LP Executive staff";
 $string['lpallgemeinesuniversitaetspersonal'] = "LP General university staff";
 $string['lpstudierende'] = "LP Students";
@@ -489,7 +491,7 @@ $string['lpexterne'] = "LP Externe";
 $string['lpbibliothek'] = "LP Bibliothek";
 
 $string['phdstudents'] = "PhD Students";
-$string['postdoc'] = "Postdocs";
+$string['postdoc'] = "PostDocs";
 $string['fuehrungskraefte'] = "Executive staff";
 $string['allgemeinespersonal'] = "General staff";
 $string['wissenschaftlichespersonal'] = "Academic staff";
@@ -545,10 +547,12 @@ $string['selbstundarbeitsorganisation'] = "Personal and professional organisatio
 $string['veranstaltungsorganisation'] = 'Event organisation';
 $string['arbeitsorganisation'] = 'Professional organisation';
 $string['selbstorganisation'] = 'Personal organisation';
+$string['servicedesk'] = 'Servicedesk';
 $string['servicekundinnenorientierung'] = 'Service & customer-facing skills ';
 $string['loesungszukunftsorientierung'] = 'Solutions & future focus';
 $string['ressourceneffizienz'] = 'Resource efficiency';
 $string['changekompetenz'] = 'Flexibility';
+$string['changeuser'] = 'Change user';
 $string['gesundheitsorientierung'] = 'Health awareness';
 $string['lernkompetenz'] = 'Aptitude for learning';
 $string['digitalkompetenzen'] = "Digital competencies";
@@ -556,6 +560,7 @@ $string['itsecurity'] = 'IT Security';
 $string['digitaleinteraktion'] = 'Digital interaction';
 $string['umgangmitinformationenunddaten'] = 'Handling information & data	';
 $string['technologienutzung'] = 'IT skills';
+$string['termsandconditions'] = 'With booking I accept the&nbsp;<a href="{$a}" target="_blank">terms and conditions</a>.';
 $string['fuehrungskompetenzen'] = "Leadership competencies";
 $string['educationalleadershipandmanagement'] = 'Educational Leadership & Management';
 $string['sonstige'] = "Others";

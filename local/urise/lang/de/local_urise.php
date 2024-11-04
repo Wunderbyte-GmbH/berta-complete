@@ -72,7 +72,7 @@ $string['substitutionspool'] = 'Vertretungspool für {$a}';
 $string['editsubstitutionspool'] = 'Vertretungspool bearbeiten';
 $string['viewsubstitutionspool'] = 'Vertretungspool ansehen';
 $string['mailtosubstitutionspool'] = 'E-Mail an Vertretungspool senden';
-$string['substitutionspool:infotext'] = 'Trainer:innen, die <b>{$a}</b> vertreten dürfen:';
+$string['substitutionspool:infotext'] = 'Trainer*innen, die <b>{$a}</b> vertreten dürfen:';
 $string['substitutionspool:mailproblems'] = 'Hier klicken, wenn Sie Probleme beim Versenden der E-Mails haben...';
 $string['substitutionspool:copypastemails'] = 'Kopieren Sie die folgenden E-Mail-Adressen in das BCC-Feld Ihres E-Mail-Programms:';
 $string['gateway'] = 'Gateway';
@@ -128,8 +128,8 @@ $string['editentitiescategories'] = 'Kategorien der Organisations-Einheiten bear
 $string['importentities'] = 'Organisations-Einheiten importieren';
 $string['editbookinginstance'] = 'Buchungs-Instanz bearbeiten';
 $string['editbookings'] = 'Kurs-Übersicht';
-$string['viewteachers'] = 'Trainer:innen-Übersicht';
-$string['teachersinstancereport'] = 'Trainer:innen-Gesamtbericht (Kurse, Fehlstunden, Vertretungen)';
+$string['viewteachers'] = 'Trainer*innen-Übersicht';
+$string['teachersinstancereport'] = 'Trainer*innen-Gesamtbericht (Kurse, Fehlstunden, Vertretungen)';
 $string['sapdailysums'] = 'SAP-Buchungsdateien';
 $string['searchcourses'] = "Kurs suchen ...";
 
@@ -137,6 +137,7 @@ $string['addbookinginstance'] = '<span class="bg-danger font-weight-bold">Keine 
 $string['editpricecategories'] = 'Preiskategorien bearbeiten';
 $string['editsemesters'] = 'Semester bearbeiten';
 $string['changebookinginstance'] = 'Standard-Semester-Instanz setzen';
+$string['changeuser'] = 'Wechsle Nutzer:in';
 $string['editbotags'] = 'Tags verwalten';
 $string['createbotag'] = 'Neuen Tag anlegen...';
 $string['createbotag:helptext'] = '<p>
@@ -270,6 +271,8 @@ $string['booking:editoptionformconfig'] = 'Buchungsoptionsfelder bearbeiten';
 $string['booking:bookanyone'] = 'Darf alle Nutzer:innen buchen';
 $string['mod/booking:bookanyone'] = 'JedeN buchen';
 $string['mod/booking:seepersonalteacherinformation'] = 'Detailinfos über Lehrende anzeigen';
+
+$string['more'] = 'mehr';
 
 // Optionformconfig.php / optionformconfig_form.php.
 $string['optionformconfig'] = 'Formulare für Buchungsoptionen anpassen (PRO)';
@@ -492,7 +495,7 @@ $string['personalentwicklungundrecruiting'] = "Personalentwicklung und Recruitin
 $string['centerforteachingandlearning'] = "Center for Teaching and Learning";
 $string['koordinationstudienservices'] = "Koordination Studienservices";
 $string['zentralerinformatikdienst'] = "Zentraler Informatikdienst";
-$string['lppostdoc'] = "LP Postdoc";
+$string['lppostdoc'] = "LP PostDocs";
 $string['lpfuehrungskraefte'] = "LP Führungskraefte";
 $string['lpallgemeinesuniversitaetspersonal'] = "LP Allgemeines Universitätspersonal";
 $string['lpstudierende'] = "LP Studierende";
@@ -500,7 +503,7 @@ $string['lpexterne'] = "LP Externe";
 $string['lpbibliothek'] = "LP Bibliothek";
 
 $string['phdstudents'] = "PhD Students";
-$string['postdoc'] = "Postdocs";
+$string['postdoc'] = "PostDocs";
 $string['fuehrungskraefte'] = "Führungskräfte";
 $string['allgemeinespersonal'] = "Allgemeines Personal";
 $string['wissenschaftlichespersonal'] = "Wissenschaftliches Personal";
@@ -557,6 +560,7 @@ $string['selbstundarbeitsorganisation'] = "Selbst- & Arbeitsorganisation";
 $string['veranstaltungsorganisation'] = 'Veranstaltungsorganisation';
 $string['arbeitsorganisation'] = 'Arbeitsorganisation';
 $string['selbstorganisation'] = 'Selbstorganisation';
+$string['servicedesk'] = 'Servicedesk';
 $string['servicekundinnenorientierung'] = 'Service- & Kund*innenorientierung';
 $string['loesungszukunftsorientierung'] = 'Lösungs- & Zukunftsorientierung';
 $string['ressourceneffizienz'] = 'Ressourceneffizienz';
@@ -568,6 +572,7 @@ $string['itsecurity'] = 'IT Security';
 $string['digitaleinteraktion'] = 'Digitale Interaktion';
 $string['umgangmitinformationenunddaten'] = 'Umgang mit Informationen & Daten';
 $string['technologienutzung'] = 'Technologienutzung';
+$string['termsandconditions'] = 'Bei Anmeldung akzeptiere ich&nbsp;<a href="{$a}" target="_blank">die Teilnahmebedingungen</a>.';
 $string['fuehrungskompetenzen'] = "Führungskompetenzen";
 $string['educationalleadershipandmanagement'] = 'Educational Leadership & Management';
 $string['sonstige'] = "Sonstige";

@@ -25,12 +25,15 @@
 
 namespace customfield_textregex;
 
+use advanced_testcase;
+use coding_exception;
 use core_customfield_generator;
 use core_customfield_test_instance_form;
 use core_customfield\category_controller;
 use core_customfield\data_controller;
 use core_customfield\field_controller;
 use core_customfield\field_config_form;
+use stdClass;
 
 /**
  * Functional test for 'customfield_textregex'
@@ -39,22 +42,24 @@ use core_customfield\field_config_form;
  * @copyright  2019 Marina Glancy
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-final class plugin_test extends \advanced_testcase {
+final class plugin_test extends advanced_testcase {
 
-    /** @var \stdClass[]  */
+    /** @var stdClass[]  */
     private array $courses = [];
 
-    /** @var \core_customfield\category_controller */
+    /** @var category_controller */
     private category_controller $cfcat;
 
-    /** @var \core_customfield\field_controller[] */
+    /** @var field_controller[] */
     private array $cfields;
 
-    /** @var \core_customfield\data_controller[] */
+    /** @var data_controller[] */
     private array $cfdata;
 
     /**
      * Tests set up.
+     *
+     * @throws coding_exception
      */
     public function setUp(): void {
         parent::setUp();
@@ -95,6 +100,7 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for initialising field and data controllers
+     *
      * @covers \core_customfield\field_controller::create
      */
     public function test_initialise(): void {
@@ -132,7 +138,9 @@ final class plugin_test extends \advanced_testcase {
 
     /**
      * Test for instance form functions
+     *
      * @coversNothing
+     * @throws coding_exception
      */
     public function test_instance_form(): void {
         global $CFG;
@@ -142,21 +150,21 @@ final class plugin_test extends \advanced_testcase {
 
         // First try to submit without required field.
         $submitdata = (array)$this->courses[1];
-        core_customfield_test_instance_form::mock_submit($submitdata, []);
+        core_customfield_test_instance_form::mock_submit($submitdata);
         $form = new core_customfield_test_instance_form('POST',
             ['handler' => $handler, 'instance' => $this->courses[1]]);
         $this->assertFalse($form->is_validated());
 
         // Now with required but invalid field.
         $submitdata['customfield_myfield2'] = '123456';
-        core_customfield_test_instance_form::mock_submit($submitdata, []);
+        core_customfield_test_instance_form::mock_submit($submitdata);
         $form = new core_customfield_test_instance_form('POST',
             ['handler' => $handler, 'instance' => $this->courses[1]]);
         $this->assertFalse($form->is_validated());
 
         // Now with required field.
         $submitdata['customfield_myfield2'] = 'sometext';
-        core_customfield_test_instance_form::mock_submit($submitdata, []);
+        core_customfield_test_instance_form::mock_submit($submitdata);
         $form = new core_customfield_test_instance_form('POST',
             ['handler' => $handler, 'instance' => $this->courses[1]]);
         $this->assertTrue($form->is_validated());

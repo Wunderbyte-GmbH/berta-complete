@@ -1083,6 +1083,10 @@ $string['excelfile'] = 'CSV file with activity completion';
 $string['executerestscript'] = 'Execute REST script';
 $string['existingsubscribers'] = 'Existing subscribers';
 $string['expired'] = 'Sorry, this activity closed on {$a} and is no longer available';
+$string['extendlimitforoverbooked'] = 'Add overbooked seats to applied factor';
+$string['extendlimitforoverbooked_help'] = 'If you select this option, the following happens:
+    A course has a limit of 40 but is already overbooked with 2 participants to 42 participants.
+    If a limit increase of, for example, 10% is applied to this course, the limit will be increased to 46 (40 + 4 (10%) + 2 (overbooked seats)), instead of 44 (40 + 4).';
 $string['feedbackurl'] = 'Poll url';
 $string['feedbackurl_help'] = 'Enter a link to a feedback form that should be sent to participants.
  It can be added to e-mails with the <b>{pollurl}</b> placeholder.';
@@ -1140,6 +1144,7 @@ $string['gotomoodlecourse'] = 'Go to Moodle course';
 $string['groupdeleted'] = 'This booking instance creates groups automatically in the target course. But the group has been manually deleted in the target course. Activate the following checkbox in order to recreate the group';
 $string['groupexists'] = 'The group already exists in the target course, please choose another name for the booking option';
 $string['groupname'] = 'Group name';
+$string['h'] = '';
 $string['hascapability'] = 'Except has capability';
 $string['helptext:emailsettings'] = '<div class="alert alert-warning style="margin-left: 200px;">
 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
@@ -1178,17 +1183,17 @@ $string['identifier'] = 'Identification';
 $string['ifdefinedusedtomatch'] = 'If defined, will be used to match.';
 $string['importaddtocalendar'] = 'Zum Moodle Kalender hinzufügen';
 $string['importcolumnsinfos'] = 'Informations about columns to be imported:';
-$string['importcoursenumber'] = 'Moodle ID Nummer eines Moodle Kurses, in den die Buchenden eingeschrieben werden';
-$string['importcourseshortname'] = 'Kurzname eines Moodle Kurses, in den die Buchenden eingeschrieben werden';
+$string['importcoursenumber'] = 'Moodle ID number of a Moodle course in which the participants are enrolled';
+$string['importcourseshortname'] = 'Short name of a Moodle course in which the participants are enrolled';
 $string['importcsv'] = 'CSV Importer';
 $string['importcsvbookingoption'] = 'Import CSV with booking options';
 $string['importcsvtitle'] = 'Import CSV';
-$string['importdayofweek'] = 'Wochentag einer Buchungsoption, z.B. Montag';
-$string['importdayofweekendtime'] = 'Endzeit eines Kurses, z.B. 12:00';
-$string['importdayofweekstarttime'] = 'Anfangszeit eines Kurses, z.B. 10:00';
-$string['importdayofweektime'] = 'Wochentag und Zeit einer Buchungsoption, z.B. Montag, 10:00 - 12:00';
-$string['importdefault'] = 'Standardpreis einer Buchungsoption. Nur wenn der Standardpreis gesetzt ist, können weitere Preise angegeben werden. Die Spalten müssen dafür den Kurznamen der Buchungskategorien entsprechen.';
-$string['importdescription'] = 'Beschreibung der Buchungsoption';
+$string['importdayofweek'] = 'Day of the week for a booking option, e.g., Monday';
+$string['importdayofweekendtime'] = 'End time of a course, e.g., 12:00';
+$string['importdayofweekstarttime'] = 'Start time of a course, e.g., 10:00';
+$string['importdayofweektime'] = 'Day of the week and time for a booking option, e.g., Monday, 10:00 - 12:00';
+$string['importdefault'] = 'Default price of a booking option. Additional prices can only be specified if the default price is set. The columns must match the short names of the booking categories.';
+$string['importdescription'] = 'Description of the booking option';
 $string['importexcelbutton'] = 'Import activity completion';
 $string['importexceltitle'] = 'Import activity completion';
 $string['importfailed'] = 'Import failed';
@@ -1200,11 +1205,11 @@ $string['importmaxanswers'] = 'Maximale Anzahl von Buchungen pro Buchungsoption'
 $string['importmaxoverbooking'] = 'Maximale Anzahl an Wartelistenplätzen pro Buchungsoption';
 $string['importpartial'] = 'The import was only partially completed. There were problems with following lines and they were not imported: ';
 $string['importsuccess'] = 'Import was successful. {$a} record(s) treated.';
-$string['importteacheremail'] = 'E-Mail Adressen von Nutzerinnen auf der Plattform, die als LehrerInnen in den Buchungsoptionen hinterlegt werden können. Bei mehreren e-mail Adressen Komma als Trennzeichen verwenden (aufpassen auf "Escape" bei Komma getrennten CSV!)';
-$string['importtext'] = 'Titel einer Buchungsoption (Synonym zu text)';
-$string['importtileprefix'] = 'Prefix (z.b. Kursnummer)';
-$string['importtitle'] = 'Titel einer Buchungsoption';
-$string['importuseremail'] = 'E-Mail Adressen von Nutzerinnen auf der Plattform, die diese Buchungsoption gebucht haben. Bei mehreren e-mail Adressen Komma als Trennzeichen verwenden (aufpassen auf "Escape" bei Komma getrennten CSV!)';
+$string['importteacheremail'] = 'Email addresses of users on the platform who can be listed as teachers in the booking options. Use a comma as a separator for multiple email addresses (beware of escaping for comma-separated CSVs!)';
+$string['importtext'] = 'Title of a booking option (synonym for text)';
+$string['importtileprefix'] = 'Prefix (e.g., course number)';
+$string['importtitle'] = 'Title of a booking option';
+$string['importuseremail'] = 'Email addresses of users on the platform who have booked this option. Use a comma as a separator for multiple email addresses (beware of escaping for comma-separated CSVs!)';
 $string['inarray'] = 'user has one of these comma separated values';
 $string['includeteachers'] = 'Include teachers in the sign-in sheet';
 $string['indexnumber'] = 'Numbering';
@@ -1266,7 +1271,7 @@ $string['limitanswers_help'] = 'If you change this option and you have booked pe
 $string['limitchangestrackinginrules'] = "Limit reactions on changes in booking rules";
 $string['limitchangestrackinginrulesdesc'] = "If you activate this setting, the booking rule react on change will only apply to the selected fields.";
 $string['limitfactor'] = 'Booking limit factor';
-$string['limitfactor_help'] = 'Specify a value by which to multiply the booking limit. For example, to increase the booking limit by 20%, enter the value <b>1.2</b>.';
+$string['limitfactor_help'] = 'Specify a value by which to multiply the booking limit. For example, to increase the booking limit by 20%, enter the value <b>1.2</b>. Always rounded up.';
 $string['linkbacktocourse'] = 'Link to booking option';
 $string['linkgotobookingoption'] = 'Go to booked option: {$a}</a>';
 $string['linknotavailableyet'] = "The link to access the meeting is available only 15 minutes before the start
@@ -1634,7 +1639,7 @@ $string['priceformulainfo'] = '<a data-toggle="collapse" href="#priceformula" ro
 <div class="collapse" id="priceformula">
 <samp>{$a->formula}</samp>
 </div><br>
-<a href="{$CFG->wwwroot}/admin/settings.php?section=modsettingbooking" target="_blank"><i class="fa fa-edit"></i> Edit formula...</a><br><br>
+<a href="{$a->url}" target="_blank"><i class="fa fa-edit"></i> Edit formula...</a><br><br>
 Below, you can additionally add a manual factor (multiplication) and an absolute value (addition) to be added to the formula.';
 $string['priceformulaisactive'] = 'On saving, calculate prices with price formula (this will overwrite current prices).';
 $string['priceformulamultiply'] = 'Manual factor';
@@ -1811,6 +1816,8 @@ $string['sameday'] = 'same day';
 $string['saturday'] = 'Saturday';
 $string['saveinstanceastemplate'] = 'Add booking instance to template';
 $string['savenewtagtemplate'] = 'Save';
+$string['sccartdescription'] = "Description in the Shopping Cart";
+$string['sccartdescription_desc'] = "Description displayed in the Shopping Cart. Fields of the booking option can be inserted using placeholders, e.g., {location}";
 $string['scgfbookgroupscohorts'] = 'Book cohort(s) or group(s)';
 $string['scgfcohortheader'] = 'Cohort subscription';
 $string['scgfgroupheader'] = 'Group subscription';
@@ -2068,7 +2075,7 @@ $string['templatedeleted'] = 'Template was deleted!';
 $string['templatefile'] = 'Template file';
 $string['templatesuccessfullysaved'] = 'Template was saved.';
 $string['terminated'] = "Terminated";
-$string['text'] = 'Titel';
+$string['text'] = 'Title';
 $string['textarea'] = "Textarea";
 $string['textdependingonstatus'] = "Text depending on booking status ";
 $string['textfield'] = 'Single line text input';

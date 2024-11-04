@@ -345,6 +345,7 @@ class wb_faq {
                     }
                 }
             }
+            $record->title = format_string($record->title);
             // If its a question.
             if ($record->type == 1) {
 
@@ -355,6 +356,8 @@ class wb_faq {
                     'local_wb_faq',
                     'faq_entry',
                     $record->id);
+
+                $record->content = format_text($record->content);
 
                 if (!isset($dataarr[$record->parentid])) {
                     $dataarr[$record->parentid] = new stdClass();
@@ -410,6 +413,17 @@ class wb_faq {
     public function set_courselist() {
         $this->courselist = enrol_get_my_courses(null, null, 0, [], true);
     }
+
+    /**
+     * Get mapped strings
+     *
+     * @return array
+     */
+    public static function get_string_map() {
+        $stringmap = json_decode(get_config('local_wb_faq', 'mapstrings'), true);
+        return $stringmap;
+    }
+
     /**
      * Add Breadcrumbs to flat & hierarchical tree.
      *
@@ -418,6 +432,7 @@ class wb_faq {
      * @return void
      */
     private static function add_breadcrumb(&$node, &$flattree) {
+        $map = self::get_string_map() ?? [];
 
         if (!$node) {
             return;
@@ -426,6 +441,7 @@ class wb_faq {
         if (!isset($node->breadcrumbs)) {
             $node->breadcrumbs[] = [
                 'name' => $node->title ?? get_string('faq', 'local_wb_faq'),
+                'datacat' => $node->title ?? get_string('faq', 'local_wb_faq'),
                 'id' => $node->id ?? 0
             ];
         }
@@ -433,16 +449,23 @@ class wb_faq {
         if (isset($node->categories)) {
             foreach ($node->categories as $category) {
                 $category->breadcrumbs = $node->breadcrumbs ?? [];
+                $title = $map[$category->title] ?? $category->title;
                 $category->breadcrumbs[] = [
-                    'name' => $category->title,
-                    'id' => $category->id ?? 0
+                    'name' => $title,
+                    'id' => $category->id ?? 0,
+                    'datacat' => $category->title,
                 ];
 
                 self::add_breadcrumb($category, $flattree);
             }
         }
         if (isset($node->id)) {
+            if (!empty($node->breadcrumbs)) {
+                $lastkey = array_key_last($node->breadcrumbs);
+                $node->breadcrumbs[$lastkey]['active'] = true;
+            }
             $flattree[$node->id]->breadcrumbs = $node->breadcrumbs;
+            $flattree[$node->id]->headertitle = end($node->breadcrumbs);
         }
     }
 
@@ -518,14 +541,17 @@ class wb_faq {
 
         $DB->update_record('local_wb_faq_entry', $data);
 
-        $context = \context_system::instance();
+        $context = context_system::instance();
         $userid = $USER->id;
-        $event = \local_wb_faq\event\faq_entry_added::create(
-            array(
-             'objectid' => $id,
-             'context' => $context,
-             'relateduserid' => $userid));
-        $event->trigger();
+        // $event = \local_wb_faq\event\faq_entry_added::create(
+        //     [
+        //         'objectid' => $id,
+        //         'context' => $context,
+        //         'relateduserid' => $userid,
+        //         'other' => [],
+        //     ]
+        // );
+        // $event->trigger();
 
         cache_helper::purge_by_event('setbackfaqlist');
 
@@ -585,18 +611,21 @@ class wb_faq {
     public static function delete_entry(int $id) {
         global $DB, $USER;
 
-        $result = $DB->delete_records('local_wb_faq_entry', array('id' => $id));
+        $result = $DB->delete_records('local_wb_faq_entry', ['id' => $id]);
 
         cache_helper::purge_by_event('setbackfaqlist');
         if ($result) {
-            $context = \context_system::instance();
+            $context = context_system::instance();
             $userid = $USER->id;
-            $event = \local_wb_faq\event\faq_entry_added::create(
-                array(
-                    'objectid' => $id,
-                    'context' => $context,
-                    'relateduserid'    => $userid));
-            $event->trigger();
+            // $event = \local_wb_faq\event\faq_entry_deleted::create(
+            //     [
+            //         'objectid' => $id,
+            //         'context' => $context,
+            //         'relateduserid' => $userid,
+            //         'other' => [],
+            //     ]
+            // );
+            // $event->trigger();
         }
         return $result ? 1 : 0;
     }

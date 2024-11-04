@@ -72,44 +72,30 @@ class standardfilter extends base {
         foreach ($categoryvalue as $key => $value) {
             $filter .= $filtercounter == 1 ? "" : " OR ";
             // Apply special filter here.
-            if (isset($table->subcolumns['datafields'][$columnname]['explode'])
-                || isset($table->subcolumns['datafields'][$columnname]['jsonattribute'])) {
+            if (
+                isset($table->subcolumns['datafields'][$columnname]['jsonattribute'])
+            ) {
                     $paramsvaluekey = $table->set_params("%" . $value ."%");
                     $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false);
-            } else if (is_numeric($value)) {
+            } else if (
+                is_numeric($value)
+                && isset($table->subcolumns['datafields'][$columnname]['local_wunderbyte_table\filters\types\hourlist'])
+            ) {
                 // Here we check if it's an hourslist filter.
-                if (isset($table->subcolumns['datafields'][$columnname]['local_wunderbyte_table\filters\types\hourlist'])) {
-                    $paramsvaluekey = $table->set_params((string) ($value + $delta), false);
-                    $filter .= filter::apply_hourlist_filter($columnname, ":$paramsvaluekey");
-                    $delta = filter::get_timezone_offset();
-                } else {
-                    $paramsvaluekey = $table->set_params((string) $value, false);
-                    $filter .= $DB->sql_like($DB->sql_concat($columnname), ":$paramsvaluekey", false);
-                }
+                $paramsvaluekey = $table->set_params((string) ($value + $delta), false);
+                $filter .= filter::apply_hourlist_filter($columnname, ":$paramsvaluekey");
+                $delta = filter::get_timezone_offset();
             } else {
                 // We want to find the value in an array of values.
                 // Therefore, we have to use or as well.
                 // First, make sure we have enough params we can use..
-                $filter .= " ( ";
-                $paramsvaluekey = $table->set_params($value, true);
+                $separator = $table->subcolumns['datafields'][$columnname]['explode'] ?? ",";
+                $paramsvaluekey = $table->set_params('%' . $separator . $value . $separator . '%', true);
                 $escapecharacter = wunderbyte_table::return_escape_character($value);
-                $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false, false, false, $escapecharacter);
-
-                $filter .= " OR ";
-                $paramsvaluekey = $table->set_params($value . ",%", true);
-                $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false, false, false, $escapecharacter);
-
-                $filter .= " OR ";
-                $paramsvaluekey = $table->set_params("%," . $value, true);
-                $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false, false, false, $escapecharacter);
-
-                $filter .= " OR ";
-                $paramsvaluekey = $table->set_params("%," . $value . ",%", true);
-                $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false, false, false, $escapecharacter);
-
-                $filter .= " ) ";
+                $concatvalue = $DB->sql_concat("'$separator'", $columnname, "'$separator'");
+                $filter .= $DB->sql_like("$concatvalue", ":$paramsvaluekey", false, false, false, $escapecharacter);
             }
-            $filtercounter ++;
+            $filtercounter++;
         }
         $filter .= " ) ";
     }

@@ -1072,6 +1072,10 @@ $string['excelfile'] = 'CSV Datei mit Aktivitätsabschluss';
 $string['executerestscript'] = 'REST script ausführen';
 $string['existingsubscribers'] = 'Vorhandene Nutzer:innen';
 $string['expired'] = 'Diese Aktivität wurde leider am {$a} beendet und steht nicht mehr zur Verfügung';
+$string['extendlimitforoverbooked'] = 'Überbuchte Personen zusätzlich zu Faktor addieren';
+$string['extendlimitforoverbooked_help'] = 'Wählen Sie diese Option, passiert folgendes:
+    Ein Kurs hat ein Limit von 40. Er ist aber bereits mit 2 TN auf 42 TN überbucht.
+    Wird auf diesen Kurs eine Limiterhöhung um beispielsweise 10% angewandt, wird das Limit auf 46 erhöht (40 + 4 (10%) + 2 (bereits überbuchte)), statt auf 44 (40+4).';
 $string['feedbackurl'] = 'Link zur Umfrage';
 $string['feedbackurl_help'] = 'Link zu einem Feedback-Formular, das an Teilnehmer:innen gesendet werden soll.
  Verwenden Sie in E-Mails den Platzhalter <b>{pollurl}</b>.';
@@ -1130,6 +1134,7 @@ $string['gotomoodlecourse'] = 'Zum Moodle-Kurs';
 $string['groupdeleted'] = 'Diese Buchung erstellt automatisch Gruppen im Zielkurs. Aber die Gruppe wurde im Zielkurs manuell gelöscht. Aktivieren Sie folgende Checkbox, um die Gruppe erneut zu erstellen';
 $string['groupexists'] = 'Die Gruppe existiert bereits im Zielkurs. Bitte verwenden Sie einen anderen Namen für die Buchungsoption';
 $string['groupname'] = 'Gruppenname';
+$string['h'] = ' Uhr';
 $string['hascapability'] = 'Außer mit dieser Fähikgeit';
 $string['helptext:emailsettings'] = '<div class="alert alert-warning style="margin-left: 200px;">
 <i class="fa fa-exclamation-triangle" aria-hidden="true"></i>
@@ -1257,7 +1262,7 @@ $string['limitanswers_help'] = 'Bei Änderung dieser Einstellung und vorhandenen
 $string['limitchangestrackinginrules'] = "Reaktionen auf Änderungen in Buchungs Regeln begrenzen";
 $string['limitchangestrackinginrulesdesc'] = "Wenn Sie diese Einstellung aktivieren, gilt die Reaktion auf Änderungen in Buchungs Regeln nur für die ausgewählten Felder.";
 $string['limitfactor'] = 'Buchungslimit-Faktor';
-$string['limitfactor_help'] = 'Geben Sie einen Wert an, mit dem das Buchungslimit multipliziert werden soll. Um das Buchungslimit beispielsweise um 20% zu erhöhen, geben Sie den Wert 1.2 ein.';
+$string['limitfactor_help'] = 'Geben Sie einen Wert an, mit dem das Buchungslimit multipliziert werden soll. Um das Buchungslimit beispielsweise um 20% zu erhöhen, geben Sie den Wert 1.2 ein. Es wird auf ganze Plätze aufgerundet.';
 $string['linkbacktocourse'] = 'Link zu Buchungsoptionen';
 $string['linkgotobookingoption'] = 'Buchung anzeigen: {$a}</a>';
 $string['linknotavailableyet'] = 'Der Link zum Online-Meeting-Raum ist erst 15 Minuten vor dem Meeting sichtbar
@@ -1626,7 +1631,7 @@ $string['priceformulainfo'] = '<a data-toggle="collapse" href="#priceformula" ro
 <div class="collapse" id="priceformula">
 <samp>{$a->formula}</samp>
 </div><br>
-<a href="{$CFG->wwwroot}/admin/settings.php?section=modsettingbooking" target="_blank"><i class="fa fa-edit"></i> Formel bearbeiten...</a><br><br>
+<a href="{$a->url}" target="_blank"><i class="fa fa-edit"></i> Formel bearbeiten...</a><br><br>
 Unterhalb können Sie zusätzlich einen manuellen Faktor (Multiplikation) und einen Absolutwert (Addition) hinzufügen.';
 $string['priceformulaisactive'] = 'Beim Speichern Preise mit Preisformel neu berechnen (aktuelle Preise werden überschrieben).';
 $string['priceformulamultiply'] = 'Manueller Faktor';
@@ -1746,6 +1751,8 @@ $string['sameday'] = 'Selber Tag';
 $string['saturday'] = 'Samstag';
 $string['saveinstanceastemplate'] = 'Buchung als Vorlage hinzufügen';
 $string['savenewtagtemplate'] = 'Speichern';
+$string['sccartdescription'] = "Beschreibung im Shopping Cart";
+$string['sccartdescription_desc'] = "Beschreibung, die im Shopping Cart angezeigt wird. Felder der Buchungsoption können mit Platzhaltern eingefügt werden, z.B. {location}";
 $string['scgfbookgroupscohorts'] = 'Globale Gruppe(n) oder Gruppe(n) buchen';
 $string['scgfcohortheader'] = 'Globale Gruppe (Kohorte) buchen';
 $string['scgfgroupheader'] = 'Gruppe aus dem Kurs buchen';

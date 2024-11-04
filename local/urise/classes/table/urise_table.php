@@ -337,7 +337,7 @@ class urise_table extends wunderbyte_table {
         } else {
             $url = '#';
         }
-        return "<a href='$url' target='_blank' class=''>mehr</a>";
+        return "<a href='$url' target='_blank' class=''>".get_string('more', 'local_urise')."</a>";
     }
 
     /**
@@ -362,16 +362,7 @@ class urise_table extends wunderbyte_table {
             if (strlen($shortdescription) > $maxlength) {
                 $shortdescription = substr($shortdescription, 0, $maxlength) . '...';
 
-                $ret =
-                    '<div>
-                        <a data-toggle="collapse" href="#collapseDescription' . $values->id . '" role="button"
-                            aria-expanded="false" aria-controls="collapseDescription">
-                            <i class="fa fa-info-circle" aria-hidden="true"></i>&nbsp;' .
-                            get_string('showdescription', 'local_urise') . '...</a>
-                    </div>
-                    <div class="collapse" id="collapseDescription' . $values->id . '">
-                        <div class="card card-body border-1 mt-1 mb-1 mr-3">' . $fulldescription . '</div>
-                    </div>';
+                $ret = $shortdescription;
             }
         }
 
@@ -821,8 +812,20 @@ class urise_table extends wunderbyte_table {
      */
     public function col_coursestarttime($values) {
 
-        // We don't use this column here, so just return an empty string.
-        return '';
+        $coursestarttime = $values->coursestarttime;
+        if (empty($coursestarttime)) {
+            return '';
+        }
+
+        switch (current_language()) {
+            case 'de':
+                $renderedcoursestarttime = date('d.m.Y', $coursestarttime);
+                break;
+            default:
+                $renderedcoursestarttime = date('M d, Y', $coursestarttime);
+                break;
+        }
+        return $renderedcoursestarttime;
     }
 
     /**

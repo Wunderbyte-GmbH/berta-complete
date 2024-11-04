@@ -22,6 +22,7 @@
  */
 
 use core\event\capability_assigned;
+use local_shopping_cart\shopping_cart;
 use local_urise\permissions;
 use mod_booking\singleton_service;
 
@@ -71,7 +72,8 @@ function local_urise_get_fontawesome_icon_map() {
  * @return string The HTML
  */
 function local_urise_render_navbar_output(\renderer_base $renderer) {
-    global $CFG, $DB;
+    global $CFG, $DB, $USER;
+
     // Early bail out conditions.
     if (!isloggedin() || isguestuser()) {
         return '';
@@ -82,7 +84,7 @@ function local_urise_render_navbar_output(\renderer_base $renderer) {
         return '';
     }
     $context = context_system::instance();
-    if (has_capability('moodle/user:editprofile', $context)) {
+    if (has_capability('mod/booking:editteacherdescription', $context)) {
         $editteacherlink = '<a class="dropdown-item" href="'
                 . $CFG->wwwroot . '/mod/booking/teachers.php">'
                 . get_string('editteachers', 'local_urise') . '</a>';
@@ -104,6 +106,8 @@ function local_urise_render_navbar_output(\renderer_base $renderer) {
                 . $CFG->wwwroot . '/local/entities/entities.php">'
                 . get_string('entities', 'local_urise') . '</a>'
             . $editteacherlink . '
+            <a class="dropdown-item" href="https://servicedesk.univie.ac.at/plugins/servlet/desk/portal/163/create/1918" target="_blank">'
+                . get_string('servicedesk', 'local_urise') . '</a>
         </div>
     </div>';
     return $output;

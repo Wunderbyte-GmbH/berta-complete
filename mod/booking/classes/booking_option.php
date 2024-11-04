@@ -602,27 +602,24 @@ class booking_option {
     public function delete_responses_activitycompletion() {
         global $DB;
 
-        $bookingsettings = singleton_service::get_instance_of_booking_settings_by_bookingid($this->bookingid);
+        $booking = singleton_service::get_instance_of_booking_by_bookingid($this->bookingid);
 
-        $ud = [];
-        $oud = [];
-        $users = $DB->get_records('course_modules_completion',
-                ['coursemoduleid' => $bookingsettings->completionmodule]);
-        $ousers = $DB->get_records('booking_answers', ['optionid' => $this->optionid]);
-
-        foreach ($users as $u) {
-            $ud[] = $u->userid;
+        $todelete = [];
+        $options = $booking->get_all_options();
+        foreach ($options as $option) {
+            $answers = booking_answers::get_instance_from_optionid($option->id);
+            if (!empty($answers->users)) {
+                foreach ($answers->users as $user) {
+                    if ((int)$user->completed === 1) {
+                        $todelete[] = $user->id;
+                    }
+                }
+            }
         }
-
-        foreach ($ousers as $u) {
-            $oud[] = $u->userid;
-        }
-
-        $todelete = array_intersect($ud, $oud);
 
         $results = [];
         foreach ($todelete as $userid) {
-            $results[$userid] = $this->user_delete_response($userid);
+            $results[$userid] = $this->user_delete_response($userid, false, false, true, true);
         }
 
         return $results;
@@ -640,7 +637,7 @@ class booking_option {
             return $results;
         }
         foreach ($users as $userid) {
-            $results[$userid] = $this->user_delete_response($userid);
+            $results[$userid] = $this->user_delete_response($userid, false, false, true, true);
         }
         return $results;
     }
@@ -654,10 +651,11 @@ class booking_option {
      * @param bool $bookingoptioncancel indicates if the function was called
      *     after the whole booking option was cancelled, false by default
      * @param bool $syncwaitinglist set this to false, if you do not want to sync_waiting_list here (avoid recursions)
+     * @param bool $deleteall set this to true if you want to delete a complete answers too
      * @return bool true if booking was deleted successfully, otherwise false
      */
     public function user_delete_response($userid, $cancelreservation = false,
-        $bookingoptioncancel = false, $syncwaitinglist = true) {
+        $bookingoptioncancel = false, $syncwaitinglist = true, $deleteall = false) {
 
         global $USER, $DB;
 
@@ -677,8 +675,13 @@ class booking_option {
             $syncwaitinglist = false;
         }
 
-        $results = $DB->get_records('booking_answers',
-                ['userid' => $userid, 'optionid' => $this->optionid, 'completed' => 0]);
+        // Delete all booked options including completed.
+        $conditions = ['userid' => $userid, 'optionid' => $this->optionid];
+        if ($deleteall === false) {
+            // Delete only incompleted booked options.
+            $conditions['completed'] = 0;
+        }
+        $results = $DB->get_records('booking_answers', $conditions);
 
         if (count($results) == 0) {
             return false;
@@ -2673,17 +2676,20 @@ class booking_option {
                 // For the mail placeholder {bookingdetails} no button but link only.
                 // However, we can use HTML links in mails.
                 $cm = $this->booking->cm;
-                $link = new moodle_url($baseurl . '/mod/booking/link.php',
+                $link = new moodle_url(
+                    $baseurl . '/mod/booking/link.php',
                     ['id' => $cm->id,
                         'optionid' => $this->optionid,
                         'action' => 'join',
                         'sessionid' => $sessionid,
                         'fieldid' => $field->id,
-                    ]);
+                    ]
+                );
                 $link = $link->out(false);
+                $fieldname = get_string($field->cfgname, 'mod_booking');
                 return [
                     'name' => null,
-                    'value' => "$field->cfgname: <a href='$link' target='_blank'>$link</a>",
+                    'value' => "<a href='$link' target='_blank'>$fieldname</a>",
                 ];
             default:
                 return [];

@@ -197,11 +197,7 @@ class shortcodes {
             $infinitescrollpage = 0;
         }
 
-        if (empty($args['initcourses']) || $args['initcourses'] == "false") {
-            $table = self::inittableforcourses(false);
-        } else {
-            $table = self::inittableforcourses();
-        }
+        $table = self::inittableforcourses();
 
         if (empty($args['reload'])) {
             $args['reload'] = false;
@@ -287,9 +283,16 @@ class shortcodes {
      */
     public static function unifiedmybookingslist($shortcode, $args, $content, $env, $next) {
 
-        global $USER;
+        global $USER, $PAGE;
+
+        $userid = optional_param('userid', $USER->id, PARAM_INT);
+
+        if ($userid != $USER->id) {
+            shopping_cart::buy_for_user($userid);
+        }
 
         self::fix_args($args);
+
         $booking = self::get_booking($args);
 
         $bookingids = explode(',', get_config('local_urise', 'multibookinginstances'));
@@ -367,7 +370,7 @@ class shortcodes {
                     null,
                     [],
                     $wherearray,
-                    $USER->id,
+                    $userid,
                     [
                         MOD_BOOKING_STATUSPARAM_BOOKED,
                         MOD_BOOKING_STATUSPARAM_RESERVED,
@@ -387,7 +390,7 @@ class shortcodes {
                     null,
                     [],
                     $wherearray,
-                    $USER->id,
+                    $userid,
                     [
                         MOD_BOOKING_STATUSPARAM_BOOKED,
                         MOD_BOOKING_STATUSPARAM_RESERVED,
@@ -598,6 +601,11 @@ class shortcodes {
      */
     public static function calendarview($shortcode, $args, $content, $env, $next) {
 
+        // Calendar should normally be sorted by coursestarttime.
+        if (empty($args['sortby'])) {
+            $args['sortby'] = 'coursestarttime';
+        }
+
         [$table, $perpage] = self::unifiedview($shortcode, $args, $content, $env, $next, true);
 
         $table->tabletemplate = 'local_wunderbyte_table/calendarview';
@@ -709,12 +717,12 @@ class shortcodes {
         if ($addcols == true) {
             $table->define_columns([
                 'titleprefix',
-                'coursestarttime',
-                'courseendtime',
                 'location',
                 'bookingopeningtime',
                 'bookingclosingtime',
             ]);
+
+            $table->add_subcolumns('invisible', ['coursestarttime', 'courseendtime']);
         }
         return $table;
     }

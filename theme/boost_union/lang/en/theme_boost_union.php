@@ -602,7 +602,7 @@ $string['pagelayoutstab'] = 'Page layouts';
 $string['policyheading'] = 'Policies';
 // ... ... Setting: Navigation on policy overview page.
 $string['policyoverviewnavigationsetting'] = 'Show navigation on policy overview page';
-$string['policyoverviewnavigationsetting_desc'] = 'By default, the policy overview page (provided by tool_policy) does not show a navigation menu or footer. With this setting, you can show the primary navigation and footer on that page.';
+$string['policyoverviewnavigationsetting_desc'] = 'By default, the <a href="{$a->url}">policy overview page (provided by tool_policy)</a> does not show a navigation menu or footer. With this setting, you can show the primary navigation and footer on that page.';
 
 // Settings: Links tab.
 $string['linkstab'] = 'Links';
@@ -686,7 +686,7 @@ $string['footersuppressstandardfootercore'] = 'Suppress footer output by core co
 $string['footersuppressstandardfootercore_desc'] = 'With this setting, you can entirely suppress the footer output by the core component \'{$a}\'. Core components can add additional content to the footer by implementing a particular hook or function. This core component has implemented this hook / function and might add content to the footer in certain circumstances.';
 // ... ... Setting: Suppress footer output by plugins.
 $string['footersuppressstandardfooter'] = 'Suppress footer output by plugin \'{$a}\'';
-$string['footersuppressstandardfooter_desc'] = 'With this setting, you can entirely suppress the footer output by plugin \'{$a}\'. Plugins (even if they are shipped with Moodle core, but are still technically plugins) can add additional content to the footer by implementing a particular hook or function. This plugin has implemented this hook / function and might add content to the footer in certain circumstances.';
+$string['footersuppressstandardfooter_desc'] = 'With this setting, you can entirely suppress the footer output by plugin \'{$a}\'. Plugins (even if they are shipped with Moodle core, but are still technically plugins) can add additional content to the footer by implementing a particular hook or function. This plugin has implemented this hook / function and might add content to the footer in certain circumstances.<br />Please note: Due to the way how the suppressing feature is implemented, the setting might not take effect before the second page load after saving the setting.';
 
 // Settings: Static pages tab.
 $string['staticpagestab'] = 'Static pages';
@@ -1320,6 +1320,7 @@ $string['cachedef_flavours'] = 'Flavours which apply to a given page\'s category
 $string['cachedef_smartmenus'] = 'Smart menus';
 $string['cachedef_smartmenu_items'] = 'Smart menu items';
 $string['cachedef_touchiconsios'] = 'Touch icon files for iOS';
+$string['cachedef_hookoverrides'] = 'Hook overrides';
 
 // Scheduled tasks.
 $string['task_purgecache'] = 'Purge theme cache';
