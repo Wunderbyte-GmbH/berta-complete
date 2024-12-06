@@ -17,6 +17,7 @@
 namespace mod_booking\booking_campaigns\campaigns;
 
 use mod_booking\booking_campaigns\booking_campaign;
+use mod_booking\booking_campaigns\campaigns_info;
 use mod_booking\booking_option_settings;
 use mod_booking\customfield\booking_handler;
 use mod_booking\singleton_service;
@@ -68,8 +69,11 @@ class campaign_customfield implements booking_campaign {
     public $extendlimitforoverbooked = 0;
 
     // From JSON.
-    /** @var string $fieldname */
-    public $fieldname = '';
+    /** @var string $bofieldname */
+    public $bofieldname = '';
+
+    /** @var string $campaignfieldnameoperator */
+    public $campaignfieldnameoperator = '';
 
     /** @var string $fieldvalue */
     public $fieldvalue = '';
@@ -80,8 +84,8 @@ class campaign_customfield implements booking_campaign {
     /** @var string $cpoperator */
     public $cpoperator = '';
 
-    /** @var string $textfield */
-    public $textfield = '';
+    /** @var array $cpvalue */
+    public $cpvalue = [];
 
     /** @var bool $userspecificprice */
     public $userspecificprice = false;
@@ -101,8 +105,9 @@ class campaign_customfield implements booking_campaign {
 
         // Set additional data stored in JSON.
         $jsonobj = json_decode($record->json);
-        $this->fieldname = $jsonobj->fieldname;
-        $this->fieldvalue = $jsonobj->fieldvalue;
+        $this->bofieldname = $jsonobj->bofieldname ?? '';
+        $this->campaignfieldnameoperator = $jsonobj->campaignfieldnameoperator ?? '';
+        $this->fieldvalue = $jsonobj->fieldvalue ?? '';
 
         if (!empty($jsonobj->cpfield)) {
 
@@ -110,7 +115,7 @@ class campaign_customfield implements booking_campaign {
 
             $this->cpfield = $jsonobj->cpfield ?? 0;
             $this->cpoperator = $jsonobj->cpoperator ?? '';
-            $this->textfield = $jsonobj->textfield ?? '';
+            $this->cpvalue = $jsonobj->cpvalue ?? [];
         }
     }
 
@@ -124,97 +129,7 @@ class campaign_customfield implements booking_campaign {
 
         global $DB;
 
-        $mform->addElement('text', 'name', get_string('campaignname', 'mod_booking'));
-        $mform->addHelpButton('name', 'campaign_name', 'mod_booking');
-
-        $mform->addElement('static', 'warning', '',
-                get_string('optionspecificcampaignwarning', 'mod_booking'));
-
-        // Custom field name.
-        $records = booking_handler::get_customfields();
-
-        $fieldnames = [];
-        $fieldnames[0] = get_string('choose...', 'mod_booking');
-        foreach ($records as $record) {
-            $fieldnames[$record->shortname] = $record->name;
-        }
-
-        $operators = [
-            '=' => get_string('equals', 'mod_booking'),
-            '~' => get_string('contains', 'mod_booking'),
-        ];
-
-        $mform->addElement('select', 'fieldname',
-            get_string('campaignfieldname', 'mod_booking'), $fieldnames);
-        $mform->addHelpButton('fieldname', 'campaignfieldname', 'mod_booking');
-
-        // Custom field value.
-        $sql = "SELECT DISTINCT cd.value
-            FROM {customfield_field} cf
-            JOIN {customfield_category} cc
-            ON cf.categoryid = cc.id
-            JOIN {customfield_data} cd
-            ON cd.fieldid = cf.id
-            WHERE cc.area = 'booking'
-            AND cd.value IS NOT NULL
-            AND cd.value <> ''
-            AND cf.shortname = :fieldname";
-
-        $params = ['fieldname' => ''];
-        if (!empty($ajaxformdata["fieldname"])) {
-            $params['fieldname'] = $ajaxformdata["fieldname"];
-        }
-        $records = $DB->get_fieldset_sql($sql, $params);
-
-        $fieldvalues = [];
-        foreach ($records as $record) {
-            if (strpos($record, ',') !== false) {
-                foreach (explode(',', $record) as $subrecord) {
-                    $fieldvalues[$subrecord] = $subrecord;
-                }
-            } else {
-                $fieldvalues[$record] = $record;
-            }
-        }
-
-        $options = [
-            'noselectionstring' => get_string('choose...', 'mod_booking'),
-            'tags' => true,
-            'multiple' => false,
-        ];
-        $mform->addElement('autocomplete', 'fieldvalue',
-            get_string('campaignfieldvalue', 'mod_booking'), $fieldvalues, $options);
-        $mform->addHelpButton('fieldvalue', 'campaignfieldvalue', 'mod_booking');
-        $mform->hideIf('fieldvalue', 'fieldname', 'eq', "0");
-
-        // Custom user profile field to be checked.
-        $customuserprofilefields = $DB->get_records('user_info_field', null, '', 'id, name, shortname');
-        if (!empty($customuserprofilefields)) {
-            $customuserprofilefieldsarray = [];
-            $customuserprofilefieldsarray[0] = get_string('choose...', 'mod_booking');
-
-            $mform->addElement('static', 'warning', '',
-                get_string('userspecificcampaignwarning', 'mod_booking'));
-
-            // Create an array of key => value pairs for the dropdown.
-            foreach ($customuserprofilefields as $customuserprofilefield) {
-                $customuserprofilefieldsarray[$customuserprofilefield->shortname] = $customuserprofilefield->name;
-            }
-
-            $mform->addElement('select', 'cpfield',
-                get_string('customuserprofilefield', 'mod_booking'), $customuserprofilefieldsarray);
-
-            $mform->addHelpButton('cpfield', 'customuserprofilefield', 'mod_booking');
-
-            $mform->addElement('select', 'cpoperator',
-                get_string('blockoperator', 'mod_booking'), $operators);
-            $mform->hideIf('cpoperator', 'cpfield', 'eq', "0");
-
-            $mform->addElement('text', 'textfield',
-                get_string('textfield', 'mod_booking'));
-            $mform->setType('textfield', PARAM_TEXT);
-            $mform->hideIf('textfield', 'cpfield', 'eq', "0");
-        }
+        campaigns_info::add_customfields_to_form($mform, $ajaxformdata);
 
         $mform->addElement('date_time_selector', 'starttime', get_string('campaignstart', 'mod_booking'));
         $mform->setType('starttime', PARAM_INT);
@@ -263,13 +178,14 @@ class campaign_customfield implements booking_campaign {
             $jsonobject = json_decode($data->json);
         }
 
-        $jsonobject->fieldname = $data->fieldname;
+        $jsonobject->bofieldname = $data->bofieldname;
+        $jsonobject->campaignfieldnameoperator = $data->campaignfieldnameoperator;
         $jsonobject->fieldvalue = $data->fieldvalue;
 
         if (!empty($data->cpfield)) {
             $jsonobject->cpfield = $data->cpfield;
             $jsonobject->cpoperator = $data->cpoperator ?? '';
-            $jsonobject->textfield = $data->textfield ?? '';
+            $jsonobject->cpvalue = $data->cpvalue ?? [];
         }
 
         $record->json = json_encode($jsonobject);
@@ -317,12 +233,13 @@ class campaign_customfield implements booking_campaign {
         if ($jsonobject = json_decode($record->json)) {
             switch ($record->type) {
                 case MOD_BOOKING_CAMPAIGN_TYPE_CUSTOMFIELD:
-                    $data->fieldname = $jsonobject->fieldname;
+                    $data->bofieldname = $jsonobject->bofieldname;
+                    $data->campaignfieldnameoperator = $jsonobject->campaignfieldnameoperator;
                     $data->fieldvalue = $jsonobject->fieldvalue;
 
                     $data->cpfield = $jsonobject->cpfield ?? 0;
                     $data->cpoperator = $jsonobject->cpoperator ?? '';
-                    $data->textfield = $jsonobject->textfield ?? '';
+                    $data->cpvalue = $jsonobject->cpvalue ?? [];
                     break;
             }
         }
@@ -336,32 +253,13 @@ class campaign_customfield implements booking_campaign {
      * @return bool true if the campaign is currently active
      */
     public function campaign_is_active(int $optionid, booking_option_settings $settings): bool {
-
-        $now = time();
-        if ($this->starttime <= $now && $now <= $this->endtime) {
-
-            // If it's user specific and there is no option specific fieldname, we return true right away.
-            // Price it'self for the user is calculated in get_campaign price.
-            if ($this->userspecificprice && empty($this->fieldname)) {
-                return true;
-            } else if (!empty($settings->customfields[$this->fieldname])) {
-                if (
-                    is_string($settings->customfields[$this->fieldname])
-                    && $settings->customfields[$this->fieldname] === $this->fieldvalue) {
-                    // It's a string so we can compare directly.
-                    return true;
-                } else if (is_array($settings->customfields[$this->fieldname])
-                    && in_array($this->fieldvalue, $settings->customfields[$this->fieldname])) {
-                    // It's an array, so we check with in_array.
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-        return false;
+        return campaigns_info::check_if_campaign_is_active(
+            $this->starttime,
+            $this->endtime,
+            $settings->customfields[$this->bofieldname],
+            $this->fieldvalue,
+            $this->campaignfieldnameoperator
+        );
     }
 
     /**
@@ -376,20 +274,14 @@ class campaign_customfield implements booking_campaign {
             $campaignprice = $price * $this->pricefactor;
         } else {
             $campaignprice = $price;
-            $user = singleton_service::get_instance_of_user($userid);
-            if ($fieldvalue = $user->profile[$this->cpfield]) {
-                switch ($this->cpoperator) {
-                    case '=':
-                        if ($fieldvalue == $this->textfield) {
-                            $campaignprice = $price * $this->pricefactor;
-                        }
-                        break;
-                    case '~':
-                        if ($fieldvalue == $this->textfield) {
-                            $campaignprice = $price * $this->pricefactor;
-                        }
-                        break;
-                }
+            $fieldapplies = campaigns_info::check_if_profilefield_applies(
+                $this->cpvalue,
+                $this->cpfield,
+                $this->cpoperator,
+                $userid
+            );
+            if ($fieldapplies) {
+                $campaignprice = $price * $this->pricefactor;
             }
         }
 
@@ -453,9 +345,10 @@ class campaign_customfield implements booking_campaign {
     /**
      * Check if particular campaign is blocking right now.
      * @param booking_option_settings $settings the booking option settings class
+     * @param int $userid id of the user
      * @return array
      */
-    public function is_blocking(booking_option_settings $settings): array {
+    public function is_blocking(booking_option_settings $settings, int $userid): array {
 
         return [
             'status' => false,

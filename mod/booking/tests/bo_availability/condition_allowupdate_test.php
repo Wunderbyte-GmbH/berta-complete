@@ -51,16 +51,8 @@ final class condition_allowupdate_test extends advanced_testcase {
      * Tests set up.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest(true);
-    }
-
-    /**
-     * Tear Down.
-     *
-     * @return void
-     *
-     */
-    public function tearDown(): void {
     }
 
     /**
@@ -215,122 +207,12 @@ final class condition_allowupdate_test extends advanced_testcase {
     }
 
     /**
-     * Test campaign blockbooking.
+     * Test subbookings - person.
      *
-     * @covers \condition\campaign_blockbooking::is_available
-     * @param array $bdata
-     * @throws \coding_exception
-     * @throws \dml_exception
-     *
-     * @dataProvider booking_common_settings_provider
-     */
-    public function test_booking_bookit_campaign_blockbooking(array $bdata): void {
-        global $DB, $CFG;
-
-        // Setup test data.
-        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
-
-        // Create users.
-        $student1 = $this->getDataGenerator()->create_user();
-        $student2 = $this->getDataGenerator()->create_user();
-        $teacher = $this->getDataGenerator()->create_user();
-        $bookingmanager = $this->getDataGenerator()->create_user(); // Booking manager.
-
-        $bdata['course'] = $course->id;
-        $bdata['bookingmanager'] = $bookingmanager->username;
-
-        $booking1 = $this->getDataGenerator()->create_module('booking', $bdata);
-
-        $this->setAdminUser();
-
-        $this->getDataGenerator()->enrol_user($student1->id, $course->id);
-        $this->getDataGenerator()->enrol_user($student2->id, $course->id);
-        $this->getDataGenerator()->enrol_user($teacher->id, $course->id);
-        $this->getDataGenerator()->enrol_user($bookingmanager->id, $course->id);
-
-        $categorydata            = new stdClass();
-        $categorydata->name      = 'BookCustomCat1';
-        $categorydata->component = 'mod_booking';
-        $categorydata->area      = 'booking';
-        $categorydata->itemid    = 0;
-        $categorydata->contextid = context_system::instance()->id;
-
-        $bookingcat = $this->getDataGenerator()->create_custom_field_category((array)$categorydata);
-        $bookingcat->save();
-
-        $fielddata                = new stdClass();
-        $fielddata->categoryid    = $bookingcat->get('id');
-        $fielddata->name       = 'Sport1';
-        $fielddata->shortname  = 'spt1';
-        $fielddata->type = 'text';
-        $fielddata->configdata    = "{\"required\":\"0\",\"uniquevalues\":\"0\",\"locked\":\"0\",\"visibility\":\"2\",
-                                    \"defaultvalue\":\"\",\"displaysize\":30,\"maxlength\":50,\"ispassword\":\"0\",
-                                    \"link\":\"\",\"linktarget\":\"\"}";
-        $bookingfield = $this->getDataGenerator()->create_custom_field((array)$fielddata);
-        $bookingfield->save();
-        $this->assertTrue(\core_customfield\field::record_exists($bookingfield->get('id')));
-
-        $record = new stdClass();
-        $record->bookingid = $booking1->id;
-        $record->text = 'Test option1';
-        $record->chooseorcreatecourse = 1; // Reqiured.
-        $record->courseid = $course->id;
-        $record->useprice = 0;
-        $record->maxanswers = 3;
-        $record->optiondateid_1 = "0";
-        $record->daystonotify_1 = "0";
-        $record->coursestarttime_1 = strtotime('now + 3 day');
-        $record->courseendtime_1 = strtotime('now + 6 day');
-        $record->customfield_spt1 = 'tennis';
-
-        /** @var mod_booking_generator $plugingenerator */
-        $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
-
-        // Create blocking campaing.
-        $campaingdata = (object)[
-            'fieldname' => 'spt1',
-            'fieldvalue' => 'tennis',
-            'blockoperator' => 'blockabove',
-            'blockinglabel' => 'block_above_30',
-            'hascapability' => null,
-            'percentageavailableplaces' => 30,
-        ];
-        $campaing = new stdClass();
-        $campaing = [
-            'name' => 'bloking', 'type' => 1,
-            'starttime' => strtotime('yesterday'), 'endtime' => strtotime('now + 1 month'),
-            'pricefactor' => 1, 'limitfactor' => 1,
-            'json' => json_encode($campaingdata),
-        ];
-
-        $option1 = $plugingenerator->create_option($record);
-        singleton_service::destroy_booking_option_singleton($option1->id); // Mandatory there.
-
-        $plugingenerator->create_campaign($campaing);
-
-        $settings1 = singleton_service::get_instance_of_booking_option_settings($option1->id);
-        $optionobj1 = singleton_service::get_instance_of_booking_option($settings1->cmid, $option1->id);
-
-        // Book the first user without any problem.
-        $boinfo1 = new bo_info($settings1);
-
-        $this->setUser($student1);
-        // Book option1 by student1.
-        $result = booking_bookit::bookit('option', $settings1->id, $student1->id);
-        $result = booking_bookit::bookit('option', $settings1->id, $student1->id);
-        list($id, $isavailable, $description) = $boinfo1->is_available($settings1->id, $student1->id, true);
-        $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $id);
-
-        // Try to book option1 with student2.
-        $this->setUser($student2);
-        list($id, $isavailable, $description) = $boinfo1->is_available($settings1->id, $student2->id, true);
-        $this->assertEquals(MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING, $id);
-    }
-
-    /**
-     * Test subbookings.
-     *
-     * @covers \condition\campaign_blockbooking::is_available
+     * @covers \condition\subbooking_blocks::is_available
+     * @covers \condition\subbooking::is_available
+     * @covers \subbookings\booking_subbooking
+     * @covers \subbookings\sb_types\subbooking_additionalperson
      * @param array $bdata
      * @throws \coding_exception
      * @throws \dml_exception
@@ -400,6 +282,20 @@ final class condition_allowupdate_test extends advanced_testcase {
         $settings1 = singleton_service::get_instance_of_booking_option_settings($option1->id);
         $boinfo1 = new bo_info($settings1);
 
+        // Validate subbooking presence.
+        $phpunitversion = (float)\PHPUnit\Runner\Version::series();
+        if ($phpunitversion < 9.6) {
+            $this->assertObjectHasAttribute('subbookings', $settings1);
+        } else {
+            $this->assertObjectHasProperty('subbookings', $settings1);
+        }
+        $this->assertIsArray($settings1->subbookings);
+        $this->assertCount(1, $settings1->subbookings);
+        $subbookingobj = $settings1->subbookings[0];
+        $this->assertInstanceOf('mod_booking\subbookings\sb_types\subbooking_additionalperson', $subbookingobj);
+        $this->assertEquals($subboking->name, $subbookingobj->name);
+        $this->assertEquals($subboking->type, $subbookingobj->type);
+
         $this->setUser($student1);
         // Validate that subboking is available and non-bloking.
         list($id, $isavailable, $description) = $boinfo1->is_available($settings1->id, $student1->id, false);
@@ -426,6 +322,19 @@ final class condition_allowupdate_test extends advanced_testcase {
 
         $settings2 = singleton_service::get_instance_of_booking_option_settings($option2->id);
         $boinfo2 = new bo_info($settings2);
+
+        // Validate subbooking presence.
+        if ($phpunitversion < 9.6) {
+            $this->assertObjectHasAttribute('subbookings', $settings2);
+        } else {
+            $this->assertObjectHasProperty('subbookings', $settings2);
+        }
+        $this->assertIsArray($settings2->subbookings);
+        $this->assertCount(1, $settings2->subbookings);
+        $subbookingobj = $settings2->subbookings[0];
+        $this->assertInstanceOf('mod_booking\subbookings\sb_types\subbooking_additionalperson', $subbookingobj);
+        $this->assertEquals($subboking->name, $subbookingobj->name);
+        $this->assertEquals($subboking->type, $subbookingobj->type);
 
         // Try to book option2 with student2.
         $this->setUser($student2);

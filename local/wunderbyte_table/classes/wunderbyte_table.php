@@ -357,6 +357,12 @@ class wunderbyte_table extends table_sql {
     public $showpagination = true;
 
     /**
+     * Additional template data.
+     * @var array
+     */
+    public $templatedata = [];
+
+    /**
      * Constructor. Does store uniqueid as hashed value and the actual classname.
      * The $uniqueid should be composed by ASCII alphanumeric characters, underlines and spaces only!
      * It is recommended to avoid of usage of simple single words like "table" to reduce chance of affecting by Moodle`s core CSS
@@ -1398,6 +1404,7 @@ class wunderbyte_table extends table_sql {
                     $class = new $classname($categorykey, $filtersetting['localizedname']);
                     $class->apply_filter($filter, $categorykey, $categoryvalue, $this);
 
+                    // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
                     // TODO: Use apply_filter method for the remaining filter type datepicker.
                     // Eventually we will get rid of the following section.
                     // ... for the moment, make sure to escape it for classes already implementing the new way.
@@ -1862,9 +1869,9 @@ class wunderbyte_table extends table_sql {
         }
     }
 
-    /** Set params with key for table.
+    /**
+     * Set params with key for table.
      * You can use extra quotes added to the string or set the param without additional quotes.
-     *
      *
      * @param string $value
      * @param bool $useextraquotes
@@ -1886,5 +1893,15 @@ class wunderbyte_table extends table_sql {
         }
 
         return $paramsvaluekey;
+    }
+
+    /**
+     * Sets template data by key and value.
+     *
+     * @param string $key   The key under which the data will be stored.
+     * @param mixed  $value The value to be stored under the specified key.
+     */
+    public function set_template_data($key, $value) {
+        $this->templatedata[$key] = $value;
     }
 }

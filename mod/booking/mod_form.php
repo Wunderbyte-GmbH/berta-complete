@@ -161,9 +161,11 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
         $viewparamoptions = [MOD_BOOKING_VIEW_PARAM_LIST => get_string('viewparam:list', 'mod_booking')];
-        // Cards view is a PRO feature.
+        // Additional views like cards view are a PRO feature.
         if ($isproversion) {
             $viewparamoptions[MOD_BOOKING_VIEW_PARAM_CARDS] = get_string('viewparam:cards', 'mod_booking');
+            $viewparamoptions[MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT] = get_string('viewparam:listimgleft', 'mod_booking');
+            $viewparamoptions[MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT] = get_string('viewparam:listimgright', 'mod_booking');
         }
         // Default view param (0...List view, 1...Cards view).
         $mform->addElement('select', 'viewparam', get_string('viewparam', 'mod_booking'),
@@ -174,7 +176,7 @@ class mod_booking_mod_form extends moodleform_mod {
 
         if (!$isproversion) {
             $mform->addElement('html', '<div class="mb-3" style="margin-left: 13rem;">' . get_string('badge:pro', 'mod_booking') .
-                " <span class='small'>" . get_string('proversion:cardsview', 'mod_booking') . '</span></div>');
+                " <span class='small'>" . get_string('proversion:extraviews', 'mod_booking') . '</span></div>');
         }
 
         // Choose semester.
@@ -751,25 +753,13 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->addElement('header', 'bookingandcancelling',
                 get_string('bookingandcancelling', 'mod_booking'));
 
-        $mform->addElement('advcheckbox', 'disablebooking', get_string('disablebookingforinstance', 'mod_booking'));
-        $mform->setType('disablebooking', PARAM_INT);
-        $mform->setDefault('disablebooking', (int) booking::get_value_of_json_by_key((int) $bookingid, "disablebooking"));
-
-        // Miscellaneous settings.
-        $mform->addElement('header', 'miscellaneoussettingshdr',
-                get_string('advancedoptions', 'mod_booking'));
-
-        $mform->addElement('editor', 'bookingpolicy', get_string("bookingpolicy", "booking"), null,
-                null);
-        $mform->setType('bookingpolicy', PARAM_CLEANHTML);
-
         $mform->addElement('advcheckbox', 'allowupdate', get_string('allowbookingafterstart', 'mod_booking'));
 
         $mform->addElement('advcheckbox', 'disablecancel', get_string('disablecancelforinstance', 'mod_booking'));
         $mform->setType('disablecancel', PARAM_INT);
         $mform->setDefault('disablecancel', (int) booking::get_value_of_json_by_key((int) $bookingid, "disablecancel"));
 
-        $mform->addElement('advcheckbox', 'cancancelbook', get_string('cancancelbook', 'mod_booking'));
+        $mform->addElement('advcheckbox', 'cancancelbook', get_string('cancancelbookallow', 'mod_booking'));
         $mform->disabledIf('cancancelbook', 'disablecancel', 'eq', 1);
 
         $cancancelbookdaysstring = get_string('cancancelbookdays', 'mod_booking');
@@ -786,13 +776,42 @@ class mod_booking_mod_form extends moodleform_mod {
                 break;
         }
 
+        // Cancel date is either absolute or relative to defined start.
+        $strid = 'cdo:' . $canceldependenton;
+        $a = get_string($strid, 'mod_booking');
+        $mform->addElement('advcheckbox', 'cancelrelativedate', get_string('cancancelbookrelative', 'mod_booking', $a));
+        $mform->hideIf('cancelrelativedate', 'cancancelbook', 'eq', 0);
+        $mform->hideIf('cancelrelativedate', 'disablecancel', 'eq', 1);
+        $mform->setDefault('cancelrelativedate',
+        (int)booking::get_value_of_json_by_key($bookingid, 'cancelrelativedate') ?? 1);
+
+        $mform->addElement('date_time_selector', 'allowupdatetimestamp', get_string('canceldateabsolute', 'mod_booking'));
+        $mform->hideIf('allowupdatetimestamp', 'cancancelbook', 'eq', 0);
+        $mform->hideIf('allowupdatetimestamp', 'cancelrelativedate', 'eq', 1);
+        $mform->setDefault('allowupdatetimestamp',
+        booking::get_value_of_json_by_key($bookingid, 'allowupdatetimestamp') ?? '');
+
         $opts = [10000 => get_string('cancancelbookdaysno', 'mod_booking')];
         $extraopts = array_combine(range(-100, 100), range(-100, 100));
         $opts = $opts + $extraopts;
         $mform->addElement('select', 'allowupdatedays', $cancancelbookdaysstring, $opts);
+        $mform->hideIf('allowupdatedays', 'cancelrelativedate', 'eq', 0);
+
         $mform->setDefault('allowupdatedays', 10000); // One million means "no limit".
         $mform->disabledIf('allowupdatedays', 'cancancelbook', 'eq', 0);
         $mform->disabledIf('allowupdatedays', 'disablecancel', 'eq', 1);
+
+        $mform->addElement('advcheckbox', 'disablebooking', get_string('disablebookingforinstance', 'mod_booking'));
+        $mform->setType('disablebooking', PARAM_INT);
+        $mform->setDefault('disablebooking', (int) booking::get_value_of_json_by_key((int) $bookingid, "disablebooking"));
+
+        // Miscellaneous settings.
+        $mform->addElement('header', 'miscellaneoussettingshdr',
+                get_string('advancedoptions', 'mod_booking'));
+
+        $mform->addElement('editor', 'bookingpolicy', get_string("bookingpolicy", "booking"), null,
+                null);
+        $mform->setType('bookingpolicy', PARAM_CLEANHTML);
 
         $mform->addElement('advcheckbox', 'autoenrol', get_string('autoenrol', 'booking'));
         $mform->setDefault('autoenrol', 1);
@@ -874,6 +893,16 @@ class mod_booking_mod_form extends moodleform_mod {
         $mform->setDefault('ratings', 0);
 
         $mform->addElement('advcheckbox', 'removeuseronunenrol', get_string("removeuseronunenrol", "booking"));
+
+        if (get_config('booking', 'conditionsoverwritingbillboard')) {
+            $mform->addElement('advcheckbox', 'overwriteblockingwarnings', get_string("overwriteblockingwarnings", "booking"));
+            $mform->addElement('textarea', 'billboardtext',
+                get_string("billboardtext", "booking"), null, null);
+            $mform->setDefault('overwriteblockingwarnings',
+            (int)booking::get_value_of_json_by_key($bookingid, 'overwriteblockingwarnings') ?? 0);
+            $mform->setDefault('billboardtext',
+            booking::get_value_of_json_by_key($bookingid, 'billboardtext') ?? '');
+        }
 
         // Booking option text.
         $mform->addElement('header', 'bookingoptiontextheader',
@@ -1285,7 +1314,9 @@ class mod_booking_mod_form extends moodleform_mod {
             }
         }
 
+        // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
         // TODO: Check if it's possible to overwrite instance specific mail templates with global mail templates...
+        // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
         // TODO: ... if mailtemplatessource is set to 1 on saving.
     }
 

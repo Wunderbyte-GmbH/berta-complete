@@ -896,6 +896,7 @@ body.limitedwidth #page.drawers .footer-popover {
 .page-item.active .page-link {
     color: white;
     background: #99B2C6;
+    border-radius: 7px;
 }
 
 @media (min-width: 1600px) {
@@ -1209,43 +1210,43 @@ body.limitedwidth #page.drawers .footer-popover {
   }
 
   .my-7 {
-    margin-bottom: 100px;
-    margin-top: 100px;
+    margin-bottom: 80px;
+    margin-top: 80px;
   }
 
   .mb-7 {
-    margin-bottom: 100px;
+    margin-bottom: 80px;
   }
 
   .mt-7 {
-    margin-top: 100px;
+    margin-top: 80px;
   }
 
   @media (max-width: 767.98px) {
     .my-6 {
-        margin-bottom: 50px;
-        margin-top: 50px;
+        margin-bottom: 25px;
+        margin-top: 25px;
       }
 
       .mb-6 {
-        margin-bottom: 50px;
+        margin-bottom: 25px;
       }
 
       .mt-6 {
-        margin-top: 50px;
+        margin-top: 25px;
       }
 
       .my-7 {
-        margin-bottom: 80px;
-        margin-top: 80px;
+        margin-bottom: 40px;
+        margin-top: 40px;
       }
 
       .mb-7 {
-        margin-bottom: 80px;
+        margin-bottom: 40px;
       }
 
       .mt-7 {
-        margin-top: 80px;
+        margin-top: 40px;
       }
     .footer-content-information .card .card-body,.footer-content-information .card .card-header {
       padding: 0.625rem 0px;
@@ -1437,8 +1438,23 @@ body.limitedwidth #page.drawers .footer-popover {
         grid-template-columns: repeat(4, 1fr);
         grid-template-rows: 1fr;
         grid-column-gap: 20px;
-        border-bottom: 1px solid #D9E1E7;
     }
+
+
+    // .mod-booking-card-content {
+
+    //     position: relative;
+    //     border-bottom: none !important;
+    //     overflow: visible;
+    //   }
+    .mod-booking-card::after {
+      content: '';
+      position: absolute;
+      border-bottom: 1px solid #D9E1E7;
+      bottom: 20px;
+      left: -40px;
+      width: 110vw;
+  }
 
     .wunderbyte-table-grid {
       padding: 0px;
@@ -2122,11 +2138,12 @@ h4 {
     line-height: 18px;
     text-align: left;
     padding: 6px 8px;
-    border-radius: 150px;
+    border-radius: 15px;
 }
 
 .pill-blue {
     background: #CCEBFF;
+    margin-bottom: 10px;
 }
 
 .lexamenu .filterelement.datepicker-input[type="time"] {
@@ -2195,7 +2212,6 @@ h4 {
     }
     #lexa-drawer-logo {
         height: 25px;
-        padding-left: calc(1.25rem - 10px);
         width: 77px !important;
     }
     .drawer-primary .list-group {
@@ -2221,9 +2237,6 @@ h4 {
     .block.container, .block.container-xl {
         padding: 0 !important;
     }
-    .langbutton {
-        display: none;
-    }
     .navbar .lexa-nav-first-row .navbar-nav .nav-link, .navbar .lexa-nav-first-row .usermenu-container, .navbar .lexa-nav-first-row .editmode-switch-form {
         padding: 0rem 0.5rem
     }
@@ -2241,6 +2254,56 @@ h4 {
         text-align: center;
         width: 100%;
     }
+
+    .mobile100center img{
+        max-width: 140px !important;
+        max-height: 140px !important;
+    }
+
+    .wunderbyte-table-grid .placeholderimage {
+        border-radius: 7px;
+    }
+
+
+    .wunderbyte-table-grid .list-group-item img {
+        /* eslint-disable-next-line */
+        border-radius: 7px !important;
+    }
+
+    #page-mod-booking-optionview .page-context-header {
+        display: none !important;
+      }
+
+      #page-mod-booking-optionview #topofscroll {
+        margin-top: 0;
+      }
+
+      #page-mod-booking-optionview .price-card {
+        margin-top: 30px;
+      }
+
+      .wunderbyteTableSelect {
+        margin-left: 0;
+        margin-right: 0;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 90%;
+        background: transparent;
+        border: 1px solid black;
+        color: black;
+        border-radius: 12px;
+        text-decoration: none;
+        position: relative;
+        margin-bottom: 20px;
+      }
+
+      .filtermobilewrap {
+        margin: 0 auto;
+        margin-top: 0 !important;
+      }
+
 }
 
 #footnote a {
@@ -2268,9 +2331,26 @@ text-align: start;
     align-items: center;
     gap: 17px;
     flex-shrink: 0;
+    margin-top: 40px;
 }
 
 @include media-breakpoint-down(sm) {
+    [class*="col-"] {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+    .wunderbyte-table-grid.rows-container {
+        padding-left: 0px !important;
+        padding-right: 0px !important;
+    }
+      
+      
+
+    .wb_news_slide {
+        flex-direction: column-reverse;
+    }
+
     .alleveranstaltungen {
         height: auto !important;
            font-size: 14px !important;
@@ -2282,10 +2362,23 @@ text-align: start;
 
     .infoslidermobile .carousel-indicators .active {
         background-color:  #809FB8;
+        width: 15px;
+        height: 15px;
         }
+
+    .infoslidermobile .carousel-indicators li {
+        width: 15px;
+        height: 15px;
+        }
+
+    .infoslidermobile .carousel-indicators {
+         margin-top: 20px;
+    }
+
 
     .reverseonmobile {
         text-align: center;
+        padding-bottom: 0 !important;
     }
 
     .timelineproject {
@@ -2558,3 +2651,278 @@ text-align: start;
         padding: 0px !important;
         gap: 20px;
     }
+
+.hidefaq {
+    display: inline-block !important;
+}
+
+.backgroundfaq {
+    background: linear-gradient(77.48deg, #001F33 -5.09%, #0063A6 98.91%);
+}
+
+.wbfaqinput {
+    width: 600px;
+}
+
+.wbfaqbreadcrumb[data-catvalue="FAQ"] {
+    display: none !important;
+}
+
+.wbfaqcollapsebutton:focus,
+ .wbfaqcollapsebutton:hover
+{
+    box-shadow: none !important;
+    text-decoration: none !important;
+}
+
+@include media-breakpoint-down(sm) {
+    .wbfaqinput {
+        width: 100%;
+    }
+
+    .mod-booking-card-body .description  {
+        display: none;
+    }
+    
+    .wbwunschbox .img-fluid {
+        max-width: 80%;
+        margin: 0 auto;
+        margin-bottom: 20px;
+    }
+    
+    .wbwunschbox .btn-primary {
+      margin: 0 auto;
+    }
+
+    .wb-news-container.mt-5.wb_news.container-fluid .card-title {
+        margin-top: 14px;
+        margin-bottom: 14px;
+    }
+    
+    .wb-records-count-label {
+        font-size: 16px;
+    }
+    
+}
+
+.wbfaqaccordion {
+border-radius: 20px;
+box-shadow: -5px 0px 10px 0px #00000005;
+}
+
+.wbfaqaccordion .card, .wbfaqaccordion .card-header {
+    background: transparent;
+    border: none;
+}
+
+.wbfaqaccordion .card {
+    padding: 50px !important;
+
+}
+
+.wbfaqaccordion .accordion-body {
+    border-top: none
+}
+
+.wbfaqaccordion
+.accordion-item {
+    border-bottom: 1px solid     #D9DBE9
+}
+
+.wbfaqaccordion .accordion-item:last-child {
+    border-bottom: none;
+}
+
+.wbfaqcollapsebutton .wbfaqaccordionbuttonm {
+    display: inline-block;
+    line-height: 30px;
+}
+
+.local_wb_faq_container {
+    margin-top: 50px;
+}
+
+.wbfaqcollapsebutton .wbfaqaccordionbuttonp {
+    display: none;
+    line-height: 30px;
+}
+
+.wbfaqcollapsebutton.collapsed .wbfaqaccordionbuttonp {
+    display: inline-block;
+}
+
+.wbfaqcollapsebutton.collapsed .wbfaqaccordionbuttonm {
+    display: none;
+}
+
+.wbfaqaccordion
+.accordion-item {
+    border-bottom: 1px solid#D9DBE9
+}
+
+.wbfaqaccordion .accordion-item:last-child {
+    border-bottom: none;
+}
+.current-faq.wb-breadcrumb .d-flex{
+    border: 1px solid #D9E1E7;
+    border-radius: 10px;
+    max-width: fit-content;
+}
+.wbfaqbreadcrumb {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #809FB8;
+}
+.btn.wbfaqbreadcrumb {
+    padding: 10px 20px;
+}
+.wbfaqbreadcrumb.wb_faq-active {
+    color:#0063A6;
+}
+
+.wbfaqaccordion {
+    list-style: none !important;
+  }
+
+  #wb_faq_searchbox .wbfaqaccordion {
+    box-shadow: none;
+  }
+
+  .mod-booking-card-body .description {
+    margin-top: 10px;
+    font-family: Roboto;
+    font-size: 0.875rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.125rem;
+  }
+
+  .mod-booking-card-infos .bg-secondary.rounded.category {
+    margin-bottom: 10px;
+  }
+
+  .mod-booking-card-infos .bg-secondary.rounded.organisation {
+    margin-bottom: 10px;
+  }
+
+  .mod-booking-card-infos .kompetenzen {
+    margin-left: -26px;
+  }
+  .bg-secondary.rounded.category:first-child {
+    margin-left: 26px;
+  }
+
+.price-card .uriseimage, .price-card .placeholderimage {
+    max-height: 260px;
+    object-fit: cover;
+}
+.price-card .placeholderimage {
+  height: 260px;
+}
+
+.booking-button-mainarea.urisebutton.alert-warning {
+    background: var(--interface-light_content, #D9E1E7);
+    }
+
+.wb-bt {
+    border: 1px solid transparent;
+    }
+
+    .wbanbieter .lexa-custom-collapse {
+    padding: 0;
+    }
+
+    .wbanbieter .lexa-custom-collapse a {
+    margin-bottom: 0;
+    }
+
+    .wbanbieter {
+        border-bottom: 1px solid #99B2C6 !important;
+        border-radius: 0;
+        padding-bottom: 40px;
+    }
+
+    .wbanbieter
+    .lexa-custom-icon {
+    margin-right: none;
+    }
+
+    .wbanbieter
+    .collapsed
+    .lexa-custom-icon  .icon-down{
+    display: inline-flex;
+    width: 18px;
+    }
+
+    .wbanbieter
+    .collapsed
+    .lexa-custom-icon.icon-down {
+    display: none;
+    }
+
+
+    .wbanbieter
+    .lexa-custom-collapse
+    .text-primary:not(.collapsed)
+    .lexa-custom-icon.icon-right {
+    display: none;
+    }
+
+.wbrowstag {
+    padding: 5px 10px !important;
+    border-radius: 6px !important;
+}
+
+.urise-courses-container .wunderbyteTableFilter ul.wunderbyterFilterList li {
+    overflow-x: hidden;
+}
+
+.logomobile {
+    display: none;
+}
+.lexa-faqcat {
+    padding: 20px 0;
+    border-bottom: 1px solid #D9DBE9;
+}
+
+.wbfaqinput {
+    max-width: 628px !important;
+    width: 100% !important;
+    height: 55px !important;
+    padding-left: 21px !important;
+}
+
+@media (max-width: 768px) {
+        .drawer-primary .drawercontent .list-group a.list-group-item {
+          border: none;
+          height: 52px;
+          padding: 17px 0px 17px 25px;
+          }
+        .drawer-primary .drawercontent
+        .footer-content-information .logo {
+          margin-bottom: calc(45px - 0.625rem);
+        }
+        #lexa-navbar-brand-second-row
+        .logo {
+          margin-left: 20px;
+        }
+        .drawercontent {
+            background: #fff !important;
+        }
+        .logomobile {
+            display: block;
+            width: 100px;
+            margin-left: 20px;
+        }
+        #lexa-navbar-scrolled-only {
+            width: 100%;
+            justify-content: space-between;
+        }
+        #lexa-navbar-scrolled {
+            height: 62px;
+        }
+        .navbar .navbar-brand-second-row .logo {
+            margin-left: 20px;
+        }
+}

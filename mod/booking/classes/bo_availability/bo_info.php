@@ -29,6 +29,7 @@ use context_system;
 use local_shopping_cart\shopping_cart;
 use mod_booking\booking;
 use mod_booking\booking_bookit;
+use mod_booking\booking_context_helper;
 use mod_booking\booking_option_settings;
 use mod_booking\local\modechecker;
 use mod_booking\output\bookingoption_description;
@@ -278,7 +279,6 @@ class bo_info {
 
         // Now we might need to override the result of a previous condition which has been resolved as false before.
         foreach ($overrideconditions as $condition) {
-
             // As we manipulate this value, we have to keep the original value.
             $resultsarray[$condition->id]['isavailable:original'] = $resultsarray[$condition->id]['isavailable'];
 
@@ -293,8 +293,10 @@ class bo_info {
                             // If one of the two results is true, both are true.
                             if (isset($resultsarray[$ocid])) {
                                 $overrideswithkeys = array_flip($resultsarray[$ocid]['condition']->overrides ?? []);
-                                if (!$resultsarray[$ocid]['reciprocal'] ||
-                                    isset($overrideswithkeys[$condition->id])) {
+                                if (
+                                    !$resultsarray[$ocid]['reciprocal'] ||
+                                    isset($overrideswithkeys[$condition->id])
+                                ) {
                                     if ($resultsarray[$ocid]['isavailable']) {
                                         $resultsarray[$condition->id]['isavailable'] = true;
                                     }
@@ -758,7 +760,7 @@ class bo_info {
             $renderedstring .= $output->render_col_price($data);
         }
 
-        // If notification list ist turned on, we show the "notify-me" button.
+        // If notification list is turned on, we show the "notify-me" button.
         if ($shownotificationlist && $optionid && $usertobuyfor->id) {
             $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
             $bookinginformation = $bookinganswer->return_all_booking_information($usertobuyfor->id);
@@ -851,11 +853,36 @@ class bo_info {
             && $settings->useprice) {
             $priceitems = price::get_price('option', $settings->id, $user);
             if (count($priceitems) > 0) {
-                $data['sub'] = [
-                    'label' => $priceitems["price"] . " " . $priceitems["currency"],
-                    'class' => ' text-center ',
-                    'role' => '',
-                ];
+                if (
+                    get_config('booking', 'priceisalwayson')
+                    || !empty(get_config('booking', 'displayemptyprice'))
+                    || !empty((float)$priceitems["price"])
+                ) {
+                    $currstring = isset($priceitems["currency"]) ? "" .  $priceitems["currency"] : '';
+
+                    $label = "";
+                    if (
+                        (!isloggedin()
+                        || isguestuser())
+                        && !empty($priceitems = self::return_sorted_priceitems($settings->id))
+                        ) {
+                        foreach ($priceitems as $priceitem) {
+                            if (!empty($label)) {
+                                $label .= " / ";
+                            }
+                            $label .= $priceitem['price'];
+                        }
+                        $label .= " " . $currstring;
+                    } else {
+                        $label = $priceitems["price"] . " " . $currstring;
+                    }
+
+                    $data['sub'] = [
+                        'label' => $label,
+                        'class' => ' text-center ',
+                        'role' => '',
+                    ];
+                }
             }
         }
 
@@ -869,7 +896,7 @@ class bo_info {
             if ($price = price::get_price('option', $settings->id, $user)) {
                 $data['price'] = [
                     'price' => $price['price'],
-                    'currency' => $price['currency'],
+                    'currency' => $price['currency'] ?? '',
                 ];
             }
         }
@@ -888,8 +915,67 @@ class bo_info {
             'mod_booking/bookit_button', // The template.
             $data, // The corresponding data object.
         ];
-
         return $returnarray;
+    }
+
+    /**
+     * Return priceitems.
+     *
+     * @param mixed $itemid
+     * @param int $userid
+     *
+     * @return array
+     *
+     */
+    private static function return_sorted_priceitems($itemid, $userid = 0): array {
+        $priceitems = price::get_prices_from_cache_or_db('option', $itemid, $userid);
+        $sortedpriceitems = [];
+        foreach ($priceitems as $priceitem) {
+            $pricecategory = price::get_active_pricecategory_from_cache_or_db($priceitem->pricecategoryidentifier);
+
+            $priceitemarray = (array)$priceitem;
+
+            if (!empty($pricecategory)) {
+                $priceitemarray['pricecategoryname'] = $pricecategory->name;
+                // Actually not yet sorted.
+                $sortedpriceitems[$pricecategory->pricecatsortorder] = $priceitemarray;
+            }
+        }
+
+        // Now we sort the array according to the sort order defined in price categories.
+        ksort($sortedpriceitems);
+        // The mustache template cannot handle keys, so we remove them now.
+        $sortedpriceitems = array_values($sortedpriceitems);
+        return $sortedpriceitems;
+    }
+
+    /**
+     * If billboard is activated, we want to overwrite the warning messages with the billboard text.
+     *
+     *
+     * @param bo_condition $condition
+     * @param booking_option_settings $settings
+     *
+     * @return string
+     *
+     */
+    public static function apply_billboard(bo_condition $condition, booking_option_settings $settings): string {
+        if (empty(get_config('booking', 'conditionsoverwritingbillboard'))) {
+            return '';
+        }
+
+        // Fetch settings of instance to see if alert needs to be overwritten.
+        $instance = singleton_service::get_instance_of_booking_by_bookingid($settings->bookingid);
+        if (empty($instance->settings->json)) {
+            return '';
+        }
+        $jsondata = json_decode($instance->settings->json);
+        if (empty($jsondata->billboardtext) || empty($jsondata->overwriteblockingwarnings)) {
+            return '';
+        }
+        global $PAGE;
+        booking_context_helper::fix_booking_page_context($PAGE, $settings->cmid);
+        return format_text($jsondata->billboardtext);
     }
 
     /**
@@ -1095,7 +1181,11 @@ class bo_info {
         $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         $viewparam = booking::get_value_of_json_by_key($settings->bookingid, 'viewparam');
         $turnoffmodals = 0; // By default, we use modals.
-        if ($viewparam == MOD_BOOKING_VIEW_PARAM_LIST) {
+        if (
+            $viewparam == MOD_BOOKING_VIEW_PARAM_LIST
+            || $viewparam = MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT
+            || $viewparam = MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT
+        ) {
             // Only if we use list view, we can use inline modals.
             // So only in this case, we need to check the config setting.
             $turnoffmodals = get_config('booking', 'turnoffmodals');

@@ -56,6 +56,9 @@ class userprofilefield_2_custom implements bo_condition {
     /** @var bool $overridable Indicates if the condition can be overriden. */
     public $overridable = true;
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = true;
+
     /** @var stdClass $customsettings an stdclass coming from the json which passes custom settings */
     public $customsettings = null;
 
@@ -70,6 +73,16 @@ class userprofilefield_2_custom implements bo_condition {
         if ($id) {
             $this->id = $id;
         }
+    }
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
     }
 
     /**
@@ -266,7 +279,7 @@ class userprofilefield_2_custom implements bo_condition {
                 $usercustomfields->{$formfield->field->shortname} = $formfield->data;
             }
             $user->profile = (array)$usercustomfields ?? [];
-            $value = $user->profile[$profilefield] ?? null;
+            $value = $user->profile[$profilefield] ?? '';
         } else {
             $value = $user->$profilefield;
         }
@@ -621,6 +634,14 @@ class userprofilefield_2_custom implements bo_condition {
      * @return string
      */
     private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = $full ? get_string('bocondcustomuserprofilefieldfullavailable', 'mod_booking') :
                 get_string('bocondcustomuserprofilefieldavailable', 'mod_booking');

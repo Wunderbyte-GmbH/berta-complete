@@ -15,21 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace paygw_payunity\output;
-use plugin_renderer_base;
 
+use plugin_renderer_base;
 
 /**
  * A custom renderer class that extends the plugin_renderer_base and is used by the booking module.
  *
- * @package local_musi
+ * @package paygw_payunity
  * @copyright 2022 Georg Maißer
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class renderer extends plugin_renderer_base {
-
-    /** Function to render the dashboard
-     * @param stdClass $data
+    /**
+     * Function to render the dashboard
+     *
+     * @param mixed $data
+     *
      * @return string
+     *
      */
     public function render_checkout($data) {
         $o = '';

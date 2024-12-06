@@ -1,3 +1,30 @@
+## Version 2.0.31 (2024112800)
+* New feature: Add possibility to pass any template data.
+* Bugfix: Correct id for filter checkbox & label.
+* Bugfix: "Cannot read properties of null (reading 'childNodes')" JS error.
+* Bugfix: Grunt JS.
+
+## Version 2.0.30 (2024112500)
+* Improvement: Add support for Moodle 4.5.
+* Bugfix: Correctly update URL from search (#67).
+* Bugfix: Correctly apply filtercount to hierarchical filter Wunderbyte-GmbH/moodle-moodle-local_wunderbyte_table#243.
+* Bugfix: Do not apply intrange filter when there is no string to explode. Wunderbyte-GmbH/Wunderbyte-GmbH#243.
+
+## Version 2.0.29 (2024112000)
+* Bugfix: Fix grunt "file is stale" errors.
+
+## Version 2.0.28 (2024111900)
+* Bugfix: Fix typo (dot instead of comma) breaking sortable columns and tests.
+* Bugfix: Add missing data-type for wb_action_button.
+
+## Version 2.0.27 (2024111100)
+* Improvement: Filterview flip arrows on collapse.
+
+## Version 2.0.26 (2024102900)
+* Bugfix: Fix action button selector.
+* Improvement: Change PNG to SVG in filterview template.
+* Tests: Adjust behat scenarios.
+
 ## Version 2.0.24 (2024102100)
 * Improvement: Extend tests for filters
 * Improvement: Scroll to upper margin on page switch

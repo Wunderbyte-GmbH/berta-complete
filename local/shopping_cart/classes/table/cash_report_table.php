@@ -22,7 +22,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once(__DIR__ . '/../../lib.php');
-require_once($CFG->libdir.'/tablelib.php');
+require_once($CFG->libdir . '/tablelib.php');
 
 use dml_exception;
 use local_wunderbyte_table\wunderbyte_table;
@@ -36,7 +36,6 @@ use local_wunderbyte_table\wunderbyte_table;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cash_report_table extends wunderbyte_table {
-
     /**
      * This function is called for each data row to allow processing of the
      * 'price' value.
@@ -207,4 +206,55 @@ class cash_report_table extends wunderbyte_table {
         return $out ?? '';
     }
 
+    /**
+     * This function is called for each data row to allow processing of the
+     * 'serviceperiodstart' value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string Rendered date.
+     * @throws dml_exception
+     */
+    public function col_serviceperiodstart(object $values): string {
+        $rendereddate = '';
+
+        if (empty($values->serviceperiodstart)) {
+            return $rendereddate;
+        }
+
+        if ($this->is_downloading()) {
+            $rendereddate = date('Y-m-d', $values->serviceperiodstart);
+        } else if (current_language() === 'de') {
+            $rendereddate = date('d.m.Y', $values->serviceperiodstart);
+        } else {
+            $rendereddate = date('Y-m-d', $values->serviceperiodstart);
+        }
+
+        return $rendereddate;
+    }
+
+    /**
+     * This function is called for each data row to allow processing of the
+     * 'serviceperiodend' value.
+     *
+     * @param object $values Contains object with all the values of record.
+     * @return string Rendered date.
+     * @throws dml_exception
+     */
+    public function col_serviceperiodend(object $values): string {
+        $rendereddate = '';
+
+        if (empty($values->serviceperiodstart)) {
+            return $rendereddate;
+        }
+
+        if ($this->is_downloading()) {
+            $rendereddate = date('Y-m-d', $values->serviceperiodend);
+        } else if (current_language() === 'de') {
+            $rendereddate = date('d.m.Y', $values->serviceperiodend);
+        } else {
+            $rendereddate = date('Y-m-d', $values->serviceperiodend);
+        }
+
+        return $rendereddate;
+    }
 }

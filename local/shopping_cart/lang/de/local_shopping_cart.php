@@ -154,7 +154,7 @@ $string['cashtransferreason'] = 'Grund für die Bargeldumbuchung';
 $string['cashtransferreason_help'] = 'Geben Sie einen Grund für die Bargeldumbuchung an.';
 $string['cashtransferreasonnecessary'] = 'Sie müssen einen Grund für die Bargeldumbuchung angeben!';
 $string['cashtransfersuccess'] = 'Bargeldumbuchung erfolgreich';
-$string['checkout'] = '<i class="fa fa-shopping-cart" aria-hidden="true"></i> Weiter zur Bezahlung ❯❯';
+$string['checkout'] = '<i class="fa fa-shopping-cart" aria-hidden="true"></i> Weiter zur Bezahlung';
 $string['checkout_completed'] = 'Checkout abgeschlossen';
 $string['checkout_completed_desc'] = 'Der Benutzer mit der ID {$a->userid} hat den Checkout mit identifier {$a->identifier}
  erfolgreich abgeschlossen';
@@ -368,7 +368,7 @@ $string['itemcanceled'] = 'Nutzer/in mit der id {$a->userid} hat Aritkel {$a->it
 $string['itemcouldntbebought'] = 'Artikel {$a} konnte nicht gekauft werden.';
 $string['itemexpired'] = 'Aritkel {$a->itemid} {$a->component} für die Nutzer/in mit der id {$a->relateduserid} ist abgelaufen';
 $string['itemid'] = 'ItemID';
-$string['itemname'] = 'Kurs';
+$string['itemname'] = 'Artikelname';
 $string['itempriceisnet'] = 'Preise für Artikel sind Nettopreise: Addiere die Steuer';
 $string['itempriceisnet_desc'] = 'Wenn die an den Warenkorb übergebenen Preise Nettopreise sind, dann aktivieren Sie diese Checkbox,
 um die Steuern zu den Artikelpreisen hinzuzufügen. Wenn die Artikel die Steuer bereits enthalten und somit Bruttopreise sind,
@@ -409,6 +409,7 @@ $string['nousersfound'] = 'Keine Nutzerinnen gefunden.';
 $string['novatnr'] = "Keine UID verwenden";
 $string['numberofpayments'] = 'Anzahl der Zahlungen';
 $string['numberofpayments_help'] = 'Anzahl notwendiger Zahlungen NACH der ersten Zahlung. Bitte beachten Sie, dass Ratenzahlungen nicht möglich sind, wenn nicht genügend Zeit bis zum Kursbeginn verbleibt, unter Berücksichtigung der Anzahl der Zahlungen und der Zeit zwischen den Zahlungen (Admin-Plugin-Einstellung).';
+$string['numbersinitemname'] = "Zahlen in Artikelname";
 $string['on'] = "am";
 $string['onlyone'] = 'Nur einer dieser Werte kann mehr als 0 sein.';
 $string['optioncancelled'] = 'Buchungsoption storniert';
@@ -503,6 +504,7 @@ $string['receipthtml:description'] = 'Sie können die folgenden Platzhalter verw
  Verwenden Sie nur einfaches HTML, das von TCPDF unterstützt wird.';
 $string['receiptimage'] = 'Hintergrundbild für den Kassenbeleg';
 $string['receiptimage:description'] = 'Laden Sie ein Hintergrundbild für den Kassenbeleg hoch, das z.B. Ihr Logo enthält.';
+$string['receipts'] = 'Buchungsbestätigungen';
 $string['remainingcredit'] = 'Verbleibendes Guthaben:';
 $string['remainingtotal'] = 'Preis:';
 $string['reminderdaysbefore'] = "Erinnerung x Tage vorher";
@@ -512,11 +514,6 @@ $string['restart'] = 'Nächste/r KundIn';
 $string['ro'] = "Rumänien";
 $string['rounddiscounts'] = 'Rabatte runden';
 $string['rounddiscounts_desc'] = 'Rabatte auf ganze Zahlen runden (mathematisch, ohne Nachkommastellen)';
-$string['samecostcenter'] = 'Nur eine Kostenstelle pro Zahlungsvorgang';
-$string['samecostcenter_desc'] = 'Alle Items im Warenkorb müssen die selbe Kostenstelle haben.
-Items mit unterschiedlichen Kostenstellen müssen separat gebucht werden.';
-$string['samecostcenterforcredits'] = 'Guthaben nur für selbe Kostenstellen verwenden';
-$string['samecostcenterforcredits_desc'] = 'Wenn diese Einstellung aktiviert ist und einE NutzerIn Guthaben erhält, so kann dieses Guthaben nur für Artikel der selben Kostenstelle verwendet werden.';
 $string['saveinvoicenumber'] = 'Nur Rechnungsnummer speichern';
 $string['sch_paymentaccountid'] = "Wechsle das Zahlungsanbieter-Konto";
 $string['se'] = "Schweden";
@@ -524,7 +521,11 @@ $string['searchforitem'] = 'Suche...';
 $string['selectuser'] = 'Wähle eine/n TeilnehmerIn aus...';
 $string['selectuserfirst'] = 'Wähle zuerst eine Nutzerin.';
 $string['sendpaymentbutton'] = 'Zur Bezahlung';
+$string['serviceperiod'] = 'Serviceperiode';
+$string['serviceperiodend'] = 'Ende der Serviceperiode';
+$string['serviceperiodstart'] = 'Beginn der Serviceperiode';
 $string['shopping_cart:canbuy'] = 'Kann kaufen';
+$string['shopping_cart:cansearchusers'] = 'Kann andere NutzerInnen suchen';
 $string['shopping_cart:canverifypayments'] = 'Kann Zahlungen verifizieren';
 $string['shopping_cart:cashier'] = 'Ist berechtigt für die Kassa';
 $string['shopping_cart:cashiermanualrebook'] = 'Kann Benutzer:innen manuell nachbuchen';

@@ -31,6 +31,7 @@ use core_payment\account;
 use core_user;
 use Exception;
 use html_writer;
+use local_entities\entitiesrelation_handler;
 use local_shopping_cart\addresses;
 use local_shopping_cart\invoice\invoicenumber;
 use local_shopping_cart\shopping_cart_history;
@@ -108,9 +109,12 @@ class create_invoice {
                     ? 'local_shopping_cart_invoices'
                     : get_config('local_shopping_cart', 'pathtoinvoices'));
             $filepath = $datadir . "/" . $filename;
+
+            // Make sure to escape double "/".
+            $filepath = str_replace("//", "/", $filepath);
             if (!is_dir($datadir)) {
                 // Create the directory if it doesn't exist.
-                if (!make_upload_directory($datadir)) {
+                if (!make_writable_directory($datadir)) {
                     // Handle directory creation error (e.g., display an error message).
                     throw new moodle_exception('errorcreatingdirectory', 'local_shopping_cart');
                 }
@@ -197,7 +201,7 @@ class create_invoice {
         $pdf = new TCPDF('p', 'pt', 'A4', true, 'UTF-8', false);
         // Set some content to print.
 
-        $filename = get_config('local_shopping_cart' , 'receiptimage');
+        $filename = get_config('local_shopping_cart', 'receiptimage');
         $cfghtml = get_config('local_shopping_cart', 'receipthtml');
         $context = context_system::instance();
         $fs = get_file_storage();
@@ -205,15 +209,30 @@ class create_invoice {
         foreach ($files as $file) {
             if ($file->get_filesize() > 0) {
                 $filename = $file->get_filename();
-                $imgurl = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                    $file->get_itemid(), $file->get_filepath(), $file->get_filename(), true);
+                $imgurl = moodle_url::make_pluginfile_url(
+                    $file->get_contextid(),
+                    $file->get_component(),
+                    $file->get_filearea(),
+                    $file->get_itemid(),
+                    $file->get_filepath(),
+                    $file->get_filename(),
+                    true
+                );
             }
         }
 
         $items = shopping_cart_history::return_data_from_ledger_via_identifier($identifier);
         $timecreated = $items[array_key_first($items)]->timecreated;
-        $addressbilling = $items[array_key_first($items)]->address_billing ?? 0;
-        $addressshipping = $items[array_key_first($items)]->address_shipping ?? 0;
+
+        foreach ($items as $item) {
+            if (empty($addressbilling)) {
+                $addressbilling = $item->address_billing ?? 0;
+            }
+            if (empty($addressshipping)) {
+                $addressshipping = $item->address_shipping ?? 0;
+            }
+        }
+
         $date = date($dateformat, $timecreated);
         $userid = $items[array_key_first($items)]->userid;
 
@@ -287,7 +306,7 @@ class create_invoice {
             }
         }
         foreach ($user->profile as $profilefieldkey => $profilefieldvalue) {
-            if (!isset($user->{$$profilefieldkey})) {
+            if (!isset($user->{$profilefieldkey})) {
                 // Convert unix timestamps to rendered dates.
                 if (is_numeric($profilefieldvalue)) {
                     if (strlen((string)$profilefieldvalue) > 8 && strlen((string)$profilefieldvalue) < 12) {
@@ -306,7 +325,6 @@ class create_invoice {
         $sum = 0.0;
         $itemhtml = '';
         foreach ($items as $item) {
-
             if (isset($item->schistoryid)) {
                 $shistoryitem = $DB->get_record('local_shopping_cart_history', ['id' => $item->schistoryid]);
                 $installmentdata = shopping_cart_history::get_installmentdata($shistoryitem);
@@ -316,26 +334,31 @@ class create_invoice {
                 $tmp = str_replace(
                     "[[price]]",
                     number_format((float) $item->price, 2, $commaseparator, ''),
-                    $repeathtml[0]);
+                    $repeathtml[0]
+                );
                 $tmp = str_replace(
                     "[[originalprice]]",
                     number_format((float) $item->price, 2, $commaseparator, ''),
-                    $tmp);
+                    $tmp
+                );
                 $tmp = str_replace(
                     "[[outstandingprice]]",
                     number_format(0.0, 2, $commaseparator, ''),
-                    $tmp);
+                    $tmp
+                );
             } else {
                 // In this case, price is what was really paid.
                 $price = $shistoryitem->price;
                 $tmp = str_replace(
                     "[[price]]",
                     number_format((float) $price, 2, $commaseparator, ''),
-                    $repeathtml[0]);
+                    $repeathtml[0]
+                );
                 $tmp = str_replace(
                     "[[originalprice]]",
                     number_format((float) $installmentdata['originalprice'], 2, $commaseparator, ''),
-                    $tmp);
+                    $tmp
+                );
                 // Make sure to display the price that was actually already payed as price.
                 $outstanding = 0;
                 foreach ($installmentdata['payments'] as $payment) {
@@ -346,7 +369,8 @@ class create_invoice {
                 $tmp = str_replace(
                     "[[outstandingprice]]",
                     number_format((float) $outstanding, 2, $commaseparator, ''),
-                    $tmp);
+                    $tmp
+                );
             }
             $tmp = str_replace("[[name]]", $item->itemname, $tmp);
             $tmp = str_replace("[[pos]]", $pos, $tmp);
@@ -355,15 +379,42 @@ class create_invoice {
             if ($item->area == "option" && class_exists('mod_booking\singleton_service')) {
                 $optionid = $item->itemid;
                 $optionsettings = \mod_booking\singleton_service::get_instance_of_booking_option_settings($optionid);
+                if (
+                    empty($optionsettings->location) &&
+                    !empty($optionsettings->sessions) &&
+                    class_exists('local_entities\entitiesrelation_handler')
+                ) {
+                    // If no global location is given, use first entity of sessions.
+                    $entitieshandler = new entitiesrelation_handler('mod_booking', 'optiondate');
+                    foreach ($optionsettings->sessions as $id => $session) {
+                        $entity = $entitieshandler->get_instance_data($id);
+                        if (empty($entity)) {
+                            continue;
+                        }
+                        $optionsettings->location = $entity->name;
+                        break;
+                    }
+                }
                 $tmp = str_replace("[[location]]", $optionsettings->location ?? '', $tmp); // Add location.
                 $tmp = str_replace("[[dayofweektime]]", $optionsettings->dayofweektime ?? '', $tmp); // E.g. "Mo, 10:00 - 12:00".
                 $coursestarttime = !empty($optionsettings->coursestarttime)
                     ? date($dateformat, $optionsettings->coursestarttime) : $date;
-                $tmp = str_replace("[[coursestarttime]]", $coursestarttime, $tmp); // E.g. "Mo, 10:00 - 12:00".
+                $tmp = str_replace("[[coursestarttime]]", $coursestarttime ?? '', $tmp); // E.g. "Mo, 10:00 - 12:00".
+
+                // Special handling for semester placeholder.
+                if (
+                    !empty($semesterid = $optionsettings->semesterid) &&
+                    $record = $DB->get_record('booking_semesters', ['id' => $semesterid])
+                ) {
+                    $semester = $record->name . " ($record->identifier)";
+                    $tmp = str_replace("[[semester]]", $semester ?? '', $tmp);
+                };
             } else {
-                // It should still be replaced with an empty string in case it's no booking option.
+                // Placeholders should be replaced with an empty string in case it's no booking option.
                 $tmp = str_replace("[[location]]", '', $tmp);
                 $tmp = str_replace("[[dayofweektime]]", '', $tmp);
+                $tmp = str_replace("[[coursestarttime]]", '', $tmp);
+                $tmp = str_replace("[[semester]]", '', $tmp);
             }
 
             $sum += $price;
@@ -387,7 +438,7 @@ class create_invoice {
                 border: 1px solid #c3c3c3;
             }
         </style>
-        '. $prehtml[0] . $itemhtml . $posthtml;
+        ' . $prehtml[0] . $itemhtml . $posthtml;
         // Print text using writeHTMLCell().
 
         // Set document information.

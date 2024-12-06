@@ -54,6 +54,19 @@ class campaign_blockbooking implements bo_condition {
     /** @var string $blockinglabel String to display when blocking. */
     private $blockinglabel = '';
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = true;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
+
     /**
      * Needed to see if class can take JSON.
      * @return bool
@@ -85,7 +98,7 @@ class campaign_blockbooking implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = true;
 
-        $result = booking_option::is_blocked_by_campaign($settings);
+        $result = booking_option::is_blocked_by_campaign($settings, $userid);
 
         if ($result['status']) {
             $isavailable = false;
@@ -227,6 +240,14 @@ class campaign_blockbooking implements bo_condition {
      * @return string
      */
     private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = '';
         } else {

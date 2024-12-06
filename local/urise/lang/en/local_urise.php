@@ -67,6 +67,7 @@ $string['reihenprogramm'] = "Series/Programs";
 $string['editavailabilityanddescription'] = 'Edit availability & description';
 $string['editavailability'] = 'Edit availability';
 $string['editdescription'] = 'Edit description';
+$string['editnews'] = 'Edit newselements';
 $string['substitutionspool'] = 'Substitutions pool for {$a}';
 $string['editsubstitutionspool'] = 'Edit substitutions pool';
 $string['viewsubstitutionspool'] = 'View substitutions pool';
@@ -206,7 +207,7 @@ $string['dashboard_organisation'] = 'Organisation';
 $string['dashboard_auswertung'] = 'Reporting';
 
 // Vue strings.
-$string['vuedashboardchecked'] = 'Default Checked';
+$string['vuedashboardchecked'] = 'Visible in "Our Offer"';
 $string['vuedashboardname'] = 'Name';
 $string['vuedashboardcoursecount'] = 'Moodle Course Count';
 $string['vuedashboardpath'] = 'Path';
@@ -225,8 +226,8 @@ $string['vuebookingstatsbookingoptions'] = 'Booking Options';
 $string['vuebookingstatsbooked'] = 'Booked';
 $string['vuebookingstatswaiting'] = 'Waiting List';
 $string['vuebookingstatsreserved'] = 'Reserved';
-$string['vuebookingstatsrealparticipants'] = 'Real participants';
-$string['vuebookingstatsrealcosts'] = 'Real costs';
+$string['vuebookingstatsrealparticipants'] = 'Actual participants';
+$string['vuebookingstatsrealcosts'] = 'Costs for org. unit';
 $string['vuebookingstatsparticipated'] = 'Participated';
 $string['vuebookingstatsexcused'] = 'Excused';
 $string['vuebookingstatsnoshow'] = 'No Show';
@@ -238,6 +239,7 @@ $string['vuebookingstatsrestoreconfirmation'] = 'You really want to reset this c
 $string['vuebookingstatsyes'] = 'Yes';
 $string['vuebookingstatsno'] = 'No';
 $string['vueconfirmmodal'] = 'Are you sure you want to go back?';
+$string['vuefiltertabs'] = 'Filter tabs...';
 $string['vueheadingmodal'] = 'Confirmation';
 $string['vuenotificationtitleunsave'] = 'No unsaved changes detected';
 $string['vuenotificationtextunsave'] = 'There were no unsaved changes detected.';
@@ -390,12 +392,13 @@ $string['summary_desc'] = 'Contains the settings and stats for the whole Moodle 
 // Rolls.
 $string['urise:create'] = "Create";
 $string['urise:view'] = "View";
+$string['urise:viewcourselistindashboard'] = 'Can see courselist in dashobard';
 
 // Settings.
 $string['multibookinginstances'] = "List of default activeted booking instances";
 $string['multibookinginstances_desc'] = "Choose which booking instances are activated by default.";
 
-$string['searchheadertext'] = "What would you like to learn?";
+$string['searchheadertext'] = "What are you interested in?";
 $string['myspace'] = "My bookings";
 
 // Descriptionview.
@@ -457,7 +460,8 @@ $string['fbtheologie'] = "Theology Library";
 $string['fbtranslationswissenschaft'] = "Translation Studies Library";
 $string['fbwirtschaftswissenschaftenundmathematik'] = "Business, Economics and Mathematics Library";
 $string['fbzeitgeschichte'] = "Contemporary History Library";
-$string['forschungsundpublikationsservices'] = "Research Service and Career Development";
+$string['forschungsserviceundnachwuchsfoerderung'] = "Research Service and Career Development";
+$string['forschungsundpublikationsservices'] = "Research and Publication Services";
 $string['hauptbibliothek'] = "Main Library";
 $string['universitaetsarchiv'] = "University Archive";
 $string['advancedresearchschoolinlawandjurisprudence'] = "Advanced Research School in Law and Jurisprudence";
@@ -577,7 +581,7 @@ $string['extrashortcodetwo_desc'] = "Can be used to output html code via a short
 $string['jointevent'] = "Joint event";
 $string['editteachers'] = "Edit teachers";
 
-$string['search'] = "Suchbegriff eingeben";
+$string['search'] = "Enter search term";
 
 $string['basicqualification'] = "Basic Qualification for Staff New to Teaching";
 $string['teachingcompetence'] = "Teaching Competence";

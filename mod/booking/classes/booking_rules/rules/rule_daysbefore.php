@@ -20,6 +20,7 @@ use context;
 use mod_booking\booking_rules\actions_info;
 use mod_booking\booking_rules\booking_rule;
 use mod_booking\booking_rules\conditions_info;
+use mod_booking\singleton_service;
 use MoodleQuickForm;
 use stdClass;
 
@@ -110,25 +111,35 @@ class rule_daysbefore implements booking_rule {
 
         // We support special treatments for shopping cart notifications.
         if (class_exists('local_shopping_cart\shopping_cart')) {
-
             $datefields['installmentpayment'] = get_string('installment', 'local_shopping_cart')
                 . " (" . get_string('pluginname', 'local_shopping_cart') . ")";
         }
 
-        $mform->addElement('static', 'rule_daysbefore_desc', '',
-            get_string('ruledaysbefore_desc', 'mod_booking'));
+        $mform->addElement(
+            'static',
+            'rule_daysbefore_desc',
+            '',
+            get_string('ruledaysbefore_desc', 'mod_booking')
+        );
 
         // Number of days before.
-        $mform->addElement('select', 'rule_daysbefore_days',
-            get_string('ruledays', 'mod_booking'), $numberofdaysbefore);
+        $mform->addElement(
+            'select',
+            'rule_daysbefore_days',
+            get_string('ruledays', 'mod_booking'),
+            $numberofdaysbefore
+        );
         $mform->setDefault('rule_daysbefore_days', 0);
         $repeateloptions['rule_daysbefore_days']['type'] = PARAM_TEXT;
 
         // Date field needed in combination with the number of days before.
-        $mform->addElement('select', 'rule_daysbefore_datefield',
-            get_string('ruledatefield', 'mod_booking'), $datefields);
+        $mform->addElement(
+            'select',
+            'rule_daysbefore_datefield',
+            get_string('ruledatefield', 'mod_booking'),
+            $datefields
+        );
         $repeateloptions['rule_daysbefore_datefield']['type'] = PARAM_TEXT;
-
     }
 
     /**
@@ -222,8 +233,7 @@ class rule_daysbefore implements booking_rule {
      * @param int $userid optional
      */
     public function execute(int $optionid = 0, int $userid = 0) {
-        global $DB;
-
+        $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
         $jsonobject = json_decode($this->rulejson);
 
         // We reuse this code when we check for validity, therefore we use a separate function.
@@ -236,6 +246,19 @@ class rule_daysbefore implements booking_rule {
         $action->ruleid = $this->ruleid;
 
         foreach ($records as $record) {
+            // Self-learning courses use coursestarttime only for sorting #684.
+            // So if a rule is dependent on coursestarttime or courseendtime, we just skip the execution.
+            if (!empty($settings->selflearningcourse)) {
+                if (
+                    !empty($jsonobject->ruledata->datefield)
+                    && (
+                        ($jsonobject->ruledata->datefield == 'coursestarttime')
+                        || ($jsonobject->ruledata->datefield == 'courseendtime')
+                    )
+                ) {
+                    continue;
+                }
+            }
 
             // Set the time of when the task should run.
             $nextruntime = (int) $record->datefield - ((int) $this->days * 86400);
@@ -355,6 +378,7 @@ class rule_daysbefore implements booking_rule {
 
         $condition->execute($sql, $params, $testmode, $nextruntime);
 
+        $sql->select = " DISTINCT " . $sql->select; // Required to eliminate potential duplication in case inoptimal query.
         $sqlstring = "SELECT $sql->select FROM $sql->from WHERE $sql->where";
 
         $records = $DB->get_records_sql($sqlstring, $params);

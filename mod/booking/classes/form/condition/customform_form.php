@@ -24,6 +24,8 @@
 
 namespace mod_booking\form\condition;
 
+use context_module;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -194,6 +196,15 @@ class customform_form extends dynamic_form {
                             if (count($linearray) > 1) {
                                 $options[$linearray[0]] = format_string($linearray[1]);
                                 if (count($linearray) > 2) {
+                                    $context = context_module::instance($settings->cmid);
+                                    if (isset($linearray[4]) && !has_capability('mod/booking:bookforothers', $context)) {
+                                        // Those are the users that are allowed to see this option.
+                                        $allowedusers = explode(',', $linearray[4]);
+                                        if (!in_array($userid, $allowedusers)) {
+                                            unset($options[$linearray[0]]);
+                                            continue;
+                                        }
+                                    }
                                     $ba = singleton_service::get_instance_of_booking_answers($settings);
                                     $expectedvalue = $linearray[0];
                                     $filteredba = array_filter(
@@ -203,13 +214,33 @@ class customform_form extends dynamic_form {
                                                     && $userbookings->$identifier === $expectedvalue;
                                         }
                                     );
+                                    // Check availabilty.
                                     $leftover = $linearray[2] - count($filteredba);
-                                    if ($leftover == 0) {
+                                    if (empty($linearray[2])) {
+                                        $availablestring = '';
+                                    } else if ($leftover == 0) {
                                         unset($options[$linearray[0]]);
                                     } else {
-                                        $options[$linearray[0]] .= ', ' . $leftover  .
+                                        $availablestring = ', ' . $leftover  .
                                             ' ' . get_string('bocondcustomformstillavailable', 'mod_booking');
                                     }
+
+                                    // Check price.
+                                    $priceinfostring = '';
+                                    if (isset($linearray[3])) {
+                                        // Add price and default currency.
+                                        $customformstore = new customformstore(
+                                            (int) $formdata['userid'],
+                                            (int) $formdata['id']
+                                            );
+                                        $price = $customformstore->get_price_and_currency_for_user($linearray[3]);
+                                        if (!empty($price)) {
+                                            $priceinfostring = ' (+' . $price . ')';
+                                        }
+                                    }
+                                    // Append infos to select.
+                                    $options[$linearray[0]] .= $availablestring;
+                                    $options[$linearray[0]] .= $priceinfostring;
                                 }
                             } else {
                                 $options[] = format_string($line);
@@ -254,6 +285,15 @@ class customform_form extends dynamic_form {
                             get_string('apply', 'mod_booking')
                         );
                         break;
+                    case 'enrolusersaction':
+                        $identifier = 'customform_' . $formelementvalue->formtype . '_' . $counter;
+                        $mform->addElement(
+                            'text',
+                            $identifier,
+                            format_string($formelementvalue->label) ?? "Label " . $counter
+                        );
+                        $mform->setDefault('customform_enrolusersaction_' . $counter, $formelementvalue->value);
+                        $mform->setType('customform_enrolusersaction_' . $counter, PARAM_TEXT);
                 }
 
                 $counter++;

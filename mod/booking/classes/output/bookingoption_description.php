@@ -50,7 +50,6 @@ use templatable;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class bookingoption_description implements renderable, templatable {
-
     /** @var int $optionid optionid */
     private $optionid = null;
 
@@ -104,6 +103,9 @@ class bookingoption_description implements renderable, templatable {
 
     /** @var string $duration is saved in db as seconds and will be formatted in this class */
     private $duration = null;
+
+    /** @var string $timeremaining */
+    private $timeremaining = null;
 
     /** @var string $booknowbutton as saved in db in minutes */
     private $booknowbutton = null;
@@ -164,6 +166,15 @@ class bookingoption_description implements renderable, templatable {
 
     /** @var string $bookingclosingtime */
     private $bookingclosingtime = '';
+
+    /** @var bool $selflearningcourse */
+    private $selflearningcourse = null;
+
+    /** @var bool $canstillbecancelled */
+    private $canstillbecancelled = null;
+
+    /** @var string $canceluntil */
+    private $canceluntil = null;
 
     /**
      * Constructor.
@@ -250,13 +261,42 @@ class bookingoption_description implements renderable, templatable {
         // There can be more than one modal, therefore we use the id of this record.
         $this->modalcounter = $settings->id;
 
-        // Format the duration correctly.
-        $seconds = $settings->duration;
-        $minutes = $seconds / 60;
-        $d = floor ($minutes / 1440);
-        $h = floor (($minutes - $d * 1440) / 60);
-        $m = $minutes - ($d * 1440) - ($h * 60);
-        $this->duration = "{$d} " . get_string("days") . "  {$h} " . get_string("hours") . "  {$m} " . get_string("minutes");
+        // Check if it's a self-learning course. There's a JSON flag for this.
+        if (!empty($settings->selflearningcourse)) {
+            $this->selflearningcourse = true;
+            // Format the duration correctly.
+            $this->duration = format_time($settings->duration);
+
+            $ba = singleton_service::get_instance_of_booking_answers($settings);
+            $buyforuser = price::return_user_to_buy_for();
+            if (isset($ba->usersonlist[$buyforuser->id])) {
+                $timebooked = $ba->usersonlist[$buyforuser->id]->timecreated;
+                $timeremainingsec = $timebooked + $settings->duration - time();
+                $this->timeremaining = format_time($timeremainingsec);
+            }
+        }
+
+        // Show info until when the booking option can be cancelled.
+        // If cancelling was disabled in the booking option or for the whole instance...
+        // ...then we do not show the cancel until info.
+        if (booking_option::get_value_of_json_by_key($optionid, 'disablecancel')
+            || booking::get_value_of_json_by_key($settings->bookingid, 'disablecancel')) {
+            $this->canceluntil = null;
+        } else {
+            // Check if the option has its own canceluntil date.
+            $canceluntiltimestamp = booking_option::get_value_of_json_by_key($optionid, 'canceluntil');
+            if (!empty($canceluntiltimestamp)) {
+                $this->canceluntil = userdate($canceluntiltimestamp, get_string('strftimedatetime', 'langconfig'));
+            } else {
+                $canceluntiltimestamp = booking_option::return_cancel_until_date($optionid);
+                if (!empty($canceluntiltimestamp)) {
+                    $this->canceluntil = userdate($canceluntiltimestamp, get_string('strftimedatetime', 'langconfig'));
+                }
+            }
+            if (!empty($canceluntiltimestamp) && ($canceluntiltimestamp > time())) {
+                $this->canstillbecancelled = true;
+            }
+        }
 
         // Datestring for date series and calculation of educational unit length.
         $this->dayofweektime = $settings->dayofweektime;
@@ -281,7 +321,6 @@ class bookingoption_description implements renderable, templatable {
             || (has_capability('mod/booking:addeditownoption', $modcontext) && $isteacher)
             || (has_capability('mod/booking:addeditownoption', $syscontext) && $isteacher)
         ) {
-
             $this->showmanageresponses = true;
 
             // Add a link to redirect to the booking option.
@@ -324,12 +363,18 @@ class bookingoption_description implements renderable, templatable {
 
         // Every date will be an array of datestring and customfields.
         // But customfields will only be shown if we show booking option information inline.
-
-        $this->dates = $bookingoption->return_array_of_sessions($bookingevent,
-                $descriptionparam, $withcustomfields, $forbookeduser, $ashtml);
-
-        if (!empty($this->dates)) {
-            $this->datesexist = true;
+        // Make sure, that optiondates (sessions) are not stored for self-learning courses.
+        if (empty($settings->selflearningcourse)) {
+            $this->dates = $bookingoption->return_array_of_sessions(
+                $bookingevent,
+                $descriptionparam,
+                $withcustomfields,
+                $forbookeduser,
+                $ashtml
+            );
+            if (!empty($this->dates)) {
+                $this->datesexist = true;
+            }
         }
 
         $colteacher = new col_teacher($optionid, $settings);
@@ -389,6 +434,7 @@ class bookingoption_description implements renderable, templatable {
         }
 
         // Add price.
+        // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
         // TODO: Currently this will only use the logged in $USER, this won't work for the cashier use case!
         $priceitem = price::get_price('option', $optionid, $user);
         if (!empty($priceitem)) {
@@ -461,8 +507,9 @@ class bookingoption_description implements renderable, templatable {
                 $this->booknowbutton = "<a href=$encodedlink class='btn btn-primary'>"
                         . get_string('gotobookingoption', 'booking')
                         . "</a>";
-                // TODO: We would need an event tracking status changes between notbooked, iambooked and onwaitinglist...
-                // TODO: ...in order to update the event table accordingly.
+                // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
+                /* TODO: We would need an event tracking status changes between notbooked, iambooked and onwaitinglist...
+                TODO: ...in order to update the event table accordingly. */
                 break;
 
             case MOD_BOOKING_DESCRIPTION_ICAL:
@@ -523,6 +570,7 @@ class bookingoption_description implements renderable, templatable {
             'location' => $this->location,
             'address' => $this->address,
             'institution' => $this->institution,
+            'selflearningcourse' => $this->selflearningcourse,
             'duration' => $this->duration,
             'dates' => $this->dates,
             'datesexist' => $this->datesexist,
@@ -541,7 +589,13 @@ class bookingoption_description implements renderable, templatable {
             'bookingclosingtime' => $this->bookingclosingtime,
             'editurl' => !empty($this->editurl) ? $this->editurl : false,
             'returnurl' => !empty($this->returnurl) ? $this->returnurl : false,
+            'canceluntil' => $this->canceluntil,
+            'canstillbecancelled' => $this->canstillbecancelled,
         ];
+
+        if (!empty($this->timeremaining)) {
+            $returnarray['timeremaining'] = $this->timeremaining;
+        }
 
         if (!empty($this->unitstring)) {
             $returnarray['unitstring'] = $this->unitstring;

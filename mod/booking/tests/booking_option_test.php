@@ -47,21 +47,12 @@ use stdClass;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class booking_option_test extends advanced_testcase {
-
     /**
      * Tests set up.
      */
     public function setUp(): void {
+        parent::setUp();
         $this->resetAfterTest();
-    }
-
-    /**
-     * Tear Down.
-     *
-     * @return void
-     *
-     */
-    public function tearDown(): void {
     }
 
     /**
@@ -311,9 +302,11 @@ final class booking_option_test extends advanced_testcase {
         $booking1 = $this->getDataGenerator()->create_module('booking', $bdata);
 
         $result = $DB->get_record_sql(
-                'SELECT cm.id, cm.course, cm.module, cm.instance, m.name
+            'SELECT cm.id, cm.course, cm.module, cm.instance, m.name
                 FROM {course_modules} cm LEFT JOIN {modules} m ON m.id = cm.module WHERE cm.course = ?
-                AND cm.completion > 0 LIMIT 1', [$course->id]);
+                AND cm.completion > 0 LIMIT 1',
+            [$course->id]
+        );
 
         $bdata['name'] = 'Test Booking 2';
         unset($bdata['completion']);
@@ -345,6 +338,9 @@ final class booking_option_test extends advanced_testcase {
         /** @var mod_booking_generator $plugingenerator */
         $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
         $option1 = $plugingenerator->create_option($record);
+
+        // Required to solve cahce issue.
+        singleton_service::destroy_booking_option_singleton($option1->id);
 
         $bookingobj1 = singleton_service::get_instance_of_booking_by_bookingid($booking1->id);
         $bookingsettings1 = singleton_service::get_instance_of_booking_settings_by_bookingid($bookingobj1->id);

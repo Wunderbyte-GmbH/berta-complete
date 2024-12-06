@@ -38,16 +38,25 @@
         ]
     }
 }}
-
-{{#datestrings.0}}
-    <div class='booking-showdates-collapse mt-1'>
-        {{#firstDate}}
-            {{#str}}fromdate, local_urise{{/str}}{{firstDate}}
-        {{/firstDate}}
-        {{^firstDate}}
-        {{#datestrings}}
+{{^selflearningcourse}}
+    {{#datestrings.0}}
+        <div class='booking-showdates-collapse mt-1'>
+            {{#firstDate}}
+                {{#str}}fromdate, local_urise{{/str}}{{firstDate}}
+            {{/firstDate}}
+            {{^firstDate}}
+            {{#datestrings}}
                 <div>{{{datestring}}}</div>
-        {{/datestrings}}
-        {{/firstDate}}
-    </div>
-{{/datestrings.0}}
+            {{/datestrings}}
+            {{/firstDate}}
+        </div>
+    {{/datestrings.0}}
+{{/selflearningcourse}}
+{{#selflearningcourse}}
+    {{^timeremaining}}
+        {{#str}}selflearningcoursedurationinfo, mod_booking, {{duration}}{{/str}}
+    {{/timeremaining}}
+    {{#timeremaining}}
+        {{#str}}selflearningcoursetimeremaininginfo, mod_booking, {{timeremaining}}{{/str}}
+    {{/timeremaining}}
+{{/selflearningcourse}}

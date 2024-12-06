@@ -130,9 +130,24 @@ class shopping_cart_history {
 
                     // If there are open orders tables we create selects for them.
                     $openorderstable = "paygw_" . $gwname . "_openorders";
+
+                    // For some gateways, we store a merchantref or customorderid in the openorders table.
+                    $tidpart = 'tid';
+                    $customorderidpart = 'NULL AS customorderid';
+
                     if ($dbman->table_exists($openorderstable)) {
+                        $openorderscols = $DB->get_columns($openorderstable);
+                        foreach ($openorderscols as $key => $value) {
+                            if (strpos($key, 'merchantref') !== false) {
+                                $tidpart = 'merchantref AS tid';
+                            }
+                            if (strpos($key, 'customorderid') !== false) {
+                                $customorderidpart = 'customorderid';
+                            }
+                        }
                         $openorderselects[] = "SELECT itemid, '" . $gwname .
-                            "' AS gateway, tid FROM {paygw_" . $gwname . "_openorders}";
+                            "' AS gateway, $tidpart, $customorderidpart
+                            FROM {paygw_" . $gwname . "_openorders}";
                     }
 
                     $cols = $DB->get_columns($tablename);
@@ -152,13 +167,15 @@ class shopping_cart_history {
         // If we have open orders tables select statements, we can now UNION them.
 
         if (!empty($openorderselects)) {
-            $customorderid = "oo.tid AS customorderid, ";
+            $ootid = "oo.tid AS ootid, ";
+            $oocustomorderid = "oo.customorderid, ";
             $openorderselectsstring = implode(' UNION ', $openorderselects);
-            $customorderidpart = "LEFT JOIN ($openorderselectsstring) oo ON sch.identifier = oo.itemid AND oo.gateway = p.gateway";
+            $ootidpart = "LEFT JOIN ($openorderselectsstring) oo ON sch.identifier = oo.itemid AND oo.gateway = p.gateway";
         } else {
             // If we do not have any open orders tables, we still keep an empty custom order id column for consistency.
-            $customorderid = "'' AS customorderid, ";
-            $customorderidpart = '';
+            $ootid = "NULL AS ootid, ";
+            $oocustomorderid = "NULL AS customorderid, ";
+            $ootidpart = '';
         }
 
         if (!empty($colselects)) {
@@ -191,11 +208,11 @@ class shopping_cart_history {
         }
 
         $sql = "SELECT DISTINCT
-                $uniqueidpart sch.*, " . $customorderid . "p.gateway$selectorderidpart
+                $uniqueidpart sch.*, " . $ootid . $oocustomorderid . "p.gateway$selectorderidpart
                 FROM {local_shopping_cart_history} sch
                 LEFT JOIN {payments} p
                 ON p.itemid = sch.identifier AND p.userid=sch.userid
-                $customorderidpart
+                $ootidpart
                 $gatewayspart
                 WHERE sch.userid = :userid
                 AND sch.paymentstatus >= :paymentstatus
@@ -208,8 +225,8 @@ class shopping_cart_history {
         // ... then we replace the order ID with the custom order ID.
         if (get_config('local_shopping_cart', 'cashreportshowcustomorderid')) {
             foreach ($records as &$record) {
-                if (!empty($record->customorderid)) {
-                    $record->orderid = $record->customorderid;
+                if (!empty($record->ootid)) {
+                    $record->orderid = $record->ootid;
                 }
             }
         }
@@ -261,6 +278,7 @@ class shopping_cart_history {
             foreach ($data->items as $item) {
                 $item['taxcountrycode'] = $data->taxcountrycode ?? null;
                 $item['address_billing'] = $data->address_billing ?? null;
+                $item['address_shipping'] = $data->address_shipping ?? null;
                 $uidcountrynr = null;
                 if (isset($data->vatnrnumber)) {
                     $uidcountrynr = $data->vatnrcountry . $data->vatnrnumber;
@@ -632,8 +650,16 @@ class shopping_cart_history {
                 $record->componentname === 'local_shopping_cart'
                 && $area === 'installments'
             ) {
+                // GH-94: Fix paymentstatus for installments in shopping cart history.
+                $updaterecord = new stdClass();
+                $updaterecord->id = $record->id;
+                $updaterecord->paymentstatus = LOCAL_SHOPPING_CART_PAYMENT_SUCCESS;
+                $updaterecord->timemodified = $record->timemodified;
+                $DB->update_record('local_shopping_cart_history', $updaterecord);
+
                 // We retrieve the item from history and update it for the installments.
                 $historyitem = self::return_item_from_history($record->itemid);
+
                 // Now we manipulate our entry to have a correct ledger.
                 $ledgerrecord = $record;
                 $ledgerrecord->itemid = $historyitem->itemid;

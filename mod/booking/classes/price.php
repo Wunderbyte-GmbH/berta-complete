@@ -28,6 +28,7 @@ use cache_helper;
 use context_module;
 use context_system;
 use dml_exception;
+use mod_booking\local\mobile\customformstore;
 use mod_booking\option\dates_handler;
 use moodle_url;
 use MoodleQuickForm;
@@ -743,47 +744,65 @@ class price {
         // 2. Explode pricecategoryidentifier for "," and see if $categoryidentifier is in the array.
         // 3. Concerning no match, we can either print a message and don't allow booking, or fallback on default price category.
 
-        $default = [];
-
+        $price = [];
+        unset($pricerecorddefault);
+        $pricecategoryfound = false;
         foreach ($prices as $pricerecord) {
             // We want to support string matching like category student for student@univie.ac.at.
-
             $pricecategoryidentifiers = explode(',', $pricerecord->pricecategoryidentifier);
 
-            // We store the default record as a fallback.
-            if (
-                get_config('booking', 'pricecategoryfallback')
-                && $pricerecord->pricecategoryidentifier == 'default'
-                && $categoryidentifier !== 'default'
-            ) {
-                $default = [
-                    "price" => $pricerecord->price,
-                    "currency" => $pricerecord->currency,
-                    "pricecategoryidentifier" => $pricerecord->pricecategoryidentifier,
-                    "pricecategoryname" =>
-                        self::get_active_pricecategory_from_cache_or_db($pricerecord->pricecategoryidentifier)->name,
-                ];
-            }
-
-            $pricecategoryfound = false;
             foreach ($pricecategoryidentifiers as $pricecategoryidentifier) {
+                // We store the default record as a fallback.
+                if ($pricecategoryidentifier == 'default') {
+                    $pricerecorddefault = $pricerecord;
+                }
+                // Looking for matched pricecategory.
                 if (strpos($categoryidentifier, $pricecategoryidentifier) !== false) {
                     $pricecategoryfound = true;
+                    $price = [
+                        "price" => $pricerecord->price,
+                        "currency" => $pricerecord->currency,
+                        "pricecategoryidentifier" => $pricerecord->pricecategoryidentifier,
+                        "pricecategoryname" =>
+                            self::get_active_pricecategory_from_cache_or_db($pricerecord->pricecategoryidentifier)->name,
+                    ];
                 }
-            }
-
-            if ($pricecategoryfound) {
-                return [
-                    "price" => $pricerecord->price,
-                    "currency" => $pricerecord->currency,
-                    "pricecategoryidentifier" => $pricerecord->pricecategoryidentifier,
-                    "pricecategoryname" =>
-                        self::get_active_pricecategory_from_cache_or_db($pricerecord->pricecategoryidentifier)->name,
-                ];
             }
         }
 
-        return $default;
+        // We use the default record as a fallback.
+        if (
+            $pricecategoryfound === false
+            && get_config('booking', 'pricecategoryfallback')
+        ) {
+            if (!empty($pricerecorddefault)) {
+                $price = [
+                    "price" => $pricerecorddefault->price,
+                    "currency" => $pricerecorddefault->currency,
+                    "pricecategoryidentifier" => $pricerecorddefault->pricecategoryidentifier,
+                    "pricecategoryname" =>
+                        self::get_active_pricecategory_from_cache_or_db($pricerecorddefault->pricecategoryidentifier)->name,
+                ];
+            } else {
+                return []; // No default for some reason (should never happens).
+            }
+        } else if (
+            $pricecategoryfound === false
+            && empty(get_config('booking', 'pricecategoryfallback'))
+        ) {
+            return [];
+        }
+
+        if ($area === "option" && isset($price['price'])) {
+            $customformstore = new customformstore($user->id, $itemid);
+            $price['price'] = $customformstore->modify_price($price['price'], $categoryidentifier);
+        }
+
+        if (isset($price['price'])) {
+            $price['price'] = number_format($price['price'], 2, '.', '');
+        }
+
+        return $price;
     }
 
 
@@ -878,12 +897,12 @@ class price {
         // If not, we look for the price for all.
         if ($cacheduserprices === true) {
             return [];
-        } else if ($cacheduserprices) {
+        } else if ($cacheduserprices) { // No price found.
             $prices = $cacheduserprices;
         } else {
             // Here, we haven't found a user price. We still might have a general price.
             $cachedprices = $cache->get($cachekey);
-            if ($cachedprices === true) {
+            if ($cachedprices === true) { // No price found.
                 // We set the user price, to know the next time.
                 $cache->set($usercachekey, true);
                 return [];
@@ -892,8 +911,10 @@ class price {
 
                 // At this point, we have the general prices, but we might have a user specific camapaign override.
                 // Save the user specific prices.
-                self::apply_campaigns($itemid, $prices, $userid);
-                $cache->set($usercachekey, $cachedprices);
+                if ($userid > 0) {
+                    self::apply_campaigns($itemid, $prices, $userid);
+                    $cache->set($usercachekey, $cachedprices);
+                }
             } else {
                 // Here, we haven't found user specific prices and we haven't found general prices.
                 // Therefore, we need to have a look in the DB.
@@ -913,10 +934,10 @@ class price {
                     self::apply_campaigns($itemid, $prices, 0);
                     $cache->set($cachekey, $prices);
 
-                    // Save the user specific prices.
-                    self::apply_campaigns($itemid, $prices, $userid);
-                    $cache->set($usercachekey, $prices);
-
+                    if (isloggedin() && !isguestuser()) {
+                        self::apply_campaigns($itemid, $prices, $userid);
+                        $cache->set($usercachekey, $prices);
+                    }
                 } else {
                     $cache->set($cachekey, $prices);
                     $cache->set($usercachekey, $prices);
@@ -1068,7 +1089,7 @@ class price {
                 foreach ($prices as &$price) {
                     $price->price = $campaign->get_campaign_price($price->price, $userid);
                     // Render all prices to 2 fixed decimals.
-                    $price->price = number_format(round((float) $price->price , 2), 2, '.', '');
+                    $price->price = number_format(round((float) $price->price, 2), 2, '.', '');
                     // Campaign price factor has been applied.
                 }
             }

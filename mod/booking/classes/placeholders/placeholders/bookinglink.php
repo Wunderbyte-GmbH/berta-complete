@@ -74,8 +74,7 @@ class bookinglink {
             // The cachekey depends on the kind of placeholder and it's ttl.
             // If it's the same for all users, we don't use userid.
             // If it's the same for all options of a cmid, we don't use optionid.
-            $currlang = current_language();
-            $cachekey = "$classname-$currlang-$optionid";
+            $cachekey = "$classname-$optionid";
             if (isset(placeholders_info::$placeholders[$cachekey])) {
                 return placeholders_info::$placeholders[$cachekey];
             }
@@ -85,7 +84,7 @@ class bookinglink {
             $settings = singleton_service::get_instance_of_booking_option_settings($optionid);
 
             $value = '';
-            if ($settings->courseid) {
+            if ($settings->cmid) {
                 $bookinglink = new moodle_url('/mod/booking/view.php', ['id' => $cmid]);
                 $value = html_writer::link($bookinglink, $bookinglink->out());
             }

@@ -59,8 +59,12 @@ class modal_cancel_all_addcredit extends dynamic_form {
         $data = new stdClass();
 
         $list = '';
+        $quotapercentage = get_config('local_shopping_cart', 'calculateconsumationfixedpercentage');
         foreach ($bookedusers as $user) {
             $content = "$user->firstname $user->lastname $user->email, $user->price $user->currency";
+            if (isset($quotapercentage) && $quotapercentage > 0) {
+                $content .= " (-$quotapercentage%)";
+            }
             $list .= html_writer::tag('li', $content);
         }
 
@@ -134,9 +138,17 @@ class modal_cancel_all_addcredit extends dynamic_form {
                 $credit = 0.0;
             }
 
-            shopping_cart::cancel_purchase($buser->itemid, $data->area, $buser->userid, $componentname,
-                $buser->id, $credit, $cancelationfee);
-
+            shopping_cart::cancel_purchase(
+                $buser->itemid,
+                $data->area,
+                $buser->userid,
+                $componentname,
+                $buser->id,
+                $credit,
+                $cancelationfee,
+                1,
+                1
+            );
         }
 
         // For the booking component, we have a special treatment here.

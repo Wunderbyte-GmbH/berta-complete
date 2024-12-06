@@ -55,6 +55,19 @@ class fullybooked implements bo_condition {
     /** @var bool $overridable Indicates if the condition can be overriden. */
     public $overridable = true;
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
+
     /**
      * Needed to see if class can take JSON.
      * @return bool
@@ -166,7 +179,7 @@ class fullybooked implements bo_condition {
 
         $isavailable = $this->is_available($settings, $userid, $not);
 
-        $description = self::get_description_string($isavailable, $full);
+        $description = self::get_description_string($isavailable, $full, $settings);
 
         // If the user is in principle allowed to overbook AND the overbook setting is set in the instance, overbooking is possible.
         if (!empty(get_config('booking', 'allowoverbooking'))
@@ -225,7 +238,7 @@ class fullybooked implements bo_condition {
     ): array {
 
         $isavailable = $this->is_available($settings, $userid);
-        $label = $this->get_description_string($isavailable, $full);
+        $label = $this->get_description_string($isavailable, $full, $settings);
 
         return bo_info::render_button($settings, $userid, $label, 'alert alert-warning', true, $fullwidth, 'alert', 'option');
     }
@@ -235,9 +248,18 @@ class fullybooked implements bo_condition {
      *
      * @param bool $isavailable
      * @param bool $full
+     * @param booking_option_settings $settings
      * @return string
      */
-    private function get_description_string($isavailable, $full) {
+    private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = $full ? get_string('bocondfullybookedfullavailable', 'mod_booking') :
                 get_string('bocondfullybookedavailable', 'mod_booking');

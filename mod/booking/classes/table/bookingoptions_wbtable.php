@@ -591,11 +591,16 @@ class bookingoptions_wbtable extends wunderbyte_table {
             $cachekey = "sessiondates$optionid$lang";
             $cache = cache::make($this->cachecomponent, $this->rawcachename);
 
-            if (!$ret = $cache->get($cachekey)) {
+            if (
+                !empty($settings->selflearningcourse)
+                || !$ret = $cache->get($cachekey)
+            ) {
                 $data = new \mod_booking\output\col_coursestarttime($optionid, $booking);
                 $output = singleton_service::get_renderer('mod_booking');
                 $ret = $output->render_col_coursestarttime($data);
-                $cache->set($cachekey, $ret);
+                if (empty($settings->selflearningcourse)) {
+                    $cache->set($cachekey, $ret);
+                }
             }
         }
         return $ret;
@@ -875,6 +880,7 @@ class bookingoptions_wbtable extends wunderbyte_table {
                             get_string('deletethisbookingoption', 'mod_booking')
                 ) . '</div>';
             }
+            // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
             // TODO: Move booking options to another option currently does not work correcly.
             // We temporarily remove it from booking until we are sure, it works.
             // We need to make sure it works for: teachers, optiondates, prices, answers customfields etc.

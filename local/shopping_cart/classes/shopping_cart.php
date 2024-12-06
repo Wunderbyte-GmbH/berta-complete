@@ -115,21 +115,19 @@ class shopping_cart {
         }
 
         if ($area == "option" || $area == "rebookitem") {
-            // If the setting 'samecostcenter' ist turned on...
+            // Such as 'samecostcenter' is always enforced...
             // ... then we do not allow to add items with different cost centers.
             $providerclass = static::get_service_provider_classname($component);
             $cartitem = component_class_callback($providerclass, 'allow_add_item_to_cart', [$area, $itemid, $userid]);
 
-            if (get_config('local_shopping_cart', 'samecostcenter')) {
-                $currentcostcenter = $cartitem['costcenter'] ?? '';
-
-                if (!$cartstore->same_costcenter($currentcostcenter)) {
-                    return [
-                        'success' => LOCAL_SHOPPING_CART_CARTPARAM_COSTCENTER,
-                        'itemname' => $cartitem['itemname'] ?? '',
-                    ];
-                }
+            $currentcostcenter = $cartitem['costcenter'] ?? '';
+            if (!$cartstore->same_costcenter($currentcostcenter)) {
+                return [
+                    'success' => LOCAL_SHOPPING_CART_CARTPARAM_COSTCENTER,
+                    'itemname' => $cartitem['itemname'] ?? '',
+                ];
             }
+
             if (get_config('local_shopping_cart', 'allowchooseaccount')) {
 
                 $searchdata = [
@@ -804,6 +802,8 @@ class shopping_cart {
             $ledgerrecord->timecreated = time();
             $ledgerrecord->itemname = get_string('creditsused', 'local_shopping_cart');
             $ledgerrecord->annotation = get_string('creditsusedannotation', 'local_shopping_cart');
+            $ledgerrecord->address_billing = $data['address_billing'] ?? 0;
+            $ledgerrecord->address_shipping = $data['address_shipping'] ?? 0;
             self::add_record_to_ledger_table($ledgerrecord);
         }
 
@@ -829,7 +829,6 @@ class shopping_cart {
                 ($item['componentname'] === 'local_shopping_cart')
                 && ($item['area'] === 'rebookitem')
             ) {
-
                 shopping_cart_rebookingcredit::checkout_rebooking_item(
                     $item['componentname'],
                     $item['area'],
@@ -961,17 +960,17 @@ class shopping_cart {
 
             if ($totalprice < 0) {
                 $now = time();
-
+                $id = $data['identifier'] ?? $identifier;
                 // Add credit to the user.
                 $correctiondata = (object)[
                     'userid' => $userid,
                     'currency' => $data['currency'],
                     'creditsmanagercredits' => -$totalprice,
-                    'creditsmanagerreason' => get_string('rebookingidentifier', 'local_shopping_cart', $data['identifier']),
+                    'creditsmanagerreason' => get_string('rebookingidentifier', 'local_shopping_cart', $id),
                     'payment' => LOCAL_SHOPPING_CART_PAYMENT_METHOD_REBOOKING_CREDITS_CORRECTION,
                     'timemodified' => $now,
                     'timecreated' => $now,
-                    'identifier' => $data['identifier'],
+                    'identifier' => $id,
                     'costcenter' => $data['costcenter'] ?? '',
                 ];
                 shopping_cart_credits::creditsmanager_correct_credits($correctiondata);
@@ -1029,6 +1028,7 @@ class shopping_cart {
      * @param float $customcredit
      * @param float $cancelationfee
      * @param int $applytocomponent
+     * @param int $applygivenquota
      *
      * @return array
      */
@@ -1040,7 +1040,8 @@ class shopping_cart {
         ?int $historyid = null,
         float $customcredit = 0.0,
         float $cancelationfee = 0.0,
-        int $applytocomponent = 1
+        int $applytocomponent = 1,
+        int $applygivenquota = 0
     ): array {
 
         global $USER;
@@ -1119,24 +1120,36 @@ class shopping_cart {
         }
 
         if ($success == 1) {
-            // If the payment was successfully canceled, we can book the credits to the users balance.
 
             /* If the user canceled herself and a cancelation fee is set in config settings
-            we deduce this fee from the credit. */
+            we deduce the standard fee from the credit. */
             if ($userid == $USER->id) {
-                // The credit might be reduced by the consumption.
-                $consumption = get_config('local_shopping_cart', 'calculateconsumation');
-                if ($consumption == 1) {
-                    $quota = self::get_quota_consumed($componentname, $area, $itemid, $userid, $historyid);
-                    $customcredit = $quota['remainingvalue'];
+                if (
+                    ($cancelationfeesettings = get_config('local_shopping_cart', 'cancelationfee'))
+                    && $cancelationfeesettings > 0
+                ) {
+                    $customcredit -= $cancelationfeesettings;
+                    $applygivenquota = 1;
                 }
+            }
+
+            if (!empty($applygivenquota)) {
+                // Reduction of credit because of cancelationfee is done in modal.
+                $quota = self::get_quota_consumed(
+                    $componentname,
+                    $area,
+                    $itemid,
+                    $userid,
+                    $historyid,
+                    $customcredit
+                );
 
                 if (
-                    ($cancelationfee = get_config('local_shopping_cart', 'cancelationfee'))
-                    && $cancelationfee > 0
+                    isset($quota['remainingvalue'])
+                    && isset($quota['quota'])
+                    && $quota['quota'] > 0
                 ) {
-                    $customcredit = $customcredit - $cancelationfee;
-
+                    $customcredit = $quota['remainingvalue'];
                 }
             }
             // Apply rounding to all relevant values.
@@ -1409,21 +1422,30 @@ class shopping_cart {
      * @param int $itemid
      * @param int $userid
      * @param int $historyid
+     * @param float $price
      *
      * @return array
      */
-    public static function get_quota_consumed(string $component, string $area, int $itemid, int $userid, int $historyid): array {
+    public static function get_quota_consumed(
+        string $component,
+        string $area,
+        int $itemid,
+        int $userid,
+        int $historyid,
+        float $price = 0
+        ): array {
 
         $item = shopping_cart_history::return_item_from_history($historyid);
 
         self::add_quota_consumed_to_item($item, $userid);
-        $quota = $item->quotaconsumed;
+        $quota = $item->quotaconsumed ?? -1;
 
         // Now get the historyitem in order to check the initial price and calculate the rest.
         if ($quota >= 0 && $item) {
             $initialprice = (float)$item->price;
+            $price = empty($price) ? $initialprice : $price;
             $deducedvalue = $initialprice * $quota;
-            $remainingvalue = $initialprice - $deducedvalue;
+            $remainingvalue = $price - $deducedvalue;
             $currency = $item->currency;
             $cancelationfee = get_config('local_shopping_cart', 'cancelationfee');
             $success = $cancelationfee < 0 ? 0 : 1; // Cancelation not allowed.
@@ -1718,8 +1740,7 @@ class shopping_cart {
 
         // If we have set a fixed percentage in settings, we use this one!
         if (
-            get_config('local_shopping_cart', 'calculateconsumation')
-            && get_config('local_shopping_cart', 'calculateconsumationfixedpercentage') > 0
+            get_config('local_shopping_cart', 'calculateconsumationfixedpercentage') > 0
         ) {
             // We also check if the setting to only apply fixed percentage within service period is turned on.
             if (get_config('local_shopping_cart', 'fixedpercentageafterserviceperiodstart')) {
@@ -1749,16 +1770,19 @@ class shopping_cart {
                 $item->quotaconsumed = (float) 0.01 * get_config('local_shopping_cart', 'calculateconsumationfixedpercentage');
                 return;
             }
+        } else if (get_config('local_shopping_cart', 'calculateconsumation')) {
+            // Fetch consumed quota.
+            $providerclass = self::get_service_provider_classname($item->componentname);
+            $item->quotaconsumed = component_class_callback($providerclass, 'quota_consumed',
+                    [
+                            'area' => $item->area,
+                            'itemid' => $item->itemid,
+                            'userid' => $userid,
+                    ]);
+        } else {
+            $item->quotaconsumed = 0.0;
+            return;
         }
-
-        // We fetch the consumed quota as well.
-        $providerclass = self::get_service_provider_classname($item->componentname);
-        $item->quotaconsumed = component_class_callback($providerclass, 'quota_consumed',
-                [
-                        'area' => $item->area,
-                        'itemid' => $item->itemid,
-                        'userid' => $userid,
-                ]);
     }
 
     /**

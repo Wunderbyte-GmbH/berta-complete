@@ -279,10 +279,13 @@ class booking_option_settings {
     /** @var int $useprice flag that indicates if we use price or not */
     public $useprice = 0;
 
+    /** @var int $selflearningcourse flag marks courses with duration but no optiondates */
+    public $selflearningcourse = 0;
+
     /** @var int $sqlfilter defines if an element should be hidden via sql filter. hidden > 0 */
     public $sqlfilter = 0;
 
-    /** @var int $attachedfiles The links on the attached files */
+    /** @var array $attachedfiles The links on the attached files */
     public $attachedfiles = [];
 
     /**
@@ -462,6 +465,7 @@ class booking_option_settings {
                 $this->boactions = [];
                 $this->canceluntil = 0;
                 $this->useprice = null; // Important: Use null as default so it will also work with old DB records.
+                $this->selflearningcourse = 0;
             }
 
             // If the course module id (cmid) is not yet set, we load it. //TODO: bookingid 0 bei option templates berücksichtigen!!
@@ -605,7 +609,9 @@ class booking_option_settings {
                 $this->electivecombinations = $dbrecord->electivecombinations;
             }
 
+            // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
             // TODO: This is a performance problem. We need to cache campaigns!
+            // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
             // TODO: We need to cache get_all_campaigns too!
             // Check if there are active campaigns.
             // If yes, we need to apply the booking limit factor.
@@ -706,7 +712,8 @@ class booking_option_settings {
                 null,
             );
 
-            $teachers[$key]->description = format_text($descriptiontext, $teacher->descriptionformat);
+            $teachers[$key]->description = $descriptiontext;
+            $teachers[$key]->descriptionformat = $teacher->descriptionformat;
         }
 
         $this->teachers = $teachers;
@@ -750,9 +757,16 @@ class booking_option_settings {
         }
 
         $data = [];
-        foreach ($this->teachers as $teacher) {
-            $t['firstname'] = $teacher->firstname;
-            $t['lastname'] = $teacher->lastname;
+        $teachers = array_values($this->teachers);
+        // Set 'notlast' flag if it's the last item. We need this for the template.
+        $lastindex = count($teachers) - 1;
+
+        foreach ($teachers as $index => $teacher) {
+            $t = [
+                'firstname' => $teacher->firstname,
+                'lastname' => $teacher->lastname,
+                'notlast' => ($index != $lastindex) ? 1 : 0,
+            ];
             $data['teachers'][] = $t;
         }
 
@@ -1041,16 +1055,23 @@ class booking_option_settings {
                 $dbrecord->useprice = $this->useprice;
             }
 
-            // Useprice flag indicates if the booking option uses a price.
             if (!empty($this->jsonobject->waitforconfirmation)) {
                 $this->waitforconfirmation = (int)$this->jsonobject->waitforconfirmation;
                 $this->jsonobject->waitforconfirmation = $this->waitforconfirmation;
                 $dbrecord->waitforconfirmation = $this->waitforconfirmation;
             }
+
+            // Selflearningcourse flag for course with duration but no optiondates.
+            if (!empty($this->jsonobject->selflearningcourse)) {
+                $this->selflearningcourse = (int)$this->jsonobject->selflearningcourse;
+                $this->jsonobject->selflearningcourse = $this->selflearningcourse;
+                $dbrecord->selflearningcourse = $this->selflearningcourse;
+            }
         } else {
             $this->boactions = $dbrecord->boactions ?? null;
             $this->canceluntil = $dbrecord->canceluntil ?? 0;
             $this->useprice = $dbrecord->useprice ?? null;
+            $this->selflearningcourse = $dbrecord->selflearningcourse ?? 0;
             $this->waitforconfirmation = $dbrecord->waitforconfirmation ?? 0;
             $this->jsonobject = $dbrecord->jsonobject ?? null;
         }

@@ -16,6 +16,12 @@
 
 namespace local_wb_news;
 use core_tag_tag;
+use local_wb_news\event\instance_created;
+use local_wb_news\event\instance_deleted;
+use local_wb_news\event\instance_updated;
+use local_wb_news\event\news_created;
+use local_wb_news\event\news_deleted;
+use local_wb_news\event\news_updated;
 use moodle_url;
 
 defined('MOODLE_INTERNAL') || die();
@@ -261,17 +267,17 @@ class news {
         $news->tags = array_values(core_tag_tag::get_item_tags_array('local_wb_news', 'news', $news->id));
         $news->publishedon = userdate($news->timecreated, get_string('strftimedate', 'core_langconfig'));
         $news->cssclasses = empty($news->cssclasses) ? false : $news->cssclasses;
-        $news->headline = strip_tags(format_text($news->headline, FORMAT_HTML, ['noclean' => true]));
-        $news->subheadline = strip_tags(format_text($news->subheadline));
-        $news->btntext = strip_tags(format_text($news->btntext));
+        $news->headline = strip_tags(format_text($news->headline, FORMAT_HTML, ['noclean' => true]), '<br>');
+        $news->subheadline = strip_tags(format_text($news->subheadline), '<br>');
+        $news->btntext = strip_tags(format_text($news->btntext),'<br>');
         $news->description = format_text($news->description);
         if (!empty($news->bgimagetext)) {
-            $news->bgimagetext = strip_tags(format_text($news->bgimagetext));
+            $news->bgimagetext = strip_tags(format_text($news->bgimagetext),'<br>');
         }
         if (!empty($news->headerimagetext)) {
-            $news->headerimagetext = strip_tags(format_text($news->headerimagetext));
+            $news->headerimagetext = strip_tags(format_text($news->headerimagetext),'<br>');
         }
-        $news->icontext = strip_tags(format_text($news->icontext));
+        $news->icontext = strip_tags(format_text($news->icontext),'<br>');
 
         $strippeddesc = strip_tags($news->description);
         if (strlen($strippeddesc) > 300) {
@@ -323,13 +329,29 @@ class news {
 
         if ($id) {
             $DB->update_record('local_wb_news', $data, true);
+
+            $event = news_updated::create([
+                'context' => context_system::instance(),
+                'userid' => $USER->id,
+                'objectid' => $id,
+            ]);
+
+            $event->trigger();
         } else {
             $data->timecreated = time();
             $id = $DB->insert_record('local_wb_news', $data, true);
+
+            $event = news_created::create([
+                'context' => context_system::instance(),
+                'userid' => $USER->id,
+                'objectid' => $id,
+            ]);
+
+            $event->trigger();
         }
 
         if (isset($data->tags)) {
-            core_tag_tag::set_item_tags('local_wb_news', 'news', $id, context_system::instance(), $data->tags);
+            core_tag_tag::set_item_tags('local_wb_news', 'local_wb_news', $id, context_system::instance(), $data->tags);
         }
 
         // We set active for 0 for every other record than our own.
@@ -405,6 +427,14 @@ class news {
 
                 $DB->update_record('local_wb_news', $record);
 
+                $event = news_deleted::create([
+                    'context' => context_system::instance(),
+                    'userid' => $USER->id,
+                    'objectid' => $data->id,
+                ]);
+
+                $event->trigger();
+
                 return $data->id;
             }
         }
@@ -458,10 +488,27 @@ class news {
 
         if ($id) {
             $DB->update_record('local_wb_news_instance', $data, true);
+
+            $event = instance_updated::create([
+                'context' => context_system::instance(),
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+            ]);
+
+            $event->trigger();
+
             return true;
         } else {
             $data->timecreated = time();
             $id = $DB->insert_record('local_wb_news_instance', $data, true);
+
+            $event = instance_created::create([
+                'context' => context_system::instance(),
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+            ]);
+
+            $event->trigger();
         }
 
         return $id;
@@ -478,6 +525,15 @@ class news {
 
         if (!empty($data->id)) {
             $DB->delete_records('local_wb_news_instance', ['id' => $data->id]);
+
+            $event = instance_deleted::create([
+                'context' => context_system::instance(),
+                'userid' => $USER->id,
+                'objectid' => $data->id,
+            ]);
+
+            $event->trigger();
+
             return $data->id;
         }
 

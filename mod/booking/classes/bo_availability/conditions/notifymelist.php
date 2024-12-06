@@ -28,6 +28,7 @@ namespace mod_booking\bo_availability\conditions;
 
 use context_system;
 use mod_booking\bo_availability\bo_condition;
+use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
 use mod_booking\output\button_notifyme;
 use mod_booking\singleton_service;
@@ -54,6 +55,19 @@ class notifymelist implements bo_condition {
 
     /** @var bool $overridable Indicates if the condition can be overriden. */
     public $overridable = true;
+
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
 
     /**
      * Needed to see if class can take JSON.
@@ -100,6 +114,8 @@ class notifymelist implements bo_condition {
                 && has_capability('local/shopping_cart:cashier', context_system::instance())
                 && $userid != $USER->id
             )
+            || !isloggedin()
+            || isguestuser()
         ) {
             $isavailable = true;
         } else {
@@ -181,7 +197,7 @@ class notifymelist implements bo_condition {
 
         $isavailable = $this->is_available($settings, $userid, $not);
 
-        $description = $this->get_description_string($isavailable, $full);
+        $description = $this->get_description_string($isavailable, $full, $settings);
 
         return [$isavailable, $description, MOD_BOOKING_BO_PREPAGE_NONE, MOD_BOOKING_BO_BUTTON_JUSTMYALERT];
     }
@@ -255,9 +271,18 @@ class notifymelist implements bo_condition {
      *
      * @param bool $isavailable
      * @param bool $full
-     * @return void
+     * @param booking_option_settings $settings
+     * @return string
      */
-    private function get_description_string($isavailable, $full) {
+    private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = $full ? get_string('bocondalreadybookedfullavailable', 'mod_booking') :
                 get_string('bocondalreadybookedavailable', 'mod_booking');

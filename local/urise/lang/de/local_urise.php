@@ -33,7 +33,7 @@ $string['urise:cansendmessages'] = 'Kann Nachrichten schicken.';
 $string['urise:editavailability'] = 'Kann die Verfügbarkeit von Buchungsoptionen ändern und Vorreservierungen anlegen';
 $string['urise:editsubstitutionspool'] = 'Kann den Vertretungspool für einzelne Kursarten bearbeiten';
 $string['urise:viewsubstitutionspool'] = 'Kann den Vertretungspool für einzelne Kursarten sehen und E-Mails an den Vertretungspool senden';
-
+$string['urise:viewcourselistindashboard'] = 'Kann Kursliste im Dashboard sehen';
 // Caches.
 $string['cachedef_cachedpaymenttable'] = 'Zahlungstransaktionen (Cache)';
 
@@ -68,6 +68,7 @@ $string['reihenprogramm'] = "Reihen/Programme";
 $string['editavailabilityanddescription'] = 'Verfügbarkeit & Beschreibung bearbeiten';
 $string['editavailability'] = 'Verfügbarkeit bearbeiten';
 $string['editdescription'] = 'Beschreibung bearbeiten';
+$string['editnews'] = 'Newselemente bearbeiten';
 $string['substitutionspool'] = 'Vertretungspool für {$a}';
 $string['editsubstitutionspool'] = 'Vertretungspool bearbeiten';
 $string['viewsubstitutionspool'] = 'Vertretungspool ansehen';
@@ -211,7 +212,7 @@ $string['dashboard_auswertung'] = 'Auswertung';
 
 
 // Vue strings.
-$string['vuedashboardchecked'] = 'Default Ausgewählt';
+$string['vuedashboardchecked'] = 'In "Angebot" sichtbar';
 $string['vuedashboardname'] = 'Name';
 $string['vuedashboardcoursecount'] = 'Anzahl der Moodle Kurse';
 $string['vuedashboardpath'] = 'Pfad';
@@ -242,6 +243,7 @@ $string['vuebookingstatsrestoreconfirmation'] = 'Möchten Sie diese Konfiguratio
 $string['vuebookingstatsyes'] = 'Ja';
 $string['vuebookingstatsno'] = 'Nein';
 $string['vueconfirmmodal'] = 'Sind Sie sicher, dass Sie zurückgehen möchten?';
+$string['vuefiltertabs'] = 'Filter tabs...';
 $string['vueheadingmodal'] = 'Bestätigung';
 $string['vuenotificationtitleunsave'] = 'Keine ungespeicherten Änderungen erkannt';
 $string['vuenotificationtextunsave'] = 'Es wurden keine ungespeicherten Änderungen erkannt.';
@@ -250,7 +252,7 @@ $string['vuenotificationtextactionsuccess'] = 'Die Konfiguration wurde erfolgrei
 $string['vuenotificationtitleactionfail'] = 'Die Konfiguration wurde nicht erfolgreich {$a}';
 $string['vuenotificationtextactionfail'] = 'Beim Speichern ist ein Fehler aufgetreten. Die Änderungen wurden nicht vorgenommen.';
 $string['vuedashboardgotocategory'] = 'Zur Kategorie';
-$string['vuedashboardbookinginstances'] = 'Booking instances';
+$string['vuedashboardbookinginstances'] = 'Buchungsinstanzen';
 $string['vuenotabsfounds'] = 'Keine Tabs gefunden';
 
 $string['booking:expertoptionform'] = "Expert option form";
@@ -458,7 +460,7 @@ $string['fbosteuropaeischegeschichteundslawistik'] = "FB Osteuropäische Geschic
 $string['fbpharmazieundernaehrungswissenschaften'] = "FB Pharmazie und Ernährungswissenschaften";
 $string['fbphilosophieundpsychologie'] = "FB Philosophie und Psychologie";
 $string['zbphysikundchemie'] = "ZB Physik und Chemie";
-$string['fbpublizistik-undkommunikationswissenschaftundinformatik'] = "FB Publizistik- und Kommunikationswissenschaft und Informatik";
+$string['fbpublizistikundkommunikationswissenschaftundinformatik'] = "FB Publizistik- und Kommunikationswissenschaft und Informatik";
 $string['fbrechtswissenschaften'] = "FB Rechtswissenschaften";
 $string['fbromanistik'] = "FB Romanistik";
 $string['fbsoziologieundpolitikwissenschaft'] = "FB Soziologie und Politikwissenschaft";
@@ -469,6 +471,7 @@ $string['fbtheologie'] = "FB Theologie";
 $string['fbtranslationswissenschaft'] = "FB Translationswissenschaft";
 $string['fbwirtschaftswissenschaftenundmathematik'] = "FB Wirtschaftswissenschaften und Mathematik";
 $string['fbzeitgeschichte'] = "FB Zeitgeschichte";
+$string['forschungsserviceundnachwuchsfoerderung'] = "Forschungsservice und Nachwuchsförderung";
 $string['forschungsundpublikationsservices'] = "Forschungs- und Publikationsservices";
 $string['hauptbibliothek'] = "Hauptbibliothek";
 $string['universitaetsarchiv'] = "Universitätsarchiv";
@@ -491,7 +494,7 @@ $string['viennadoctoralschoolincognitionbehaviorandneurosciencefrombiologytopsyc
 $string['viennadoctoralschooloftheologyandresearchonreligion'] = "Vienna Doctoral School of Theology and Research on Religion";
 $string['viennadoctoralschoolineducation'] = "Vienna Doctoral School in Education";
 $string['organisationskulturundgleichstellung'] = "Organisationskultur und Gleichstellung";
-$string['personalentwicklungundrecruiting'] = "Personalentwicklung und Recruiting";
+$string['personalentwicklungundrecruiting'] = "Personalentwicklung";
 $string['centerforteachingandlearning'] = "Center for Teaching and Learning";
 $string['koordinationstudienservices'] = "Koordination Studienservices";
 $string['zentralerinformatikdienst'] = "Zentraler Informatikdienst";

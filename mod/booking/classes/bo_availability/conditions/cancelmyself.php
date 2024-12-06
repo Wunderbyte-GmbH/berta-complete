@@ -53,6 +53,19 @@ class cancelmyself implements bo_condition {
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_CANCELMYSELF;
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
+
     /**
      * Needed to see if class can take JSON.
      * @return bool
@@ -154,6 +167,7 @@ class cancelmyself implements bo_condition {
                 }
 
                 if (!empty($canceluntil) && $now > $canceluntil) {
+                    // Don't display cancel button.
                     $isavailable = true;
                 }
 
@@ -223,7 +237,7 @@ class cancelmyself implements bo_condition {
 
         $isavailable = $this->is_available($settings, $userid, $not);
         if (!class_exists('local_shopping_cart\shopping_cart')) {
-            $description = $this->get_description_string($isavailable, $full);
+            $description = $this->get_description_string($isavailable, $full, $settings);
         } else {
             $description = 'sc cancel';
         }
@@ -314,6 +328,8 @@ class cancelmyself implements bo_condition {
      * @return string
      */
     private function get_description_string() {
+
+        // Do not trigger billboard here.
         return get_string('cancelsign', 'mod_booking') . "&nbsp;" .
             get_string('cancelmyself', 'mod_booking');
     }

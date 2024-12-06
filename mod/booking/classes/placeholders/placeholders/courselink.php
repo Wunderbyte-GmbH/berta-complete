@@ -35,6 +35,7 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
 
 /**
  * Control and manage placeholders for booking instances, options and mails.
+ * Returns a link to a course the bookingoption is related to.
  *
  * @copyright Wunderbyte GmbH <info@wunderbyte.at>
  * @author Georg Maißer
@@ -74,8 +75,7 @@ class courselink {
             // The cachekey depends on the kind of placeholder and it's ttl.
             // If it's the same for all users, we don't use userid.
             // If it's the same for all options of a cmid, we don't use optionid.
-            $currlang = current_language();
-            $cachekey = "$classname-$currlang-$optionid";
+            $cachekey = "$classname-$optionid";
             if (isset(placeholders_info::$placeholders[$cachekey])) {
                 return placeholders_info::$placeholders[$cachekey];
             }

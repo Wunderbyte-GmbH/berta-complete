@@ -31,6 +31,7 @@ use Exception;
 use mod_booking\bo_availability\bo_condition;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
+use mod_booking\event\enrollink_triggered;
 use mod_booking\local\mobile\customformstore;
 use mod_booking\singleton_service;
 use mod_booking\utils\wb_payment;
@@ -52,6 +53,9 @@ class customform implements bo_condition {
     /** @var int $id Id is set via json during construction but we still need a default ID */
     public $id = MOD_BOOKING_BO_COND_JSON_CUSTOMFORM;
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
     // Do NOT set $overridable here!
     // If there IS a custom form, then everyone should fill it out!
     // So it can't be overridable.
@@ -70,6 +74,16 @@ class customform implements bo_condition {
         if ($id) {
             $this->id = $id;
         }
+    }
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
     }
 
     /**
@@ -194,7 +208,7 @@ class customform implements bo_condition {
      * @return void
      */
     public function add_condition_to_mform(MoodleQuickForm &$mform, int $optionid = 0, ?\moodleform $moodleform = null) {
-        global $DB;
+        global $DB, $CFG;
 
         // Check if PRO version is activated.
         if (wb_payment::pro_version_is_activated()) {
@@ -211,6 +225,7 @@ class customform implements bo_condition {
                 'url' => get_string('bocondcustomformurl', 'mod_booking'),
                 'mail' => get_string('bocondcustomformmail', 'mod_booking'),
                 'deleteinfoscheckboxuser' => get_string('bocondcustomformdeleteinfoscheckboxuser', 'mod_booking'),
+                'enrolusersaction' => get_string('enrolmultipleusers', 'mod_booking'),
             ];
 
             // We add four potential elements.
@@ -264,6 +279,36 @@ class customform implements bo_condition {
                     'deleteinfoscheckboxuser'
                 );
 
+                if ($CFG->version >= 2023100900) {
+                    $mform->addElement(
+                        'static',
+                        'info_about_select_options_' . $counter,
+                        '',
+                        get_string('customformselectoptions', 'mod_booking')
+                    );
+
+                    $mform->addElement(
+                        'static',
+                        'info_about_enrolusersaction' . $counter,
+                        '',
+                        get_string('enrolusersaction:alert', 'mod_booking'),
+                    );
+                    $mform->hideIf(
+                        'info_about_enrolusersaction' . $counter,
+                        'bo_cond_customform_select_1_' . $counter,
+                        'neq',
+                        'enrolusersaction'
+                    );
+                }
+
+                $mform->hideIf('info_about_select_options_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
+                $mform->hideIf(
+                    'info_about_select_options_' . $counter,
+                    'bo_cond_customform_select_1_' . $counter,
+                    'neq',
+                    'select'
+                );
+
                 // We need to create all possible elements and hide them via "hideif" right now.
                 $mform->addElement('advcheckbox', 'bo_cond_customform_notempty_1_' . $counter,
                         get_string('bocondcustomformnotempty', 'mod_booking'), []);
@@ -313,6 +358,29 @@ class customform implements bo_condition {
             'bo_cond_customform_select_1_1',
             'eq',
             0);
+            if ($CFG->version >= 2023100900) {
+                $mform->addElement(
+                    'static',
+                    'deleteinfoscheckboxadminwarning',
+                    '',
+                    get_string('deleteinfoscheckboxadminwarning', 'mod_booking')
+                );
+                $mform->hideIf(
+                    'deleteinfoscheckboxadminwarning',
+                    'bo_cond_customform_restrict',
+                    'notchecked'
+                );
+                $mform->hideIf(
+                    'deleteinfoscheckboxadminwarning',
+                'bo_cond_customform_select_1_1',
+                'eq',
+                0);
+                $mform->hideIf(
+                    'deleteinfoscheckboxadminwarning',
+                    'bo_cond_customform_deleteinfoscheckboxadmin',
+                    'eq',
+                    0);
+            }
         } else {
             // No PRO license is active.
             $mform->addElement('static', 'bo_cond_customform_restrict',
@@ -485,7 +553,15 @@ class customform implements bo_condition {
      * @param booking_option_settings $settings
      * @return string
      */
-    private function get_description_string($isavailable, $full, $settings) {
+    private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = $full ? get_string('boconduserprofilefieldfullavailable', 'mod_booking') :
                 get_string('boconduserprofilefieldavailable', 'mod_booking');
@@ -549,12 +625,38 @@ class customform implements bo_condition {
                 "condition_customform" => $data,
             ];
             $newanswer->json = json_encode($data);
+            self::update_places_with_customformdata($data, $newanswer);
         }
 
         // We only delete the json when it's booked.
         if ($newanswer->waitinglist === MOD_BOOKING_STATUSPARAM_BOOKED) {
             $customformstore->delete_customform_data();
         }
+    }
+
+    /**
+     * Update places column in case there is a enrolusersaction field.
+     *
+     * @param mixed $data
+     * @param mixed $newanswer
+     *
+     * @return bool
+     *
+     */
+    private static function update_places_with_customformdata($data, &$newanswer): bool {
+        global $USER;
+
+        if (!isset($data->condition_customform)) {
+            return false;
+        }
+        foreach ($data->condition_customform as $key => $value) {
+            // For the moment, we only support 1 enrolusersaction field.
+            if (strpos($key, 'customform_enrolusersaction_') === 0) {
+                $newanswer->places = $value;
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -602,5 +704,35 @@ class customform implements bo_condition {
             }
         }
         return $answer;
+    }
+
+    /**
+     * This function adds error keys for form validation.
+     * @param array $data
+     * @param array $files
+     * @param array $errors
+     * @return array
+     */
+    public static function validation(array $data, array $files, array &$errors) {
+
+        if (
+            empty($data['chooseorcreatecourse'])
+            || (is_array($data['courseid']) && empty($data['courseid'][0]))
+            || empty($data['courseid'])
+        ) {
+            foreach ($data as $key => $value) {
+                // We need a courseid for the customform_enrolusersaction.
+                if (preg_match('/^bo_cond_customform_select_/', $key) && $data[$key] === "enrolusersaction") {
+                    if (empty($data['chooseorcreatecourse'])) {
+                        $errors['chooseorcreatecourse'] = get_string('relatedcourseidneeded', 'mod_booking');
+                    } else {
+                        $errors['courseid'] = get_string('relatedcourseidneeded', 'mod_booking');
+                    }
+                    return $errors;
+                }
+            }
+            return $errors;
+        }
+        return $errors;
     }
 }

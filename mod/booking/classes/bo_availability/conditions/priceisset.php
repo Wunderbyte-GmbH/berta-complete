@@ -28,6 +28,7 @@
 
 use context_module;
 use mod_booking\bo_availability\bo_condition;
+use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
 use mod_booking\local\modechecker;
 use mod_booking\price;
@@ -54,6 +55,19 @@ class priceisset implements bo_condition {
 
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_PRICEISSET;
+
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
 
     /**
      * Needed to see if class can take JSON.
@@ -85,6 +99,16 @@ class priceisset implements bo_condition {
 
         // This is the return value. Not available to begin with.
         $isavailable = false;
+
+        if (!get_config('booking', 'displayemptyprice') && !empty($settings->jsonobject->useprice)) {
+            $user = singleton_service::get_instance_of_user($userid);
+            if ($user) {
+                $price = price::get_price('option', $settings->id, $user);
+                if (isset($price['price']) && empty((float) $price['price'])) {
+                    $isavailable = true;
+                }
+            }
+        }
 
         if (!get_config('booking', 'priceisalwayson')) {
 
@@ -155,7 +179,7 @@ class priceisset implements bo_condition {
 
         $isavailable = $this->is_available($settings, $userid, $not);
 
-        $description = $this->get_description_string($isavailable, $full);
+        $description = $this->get_description_string($isavailable, $full, $settings);
 
         // If shopping cart is not installed, we still want to allow admins to book for others.
         $context = context_module::instance($settings->cmid);
@@ -270,9 +294,19 @@ class priceisset implements bo_condition {
      *
      * @param bool $isavailable
      * @param bool $full
+     * @param booking_option_settings $settings
      * @return string
      */
-    private function get_description_string($isavailable, $full): string {
+    private function get_description_string($isavailable, $full, $settings): string {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
+
         if ($isavailable) {
             $description = $full ? get_string('bocondpriceissetfullavailable', 'mod_booking') :
                 get_string('bocondpriceissetavailable', 'mod_booking');

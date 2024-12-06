@@ -34,20 +34,20 @@
     }
 }}
 
-<div class="row mb-2 w-100 d-flex justify-content-center flex-column background">
+<div class="row mb-2 w-100 d-flex justify-content-center flex-column background backgroundfaq">
   <div class="container mw-90 d-flex justify-content-center">
     <div class="row mb-2 w-100 d-flex justify-content-center flex-column">
       <h1 class="lexa-h1 text-center mb-4 text-light">
       FAQ
       </h1>
       <div class="urise text-center align-bottom d-flex justify-content-center" style="display:flex;">
-          <input class='my-2 w-auto form-control searchfaq-{{uid}}' type='text' id='searchfaq-{{uid}}' placeholder='{{#str}} searchfaq, local_wb_faq {{/str}}'>
+          <input class='my-2 wbfaqinput form-control searchfaq-{{uid}}' type='text' id='searchfaq-{{uid}}' placeholder='{{#str}} searchfaq, theme_lexa {{/str}}'>
       </div>
     </div>
   </div>
 </div>
 
-<div id="wb_faq_searchbox" class="wb_faq_searchbox-{{uid}}"></div>
+<div id="wb_faq_searchbox" class="wb_faq_searchbox-{{uid}} col-md-6 mx-auto"></div>
 
 <script>
   if (typeof require == 'function') {

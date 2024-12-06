@@ -30,7 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 
 // General.
 $string['pluginname'] = 'Boost Union';
-$string['choosereadme'] = '<p>Theme Boost Union is an enhanced child theme of Boost which is intended, on the one hand, to make Boost simply more configurable and, on the other hand, to provide helpful additional features for the daily Moodle operation of admins, teachers and students.</p><p>Boost Union is maintained by<br />Moodle an Hochschulen e.V.,</p><p>in cooperation with<br />lern.link GmbH</p><p>together with<br />bdecent GmbH</p>';
+$string['choosereadme'] = 'Theme Boost Union is an enhanced child theme of Boost which is intended, on the one hand, to make Boost simply more configurable and, on the other hand, to provide helpful additional features for the daily Moodle operation of admins, teachers and students. Boost Union is maintained by Moodle an Hochschulen e.V., in cooperation with ssystems GmbH, together with bdecent GmbH and lern.link GmbH';
 $string['configtitle'] = 'Boost Union';
 $string['githubissueslink'] = '<a href="https://github.com/moodle-an-hochschulen/moodle-theme_boost_union/issues">Github issues</a>';
 
@@ -1119,6 +1119,11 @@ $string['smartmenusbylanguage'] = 'By language';
 $string['smartmenusbylanguage_help'] = 'Restrict the visibility based on the user\'s language';
 $string['smartmenusbyrole'] = 'By role';
 $string['smartmenusbyrole_help'] = 'Restrict the visibility based on the user\'s roles.';
+$string['smartmenusbyadmin'] = 'Show to';
+$string['smartmenusbyadmin_help'] = 'Restrict the visibility based on the fact if the user is a site admin or not.';
+$string['smartmenusbyadmin_all'] = 'All users';
+$string['smartmenusbyadmin_admins'] = 'Site admins only';
+$string['smartmenusbyadmin_nonadmins'] = 'Non-admins only';
 $string['smartmenusdynamiccoursescompletionstatus'] = 'Completion status';
 $string['smartmenusdynamiccoursescompletionstatus_help'] = 'The dynamic courses menu item list will contain all courses of the user which match the selected completion status. For example, if you select \'In progress\' as the completion status, the dynamic courses menu item list will only contain courses that the current user is currently working on.';
 $string['smartmenusdynamiccoursescompletionstatuscompleted'] = 'Completed';
@@ -1276,6 +1281,7 @@ $string['smartmenusrestrictbycohortsheader'] = 'Restrict visibility by cohorts';
 $string['smartmenusrestrictbydateheader'] = 'Restrict visibility by date';
 $string['smartmenusrestrictbylanguageheader'] = 'Restrict visibility by language';
 $string['smartmenusrestrictbyrolesheader'] = 'Restrict visibility by roles';
+$string['smartmenusrestrictbyadminheader'] = 'Restrict visibility by site admin status';
 $string['smartmenusrolecontext'] = 'Context';
 $string['smartmenusrolecontext_help'] = 'Select the context for which the user\'s role should be checked (Any context or system context only)';
 $string['smartmenussavechangesandconfigure'] = 'Save and configure items';

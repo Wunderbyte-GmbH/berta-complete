@@ -117,6 +117,10 @@ class shortcodes {
     public static function unifiedlist($shortcode, $args, $content, $env, $next) {
         [$table, $perpage] = self::unifiedview($shortcode, $args, $content, $env, $next, true);
 
+        if (empty($table)) {
+            return get_string('nobookinginstancesselected', 'local_urise');
+        }
+
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
             [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
@@ -142,6 +146,10 @@ class shortcodes {
      */
     public static function unifiedcards($shortcode, $args, $content, $env, $next) {
         [$table, $perpage] = self::unifiedview($shortcode, $args, $content, $env, $next, true);
+
+        if (empty($table)) {
+            return get_string('nobookinginstancesselected', 'local_urise');
+        }
 
         // If we find "nolazy='1'", we return the table directly, without lazy loading.
         if (!empty($args['lazy'])) {
@@ -219,13 +227,22 @@ class shortcodes {
             $additionalwhere .= " (courseendtime > :timenow OR courseendtime = 0) ";
         }
 
+        $context = $booking->context;
+        if (
+            !empty($args['noinvisible'])
+            && $args['noinvisible'] == 'true'
+        ) {
+            // When we don't add a context, the sql will exclude invisible ones.
+            $context = null;
+        }
+
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
             [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
+                booking::get_options_filter_sql(0, 0, '', null, $context, [], $wherearray, null, [], $additionalwhere);
         } else {
             [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, null, [], $additionalwhere);
+                booking::get_options_filter_sql(0, 0, '', null, $context, [], $wherearray, null, [], $additionalwhere);
         }
 
         $params['timenow'] = strtotime('today 00:00');

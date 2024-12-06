@@ -1,3 +1,145 @@
+## Version 8.8.6 (2024120500)
+* Bugfix: format string in customfields only for string
+
+## Version 8.8.5 (2024120400)
+* Improvement: Nav tabs for mobile view
+* Bugfix: Prevent booking rules from being sent on inactive configuration
+* Bugfix: No price if fallback for default price is off
+* Bugfix: Notification list only for logged in users & display price
+* Bugfix: Several fixes for self-learning courses
+
+## Version 8.8.4 (2024120300)
+* Improvement: Add type=imageleft (or imageright) to shortcode 'courselist' to show header images.
+* Improvement: Campaigns allow multiple profile fields
+* Improvement: Set relative cancellation dates until midnight of selected day
+* Improvement: Format string on changes values from customfields
+* Bugfix: Apply campaigns correctly for users not logged in.
+* Bugfix: check userprofilefield doesn't break view for users not logged in
+
+## Version 8.8.3 (2024112800)
+* New feature: List views with header image on left or right side. (#233)
+* Improvement: Pass template data via Wunderbyte table. (#233)
+* Improvement: Adjust template and CSS for new header images in list view. (#233)
+* Improvement: Add alert about reference to Moodle course. (#711, #650)
+* Improvement: Change name of option "multienrol" for clarity. (#650)
+* Bugfix: Fix upgrade after version update due to rebase.
+* Bugfix: Remove wrong indexing.
+* Bugfix: Correctly trigger events for enrolment actions. (#650)
+* Test: Finalize Behat scenario: Booking option enrollink creation and validation. (#711)
+* Test: Add new PHPUnit test `test_rule_on_enrollink_and_enroll()`. (#711)
+* Test: Extend PHPUnit test for placeholders in `test_rule_on_enrollink_and_enroll()`. (#711)
+
+## Version 8.8.2 (2024112600)
+* Bugfix: Wunderbyte-GmbH#240 - Fix localization on teacher description page.
+* Bugfix: Fix warnings for self-learning courses and never show them if config setting is off.
+* Bugfix: Do not hide but disable self-learning course checkbox, so users can understand behavior of form elements.
+* Bugfix: Set notlast flag instead of last flag for comma in teachers list.
+
+## Version 8.8.1 (2024112500)
+* Improvement: Better strings for self-learning courses feature.
+* Improvement: Add support for Moodle 4.5.
+* Improvement: Move booking and cancelling settings into corresponding section.
+* Improvement: Display static warning about 'deleteinfocheckbox' only for Moodle >= 4.3.
+* Improvement: Adjust behat "Booking option availability: custom form with selection of prices" to cover even decimals in the additional prices.
+* Bugfix: Fix missing strings and string order.
+* Bugfix: Render 'enddatetime' with only one "h" for hour (#234).
+* Bugfix: Correct string identifier and hide static warning for Moodle < 4.3 (#713).
+* Bugfix: Fix booking page context for blockbooking campaign.
+* Bugfix: Fix strings for self-learning courses (#713).
+* Bugfix: Potential bugfix for self-learning courses.
+* Bugfix: Fix behats on cancellation due to "Booking and Cancelling" settings group.
+* Bugfix: Only modify price if given.
+* Bugfix: Don't show legacy notification mail templates (#685).
+* Bugfix: Ensure no legacy reminder mails are sent when they are turned off (#685).
+* Bugfix: Use English placeholders only (#712).
+* Bugfix: Append usernames with a comma in changes (#706).
+* Test: New behat scenario for self-learning courses enrolment (#684).
+
+## Version 8.8.0 (2024112000)
+* Improvement: Updated wunderbyte table dependency to new version 2024112000.
+
+## Version 8.7.9 (2024111900)
+* Improvement: Enable price as 3rd arg for customform select (#669 MUSI-621)
+* Improvement: Extend customform select limit to allowed users (#669 MUSI-621)
+* Improvement: Display infos about select in customform (#669 MUSI-621)
+* Improvement: user string price with fixed decimal points as elsewhere (#696)
+* Improvement: Fixes and improvements for campaigns.
+* Bugfix: Customform select specific usecases (#669 #650 MUSI-621)
+* Bugfix: Fix of incorrect processing of pricecategory string
+* Bugfix: small adjustment of the condition_bookingpolicy_test class.
+* Bugfix: Fix zero price phpunit test (#654).
+* Bugfix: Do not show zero price for students unless it forced
+
+## Version 8.7.8 (2024111500)
+* New feature: Booking option with a duration for self-learning courses:
+Users will get enrolled when they book for the defined duration.
+* New feature: Better display of PRO features and links to renew license and to new Booking Academy.
+* Improvement: Placeholders for Semester & Name of instance (#660)
+* Improvement: Select absolute canceluntil date in bookingsettings (#662)
+* Improvement: Track detailed changes of customfields (#670).
+* Improvement: Set flag for last teacher in array to be used in template (#695).
+* Improvement: Better strings for absolute date (with adjusted behat).
+* Improvement: Make courses with fixed duration a PRO feature.
+* Improvement: When there are no dates, we simply don't show them. No reason to show a "No date set" string.
+* Improvement: selector names, linting, fix pro-features UI etc.
+* Improvement: Link to booking rules course in showroom #694.
+* Bugfix: Display only meaningful data in shoppingcartplaceholder (#687)
+* Bugfix: Do not clean shortname as some customers need the fullname even in the shortname (e.g. for placeholders) - fixes #688
+* Bugfix: Fix potential cache issue in the test_delete_responses_activitycompletion()
+* Bugfix: Fix for "assertObjectHasAttribute() is deprecated and will be removed in PHPUnit 10. Refactor your test to use assertObjectHasProperty() instead" in phpunit (#689).
+* Bugfix: Fix generator method on rule creation.
+* Bugfix: Explicit declaration of params to avoid "Creation of dynamic property booking_settings::$xxxxxx is deprecated" error.
+* Bugfix: viewconfirmation render correct data.
+* Bugfix: Correctly display price if user isn't logged in.
+* Bugfix: Make sure date section does not collapse when adding dates.
+* Bugfix: setType to PARAM_INT for selflearningcourseactive.
+* Bugfix: When no license is set, we disable self-learning course checkbox.
+* Bugfix: Fix behat for self-learning course enrolment. #684
+* Bugfix: #703 - Recommendedin matches without wildcards to avoid false positives.
+* Test: new behat scenario for Self-learning courses: duration and enrollment (#684).
+
+## Version 8.7.6 (2024110600)
+* Improvement: Tests for checkbox deleting infos from bookinganswers
+* Improvement: Better tests for rules feature
+* Improvement: Possibility to limit description length via server side validation
+* Bugfix: Improve SQL to fetch bookinganswers
+* Bugfix: Fetch bookinganswers from cache
+* Bugfix: Add missing fields for booking options for backup and duplication.
+
+## Version 8.7.5 (2024102500)
+* New Feature: Billboard to overwrite warning messages blocking bookings
+* Improvement: add campaign to enable extension of limit for overbooked places
+* Improvement: better testing of booking option completed
+* Improvement: refactoring of delete_responses_activitycompletion() method to use singleton calls
+* Improvement: new behat Scenario: Configure availability with modal form and data deletion
+* Improvement: Possibility to adjust description passed on to shopping cart via placeholders
+* Improvement: if no price is set for user, allow booking
+* Improvement: Add setting for displayemptyprice
+* Improvement: New tests for rules
+* Bugfix: User delete response
+* Bugfix: String translations
+* Bugfix: detailview of teacher working with only 2nd phone as well
+* Bugfix: Search in template list
+* Bugfix: Allow alerts for prepagemodals
+* Bugfix: fallback for check on empty price
+
+## Version 8.7.4 (2024101700)
+* Improvement: improve filter of bulkoperations
+* Improvement: swap main and top button in prepagemodal
+* Improvement: update readme
+* Improvement: Better information about teacher roles enrolment
+* Improvement: Better informations for users regarding activitycompletion
+* Improvement: Add 'Uhr' to german time
+* Improvement: Improve Teams & bbb rendering in mails
+* Improvement: Execute Rules and related events (cancellation) in the right order
+* Improvement: Add field to db to check if overbooking is allowed
+* Bugfix: really avoid breaking task
+* Bugfix: Change infotext for changes of option fields
+* Bugfix: Don't show message symbol on teachers page when messaging is deactivitated
+* Bugfix: Better localization when sending mails
+* Bugfix: Don't render prepage when we block with an alert
+* Bugfix: fix link to price formula
+
 ## Version 8.7.3 (2024101100)
 * Bugfix: Display deletecheckbox correctly
 * Bugfix: Hide second customfield and operator correctly
@@ -199,7 +341,7 @@
 ## Version 8.6.5 (2024081900)
 * Improvement: Enhancements of rules and placeholders
 * Improvement: Better book on detail page handling
-* Improvement: GH-596 Better feedback for not logged in users
+* Improvement: #596 Better feedback for not logged in users
 * Improvement: Use format_string instead of format text when advisable
 * Improvement: Add booked AND on waitinglist selector to bookingoptionusers
 * Improvement: Add deleted users to report.php
@@ -1011,7 +1153,7 @@ In shopping cart, a new setting can then be activated to avoid booking of items 
 * Improvement: Fix signin sheets, only Lastname, Firstname, No profiletext anymore.
 
 **Bugfixes:**
-* Bugfix: Fixes for GH-325 (Pull request).
+* Bugfix: Fixes for #325 (Pull request).
 * Bugfix: Fix bug in event description.
 * Bugfix: New teacher syntax.
 * Bugfix: We need module context in the teacher substitutions form!

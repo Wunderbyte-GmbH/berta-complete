@@ -118,6 +118,10 @@ class get_config_for_js extends external_api {
      */
     public static function execute(string $component, string $paymentarea, int $itemid): array {
         global $CFG, $DB, $USER, $SESSION;
+
+        $systemcontext = context_system::instance();
+        self::validate_context($systemcontext);
+
         self::validate_parameters(self::execute_parameters(), [
             'component' => $component,
             'paymentarea' => $paymentarea,
@@ -162,20 +166,13 @@ class get_config_for_js extends external_api {
                     $course = $item->itemid;
                 }
 
-                $substring = ' K' . $course . ' ' . $item->price;
+                $substring = ' K' . $course;
                 $merchanttransactionid .= $substring;
 
             }
-            $pricestring = ' ' . $amount;
-            $merchanttransactionid .= $pricestring . ' ' . $timestamp;
             $longmtid = $merchanttransactionid;
             // Payment provider accepts max string length of 40 characters.
-            if (strlen($merchanttransactionid) >= 39) {
-                $merchanttransactionid = $itemid . ' ' .  $USER->id . ' ' . $amount . ' ' . $timestamp;
-            }
-            if (strlen($merchanttransactionid) >= 39) {
-                $merchanttransactionid = $string . $timestamp;
-            }
+            $merchanttransactionid = substr($string, 0, 40);
         } else {
             $merchanttransactionid = $string . $timestamp;
             $longmtid = $merchanttransactionid;
@@ -185,6 +182,7 @@ class get_config_for_js extends external_api {
 
         $paymentdata = new \stdClass();
         $paymentdata->tid = $merchanttransactionid;
+        $paymentdata->merchantParameters = $longmtid;
         $paymentdata->amount = helper::get_rounded_cost($payable->get_amount(), $payable->get_currency(), $surcharge);
         $paymentdata->currency = $payable->get_currency();
         $paymentdata->redirecturl = $root . "/payment/gateway/payone/checkout.php?itemid=" . $itemid . "&component=" .
@@ -203,7 +201,8 @@ class get_config_for_js extends external_api {
             $record->status = 0;
             $record->timecreated = time();
             $record->timemodified = time();
-            $record->merchantref = $longmtid;
+            $record->merchantref = $purchaseid;
+            $record->customorderid = $longmtid;
 
             // Check for duplicate.
             if (!$existingrecord = $DB->get_record('paygw_payone_openorders', ['itemid' => $itemid, 'userid' => $USER->id])) {

@@ -72,7 +72,12 @@ export const init = (idstring, encodedtable) => {
     counter = Object.entries(queries).length;
 
     if (counter > 1) {
-        moreThanOneTable = true;
+        // Check if all have the same value for encodedtable.
+        const firstEncodedTable = Object.entries(queries)[0]?.encodedtable;
+        const allSame = Object.entries(queries).every(obj => obj.encodedtable === firstEncodedTable);
+        if (!allSame) {
+            moreThanOneTable = true;
+        }
     }
 
     if (idstring && encodedtable) {
@@ -350,8 +355,10 @@ export const callLoadData = (
     const table = document.getElementById('a' + idstring);
 
     // We don't want to update URL for lazyout tables that be loaded (have childnodes) at this point.
-    if (moreThanOneTable !== true && table.childNodes.length > 0) {
-        updateUrlWithFilterSearchSort(filterobjects, searchtext, tsort, tdir);
+    if (moreThanOneTable !== true && (typeof table === 'object' && table !== null)) {
+        if (table.childNodes.length > 0) {
+            updateUrlWithFilterSearchSort(filterobjects, searchtext, tsort, tdir);
+        }
     }
 
     let container = document.querySelector(".wunderbyte_table_container_" + idstring);

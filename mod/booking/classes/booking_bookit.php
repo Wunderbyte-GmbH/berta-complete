@@ -107,7 +107,8 @@ class booking_bookit {
     public static function render_bookit_template_data(
         booking_option_settings $settings,
         int $userid = 0,
-        bool $renderprepagemodal = true) {
+        bool $renderprepagemodal = true
+    ) {
 
         // Get blocking conditions, including prepages$prepages etc.
         $results = bo_info::get_condition_results($settings->id, $userid);
@@ -184,8 +185,12 @@ class booking_bookit {
 
             $viewparam = booking::get_value_of_json_by_key($settings->bookingid, 'viewparam');
             $turnoffmodals = 0; // By default, we use modals.
-            if ($viewparam == MOD_BOOKING_VIEW_PARAM_LIST) {
-                // Only if we use list view, we can use inline modals.
+            if (
+                $viewparam == MOD_BOOKING_VIEW_PARAM_LIST
+                || $viewparam == MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT
+                || $viewparam == MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT
+            ) {
+                // Only if we use one of the list views, we can use inline modals.
                 // So only in this case, we need to check the config setting.
                 $turnoffmodals = get_config('booking', 'turnoffmodals');
             }
@@ -353,9 +358,12 @@ class booking_bookit {
             } else if ($id === MOD_BOOKING_BO_COND_ASKFORCONFIRMATION) {
                 $isavailable = true;
             } else if ($id === MOD_BOOKING_BO_COND_ALREADYBOOKED || $id === MOD_BOOKING_BO_COND_ONWAITINGLIST) {
-
+                $cancelmyself = new cancelmyself();
                 // Add a layer of security to not cancel just because of unintentional double click.
-                if (!cancelmyself::apply_coolingoff_period($settings, $userid)) {
+                if (
+                    !cancelmyself::apply_coolingoff_period($settings, $userid) &&
+                    !$cancelmyself->is_available($settings, $userid)
+                ) {
                      // If the cancel condition is blocking here, we can actually mark the option for cancelation.
                     $cache = cache::make('mod_booking', 'confirmbooking');
                     $cachekey = $userid . "_" . $settings->id . "_cancel";
@@ -531,6 +539,7 @@ class booking_bookit {
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
         /* $cm = get_coursemodule_from_instance('booking', $bookingoption->bookingid); */
 
+        // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
         // TODO: Find out if the executing user has the right to access this instance.
         // This can lead to problems, rights should be checked further up.
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found

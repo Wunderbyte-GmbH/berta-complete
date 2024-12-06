@@ -27,6 +27,8 @@ use local_shopping_cart\form\daily_sums_date_selector_form;
 use local_shopping_cart\shopping_cart;
 use local_shopping_cart\table\cash_report_table;
 use local_wunderbyte_table\filters\types\standardfilter;
+use local_wunderbyte_table\filters\types\intrange;
+use local_wunderbyte_table\filters\types\datepicker;
 
 require_once(__DIR__ . '/../../config.php');
 
@@ -79,9 +81,25 @@ if (!empty($account)) {
 
             // If there are open orders tables we create selects for them.
             $openorderstable = "paygw_" . $gwname . "_openorders";
+
+            // For some gateways, we store a merchantref in the openorders table.
+            $merchantrefexists = false;
+            $tidpart = 'tid';
+
             if ($dbman->table_exists($openorderstable)) {
+                $openorderscols = $DB->get_columns($openorderstable);
+                foreach ($openorderscols as $key => $value) {
+                    if (strpos($key, 'merchantref') !== false) {
+                        $merchantrefexists = true;
+                        break;
+                    }
+                }
+                if ($merchantrefexists) {
+                    $tidpart = 'merchantref AS tid';
+                }
+
                 $openorderselects[] = "SELECT itemid, '" . $gwname .
-                    "' AS gateway, tid FROM {paygw_" . $gwname . "_openorders}";
+                    "' AS gateway, $tidpart FROM {paygw_" . $gwname . "_openorders}";
             }
 
             $cols = $DB->get_columns($tablename);
@@ -98,17 +116,16 @@ if (!empty($account)) {
                 if (strpos($key, 'orderid') !== false) {
                     $orderidexists = true;
 
-                    $select .= ", $gwname.$key orderid ";
+                    $select .= ", $gwname.$key AS orderid ";
                 }
                 if (strpos($key, 'paymentbrand') !== false) {
                     $paymentbrandexists = true;
-                    $select .= ", $gwname.$key paymentbrand ";
+                    $select .= ", $gwname.$key AS paymentbrand ";
                 }
             }
             if ($orderidexists) {
-
                 if (!$paymentbrandexists) {
-                    $select .= ", '" . get_string('unknown', 'local_shopping_cart') . "' as paymentbrand ";
+                    $select .= ", '" . get_string('unknown', 'local_shopping_cart') . "' AS paymentbrand ";
                 }
                 $colselects[] = "$select $from";
             }
@@ -119,25 +136,30 @@ if (!empty($account)) {
 // If we have open orders tables select statements, we can now UNION them.
 if (!empty($openorderselects)) {
     // Some clients do not need the default orderid but the custom orderid from the openorders table.
-    $customorderid = "oo.tid AS customorderid, ";
+    $ootid = "oo.tid AS ootid, ";
     $openorderselectsstring = implode(' UNION ', $openorderselects);
-    $customorderidpart = "LEFT JOIN ($openorderselectsstring) oo ON scl.identifier = oo.itemid AND oo.gateway = p.gateway";
+    $ootidpart = "LEFT JOIN ($openorderselectsstring) oo ON scl.identifier = oo.itemid AND oo.gateway = p.gateway";
 } else {
     // If we do not have any open orders tables, we still keep an empty custom order id column for consistency.
-    $customorderid = "'' AS customorderid, ";
-    $customorderidpart = '';
+    $ootid = "'' AS ootid, ";
+    $ootidpart = '';
 }
 
 if (!empty($colselects)) {
     $gatewaysupported = true;
-    $uniqueidpart = $DB->sql_concat("scl.id", "' - '",
+    $uniqueidpart = $DB->sql_concat(
+        "scl.id",
+        "' - '",
         // Sql_cast_to_char is available since Moodle 4.1.
-        $CFG->version > 2022112800 ? "COALESCE(" . $DB->sql_cast_to_char("p.id") . ",'X')" :
+        $CFG->version > 2022112800 ?
+            "COALESCE(" . $DB->sql_cast_to_char("p.id") . ",'X')" :
             "COALESCE(CAST(p.id AS VARCHAR),'X')",
         "' - '",
         // Sql_cast_to_char is available since Moodle 4.1.
-        $CFG->version > 2022112800 ? "COALESCE(" . $DB->sql_cast_to_char("pgw.id") . ",'X')" :
-            "COALESCE(CAST(pgw.id AS VARCHAR),'X')");
+        $CFG->version > 2022112800 ?
+            "COALESCE(" . $DB->sql_cast_to_char("pgw.id") . ",'X')" :
+            "COALESCE(CAST(pgw.id AS VARCHAR),'X')"
+    );
     $selectorderidpart = ", pgw.orderid, pgw.paymentbrand";
     $colselectsstring = implode(' UNION ', $colselects);
     $gatewayspart = "LEFT JOIN ($colselectsstring) pgw ON p.id = pgw.paymentid";
@@ -146,10 +168,14 @@ if (!empty($colselects)) {
     $gatewaysupported = false;
     $gatewayspart = "";
     $selectorderidpart = "";
-    $uniqueidpart = $DB->sql_concat("scl.id", "' - '",
+    $uniqueidpart = $DB->sql_concat(
+        "scl.id",
+        "' - '",
         // Sql_cast_to_char is available since Moodle 4.1.
-        $CFG->version > 2022112800 ? "COALESCE(" . $DB->sql_cast_to_char("p.id") . ",'X')" :
-            "COALESCE(CAST(p.id AS VARCHAR),'X')");
+        $CFG->version > 2022112800 ?
+            "COALESCE(" . $DB->sql_cast_to_char("p.id") . ",'X')" :
+            "COALESCE(CAST(p.id AS VARCHAR),'X')"
+    );
 }
 
 // SQL query. The subselect will fix the "Did you remember to make the first column something...
@@ -158,14 +184,18 @@ $fields = "s1.*";
 $from = "(SELECT DISTINCT " . $uniqueidpart .
         " AS uniqueid, scl.id, scl.userid, scl.identifier, scl.price, scl.discount, scl.credits, scl.fee, scl.currency,
         u.lastname, u.firstname, u.email, scl.itemid, scl.itemname, scl.payment, scl.paymentstatus, " .
-        $customorderid .
+        $ootid .
         $DB->sql_concat("um.firstname", "' '", "um.lastname") . " as usermodified, scl.timecreated, scl.timemodified,
         scl.annotation,
-        p.gateway$selectorderidpart
+        p.gateway$selectorderidpart,
+        sch.serviceperiodstart,
+        sch.serviceperiodend
         FROM {local_shopping_cart_ledger} scl
+        LEFT JOIN {local_shopping_cart_history} sch
+        ON sch.itemid = scl.itemid AND scl.identifier = sch.identifier
         LEFT JOIN {payments} p
         ON p.itemid = scl.identifier
-        $customorderidpart
+        $ootidpart
         LEFT JOIN {user} u
         ON u.id = scl.userid
         LEFT JOIN {user} um
@@ -213,6 +243,8 @@ if ($debug != 2) {
         get_string('payment', 'local_shopping_cart'),
         get_string('paymentbrand', 'local_shopping_cart'),
         get_string('paymentstatus', 'local_shopping_cart'),
+        get_string('serviceperiodstart', 'local_shopping_cart'),
+        get_string('serviceperiodend', 'local_shopping_cart'),
         get_string('gateway', 'local_shopping_cart'),
         get_string('orderid', 'local_shopping_cart'),
         get_string('annotation', 'local_shopping_cart'),
@@ -239,11 +271,13 @@ if ($debug != 2) {
         'payment',
         'paymentbrand',
         'paymentstatus',
+        'serviceperiodstart',
+        'serviceperiodend',
         'gateway',
     ];
     if (get_config('local_shopping_cart', 'cashreportshowcustomorderid')) {
         // Only show custom order id if config setting is turned on.
-        $columns[] = 'customorderid';
+        $columns[] = 'ootid';
     } else {
         // Default.
         $columns[] = 'orderid';
@@ -330,6 +364,23 @@ if ($debug != 2) {
     ]);
     $table->add_filter($standardfilter);
 
+    $intragefilter = new intrange('itemname', get_string('numbersinitemname', 'local_shopping_cart'));
+    $table->add_filter($intragefilter);
+
+    $datepicker = new datepicker(
+        'serviceperiodstart',
+        get_string('serviceperiod', 'local_shopping_cart'),
+        'serviceperiodend',
+    );
+    $datepicker->add_options(
+        'in between',
+        '<',
+        get_string('apply_filter', 'local_wunderbyte_table'),
+        'now',
+        'now'
+    );
+    $table->add_filter($datepicker);
+
     if ($debug == 3) {
         $encodedtable = json_encode($table);
         debugging("TABLE AFTER FILTERCOLS:<br>$encodedtable", DEBUG_ALL);
@@ -407,7 +458,6 @@ echo $OUTPUT->heading(get_string('cashreport', 'local_shopping_cart'));
 
 // Debug-Mode 1 + 3: We do not show daily sums.
 if ($debug != 1 && $debug != 3) {
-
     // Check if daily sums are turned on in settings.
     if (get_config('local_shopping_cart', 'showdailysums')) {
         // Initialize the Moodle form for filtering the table.
@@ -422,12 +472,16 @@ if ($debug != 1 && $debug != 3) {
         if ($fromform = $mform->get_data()) {
             $dailysumsdate = $fromform->dailysumsdate;
             $date = date('Y-m-d', $dailysumsdate);
-            echo $OUTPUT->render_from_template('local_shopping_cart/report_daily_sums',
-                shopping_cart::get_daily_sums_data($date, $selectorformoutput));
+            echo $OUTPUT->render_from_template(
+                'local_shopping_cart/report_daily_sums',
+                shopping_cart::get_daily_sums_data($date, $selectorformoutput)
+            );
         } else {
             // Show daily sums.
-            echo $OUTPUT->render_from_template('local_shopping_cart/report_daily_sums',
-                shopping_cart::get_daily_sums_data($date, $selectorformoutput));
+            echo $OUTPUT->render_from_template(
+                'local_shopping_cart/report_daily_sums',
+                shopping_cart::get_daily_sums_data($date, $selectorformoutput)
+            );
         }
     }
 

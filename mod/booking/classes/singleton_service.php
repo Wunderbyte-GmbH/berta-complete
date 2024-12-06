@@ -134,7 +134,7 @@ class singleton_service {
      * @param booking_option_settings $settings
      * @return booking_answers
      */
-    public static function get_instance_of_booking_answers($settings) {
+    public static function get_instance_of_booking_answers($settings): booking_answers {
 
         $instance = self::get_instance();
 
@@ -380,16 +380,26 @@ class singleton_service {
      * Service to create and return singleton instance of Moodle user.
      *
      * @param int $userid
+     * @param bool $includeprofilefields
      *
      * @return stdClass
      */
-    public static function get_instance_of_user(int $userid) {
+    public static function get_instance_of_user(int $userid, bool $includeprofilefields = false) {
+        global $CFG;
         $instance = self::get_instance();
 
         if (isset($instance->users[$userid])) {
+            if ($includeprofilefields && !isset($instance->users[$userid]->profile)) {
+                require_once("{$CFG->dirroot}/user/profile/lib.php");
+                profile_load_custom_fields($instance->users[$userid]);
+            }
             return $instance->users[$userid];
         } else {
             $user = core_user::get_user($userid);
+            if ($includeprofilefields) {
+                require_once("{$CFG->dirroot}/user/profile/lib.php");
+                profile_load_custom_fields($user);
+            }
             $instance->users[$userid] = $user;
             return $user;
         }
@@ -527,6 +537,24 @@ class singleton_service {
             } else {
                 $instance->campaigns = $campaigns;
             }
+        }
+
+        return (array)$instance->campaigns;
+    }
+
+    /**
+     * Delete campaigns from singleton.
+     * @param int $id
+     * @return array
+     */
+    public static function reset_campaigns($id = 0): array {
+
+        $instance = self::get_instance();
+
+        if (empty($id)) {
+            $instance->campaigns = [];
+        } else {
+            unset($instance->campaigns[$id]);
         }
 
         return (array)$instance->campaigns;

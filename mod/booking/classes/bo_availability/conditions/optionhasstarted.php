@@ -45,12 +45,24 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class optionhasstarted implements bo_condition {
-
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_OPTIONHASSTARTED;
 
     /** @var bool $overridable Indicates if the condition can be overriden. */
     public $overridable = true;
+
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = true;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
 
     /**
      * Needed to see if class can take JSON.
@@ -84,6 +96,9 @@ class optionhasstarted implements bo_condition {
         // We kept the name "allowupdate" for legacy reasons.
         // The actual meaning of this field is "allow booking after option has started".
         if ($bookingsettings->allowupdate == 1) {
+            $isavailable = true;
+        } else if (!empty($settings->selflearningcourse)) {
+            // For self-learning courses this condition may never block.
             $isavailable = true;
         } else if (!empty($settings->coursestarttime)) {
             // In this case, we have to check if the booking option has already started.
@@ -154,7 +169,7 @@ class optionhasstarted implements bo_condition {
 
         $isavailable = $this->is_available($settings, $userid, $not);
 
-        $description = $this->get_description_string($isavailable, $full);
+        $description = $this->get_description_string($isavailable, $full, $settings);
 
         return [$isavailable, $description, MOD_BOOKING_BO_PREPAGE_NONE, MOD_BOOKING_BO_BUTTON_MYALERT];
     }
@@ -204,7 +219,7 @@ class optionhasstarted implements bo_condition {
         bool $fullwidth = true
     ): array {
 
-        $label = $this->get_description_string(false, $full);
+        $label = $this->get_description_string(false, $full, $settings);
 
         return bo_info::render_button($settings, $userid, $label, 'alert alert-warning', true, $fullwidth, 'alert', 'option');
     }
@@ -214,9 +229,18 @@ class optionhasstarted implements bo_condition {
      *
      * @param bool $isavailable
      * @param bool $full
+     * @param booking_option_settings $settings
      * @return string
      */
-    private function get_description_string($isavailable, $full) {
+    private function get_description_string(bool $isavailable, bool $full, booking_option_settings $settings) {
+
+        if (
+            !$isavailable
+            && $this->overwrittenbybillboard
+            && !empty($desc = bo_info::apply_billboard($this, $settings))
+        ) {
+            return $desc;
+        }
         if ($isavailable) {
             $description = $full ? get_string('bocondoptionhasstartedfullavailable', 'mod_booking') :
                 get_string('bocondoptionhasstartedavailable', 'mod_booking');

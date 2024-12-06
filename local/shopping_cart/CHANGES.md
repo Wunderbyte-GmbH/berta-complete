@@ -1,3 +1,57 @@
+## Version 0.9.44 (2024120501)
+* Bugfix: Make sure we always get rid of the old costcenter
+
+## Version 0.9.43 (2024120500)
+* Improvement: Save address infos correctly to ledger.
+* Improvement: Display location of first session for options without global location.
+* Improvement: Show merchantref and customorderid at the right places. (Wunderbyte-GmbH/moodle-paygw_payone#5)
+* Improvement: Add semester placeholder (Wunderbyte-GmbH/moodle-mod_booking#660).
+* Bugfix: Bugfixes for receipts.
+* Bugfix: Fix lang string nopaymentaccountsdesc.
+* Bugfix: Show address also in credit card checkout.
+* Bugfix: Bugfix when wanting to consume credits with booking fee and non default costcenter #107.
+* Bugfix: Fix SQL for customorderid that broke behat. (Wunderbyte-GmbH/moodle-paygw_payone#5)
+
+## Version 0.9.42 (2024112500)
+* Improvement: Add support for Moodle 4.5.
+* Bugfix: Fix lang string.
+* Bugfix: Fix bug with merchantref (#97).
+* Bugfix: Store receipt correctly (#98).
+* Bugfix: No 2x for money icon in navbar.
+
+## Version 0.9.41 (2024112000)
+* Improvement: Add dependency for new version 2024112000 of Wunderbyte Table.
+
+## Version 0.9.40 (2024111900)
+* Improvement: Add filter for serviceperiod and numbers in itemname to report (Wunderbyte-GmbH/moodle-mod_booking#665).
+* Improvement: Add serviceperiod to download of report (Wunderbyte-GmbH/moodle-mod_booking#665).
+* Improvement: Update item price for in pricecontainer.
+* Improvement: When there is a merchantref, we show it instead of tid #91.
+* Improvement: Aggregate all installment receipts in shopping cart history. #92.
+* Bugfix: Fix for [[coursestarttime]] placeholder in invoice.
+* Bugfix: Fix icons of installments (too big on checkout.php).
+* Bugfix: Fix wrong paymentstatus for installments in shopping cart history #94.
+
+## Version 0.9.39 (2024110601)
+* Improvement: Add tests for costcenters
+* Bugfix: Correct application of costcenters
+* Bugfix: Return 0 quota if quota is disabled
+
+## Version 0.9.38 (2024110600)
+* Bugfix: Cast datatype in receipt
+* Bugfix: Apply given quota to cancel all user function
+
+## Version 0.9.37 (2024102500)
+* Improvement: Support coursestarttime in receipt
+* Bugfix: Use separate capability for searching users
+* Bugfix: Don't change buyfor user when we are in a webservice environment
+
+## Version 0.9.36 (2024102200)
+* Improvement: Set back buyforuser on every page except cashier.
+* Bugfix: Fix costcenter check with rebookingfee
+* Bugfix: storedpaymentaccountid can not block on empty cart
+* Bugfix: Make sure one can see other users receipt only with cashier capability
+
 ## Version 0.9.35 (2024101702)
 * Bugfix: Function to check for rebookings not breaking checkout
 * Bugfix: Correctly trigger item_notbought event

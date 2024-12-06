@@ -52,6 +52,19 @@ class confirmation implements bo_condition {
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_CONFIRMATION;
 
+    /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
+    public $overwrittenbybillboard = false;
+
+    /**
+     * Get the condition id.
+     *
+     * @return int
+     *
+     */
+    public function get_id(): int {
+        return $this->id;
+    }
+
     /**
      * Needed to see if class can take JSON.
      * @return bool
@@ -142,7 +155,7 @@ class confirmation implements bo_condition {
         // We don't need a description here.
         $description = '';
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-        /* $description = $this->get_description_string($isavailable, $full); */
+        /* $description = $this->get_description_string($isavailable, $full, $settings); */
 
         return [$isavailable, $description, MOD_BOOKING_BO_PREPAGE_POSTBOOK, MOD_BOOKING_BO_BUTTON_INDIFFERENT];
     }
