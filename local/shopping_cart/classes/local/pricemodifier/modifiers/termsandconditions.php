@@ -37,7 +37,6 @@ use local_shopping_cart\local\pricemodifier\modifier_base;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 abstract class termsandconditions extends modifier_base {
-
     /**
      * The id is nedessary for the hierarchie of modifiers.
      * @var int
@@ -52,10 +51,9 @@ abstract class termsandconditions extends modifier_base {
      * @throws coding_exception
      */
     public static function apply(array &$data): array {
-
         // Show the terms.
         if (get_config('local_shopping_cart', 'accepttermsandconditions')) {
-            $data['termsandconditions'] = get_config('local_shopping_cart', 'termsandconditions');
+            //$data['termsandconditions'] = get_config('local_shopping_cart', 'termsandconditions');
         }
 
         return $data;

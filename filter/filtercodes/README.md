@@ -170,6 +170,9 @@ FilterCodes are meant to be entered as regular text in the Moodle WYSIWYG editor
 * {firstname} : Display the user's first name.
 * {surname} or {lastname} : Display the user's surname (family/last name).
 * {fullname} : Display the user's first name and surname.
+* {middlename} : Display the user's middle name.
+* {firstnamephonetic} : Display the user's first name in phonetic.
+* {lastnamephonetic} : Display the user's last name in phonetic.
 * {alternatename} : Display the user's alternate name. If blank, it will display the user's first name instead.
 * {city} : Display the user's city.
 * {country} : Display the user's country.
@@ -794,7 +797,7 @@ Add the following code to core_renderer section (often found in /theme/yourtheme
         /**
          * Applies Moodle filters to the custom menu and custom user menu.
          *
-         * Copyright: 2017-2024 TNG Consulting Inc.
+         * Copyright: 2017-2025 TNG Consulting Inc.
          * License:   GNU GPL v3+.
          *
          * @param string $custommenuitems Current custom menu object.
@@ -1160,6 +1163,9 @@ Create a Page on your Moodle site, preferably in a course, so that those tags wo
 * Surname [{surname}]: {surname}
 * Last name [{lastname}]: {lastname}
 * Full name [{fullname}]: {fullname}
+* First name phonetic [{firstnamephonetic}]: {firstnamephonetic}
+* Last name phonetic [{lastnamephonetic}]: {lastnamephonetic}
+* Middle name [{middlename}]: {middlename}
 * Alternate name [{alternatename}]: {alternatename}
 * City [{city}]: {city}
 * Country [{country}]: {country}
@@ -1591,7 +1597,7 @@ https://github.com/michael-milette/moodle-filter_filtercodes
 
 # License
 
-Copyright © 2017-2024 TNG Consulting Inc. - https://www.tngconsulting.ca/
+Copyright © 2017-2025 TNG Consulting Inc. - https://www.tngconsulting.ca/
 
 This file is part of FilterCodes for Moodle - https://moodle.org/
 

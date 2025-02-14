@@ -82,7 +82,7 @@ class mobile {
         $records = $DB->get_records_sql($sql, $params);
 
         $outputdata = [];
-        $pattern = '/<br\s*\/?>/i';
+
         $maxdatabeforecollapsable = get_config('booking', 'collapseshowsettings');
         if ($maxdatabeforecollapsable === false) {
             $maxdatabeforecollapsable = '2';
@@ -92,7 +92,6 @@ class mobile {
             $tmpoutputdata = $settings->return_booking_option_information();
             $tmpoutputdata['maxsessions'] = $maxdatabeforecollapsable;
             $data = $settings->return_booking_option_information();
-            $data['description'] = preg_split($pattern, $data['description']);
             if (count($settings->sessions) > $maxdatabeforecollapsable) {
                 $data['collapsedsessions'] = $data['sessions'];
                 unset($data['sessions']);
@@ -185,13 +184,17 @@ class mobile {
             case MOD_BOOKING_BO_COND_BOOKINGPOLICY:
                 $data['nosubmit']['label'] = get_string('notbookable', 'mod_booking');
                 break;
+            case MOD_BOOKING_BO_COND_ALREADYBOOKED:
+                $data['nosubmit']['label'] = get_string('alreadybooked', 'mod_booking');
+                self::render_course_button($data);
+                break;
             default:
-
                 $data['nosubmit']['label']
                     = !empty($description) ? $description : get_string('notbookable', 'mod_booking');
                 break;
         }
 
+        self::format_description($data['description']);
         $detailhtml = $OUTPUT->render_from_template('mod_booking/mobile/mobile_booking_option_details', $data);
         return [
             'templates' => [
@@ -206,6 +209,34 @@ class mobile {
     }
 
     /**
+     * Get all selected nav tabs from the config
+     * @param string $description
+     */
+    private static function format_description(&$description) {
+        $description = str_replace('</p>', '</p><br>', $description);
+    }
+
+
+    /**
+     * Get all selected nav tabs from the config
+     * @param array $data
+     */
+    public static function render_course_button(&$data) {
+        global $CFG;
+        if (
+            isset($data['courseid']) &&
+            (int)$data['courseid'] > 0
+        ) {
+            $linktocourse = 'moodlemobile://' . $CFG->wwwroot . '?redirect=/course/view.php?id=' . $data['courseid'];
+            if (get_config('booking', 'linktomoodlecourseonbookedbutton')) {
+                $data['linktomoodlecourseonbookedbutton'] = $linktocourse;
+            } else {
+                $data['linktomoodlecourseadditionalbutton'] = $linktocourse;
+            }
+        }
+    }
+
+    /**
      * Returns all my bookings view for mobile app.
      *
      * @param array $args Arguments from tool_mobile_get_content WS
@@ -215,24 +246,25 @@ class mobile {
         global $OUTPUT, $USER, $DB;
 
         $mybookings = $DB->get_records_sql(
-        "SELECT ba.id id, c.id courseid, c.fullname fullname, b.id bookingid, b.name, bo.text, bo.id optionid,
-        bo.coursestarttime coursestarttime, bo.courseendtime courseendtime, cm.id cmid
-        FROM
-        {booking_answers} ba
-        LEFT JOIN
-    {booking_options} bo ON ba.optionid = bo.id
-        LEFT JOIN
-    {booking} b ON b.id = bo.bookingid
-        LEFT JOIN
-    {course} c ON c.id = b.course
-        LEFT JOIN
-        {course_modules} cm ON cm.module = (SELECT
-                id
+            "SELECT ba.id id, c.id courseid, c.fullname fullname, b.id bookingid, b.name, bo.text, bo.id optionid,
+            bo.coursestarttime coursestarttime, bo.courseendtime courseendtime, cm.id cmid
             FROM
-                {modules}
-            WHERE
-                name = 'booking')
-            WHERE instance = b.id AND ba.userid = {$USER->id} AND cm.visible = 1");
+            {booking_answers} ba
+            LEFT JOIN
+        {booking_options} bo ON ba.optionid = bo.id
+            LEFT JOIN
+        {booking} b ON b.id = bo.bookingid
+            LEFT JOIN
+        {course} c ON c.id = b.course
+            LEFT JOIN
+            {course_modules} cm ON cm.module = (SELECT
+                    id
+                FROM
+                    {modules}
+                WHERE
+                    name = 'booking')
+                WHERE instance = b.id AND ba.userid = {$USER->id} AND cm.visible = 1"
+        );
 
         $outputdata = [];
 
@@ -278,35 +310,28 @@ class mobile {
         global $DB, $OUTPUT, $USER;
 
         $cmid = $args['cmid'];
-        $whichview = $args['whichview'] ?? 'showall';
+        $availablenavtabs = self::get_available_nav_tabs($cmid);
+        $whichview = self::set_active_nav_tabs($availablenavtabs, $args['whichview']);
+
         if (empty($cmid)) {
             throw new moodle_exception('nocmidselected', 'mod_booking');
         }
 
         $records = self::get_available_booking_options($whichview, $cmid);
         $outputdata = [];
-        $pattern = '/<br\s*\/?>/i';
         $maxdatabeforecollapsable = get_config('booking', 'collapseshowsettings');
         if ($maxdatabeforecollapsable === false) {
             $maxdatabeforecollapsable = '2';
         }
         foreach ($records as $record) {
-            $settings = singleton_service::get_instance_of_booking_option_settings($record->id);
-            $tmpoutputdata = $settings->return_booking_option_information();
-            $tmpoutputdata['maxsessions'] = $maxdatabeforecollapsable;
-            $data = $settings->return_booking_option_information();
-            $data['description'] = preg_split($pattern, $data['description']);
-            if (count($settings->sessions) > $maxdatabeforecollapsable) {
-                $data['collapsedsessions'] = $data['sessions'];
-                unset($data['sessions']);
-            }
-            $outputdata[] = $data;
+            $outputdata[] = self::get_course_view_output_dat($record->id, $maxdatabeforecollapsable);
         }
-
+        $data = [];
+        $data['availablenavtabs'] = $availablenavtabs;
         $data['whichview'] = $whichview;
         $data['cmid'] = $cmid;
         $data['mybookings'] = $outputdata;
-        $data['availablenavtabs'] = self::get_available_nav_tabs($whichview);
+        $data['timestamp'] = time();
         return [
             'templates' => [
                 [
@@ -321,6 +346,31 @@ class mobile {
 
     /**
      * Get all selected nav tabs from the config
+     * @param int $recordid
+     * @param int $maxdatabeforecollapsable
+     * @return array
+     */
+    public static function get_course_view_output_dat($recordid, $maxdatabeforecollapsable) {
+        $settings = singleton_service::get_instance_of_booking_option_settings($recordid);
+        $tmpoutputdata = $settings->return_booking_option_information();
+        $tmpoutputdata['maxsessions'] = $maxdatabeforecollapsable;
+        $tmpoutputdata = $settings->return_booking_option_information();
+        if (
+            strlen(strip_tags($tmpoutputdata['description'])) >
+            (int) get_config('booking', 'collapsedescriptionmaxlength')
+        ) {
+            $tmpoutputdata['descriptioncollapsable'] = $tmpoutputdata['description'];
+            unset($tmpoutputdata['description']);
+        }
+        if (count($settings->sessions) > $maxdatabeforecollapsable) {
+            $tmpoutputdata['collapsedsessions'] = $tmpoutputdata['sessions'];
+            unset($tmpoutputdata['sessions']);
+        }
+        return $tmpoutputdata;
+    }
+
+    /**
+     * Get all selected nav tabs from the config
      * @param string $selectedview
      * @param int $cmid
      * @return array
@@ -331,7 +381,7 @@ class mobile {
         $params = [];
         switch ($selectedview) {
             case 'showactive':
-                $params = self::get_rendered_all_options_table($booking);
+                $params = self::get_rendered_active_options_table($booking);
                 break;
             case 'mybooking':
                 $params = self::get_rendered_my_booked_options_table($booking);
@@ -360,10 +410,14 @@ class mobile {
             $booking->context,
             [],
             $params['wherearray'],
-            $userid ?? null,
-            null,
+            $params['userid'] ?? null,
+            $params['bookingparams'] ?? 0,
             $params['additionalwhere'] ?? null
         );
+
+        if ($selectedview == 'showactive') {
+            $params['timenow'] = strtotime('today 00:00');
+        }
 
         $sql = "SELECT $fields
                 FROM $from
@@ -446,6 +500,7 @@ class mobile {
         return [
             'wherearray' => $wherearray,
             'additionalwhere' => $additionalwhere,
+            'bookingparams' => [MOD_BOOKING_STATUSPARAM_BOOKED],
         ];
     }
 
@@ -477,22 +532,44 @@ class mobile {
     }
 
     /**
-     * Get all selected nav tabs from the config
-     * @param string $activetab
+     * Get all selected nav tabs from the config$activetab
+     * @param string $cmid
      * @return array
      */
-    public static function get_available_nav_tabs($activetab) {
+    public static function get_available_nav_tabs($cmid) {
         $selectednavlabelnames = [];
         $navlabelnames = self::match_view_label_and_names();
-        $navtabs = explode(',', get_config('booking', 'mobileviewoptions'));
-        foreach ($navtabs as $navtab) {
-            $selectednavlabelnames[] = [
-              'label' => $navtab,
-              'name' => $navlabelnames[$navtab],
-              'class' => $activetab === $navtab ? 'active' : false,
-            ];
+        $configmobileviewoptions = get_config('booking', 'mobileviewoptions');
+        if ($configmobileviewoptions !== '') {
+            $navtabs = explode(',', get_config('booking', 'mobileviewoptions'));
+            foreach ($navtabs as $navtab) {
+                if (self::get_available_booking_options($navtab, $cmid)) {
+                    $selectednavlabelnames[] = [
+                      'label' => $navtab,
+                      'name' => $navlabelnames[$navtab],
+                      'class' => $activetab === $navtab ? 'active' : false,
+                    ];
+                }
+            }
         }
         return $selectednavlabelnames;
+    }
+
+    /**
+     * Get all selected nav tabs from the config$activetab
+     * @param array $tabs
+     * @param string $activetab
+     * @return string
+     */
+    public static function set_active_nav_tabs(&$tabs, $activetab) {
+        $whichview = $activetab ?? $tabs[0]['label'] ?? 'showall';
+        foreach ($tabs as &$tab) {
+            if ($tab['label'] == $whichview) {
+                $tab['class'] = 'active';
+                break;
+            }
+        }
+        return $whichview;
     }
 
     /**

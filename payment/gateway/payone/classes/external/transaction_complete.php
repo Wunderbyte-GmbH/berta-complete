@@ -110,27 +110,51 @@ class transaction_complete extends external_api implements interface_transaction
         $successurl = helper::get_success_url($component, $paymentarea, $itemid)->__toString();
         $serverurl = $CFG->wwwroot;
 
+        // It's a major security issue here is to check if tid, itemid and userid are correct.
+        $openordersrecord = $DB->get_record('paygw_payone_openorders', ['itemid' => $itemid, 'tid' => $tid]);
+
+        if (!$openordersrecord) {
+            // There is a paymenterror.
+            $context = context_system::instance();
+            $event = payment_error::create([
+                'context' => $context,
+                'userid' => $userid,
+                'other' => [
+                        'message' => 'nonmatchingtidandidentifier',
+                        'orderid' => $tid,
+                        'itemid' => $itemid,
+                        'component' => $component,
+                        'paymentarea' => $paymentarea]]);
+            $event->trigger();
+            throw new \moodle_exception('nonmatchingtidandidentifier', 'paygw_payone');
+        }
+
         if (empty($userid)) {
             $userid = $USER->id;
-            // Fallback: If it's the system user 0, we need to get the REAL user from openorders table!
-            if (empty($userid)) {
-                if (!$userid = $DB->get_field('paygw_payone_openorders', 'userid', ['itemid' => $itemid])) {
-                    // We need a hard stop. If for any reason we can't find out the userid, we log it and stop.
-                    // We trigger the payment_error event.
-                    $context = context_system::instance();
-                    $event = payment_error::create([
-                        'context' => $context,
-                        'userid' => $userid,
-                        'other' => [
-                                'message' => 'nouseridintransactioncomplete',
-                                'orderid' => $tid,
-                                'itemid' => $itemid,
-                                'component' => $component,
-                                'paymentarea' => $paymentarea]]);
-                    $event->trigger();
-                    throw new \moodle_exception('nouseridintransactioncomplete', 'paygw_payone');
-                }
-            }
+        }
+        if ($userid != $openordersrecord->userid) {
+            $userid = $USER->id;
+             // We need a hard stop. If for any reason we can't find out the userid, we log it and stop.
+            // We trigger the payment_error event.
+            $context = context_system::instance();
+            $event = payment_error::create([
+                'context' => $context,
+                'userid' => $userid,
+                'other' => [
+                        'message' => 'wronguseridintransactioncomplete',
+                        'orderid' => $tid,
+                        'itemid' => $itemid,
+                        'component' => $component,
+                        'paymentarea' => $paymentarea]]);
+            $event->trigger();
+
+            $url = str_replace('success=1', 'success=0', $successurl);
+
+            return [
+                'url' => $successurl ?? $serverurl,
+                'success' => false,
+                'message' => get_string('wronguseridintransactioncomplete', 'paygw_payone'),
+            ];
         }
 
         // We need to prevent duplicates, so check if the payment already exists!
@@ -168,6 +192,8 @@ class transaction_complete extends external_api implements interface_transaction
             'userid' => $userid,
         ]);
 
+        // Test if itemid, userid and tid correspond to data in open orders table.
+
         $config = (object)helper::get_gateway_configuration($component, $paymentarea, $itemid, 'payone');
         $sandbox = $config->environment == 'sandbox';
 
@@ -177,6 +203,8 @@ class transaction_complete extends external_api implements interface_transaction
         // Add surcharge if there is any.
         $surcharge = helper::get_gateway_surcharge('payone');
         $amount = helper::get_rounded_cost($payable->get_amount(), $currency, $surcharge);
+
+        // Now we check of the amount from the open orders table is the same that the user actually paid.
 
         $sdk = new payone_sdk($config->clientid, $config->secret, $config->brandname, $sandbox);
         $orderdetails = $sdk->check_status($tid);

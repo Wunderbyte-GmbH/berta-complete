@@ -23,7 +23,7 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
  */
 
-$string['backtooverview'] = "Back to overview";
+$string['backtooverview'] = "Zurück";
 $string['choosereadme'] = '<div class="clearfix"><h2>Lexa</h2>'.
 '<h3>About</h3>'.
 '<p>Lexa is a child theme of the Boost theme.</p>'.
@@ -135,3 +135,10 @@ $string['communities'] = 'Communities';
 $string['searchfaq'] = "Wie können wir Ihnen helfen? Suchen Sie nach einer Antwort oder einem Thema...";
 $string['support'] = 'Support';
 $string['sortby'] = 'Sortieren nach';
+
+$string['loginuwien'] = 'Anmeldung für Angehörige der Universität Wien';
+$string['loginguest'] = 'Als Gast das Angebot der Bibliothek nutzen';
+$string['loginguesthl'] = 'Anmeldung mit Gastkonto';
+$string['guestlogin'] = 'Gastkonto für u:rise anlegen';
+$string['forgetguestlogin'] = 'Gastkonto Passwort vergessen';
+$string['loginuwienbtn'] = 'Hier mit u:account anmelden';

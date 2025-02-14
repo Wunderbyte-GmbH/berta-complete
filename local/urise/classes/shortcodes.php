@@ -216,7 +216,7 @@ class shortcodes {
 
         $wherearray = ['bookingid' => $bookingids];
 
-        // Additional where condition for both card and list views
+        // Additional where condition for both card and list views.
         $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
 
         // Additional where has to be added here. We add the param later.
@@ -259,6 +259,7 @@ class shortcodes {
         if ($showimage !== false) {
             $table->set_tableclass('cardimageclass', 'pr-0 pl-1');
             $table->add_subcolumns('cardimage', ['image']);
+            $table->add_subcolumns('ariasection', ['puretext']);
         }
 
         if (empty($args['showpagination'])) {
@@ -270,6 +271,7 @@ class shortcodes {
         if ($renderascard) {
             self::generate_table_for_cards($table, $args);
             $table->tabletemplate = 'local_urise/table_card';
+            $table->add_subcolumns('ariasection', ['puretext']);
             if ($args['showpagination'] == "true") {
                 $table->showpagination = true;
             } else {
@@ -797,6 +799,7 @@ class shortcodes {
                 5 => get_string('fuehrungskraefte', 'local_urise'),
                 6 => get_string('studierende', 'local_urise'),
                 7 => get_string('interessierteoeffentlichkeit', 'local_urise'),
+                8 => get_string('studentmultipliers', 'local_urise'),
             ]);
             $table->add_filter($standardfilter);
         }
@@ -825,6 +828,7 @@ class shortcodes {
                 0 => 'wbt_suppress',
                 1 => get_string('german', 'local_urise'),
                 2 => get_string('english', 'local_urise'),
+                3 => get_string('germanenglish', 'local_urise'),
             ]);
             $table->add_filter($standardfilter);
         }
@@ -837,8 +841,8 @@ class shortcodes {
                 2 => get_string('hybrid', 'local_urise'),
                 3 => get_string('blendedlearningonsite', 'local_urise'),
                 4 => get_string('blendedlearningonline', 'local_urise'),
-                5 => get_string('blendedlearningonline', 'local_urise'),
-                6 => get_string('onsite', 'local_urise'),
+                5 => get_string('blendedlearninghybrid', 'local_urise'),
+                6 => get_string('online', 'local_urise'),
                 7 => get_string('selfpaced', 'local_urise'),
             ]);
             $table->add_filter($standardfilter);
@@ -981,10 +985,7 @@ class shortcodes {
 
         if (!empty($args['sort'])) {
             $sortablecolumns = [
-                'titleprefix' => get_string('titleprefix', 'local_urise'),
                 'text' => get_string('coursename', 'local_urise'),
-                'organisation' => get_string('organisation', 'local_urise'),
-                'location' => get_string('location', 'local_urise'),
             ];
             if (get_config('local_urise', 'uriseshortcodesshowstart')) {
                 $sortablecolumns['coursestarttime'] = get_string('coursestarttime', 'mod_booking');
@@ -1054,16 +1055,18 @@ class shortcodes {
         $table->add_subcolumns('cardimage', ['image']);
         $table->set_tableclass('cardimageclass', 'imagecontainer');
         $table->add_subcolumns('cardheader', ['botags', 'action', 'bookings']);
-        $table->add_subcolumns('cardlist', ['showdates', 'kurssprache', 'format', 'kompetenzen', 'organisation', 'course']);
+        $table->add_subcolumns('cardlist', ['showdates', 'umfang', 'kurssprache', 'format', 'kompetenzen', 'organisation', 'course']);
         $table->add_subcolumns('cardfooter', ['price']);
 
         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-regular fa-message fa-fw text-primary mr-2'],
          ['kurssprache']);
+         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'],
+         ['umfang']);
          $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-computer fa-fw  text-primary mr-2'],
          ['format']);
          $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-hashtag fa-fw  text-primary mr-2'],
          ['kompetenzen']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'], ['showdates']);
+        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-calendar text-primary fa-fw  showdatesicon mr-2'], ['showdates']);
         $table->add_classes_to_subcolumns('cardlist', ['columnclass' => 'd-flex align-item-center'], ['showdates']);
         // $table->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'mt-auto'], ['price']);
         $table->add_classes_to_subcolumns('cardheader', ['columnkeyclass' => 'd-none']);
@@ -1228,9 +1231,7 @@ class shortcodes {
                             }
 
                         } else {
-                            $argument = strip_tags($argument);
-                            $argument = trim($argument);
-                            $wherearray[$key] = $value;
+                            $wherearray[$key] = strip_tags(trim($value));
                         }
 
                         break;
@@ -1407,6 +1408,26 @@ class shortcodes {
             '39' => [
                 'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
                 'localizedname' => get_string('educationalleadershipandmanagement', 'local_urise'),
+            ],
+            '41' => [
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('teamfuehrungentwicklung', 'local_urise'),
+            ],
+            '42' => [
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('selbstfuehrung', 'local_urise'),
+            ],
+            '43' => [
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('mitarbeitendefoerdern', 'local_urise'),
+            ],
+            '44' => [
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('entscheidungskompetenzen', 'local_urise'),
+            ],
+            '45' => [
+                'parent' => get_string('fuehrungskompetenzen', 'local_urise'),
+                'localizedname' => get_string('strategischeplanungentwicklung', 'local_urise'),
             ],
             '40' => [
                 'parent' => get_string('sonstige', 'local_urise'),

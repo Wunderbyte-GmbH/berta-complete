@@ -61,14 +61,33 @@ class previouslybooked implements bo_condition {
     public $customsettings = null;
 
     /**
+     * Singleton instance.
+     *
+     * @var object
+     */
+    private static $instance = null;
+
+    /**
+     * Singleton instance.
+     *
+     * @param ?int $id
+     * @return object
+     *
+     */
+    public static function instance(?int $id = null): object {
+        if (empty(self::$instance)) {
+            self::$instance = new self($id);
+        }
+        return self::$instance;
+    }
+
+    /**
      * Constructor.
      *
      * @param ?int $id
-     * @param ?booking_option_settings $settings
      * @return void
      */
-    public function __construct(?int $id = null, ?booking_option_settings $settings = null) {
-
+    private function __construct(?int $id = null) {
         if ($id) {
             $this->id = $id;
         }
@@ -113,15 +132,26 @@ class previouslybooked implements bo_condition {
         // This is the return value. Not available to begin with.
         $isavailable = false;
 
-        if (empty($this->customsettings->optionid)) {
+        if (
+            empty($this->customsettings->optionid
+            || (!isloggedin() || isguestuser()))
+        ) {
             $isavailable = true;
         } else {
             $optionid = $this->customsettings->optionid;
             $optionsettings = singleton_service::get_instance_of_booking_option_settings($optionid);
-            $bookinganswer = singleton_service::get_instance_of_booking_answers($optionsettings);
-            $bookinginformation = $bookinganswer->return_all_booking_information($userid);
 
-            if (isset($bookinginformation['iambooked'])) {
+            // There might be a booking option specified which does not exist (anymore).
+            // Only if there is an id, we can really check.
+            if (!empty($optionsettings->id)) {
+                $bookinganswer = singleton_service::get_instance_of_booking_answers($optionsettings);
+                $bookinginformation = $bookinganswer->return_all_booking_information($userid);
+
+                if (isset($bookinginformation['iambooked'])) {
+                    $isavailable = true;
+                }
+            } else {
+                // If not, it's always available.
                 $isavailable = true;
             }
         }
@@ -278,7 +308,7 @@ class previouslybooked implements bo_condition {
                     if (!empty($jsonconditions)) {
                         foreach ($jsonconditions as $jsoncondition) {
                             $currentclassname = $jsoncondition->class;
-                            $currentcondition = new $currentclassname();
+                            $currentcondition = $currentclassname::instance();
                             // Currently conditions of the same type cannot be combined with each other.
                             if ($jsoncondition->id != $this->id
                                 && isset($currentcondition->overridable)

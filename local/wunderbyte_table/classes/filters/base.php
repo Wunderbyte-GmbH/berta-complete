@@ -25,6 +25,7 @@
 namespace local_wunderbyte_table\filters;
 
 use coding_exception;
+use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
 use local_wunderbyte_table\filter;
 use local_wunderbyte_table\wunderbyte_table;
 use moodle_exception;
@@ -282,9 +283,20 @@ abstract class base {
             }
             $identifierarray[] = $identifier;
 
+            if (isset($sortedarray[$valuekey]) && $sortedarray[$valuekey] === true) {
+                // For custom fields, we get the actual string value from field controller.
+                $fieldcontroller = wbt_field_controller_info::get_instance_by_shortname($fckey);
+                if (!empty($fieldcontroller)) {
+                    $cfstringvalueforvaluekey = $fieldcontroller->get_option_value_by_key($valuekey);
+                    if ($cfstringvalueforvaluekey == wbt_field_controller_info::WBTABLE_CUSTOMFIELD_VALUE_NOTFOUND) {
+                        continue;
+                    }
+                }
+            }
+
             $itemobject = [
-                // We do not want to show html entities, so replace &amp; with &.
-                'key' => str_replace("&amp;", "&", $valuekey),
+                // We do not want to show HTML tags or HTML entities, so replace &amp; with &.
+                'key' => strip_tags(str_replace("&amp;", "&", $cfstringvalueforvaluekey ?? $valuekey)),
                 'value' => $valuevalue === true ? $valuekey : $valuevalue,
                 'identifier' => $identifier,
                 'category' => $fckey,
@@ -395,7 +407,39 @@ abstract class base {
         $categoryvalue,
         wunderbyte_table &$table
     ): void {
-        return;
+        global $DB;
+        $filtercounter = 1;
+        $filter .= " ( ";
+        foreach ($categoryvalue as $key => $value) {
+            $filter .= $filtercounter == 1 ? "" : " OR ";
+            // Apply special filter here.
+            if (
+                isset($table->subcolumns['datafields'][$columnname]['jsonattribute'])
+            ) {
+                    $paramsvaluekey = $table->set_params("%" . $value ."%");
+                    $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false);
+            } else if (
+                is_numeric($value)
+                && isset($table->subcolumns['datafields'][$columnname]['local_wunderbyte_table\filters\types\hourlist'])
+            ) {
+                // Known issue. See https://github.com/Wunderbyte-GmbH/Wunderbyte-GmbH/issues/304.
+                // Here we check if it's an hourslist filter.
+                $delta = filter::get_timezone_offset(); // Timezone might vary according to location.
+                $paramsvaluekey = $table->set_params((string) ($value + $delta), false);
+                $filter .= filter::apply_hourlist_filter($columnname, ":$paramsvaluekey");
+            } else {
+                // We want to find the value in an array of values.
+                // Therefore, we have to use or as well.
+                // First, make sure we have enough params we can use..
+                $separator = $table->subcolumns['datafields'][$columnname]['explode'] ?? ",";
+                $paramsvaluekey = $table->set_params('%' . $separator . $value . $separator . '%', true);
+                $escapecharacter = wunderbyte_table::return_escape_character($value);
+                $concatvalue = $DB->sql_concat("'$separator'", $columnname, "'$separator'");
+                $filter .= $DB->sql_like("$concatvalue", ":$paramsvaluekey", false, false, false, $escapecharacter);
+            }
+            $filtercounter++;
+        }
+        $filter .= " ) ";
     }
 
     /**

@@ -24,9 +24,9 @@
 
 namespace local_wunderbyte_table\filters\types;
 
-use local_wunderbyte_table\filter;
 use local_wunderbyte_table\filters\base;
 use local_wunderbyte_table\wunderbyte_table;
+use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
 
 /**
  * Wunderbyte table class is an extension of table_sql.
@@ -143,9 +143,19 @@ class hierarchicalfilter extends base {
         foreach ($values as $subcategorykey => $subcategoryarray) {
             $categorycount = 0;
             foreach ($subcategoryarray as $valuekey => $valuevalue) {
+
+                // For custom fields, we get the actual string value from field controller.
+                $fieldcontroller = wbt_field_controller_info::get_instance_by_shortname($fckey);
+                if (!empty($fieldcontroller)) {
+                    $cfstringvalueforvaluekey = $fieldcontroller->get_option_value_by_key($valuekey);
+                    if ($cfstringvalueforvaluekey == wbt_field_controller_info::WBTABLE_CUSTOMFIELD_VALUE_NOTFOUND) {
+                        continue;
+                    }
+                }
+
                 $itemobject = [
-                    // We do not want to show html entities, so replace &amp; with &.
-                    'key' => str_replace("&amp;", "&", $valuekey),
+                    // We do not want to show HTML tags or HTML entities, so replace &amp; with &.
+                    'key' => strip_tags(str_replace("&amp;", "&", $cfstringvalueforvaluekey ?? $valuekey)),
                     'value' => $valuevalue === true ? $valuekey : $valuevalue,
                     'category' => $fckey,
                 ];

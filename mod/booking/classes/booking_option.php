@@ -655,8 +655,13 @@ class booking_option {
      * @param bool $deleteall set this to true if you want to delete a complete answers too
      * @return bool true if booking was deleted successfully, otherwise false
      */
-    public function user_delete_response($userid, $cancelreservation = false,
-        $bookingoptioncancel = false, $syncwaitinglist = true, $deleteall = false) {
+    public function user_delete_response(
+        $userid,
+        $cancelreservation = false,
+        $bookingoptioncancel = false,
+        $syncwaitinglist = true,
+        $deleteall = false
+    ) {
 
         global $USER, $DB;
 
@@ -689,12 +694,15 @@ class booking_option {
         }
 
         if ($cancelreservation) {
-            $DB->delete_records('booking_answers',
-                    ['userid' => $userid,
-                      'optionid' => $this->optionid,
-                      'completed' => 0,
-                      'waitinglist' => MOD_BOOKING_STATUSPARAM_RESERVED,
-                    ]);
+            $DB->delete_records(
+                'booking_answers',
+                [
+                    'userid' => $userid,
+                    'optionid' => $this->optionid,
+                    'completed' => 0,
+                    'waitinglist' => MOD_BOOKING_STATUSPARAM_RESERVED,
+                ]
+            );
         } else {
             foreach ($results as $result) {
                 if ($result->waitinglist != MOD_BOOKING_STATUSPARAM_DELETED) {
@@ -1200,6 +1208,13 @@ class booking_option {
 
         // When a user submits a userform, we need to save this as well.
         credits::add_json_to_booking_answer($newanswer, $userid);
+
+        if (!empty($settings->selflearningcourse)) {
+            $now = time();
+            $duration = $settings->duration ?? 0;
+            $end = empty($duration) ? 0 : $now + $duration;
+            self::add_data_to_json($newanswer, 'selflearningendofsubscription', $end);
+        }
 
         // The confirmation on the waitinglist is saved here.
         if ($confirmwaitinglist === 2) {
@@ -2938,7 +2953,7 @@ class booking_option {
 
         if (count($optionsettings->sessions) == 1) {
             // Single-session.
-            $session = array_pop($optionsettings->sessions);
+            $session = reset($optionsettings->sessions);
 
             // If there's only one session and it's already over, then we count it as consumed.
             if ($session->courseendtime < $now) {
@@ -3046,6 +3061,7 @@ class booking_option {
     public static function purge_cache_for_answers(int $optionid) {
 
         cache_helper::invalidate_by_event('setbackoptionsanswers', [$optionid]);
+        cache_helper::purge_by_event('setbacksessionanswers');
         // When we set back the booking_answers...
         // ... we have to make sure it's also deleted in the singleton service.
         singleton_service::destroy_booking_answers($optionid);
@@ -3121,6 +3137,7 @@ class booking_option {
         $allowupdatedays = $bookingsettings->allowupdatedays;
         if (
             !empty($bookingsettings->cancelrelativedate) &&
+            $bookingsettings->cancelrelativedate == 1 &&
             isset($allowupdatedays) &&
             $allowupdatedays != 10000 &&
             !empty($starttime)
@@ -3265,6 +3282,13 @@ class booking_option {
         // Use the booking option title as subject.
         $subject = str_replace(' ', '%20', $settings->get_title_with_prefix());
 
+        // As neither comma nor semicolon works on all machines, we need to distinghish here.
+        $useragent = $_SERVER['HTTP_USER_AGENT'];
+        $ismacuser = stripos($useragent, 'Macintosh') !== false ||
+                    stripos($useragent, 'iPhone') !== false ||
+                    stripos($useragent, 'iPad') !== false;
+        $emailseparator = $ismacuser ? ',' : ';';
+
         if (empty($bookedusers)) {
             return '';
         }
@@ -3273,11 +3297,11 @@ class booking_option {
         if (!empty($settings->teachers)) {
             foreach ($settings->teachers as $t) {
                 if (!empty($t->email) && ($t->email != $USER->email)) {
-                    $teachersstring .= "$t->email;";
+                    $teachersstring .= "$t->email" . $emailseparator;
                 }
             }
             if ($teachersstring) {
-                $teachersstring = trim($teachersstring, ';');
+                $teachersstring = trim($teachersstring, $emailseparator);
                 $teachersstring = "cc=$teachersstring&";
             }
         }
@@ -3286,10 +3310,10 @@ class booking_option {
         foreach ($bookedusers as $bu) {
             $user = singleton_service::get_instance_of_user($bu->userid);
             if (!empty($user->email)) {
-                $emailstring .= "$user->email;";
+                $emailstring .= "$user->email" . $emailseparator;
             }
         }
-        $emailstring = trim($emailstring, ';');
+        $emailstring = trim($emailstring, $emailseparator);
 
         if (empty($emailstring)) {
             return '';

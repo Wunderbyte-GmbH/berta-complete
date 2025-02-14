@@ -35,29 +35,37 @@
     }
 }}
 <div class="d-flex justify-content-between align-items-center wb_news_slide">
-    <div class="col-md-6 {{#lightmode}} text-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}">
+    <div class="col-md-1"></div>
+    <div class="col-md-3 {{#lightmode}} text-light{{/lightmode}}{{#cssclasses}} {{cssclasses}}{{/cssclasses}}">
         {{#tags}} <span class="badge badge-success">{{.}}</span>{{/tags}}
         {{#headline}}
-            <h1>{{{headline}}}</h1>
+            <h2 class="lexa-h2">{{{headline}}}</h2>
         {{/headline}}
+        <span class="lexa-input">
         {{{description}}}
+        </span>
         {{#btntext}}
-        <a href="{{btnlink}}" class="btn btn-primary mt-4">{{btntext}}</a>
+        <a href="{{btnlink}}" class="btn btn-primary mt-4" {{#btnlinktarget}}target="{{.}}"{{/btnlinktarget}} {{#btnlinkrel}}rel="{{.}}"{{/btnlinkrel}}>{{btntext}}</a>
         {{/btntext}}
-        <div class="row mt-4 justify-content-center">
-            <a class="carousel-control-prev mt-4 mr-2" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="sr-only">Previous</span>
-            </a>
-            <a class="carousel-control-next mt-4 ml-2" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="sr-only">Next</span>
-            </a>
-        </div>
+        {{^dontshowarrows}}
+            <div class="row mt-4 justify-content-start">
+                <div class="col-md-6 mb-3">
+                    <a class="mt-4 wb_news_slider_button_left" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="prev">
+                        <span class="fa-solid fa-chevron-left" aria-hidden="true"></span>
+                        <span class="sr-only">Previous</span>
+                    </a>
+                    <a class="mt-4 wb_news_slider_button_right" href="#wb_news_carousel-{{instanceid}}" role="button" data-slide="next">
+                        <span class="fa-solid fa-chevron-right" aria-hidden="true"></span>
+                        <span class="sr-only">Next</span>
+                    </a>
+                </div>
+            </div>
+        {{/dontshowarrows}}
         {{#editmode}}
         {{> local_wb_news/editsinglenews}}
         {{/editmode}}
     </div>
+    <div class="col-md-1"></div>
     <div class="col-md-6">
         <div class="image-container w-100">
             <img src="{{bgimage}}{{headerimage}}" class="img-fluid w-100" aria-label="{{bgimagetext}}{{headerimagetext}}">
@@ -66,4 +74,5 @@
             {{/imagecaption}}
         </div>
     </div>
+    <div class="col-md-1"></div>
 </div>

@@ -24,6 +24,8 @@
 
 namespace local_shopping_cart;
 
+use local_shopping_cart\local\checkout_process\checkout_manager;
+
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/../lib.php');
@@ -273,12 +275,14 @@ class shopping_cart_history {
 
         $now = time();
 
+        $addresses = checkout_manager::return_stored_addresses_for_user($data->userid);
+
         $returnid = 0;
         if (isset($data->items)) {
             foreach ($data->items as $item) {
                 $item['taxcountrycode'] = $data->taxcountrycode ?? null;
-                $item['address_billing'] = $data->address_billing ?? null;
-                $item['address_shipping'] = $data->address_shipping ?? null;
+                $item['address_billing'] = $addresses["selectedaddress_billing"] ?? null;
+                $item['address_shipping'] = $addresses["selectedaddress_shipping"] ?? null;
                 $uidcountrynr = null;
                 if (isset($data->vatnrnumber)) {
                     $uidcountrynr = $data->vatnrcountry . $data->vatnrnumber;
@@ -340,6 +344,16 @@ class shopping_cart_history {
                     $event->trigger();
 
                     $returnid = $id;
+
+                    // Update timestamp of deletion.
+                    if (
+                        !empty($additionalminutes = get_config('local_shopping_cart', 'prolongedpaymenttime'))
+                    ) {
+                        $time = time();
+                        $additionalseconds = $additionalminutes * 60;
+                        $time += $additionalseconds;
+                        shopping_cart::add_or_reschedule_addhoc_tasks($time, $data->userid);
+                    }
                 } else {
                     $returnid = 0;
                 }
@@ -587,10 +601,69 @@ class shopping_cart_history {
             if ($aborted) {
                 return [];
             }
-
             return $data;
         }
+        return [];
+    }
 
+    /**
+     * Return extra ledger data from DB via userid
+     *
+     * @param int $userid
+     * @return array
+     */
+    public static function return_extra_lines_from_ledger(int $userid): array {
+        global $DB;
+
+        [$inorequal, $params] = $DB->get_in_or_equal(
+            [
+                LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_CORRECTION,
+                LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH,
+                LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_TRANSFER,
+                LOCAL_SHOPPING_CART_PAYMENT_METHOD_REBOOKING_CREDITS_CORRECTION,
+            ],
+            SQL_PARAMS_NAMED
+        );
+
+        $sql = "SELECT *
+                FROM {local_shopping_cart_ledger} scl
+                WHERE scl.userid = :userid
+                AND scl.payment $inorequal
+                ";
+        $params['userid'] = $userid;
+        if (
+            $data = $DB->get_records_sql($sql, $params)
+        ) {
+            return $data;
+        }
+        return [];
+    }
+
+    /**
+     * Return ledger data from DB via ledger id (cash report data).
+     * This function won't return data if the payment is already aborted.
+     *
+     * @param int $id
+     * @return array
+     */
+    public static function return_data_from_ledger_via_id(int $id): array {
+        global $DB;
+        if (
+            $data = $DB->get_records('local_shopping_cart_ledger', ['id' => $id])
+        ) {
+            // If there is an error registered, we return null.
+            foreach ($data as $record) {
+                $aborted = false;
+                // Status LOCAL_SHOPPING_CART_PAYMENT_ABORTED is 1. Fails in adhoc task if constant is used. Weird.
+                if ($record->paymentstatus == 1) {
+                    $aborted = true;
+                }
+            }
+            if ($aborted) {
+                return [];
+            }
+            return $data;
+        }
         return [];
     }
 

@@ -49,12 +49,13 @@
         }
     }
 }}
-<div class="booking-button-area {{^price}}noprice{{/price}} w-100 lexa-caption"
+<div class="booking-button-area noprice w-100 lexa-caption"
     tabindex="0"
     data-itemid="{{itemid}}"
     data-componentname="mod_booking"
     data-area="{{area}}"
     data-userid="{{userid}}"
+    data-results="{{results}}"
     {{#dataaction}}data-action="{{dataaction}}"{{/dataaction}}
     {{#nojs}}data-nojs="1"{{/nojs}}>
     {{#onlist}}

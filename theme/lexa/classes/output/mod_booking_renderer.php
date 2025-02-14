@@ -168,7 +168,6 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
             $showdatesdata = new col_coursestarttime($optionid, $booking);
             $output = singleton_service::get_renderer('local_urise');
             $ret = $output->render_col_coursestarttime($showdatesdata);
-            $ret = str_replace(' - ', ' - <br>', $ret);
             $cache->set($cachekey, $ret);
         };
 
@@ -201,9 +200,10 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
                 $competencies = explode(',', $settings->customfields['kompetenzen']);
             }
 
+            $organisations = shortcodes::get_kompetenzen();
             if (count($competencies) > 1) {
                 $returnorgas = [];
-                $organisations = shortcodes::get_kompetenzen();
+
                 foreach ($settings->customfields['kompetenzen'] as $orgaid) {
                     if (isset($organisations[$orgaid])) {
                         $returnorgas[] = $organisations[$orgaid]['localizedname'];
@@ -213,6 +213,9 @@ class mod_booking_renderer extends \mod_booking\output\renderer {
                 return $returnorgas;
             } else {
                 $value = reset($competencies);
+                if (isset($organisations[$value])) {
+                    $value = $organisations[$value]['localizedname'];
+                }
                 return [$value];
             }
         }

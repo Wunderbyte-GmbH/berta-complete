@@ -795,8 +795,6 @@ body.limitedwidth #page.drawers .footer-popover {
     display: none !important;
 }
 
-
-
 .bookinglinkbutton:not(#page-mod-booking-optionview .bookinglinkbutton) {
     border: 1px solid black;
     border-radius: 8px;
@@ -895,7 +893,7 @@ body.limitedwidth #page.drawers .footer-popover {
 
 .page-item.active .page-link {
     color: white;
-    background: #99B2C6;
+    background: var(--primary);
     border-radius: 7px;
 }
 
@@ -1155,6 +1153,10 @@ body.limitedwidth #page.drawers .footer-popover {
   .card.w-100.rounded:hover {
     border-radius: 20px;
     background: #BFD8E3;
+  }
+
+  .wunderbyte_table_container.showontop {
+    min-height: 600px;
   }
 
 //   .wunderbyte_table_container .urisebutton, .btn-secondary {
@@ -2344,8 +2346,8 @@ text-align: start;
         padding-left: 0px !important;
         padding-right: 0px !important;
     }
-      
-      
+
+
 
     .wb_news_slide {
         flex-direction: column-reverse;
@@ -2683,13 +2685,13 @@ text-align: start;
     .mod-booking-card-body .description  {
         display: none;
     }
-    
+
     .wbwunschbox .img-fluid {
         max-width: 80%;
         margin: 0 auto;
         margin-bottom: 20px;
     }
-    
+
     .wbwunschbox .btn-primary {
       margin: 0 auto;
     }
@@ -2698,11 +2700,11 @@ text-align: start;
         margin-top: 14px;
         margin-bottom: 14px;
     }
-    
+
     .wb-records-count-label {
         font-size: 16px;
     }
-    
+
 }
 
 .wbfaqaccordion {
@@ -2893,6 +2895,36 @@ box-shadow: -5px 0px 10px 0px #00000005;
     padding-left: 21px !important;
 }
 
+.wb_news .wb_news_card_crosslinks {
+    border: none;
+}
+
+.wb_news .wb_news_card_crosslinks
+img {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.wb_news_slider_button_left {
+    border: 1px solid #D9E1E7;
+    padding: 10px 15px;
+    border-radius: 8px 0 0 8px;
+    color: var(--lightcontent);
+}
+
+.wb_news_slider_button_right {
+    border: 1px solid #D9E1E7;
+    padding: 10px 15px;
+    border-radius: 0 8px 8px 0;
+    color: var(--lightcontent);
+}
+
+#shopping-cart-checkout-button {
+    font-style: normal !important;
+}
+
+
 @media (max-width: 768px) {
         .drawer-primary .drawercontent .list-group a.list-group-item {
           border: none;
@@ -2926,3 +2958,26 @@ box-shadow: -5px 0px 10px 0px #00000005;
             margin-left: 20px;
         }
 }
+
+.collapselogin {
+    padding: 10px;
+    background: var(--interface-bg, #EDF6FA);
+    color: var(--brand_primary-brand_primary, #0063A6);
+}
+
+[aria-expanded="false"] > svg.closed {
+    display: inline;
+}
+[aria-expanded="true"] > svg.closed {
+    display: none;
+}
+[aria-expanded="false"] > svg.opened {
+    display: none;
+}
+[aria-expanded="true"] > svg.opened {
+    display: inline;
+}
+
+#theme_boost_union-loginorder-local #loginbtn {
+    padding: 6px 10px !important;
+  }

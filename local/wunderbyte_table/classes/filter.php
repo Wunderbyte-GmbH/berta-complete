@@ -25,12 +25,11 @@
 namespace local_wunderbyte_table;
 
 use coding_exception;
-use core_component;
 use core_date;
 use DateTime;
 use DateTimeZone;
 use dml_exception;
-use stdClass;
+use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
 
 /**
  * Wunderbyte table class is an extension of table_sql.
@@ -51,7 +50,7 @@ class filter {
         if (!$table->filterjson) {
 
             // We need to localize the filter for every user.
-            $lang = current_language();
+            $lang = self::current_language();
             $key = $table->tablecachehash . $lang . '_filterjson';
 
             $table->filterjson = editfilter::get_userspecific_filterjson($table, $key);
@@ -129,15 +128,16 @@ class filter {
                     continue;
                 }
                 if (!isset($filtercolumns[$key][$row->{$key}])) {
-                    $filtercolumns[$key][$row->{$key}] = $row->keycount ?? true;
+                    $filtercolumns[$key][$row->{$key}] = $row->keycount ?? $row->count ?? true;
                 }
             }
         }
 
         $filterjson = ['categories' => []];
 
-        foreach ($filtercolumns as $fckey => $values) {
+        wbt_field_controller_info::instantiate_by_shortnames(array_keys($filtercolumns));
 
+        foreach ($filtercolumns as $fckey => $values) {
             // Special treatment for key localizedname.
             if (isset($filtersettings[$fckey]['localizedname'])) {
                 $localizedname = $filtersettings[$fckey]['localizedname'];
@@ -368,5 +368,26 @@ class filter {
         $delta = $gmttime - $userhour;
 
         return $delta;
+    }
+
+    /**
+     * As there seems to be the possibility that current_language() does not return the same as used by getstring...
+     * ... this function tries to avoid any problems.
+     *
+     * @return string
+     *
+     */
+    public static function current_language() {
+        // We need to localize the filter for every user.
+        $lang = get_string('thislanguage', 'langconfig');
+        // Convert the string to lowercase.
+        $lowercase = strtolower($lang);
+        // Remove any character that is not a-z.
+        $lang = preg_replace('/[^a-z]/', '', $lowercase);
+
+        if (empty($lang)) {
+            $lang = current_language();
+        }
+        return $lang;
     }
 }

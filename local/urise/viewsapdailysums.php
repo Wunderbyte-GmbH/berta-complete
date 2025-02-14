@@ -13,6 +13,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
  * Add dates to option.
  *
@@ -33,7 +34,7 @@ if (!$context = context_system::instance()) {
     throw new moodle_exception('badcontext');
 }
 
-if ((has_capability('mod/booking:updatebooking', $context) || has_capability('mod/booking:addeditownoption', $context)) == false) {
+if (!has_capability('local/shopping_cart:cashier', $context)) {
     echo $OUTPUT->header();
     echo $OUTPUT->heading(get_string('accessdenied', 'mod_booking'), 4);
     echo get_string('nopermissiontoaccesspage', 'mod_booking');
@@ -73,7 +74,10 @@ foreach ($files as $file) {
         continue;
     }
     $filenamearr = explode('_', $filename);
-    $datepart = $filenamearr[2];
+    $datepart = $filenamearr[1]; // For SAPKU_20241218_140500 => this would be 20241218.
+    if (!is_number($datepart)) {
+        continue; // We do not show artifacts with legacy naming.
+    }
     $year = substr($datepart, 0, 4);
     $month = substr($datepart, 4, 2);
 

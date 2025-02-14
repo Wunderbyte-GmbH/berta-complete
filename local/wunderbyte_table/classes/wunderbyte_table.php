@@ -950,16 +950,23 @@ class wunderbyte_table extends table_sql {
         if (!empty($searchcolumns) && count($searchcolumns)) {
 
             foreach ($searchcolumns as $key => $value) {
+                // Check Moodle version to determine compatibility.
+                if ($CFG->version > 2022112800) {
+                    // Use sql_cast_to_char, available since Moodle 4.1.
+                    $valuestring = $DB->sql_cast_to_char($value);
+                } else {
+                    // Handle databases differently based on DB type.
+                    if ($DB->get_dbfamily() === 'mysql') {
+                        // For MySQL, use CAST as CHAR.
+                        $valuestring = "CAST(" . $value . " AS CHAR)";
+                    } else {
+                        // For other DB types, use CAST as VARCHAR.
+                        $valuestring = "CAST(" . $value . " AS VARCHAR)";
+                    }
+                }
 
-                // Sql_cast_to_char is available since Moodle 4.1.
-                // Important: use ">" not ">=" here.
-                $valuestring = $CFG->version > 2022112800 ? $DB->sql_cast_to_char($value) :
-                    // No harm in using value here because it's actually the column name, defined in the code.
-                    // No user entry possible here.
-                    "CAST(" . $value . " AS VARCHAR)";
-
+                // Prepare the column string with COALESCE.
                 $searchcolumns[$key] = "COALESCE(" . $valuestring . ", ' ')";
-
             }
 
             $searchcolumns = array_values($searchcolumns);
@@ -1228,7 +1235,7 @@ class wunderbyte_table extends table_sql {
     public function apply_filter(string $filter, string &$searchtext = '') {
 
         global $DB;
-        $lang = current_language();
+        $lang = filter::current_language();
         $key = $this->tablecachehash . $lang . "_filterjson";
         $filtersettings = editfilter::return_filtersettings($this, $key);
 
@@ -1415,11 +1422,22 @@ class wunderbyte_table extends table_sql {
                 }
 
                 foreach ($categoryvalue as $key => $value) {
+                    $filter .= ($categorycounter == 1) ? "" : " AND ";
+                    $valuecounter = 1;
+                    if (is_object($value) || is_array($value)) {
+                        foreach ($value as $operator => $timestamp) {
+                            // Time values will be concatenated via AND.
+                            $filter .= ($valuecounter == 1) ? "" : " AND ";
 
-                    // Time values will be concatenated via AND.
-                    $filter .= $categorycounter == 1 ? "" : " AND ";
+                            $filter .= $categorykey . ' ' . $operator . ' ' . $timestamp;
+                            $valuecounter++;
+                        }
+                    } else {
+                        $filter .= $categorycounter == 1 ? "" : " AND ";
 
-                    $filter .= $categorykey . ' ' . key((array) $value) . ' ' . current((array) $value);
+                        $filter .= $categorykey . ' ' . key((array) $value) . ' ' . current((array) $value);
+                    }
+
                     $categorycounter++;
                 }
                 $filter .= " ) ";

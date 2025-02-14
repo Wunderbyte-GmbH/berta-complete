@@ -25,6 +25,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['acceptadditionalconditions'] = "Bestätigung zusätzlicher Konditionen verlangen";
+$string['acceptadditionalconditions:description'] = "Ohne Häkchen bei den zusätzlichen Konditionen ist buchen nicht möglich.";
 $string['accepttermsandconditions'] = "Bestätigung der AGBs verlangen";
 $string['accepttermsandconditions:description'] = "Ohne Häkchen bei den AGBs ist buchen nicht möglich.";
 $string['accessdenied'] = 'Zugriff verweigert';
@@ -32,8 +34,11 @@ $string['accountid'] = 'Zahlungsanbieter-Konto';
 $string['accountid:description'] =
         'Wählen Sie aus, über welchen Anbieter (Payment Account) die Zahlungen abgewickelt werden sollen.';
 $string['adddiscounttoitem'] = 'Der Preis dieses Artikels kann entweder um einen absoluten Betrag oder einen Prozentwert reduziert werden,
-    nicht aber um beides.';
+    nicht aber um beides. Wenn Sie einen negativen Wert als Betrag wählen, wird der Preis um diesen Betrag erhöht.';
 $string['addedtocart'] = '{$a} wurde in den Warenkorb gelegt.';
+$string['additionalconditions'] = "Zusätzliche Konditionen";
+$string['additionalconditions:description'] = "Sie können hier z.B. ein PDF verlinken. Für Übersetzungen verwenden Sie die
+ <a href='https://docs.moodle.org/402/de/Multi-language_content_filter' target='_blank'>Moodle Sprachfilter</a>.";
 $string['additonalcashiersection'] = 'Text für den Kassa-Bereich';
 $string['additonalcashiersection:description'] = 'HTML Shortcodes oder Buchungsoptionen für den Kassabereich hinzufügen';
 $string['addon'] = 'Zusätzliche Zeit festlegen';
@@ -44,6 +49,12 @@ $string['addresses:button'] = 'Weiter zur Adresseingabe';
 $string['addresses:change'] = 'Adresse ändern';
 $string['addresses:confirm:multiple'] = 'Ausgewählte Adressen verwenden';
 $string['addresses:confirm:single'] = 'Ausgewählte Adresse verwenden';
+$string['addresses:delete:description'] = 'Sind sie sich sicher diese Adresse zu löschen?';
+$string['addresses:delete:error'] = 'Ein Fehler ist aufgetreten beim Löschen';
+$string['addresses:delete:noaddressselected'] = 'Keine Addresse zum löschen ausgewählt';
+$string['addresses:delete:selected'] = 'Lösche ausgewählte Adresse';
+$string['addresses:delete:submit'] = 'Löschen bestätigen';
+$string['addresses:delete:success'] = 'Die Adresse wurde erfolgreich gelöscht';
 $string['addresses:heading'] = 'Adresse';
 $string['addresses:newaddress'] = 'Neue Adresse hinzufügen';
 $string['addresses:newaddress:address2:label'] = 'Addresszusatz';
@@ -86,8 +97,11 @@ $string['allowrebookingcredit'] = 'Umbuchungsgutschrift';
 $string['allowrebookingcredit_desc'] = 'Wenn Sie die Umbuchungsgutschrift aktivieren, bekommt ein:e Nutzer:in eine Gutschrift in Höhe der Buchungs- und Stornogebühr gutgeschrieben,
 wenn er:sie innerhalb der Stornofrist ein Item storniert und ein anderes bucht.';
 $string['alreadyincart'] = 'Das gewählte Item ist bereits im Warenkorb.';
+$string['alwaysanswerwithsuccessinverifypurchase'] = 'Immer mit erfolgreich auf im Validierungs Webservice antworten';
+$string['alwaysanswerwithsuccessinverifypurchase_desc'] = 'Dieses Feature wird nur von manchen Payment Providern verwendet und kann üblicherweise ignoriert werden.';
 $string['annotation'] = 'Anmerkung';
 $string['annotation_rebook_desc'] = 'Geben Sie eine Anmerkung oder die OrderID der Zahlungstransaktion an, die Sie nachbuchen wollen.';
+$string['appliedtoallitemsincart'] = 'Der ausgewählte Zeipunkt des Reservierungsendes wird auf alle Artikel im Warenkorb des/der Nutzer/in angewendet.';
 $string['applydiscount'] = 'Rabatt abziehen';
 $string['applytocomponent'] = 'Stornierung an Artikel Plugin melden';
 $string['applytocomponent_desc'] = 'Wird ein Artikel irrtümlich doppelt bezahlt, kann das Häkchen entfernt werden um hier zu stornieren, ohne dass die Käuferin aus z.B. dem Kurs ausgeschrieben wird.';
@@ -103,6 +117,7 @@ $string['bookingfeeonlyonce'] = 'Buchungsgebühr nur einmal einheben';
 $string['bookingfeeonlyonce_desc'] = 'Die Buchungsgebühr wird nur einmal für jede Nutzer:in eingehoben. Sobald einmal bezahlt wurde, sind alle weiteren Buchungen ohne Buchungsgebühr.';
 $string['bookingfeevariable'] = 'Variable Buchungsgebühr';
 $string['bookingfeevariable_desc'] = 'Entsprechend der Kostenstelle, können unterschiedliche Buchungsgebühren angegeben werden.';
+$string['cachedef_cachebookingpreprocess'] = 'Buchungsvorverarbeitung Cache';
 $string['cachedef_cachedcashreport'] = 'Kassajournal-Cache';
 $string['cachedef_cacherebooking'] = 'Umbuchungs-Cache (Rebooking Cache)';
 $string['cachedef_cacheshopping'] = 'Shopping Cache';
@@ -116,6 +131,10 @@ $string['calculateconsumationfixedpercentage_desc'] = 'Wenn Sie hier einen Proze
 $string['cancelationfee'] = 'Stornierungsgebühr';
 $string['cancelationfee:description'] = 'Automatisch vom Guthaben abgezogene Gebühr bei einer Stornierung durch die/den KäuferIn.
                                         -1 bedeutet, dass Stornierung durch Userin nicht möglich ist.';
+$string['cancelconfirmation'] = 'Stornierungsbestätigung';
+$string['cancelconfirmationshtml'] = 'HTML-Vorlage für Stornierungsbestätigungen';
+$string['cancelconfirmationshtmldesc'] = 'Leer lassen, um die gleiche Vorlage wie für Extra-Belege zu verwenden.
+Sie können die gleichen Platzhalter wie für die Standardbelege verwenden.';
 $string['canceldidntwork'] = 'Fehler beim Stornieren';
 $string['canceled'] = 'Storniert';
 $string['cancellationsettings'] = 'Stornierungseinstellungen';
@@ -166,8 +185,11 @@ $string['choose...'] = 'Auswählen...';
 $string['choosedefaultcountry'] = 'Standardland auswählen';
 $string['choosedefaultcountrydesc'] = 'Wählen Sie das Standardland für die Rechnungsadresse aus. Dieses wird verwendet,
  wenn die Kund/innen keine Angaben zur Rechnungsadresse machen.';
+ $string['choosehighertimestamp'] = 'Wählen Sie einen späteren Zeipunkt';
 $string['chooseplatform'] = 'Plattform wählen';
 $string['chooseplatformdesc'] = 'Wählen Sie Ihre Rechnungsplattform aus.';
+$string['completeshoppingcartprecheckout'] = 'Füllen Sie zunächst alle Pflichtfelder aus, um den Einkauf abzuschließen.';
+$string['confirmadditionalconditions'] = "Zusätzliche Konditionen akzeptieren";
 $string['confirmcancelallbody'] = 'Möchten Sie den Kauf für alle aktuellen Käufer:innen wirklich stornieren?
     Folgende Nutzer:innen erhalten den Kaufpreis zurück:
     {$a->userlist}
@@ -216,6 +238,7 @@ $string['confirmcanceltitle'] = 'Stornierung bestätigen';
 $string['confirmpaidback'] = 'Bestätige Auszahlung';
 $string['confirmpaidbackbody'] = 'Wollen Sie die Auszahlung bestätigen? Das setzt das Guthaben auf 0.';
 $string['confirmpaidbacktitle'] = 'Bestätige Auszahlung';
+$string['confirmpayment'] = 'Bezahlung bestätigen';
 $string['confirmterms'] = "AGBs akzeptieren";
 $string['confirmzeropricecheckout'] = 'Bestätige';
 $string['confirmzeropricecheckoutbody'] = 'Für diese Buchung ist keine Zahlung notwendig.
@@ -244,14 +267,14 @@ $string['creditsmanagerreason'] = 'Grund';
 $string['creditsmanagersuccess'] = 'Guthabenbuchung wurde durchgeführt.';
 $string['creditsused'] = 'Guthaben eingelöst';
 $string['creditsusedannotation'] = 'Extra-Zeile für eingelöstes Guthaben';
-$string['credittopayback'] = 'Zurückerstatteter Betrag';
+$string['credittopayback'] = 'Guthaben (vor Abzug der Stornogebühr)';
 $string['currency'] = 'Währung';
 $string['cy'] = "Zypern";
 $string['cz'] = "Tschechien";
 $string['dailysums:downloadpdf'] = 'Tageseinnahmen als PDF herunterladen';
 $string['dailysumspdfhtml'] = 'HTML-Vorlage für die Erstellung des Tagessumen-PDFs';
 $string['dailysumspdfhtml:description'] = 'Geben Sie HTML-Code ein, der als Vorlage für die Erstellung des Tagessumen-PDFs verwendet werden soll.
-Sie können die folgenden Platzhalter verwenden: [[title]], [[date]], [[totalsum]], [[printdate]], [[currency]], [[online]], [[cash]], [[creditcard]], [[debitcard]],
+Sie können die folgenden Platzhalter verwenden: [[title]], [[date]], [[totalsum]], [[totalcash]], [[printdate]], [[currency]], [[online]], [[cash]], [[creditcard]], [[debitcard]],
 [[manual]], [[creditspaidbackcash]], [[creditspaidbacktransfer]].<br>
 Lassen Sie das Feld leer, um die Standard-Vorlage zu verwenden.';
 $string['de'] = "Deutschland";
@@ -319,12 +342,18 @@ $string['error:negativevaluenotallowed'] = 'Bitte einen positiven Wert eingeben.
 $string['error:nofieldchosen'] = 'Sie müssen ein Feld auswählen.';
 $string['error:noreason'] = 'Bitte geben Sie einen Grund an.';
 $string['error:notpositive'] = 'Bitte geben Sie eine positive Zahl ein.';
+$string['error:useonlyonefield'] = 'Sie können jeweils nur eines dieser Felder nutzen';
 $string['errorinvalidvatnr'] = 'Die übermittelte UID {$a} ist ungültig';
 $string['errorselectcountry'] = 'Bitte Land auswählen';
 $string['es'] = "Spanien";
 $string['eu'] = "Europäische Union";
 $string['expirationtime'] = 'Anzahl Minuten für Ablauf des Warenkorbs';
 $string['expirationtime:description'] = 'Wie lange darf sich eine Buchung maximal im Warenkorb befinden?';
+$string['extrareceipt'] = 'Extra-Beleg';
+$string['extrareceipts'] = 'Buchungsbestätigungen auch für Extra-Zeilen im Kassajournal (z.B. "Guthabenrückzahlung bar") erstellen.';
+$string['extrareceiptshtml'] = 'HTML-Vorlage für Extra-Zeilen im Kassajournal';
+$string['extrareceiptshtmldesc'] = 'Lassen Sie dieses Feld leer, wenn Sie die gleiche Vorlage wie für normale Buchungsbestätigungen verwenden möchten.
+Sie können die selben Platzhalter wie bei den normalen Buchungsbestätigungen verwenden.';
 $string['failure'] = 'Fehler.';
 $string['fi'] = "Finnland";
 $string['firstname'] = 'Vorname';
@@ -389,9 +418,12 @@ $string['markedforrebooking'] = 'Fürs Umbuchen markiert';
 $string['markforrebooking'] = 'Kurs umbuchen';
 $string['maxitems'] = 'Max. Anzahl von Buchungen im Warenkorb';
 $string['maxitems:description'] = 'Maximale Anzahl von Buchungen im Warenkorb für den/die Nutzer/in festlegen';
+$string['modifytimeofdeletiontask'] = 'Bis wann sollen die Artikel im Warenkorb reserviert bleiben?';
+$string['modifytimeofdeletiontaskconfirmation'] = 'Artikel sind bis {$a} reserviert';
 $string['modulename'] = 'Warenkorb';
 $string['mt'] = "Malta";
 $string['mycart'] = 'Mein Warenkorb';
+$string['nextbutton'] = "Nächster Schritt";
 $string['nl'] = "Niederlande";
 $string['nocostcenter'] = 'Keine Kostenstelle';
 $string['nofixedpercentage'] = 'Kein fixer Prozentsatz';
@@ -412,6 +444,8 @@ $string['numberofpayments_help'] = 'Anzahl notwendiger Zahlungen NACH der ersten
 $string['numbersinitemname'] = "Zahlen in Artikelname";
 $string['on'] = "am";
 $string['onlyone'] = 'Nur einer dieser Werte kann mehr als 0 sein.';
+$string['onlywithvatnrnumber'] = "Nur mit valider VAT-Nummer";
+$string['onlywithvatnrnumber_desc'] = "Buchungen sind nur erlaubt, wenn eine gültige Vat_nummer hinterlegt ist.";
 $string['optioncancelled'] = 'Buchungsoption storniert';
 $string['orderdetails'] = 'Bestellübersicht';
 $string['orderid'] = 'OrderID';
@@ -469,15 +503,21 @@ $string['paymentsuccessful'] = 'Zahlung erfolgreich!';
 $string['paymentsuccessfultext'] = 'Der Zahlungsanbieter hat Ihre Zahlung bestätigt. Vielen Dank für Ihren Kauf!';
 $string['pending'] = 'Warten...';
 $string['pl'] = "Polen";
+$string['placeholderlabeldate'] = "";
+$string['placeholderlabelitemname'] = "";
+$string['placeholderlabelprice'] = " ";
 $string['pluginname'] = 'Warenkorb';
+$string['previousbutton'] = 'Vorheriger Schritt';
 $string['previouspurchases'] = 'Bisherige Käufe';
 $string['price'] = 'Preis';
 $string['print'] = 'Drucken';
 $string['privacyheading'] = "Privatsphäreneinstellungen";
 $string['privacyheadingdescription'] = "Einstellungen in Verbindung mit den Moodle Privatsphäreneinstellugnen";
+$string['prolongedpaymenttime'] = 'Verlängerte Reservierungszeit nach Bezahlbeginn';
+$string['prolongedpaymenttime_desc'] = 'Möchten Sie, dass beim Start des Bezahlvorgangs der/die Artikel eine bestimmte Dauer im Warenkorb bzw. reserviert bleiben? Geben Sie diese Reservierungsdauer in Minuten an.';
 $string['pt'] = "Portugal";
 $string['rebooking'] = 'Umbuchung';
-$string['rebookingalert'] = "Um umzubuchen fügen Sie bitte noch einen weiteren Kurs in Ihrem Einkaufswagen hinzu";
+$string['rebookingalert'] = "Um umzubuchen fügen Sie bitte noch einen weiteren Artikel in Ihrem Einkaufswagen hinzu";
 $string['rebookingcredit'] = 'Umbuchungsgutschrift';
 $string['rebookingfee'] = 'Umbuchungsgebühr';
 $string['rebookingfee_desc'] = 'Für jede Umbuchung wird eine Gebühr eingehoben, wenn die normale Stornoperiode vorbei ist.';
@@ -499,17 +539,17 @@ $string['receipt:total'] = 'Gesamtsumme';
 $string['receipt:transactionno'] = 'Transaktionsnummer';
 $string['receipthtml'] = 'HTML-Vorlage zur Erstellung von Kassenbelegen';
 $string['receipthtml:description'] = 'Sie können die folgenden Platzhalter verwenden:
-[[price]], [[pos]], [[name]], [[location]], [[dayofweektime]], [[originalprice]], [[outstandingprice]] zwischen [[items]] und [[/items]].
- Außerhalb von [[items]] können Sie auch [[sum]], [[firstname]], [[lastname]], [[mail]], [[address]], [[date]], [[invoice_number]] und [[order_number]] verwenden.
- Verwenden Sie nur einfaches HTML, das von TCPDF unterstützt wird.';
-$string['receiptimage'] = 'Hintergrundbild für den Kassenbeleg';
-$string['receiptimage:description'] = 'Laden Sie ein Hintergrundbild für den Kassenbeleg hoch, das z.B. Ihr Logo enthält.';
+[[price]], [[credits]], [[fee]], [[discount]], [[pos]], [[name]], [[location]], [[dayofweektime]], [[originalprice]], [[outstandingprice]] zwischen [[items]] und [[/items]].
+Außerhalb von [[items]] können Sie auch [[sum]], [[semester]], [[semestername]], [[semestershort]], [[firstname]], [[lastname]], [[mail]], [[address]],
+[[date]], [[invoice_number]] und [[order_number]] verwenden.
+Verwenden Sie nur einfaches HTML, das von TCPDF unterstützt wird.';
 $string['receipts'] = 'Buchungsbestätigungen';
 $string['remainingcredit'] = 'Verbleibendes Guthaben:';
 $string['remainingtotal'] = 'Preis:';
 $string['reminderdaysbefore'] = "Erinnerung x Tage vorher";
 $string['reminderdaysbefore_desc'] = "Die eingestellte Anzahl Tage vor fälliger Zahlung erscheint eine Nachricht für die/den Benutzer:in auf Ihrer Seite";
 $string['reports'] = 'Berichte';
+$string['reservationuntil'] = 'Reservierung bis:';
 $string['restart'] = 'Nächste/r KundIn';
 $string['ro'] = "Rumänien";
 $string['rounddiscounts'] = 'Rabatte runden';
@@ -536,6 +576,7 @@ $string['shoppingcarthistory'] = 'Alle bisherigen Käufe einer Person';
 $string['showdailysums'] = '&sum; Tageseinnahmen anzeigen';
 $string['showdailysumscurrentcashier'] = '&sum; Tageseinnahmen der aktuell eingeloggten Kassier:in anzeigen';
 $string['showdescription'] = 'Zeige Beschreibung';
+$string['showextrareceiptstousers'] = "Zeige Buchungsbestätigungen für Guthabenbuchungen in der Buchungsübersicht der Nutzer:innen";
 $string['showorderid'] = 'Order-ID anzeigen...';
 $string['showvatnrchecker'] = "Verwende UID Nummer und verzichte gegebenenfalls auf Umsatzsteuer";
 $string['showvatnrcheckerdescription'] = "Bei erfolgreicher Überprüfung kann auf die Einhebung der Umsatzsteuer verzichtet werden";
@@ -566,6 +607,7 @@ $string['titledailysums'] = 'Tageseinnahmen';
 $string['titledailysums:all'] = 'Gesamteinnahmen';
 $string['titledailysums:current'] = 'Aktuelle:r Kassier:in';
 $string['titledailysums:total'] = 'Saldo';
+$string['titledailysums:totalcash'] = 'Bar-Saldo';
 $string['token'] = 'Token';
 $string['tokendesc'] = 'Geben Sie Ihr Authentifizierungstoken ein. Für ERPNExt benützen sie: &lt;api_key&gt;:&lt;api_secret&gt;';
 $string['total'] = 'Gesamt:';
@@ -586,7 +628,10 @@ $string['usernotboughtitem'] = 'Nutzer/in mit der id {$a->userid} konnte den Ari
 $string['usevatnr'] = "UID eingeben";
 $string['vatnrcheckerheading'] = "UID überprüfen";
 $string['vatnrcheckerheadingdescription'] = "Vor dem Zahlen kann eine UID eingegeben und überprüft werden";
+$string['vatnrerrorfeedback'] = 'UID ist nicht gültig!';
+$string['vatnrvalidationfeedback'] = 'Gültige UID erkannt';
 $string['verify'] = "UID prüfen";
+$string['wronginputvalue'] = 'Die eingegebenen Werte sind ungültig.';
 $string['xi'] = "Nordirland";
 $string['youcancanceluntil'] = 'Sie können bis {$a} stornieren.';
 $string['youcannotcancelanymore'] = 'Stornieren ist nicht möglich.';

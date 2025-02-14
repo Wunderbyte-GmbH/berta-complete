@@ -25,14 +25,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['acceptadditionalconditions'] = "Require acceptance of additional conditions";
+$string['acceptadditionalconditions:description'] = "Without accepting additional conditions, buying is not possible.";
 $string['accepttermsandconditions'] = "Require acceptance of terms and conditions";
 $string['accepttermsandconditions:description'] = "Without accepting terms and conditions, buying is not possible.";
 $string['accessdenied'] = 'Access denied';
 $string['accountid'] = 'Payment account';
 $string['accountid:description'] = 'Choose your preferred payment account.';
 $string['adddiscounttoitem'] = 'You can reduce the price of this item either by a fixed sum or a percentage of the initial price.
-    You can\'t apply both at the same time.';
+    You can\'t apply both at the same time. If you enter a negative amount, this amout will added to the price that will therefore increase.';
 $string['addedtocart'] = '{$a} was added to your cart.';
+$string['additionalconditions'] = "Additional Conditions";
+$string['additionalconditions:description'] = "You can link to your PDF. For localization of this field, use
+ <a href='https://docs.moodle.org/402/en/Multi-language_content_filter' target='_blank'>Moodle multi-language filters</a>.";
 $string['additonalcashiersection'] = 'Add text for cashier section';
 $string['additonalcashiersection:description'] = 'Add HTML shortcodes or items to buy for the cashier shopping tab';
 $string['addon'] = 'Set addon time';
@@ -43,6 +48,12 @@ $string['addresses:button'] = 'Continue to address';
 $string['addresses:change'] = 'Change Address';
 $string['addresses:confirm:multiple'] = 'Choose selected addresses';
 $string['addresses:confirm:single'] = 'Choose selected address';
+$string['addresses:delete:description'] = 'Are you sure you want to delete the selected address?';
+$string['addresses:delete:error'] = 'Error occured deleting the address';
+$string['addresses:delete:noaddressselected'] = 'No address selected to delete';
+$string['addresses:delete:selected'] = 'Delete selected address';
+$string['addresses:delete:submit'] = 'Submit deletion';
+$string['addresses:delete:success'] = 'Successfully deleted address';
 $string['addresses:heading'] = 'Address';
 $string['addresses:newaddress'] = 'Add new address';
 $string['addresses:newaddress:address2:label'] = 'Additional address details';
@@ -86,8 +97,11 @@ $string['allowrebookingcredit'] = 'Rebooking credit';
 $string['allowrebookingcredit_desc'] = 'If you activate rebooking credit, a user will get refunded the cancelation and booking fee
 if (s)he cancels an item within the cancelation period and books another item.';
 $string['alreadyincart'] = 'The item is already in your cart.';
+$string['alwaysanswerwithsuccessinverifypurchase'] = 'Always answer with success in verify purchase webservice.';
+$string['alwaysanswerwithsuccessinverifypurchase_desc'] = 'This feature can normally be ignored, as it\'s only used by some payment providers.';
 $string['annotation'] = 'Annotation';
 $string['annotation_rebook_desc'] = 'Enter an annotation or the OrderID of the payment transaction you want to rebook.';
+$string['appliedtoallitemsincart'] = 'The time of reservation selected, will be applied to all items currently in the shopping cart of this user.';
 $string['applydiscount'] = 'Apply discount';
 $string['applytocomponent'] = 'Cancel without callback to plugin';
 $string['applytocomponent_desc'] = 'With this setting unchecked, you can cancel eg a double booking without unenroling a buyer from the bought course.';
@@ -103,6 +117,7 @@ $string['bookingfeeonlyonce'] = 'Charge booking fee only once';
 $string['bookingfeeonlyonce_desc'] = 'Every user pays the booking fee only once, no matter how many checkouts she makes.';
 $string['bookingfeevariable'] = 'Variable Booking Fee';
 $string['bookingfeevariable_desc'] = 'Depending on the costcenter, different booking fees can be specified.';
+$string['cachedef_cachebookingpreprocess'] = 'Booking preprocessing cache';
 $string['cachedef_cachedcashreport'] = 'Cash report cache';
 $string['cachedef_cacherebooking'] = 'Rebooking cache';
 $string['cachedef_cacheshopping'] = 'Shopping cache';
@@ -116,6 +131,10 @@ $string['calculateconsumationfixedpercentage_desc'] = 'If you choose a percentag
 $string['cancelationfee'] = 'Cancelation fee';
 $string['cancelationfee:description'] = 'Automatically deducted fee for cancelation by user.
                                         -1 means that cancelation by user is not possible.';
+$string['cancelconfirmation'] = 'Cancellation confirmation';
+$string['cancelconfirmationshtml'] = 'HTML template for cancellation confirmations';
+$string['cancelconfirmationshtmldesc'] = 'Leave this empty, if you want to use the same template as for the extra receipts.
+You can use the same placeholders as for the default receipts.';
 $string['canceldidntwork'] = 'Cancel didn\'t work';
 $string['canceled'] = 'Canceled';
 $string['cancellationsettings'] = 'Cancellation settings';
@@ -165,8 +184,11 @@ $string['choose...'] = 'Choose...';
 $string['choosedefaultcountry'] = 'Choose Default Country for Customers';
 $string['choosedefaultcountrydesc'] = 'Select the default country for your customers. If user does not provide invoice data, this
  country is selected for the invoice.';
+$string['choosehighertimestamp'] = 'Choose a later time';
 $string['chooseplatform'] = 'Choose Platform';
 $string['chooseplatformdesc'] = 'Select your invoicing platform.';
+$string['completeshoppingcartprecheckout'] = 'Submit all mandatory fields, before continuing with the payment process..';
+$string['confirmadditionalconditions'] = "I accept the additional conditions";
 $string['confirmcancelallbody'] = 'Do you really want to cancel this purchase for all users?
  The following users will get their money back as credit:
  {$a->userlist}
@@ -222,6 +244,7 @@ $string['confirmpaidback'] = 'Confirm';
 $string['confirmpaidbackbody'] =
  'Do you really want to confirm that you have paid back the user her credit? This will set her credit to 0.';
 $string['confirmpaidbacktitle'] = 'Confirm Payback';
+$string['confirmpayment'] = 'Confirm payment';
 $string['confirmterms'] = "I accept the terms and conditions";
 $string['confirmzeropricecheckout'] = 'Confirm';
 $string['confirmzeropricecheckoutbody'] = 'You do not have to pay anything. Do you want to proceed and book?';
@@ -240,7 +263,7 @@ $string['creditsmanager:payback'] = 'Pay back credits';
 $string['creditsmanagercredits'] = 'Correction value or credits to pay back';
 $string['creditsmanagercredits_help'] = 'If you have chosen "Correct credits" then enter the correction value here.
 Example: A user has 110 EUR in credits but should actually have 100 EUR in credits. In this case the correction value is -10.
-If you have chosen "Pay back credits" then enter the amount to pay back and choose if you want to pay back via cash or bank transfer.';
+If you have chosen "Pay back credits" then enter the Add credit and choose if you want to pay back via cash or bank transfer.';
 $string['creditsmanagercreditscostcenter'] = 'Costcenter to which the credit is assigned to';
 $string['creditsmanagercreditscostcenter_help'] = 'Select the costcenter for which the credit can be redeemed in the future. If you leave this field empty, it depends on your plugin-settings whether it can be redeemed for all or only for a specific costcenter.';
 $string['creditsmanagermode'] = 'What do you want to do?';
@@ -248,14 +271,14 @@ $string['creditsmanagerreason'] = 'Reason';
 $string['creditsmanagersuccess'] = 'Credits have been booked successfully';
 $string['creditsused'] = 'Credits used';
 $string['creditsusedannotation'] = 'Extra row because credits were used';
-$string['credittopayback'] = 'Amount to pay back';
+$string['credittopayback'] = 'Credits (before cancelation fee)';
 $string['currency'] = 'Currency';
 $string['cy'] = "Cyprus";
 $string['cz'] = "Czech Republic";
 $string['dailysums:downloadpdf'] = 'Download daily sums as PDF';
 $string['dailysumspdfhtml'] = 'HTML template for the daily sums PDF';
 $string['dailysumspdfhtml:description'] = 'Enter HTML to create the daily sums PDF. You can use the following placeholders:
-[[title]], [[date]], [[totalsum]], [[printdate]], [[currency]], [[online]], [[cash]], [[creditcard]], [[debitcard]],
+[[title]], [[date]], [[totalsum]], [[totalcash]], [[printdate]], [[currency]], [[online]], [[cash]], [[creditcard]], [[debitcard]],
 [[manual]], [[creditspaidbackcash]], [[creditspaidbacktransfer]].<br>
 Leave this empty to use the default template.';
 $string['de'] = "Germany";
@@ -324,12 +347,18 @@ $string['error:negativevaluenotallowed'] = 'Please enter a positive value.';
 $string['error:nofieldchosen'] = 'You have to choose a field.';
 $string['error:noreason'] = 'Please enter a reason.';
 $string['error:notpositive'] = 'Please enter a positive number.';
+$string['error:useonlyonefield'] = 'Can you use only one of these fields at the time';
 $string['errorinvalidvatnr'] = 'The given VAT number {$a} is invalid';
 $string['errorselectcountry'] = 'Please choose a country';
 $string['es'] = "Spain";
 $string['eu'] = "European Union";
 $string['expirationtime'] = 'Set expiration time in minutes';
 $string['expirationtime:description'] = 'How long should the item be in the cart?';
+$string['extrareceipt'] = 'Extra receipt';
+$string['extrareceipts'] = 'Also create receipts for special rows (like "Credits paid back").';
+$string['extrareceiptshtml'] = 'HTML template for extra rows';
+$string['extrareceiptshtmldesc'] = 'Leave this empty, if you want to use the same template as for normal receipts.
+You can use the same placeholders as for the default receipts.';
 $string['failure'] = 'Failure';
 $string['fi'] = "Finland";
 $string['firstname'] = 'First name';
@@ -394,9 +423,12 @@ $string['markedforrebooking'] = 'Marked for rebooking';
 $string['markforrebooking'] = 'Rebook to another course';
 $string['maxitems'] = 'Max. items in the shopping cart';
 $string['maxitems:description'] = 'Set the maximum number of items for the user shopping cart';
+$string['modifytimeofdeletiontask'] = 'Until when should the items remain reserved in the shopping cart?';
+$string['modifytimeofdeletiontaskconfirmation'] = 'Items will be preserved reserved until {$a}';
 $string['modulename'] = 'Shopping Cart';
 $string['mt'] = "Malta";
 $string['mycart'] = 'My Cart';
+$string['nextbutton'] = "Next Step";
 $string['nl'] = "Netherlands";
 $string['nocostcenter'] = 'No costcenter';
 $string['nofixedpercentage'] = 'No fixed percentage';
@@ -417,6 +449,8 @@ $string['numberofpayments_help'] = "This number refers to the required payments 
 $string['numbersinitemname'] = "Numbers in item name";
 $string['on'] = "on";
 $string['onlyone'] = 'Only one of these values can be more than 0';
+$string['onlywithvatnrnumber'] = "Only with valid VAT number";
+$string['onlywithvatnrnumber_desc'] = "Only allow bookings, if a valid VAT number is provided.";
 $string['optioncancelled'] = 'Booking option cancelled';
 $string['orderdetails'] = 'Order details';
 $string['orderid'] = 'OrderID';
@@ -474,7 +508,11 @@ $string['paymentsuccessful'] = 'Payment successful!';
 $string['paymentsuccessfultext'] = 'Your payment provider has confirmed the payment. Thank you for your purchase.';
 $string['pending'] = 'Pending';
 $string['pl'] = "Poland";
+$string['placeholderlabeldate'] = "";
+$string['placeholderlabelitemname'] = "";
+$string['placeholderlabelprice'] = "";
 $string['pluginname'] = 'Shopping Cart';
+$string['previousbutton'] = 'Previous step';
 $string['previouspurchases'] = 'Previous purchases';
 $string['price'] = 'Price';
 $string['print'] = 'Print';
@@ -544,6 +582,8 @@ $string['privacy:metadata:local_shopping_cart_ledger:userid'] = 'Id of the user 
 $string['privacy:metadata:local_shopping_cart_ledger:usermodified'] = 'Which user actually effectuated the transaction';
 $string['privacyheading'] = "Privacy settings";
 $string['privacyheadingdescription'] = "Set behaviour related to the privacy settings in Moodle";
+$string['prolongedpaymenttime'] = 'Extend reservation time after beginning of payment process';
+$string['prolongedpaymenttime_desc'] = 'Do you want the items to remain in the cart and reserved for a certain duration when the payment process starts? Specify this reservation duration in minutes.';
 $string['pt'] = "Portugal";
 $string['rebooking'] = 'Rebooking';
 $string['rebookingalert'] = "To rebook, add another course to your cart";
@@ -568,17 +608,17 @@ $string['receipt:total'] = 'Total sum';
 $string['receipt:transactionno'] = 'Transaction number';
 $string['receipthtml'] = 'Put in template for receipt';
 $string['receipthtml:description'] = 'You can use the following placeholders:
-[[price]], [[pos]], [[name]], [[location]], [[dayofweektime]], [[originalprice]], [[outstandingprice]] between [[items]] and [[/items]].
- Before and afterwards you can also use [[sum]], [[firstname]], [[lastname]], [[mail]], [[address]], [[date]], [[invoice_number]] and [[order_number]] (outside of [[items]] tag).
- Only use basic HTML supported by TCPDF';
-$string['receiptimage'] = 'Background image for cashiers receipt';
-$string['receiptimage:description'] = 'Set a background image, e.g. with logo';
+[[price]], [[credits]], [[fee]], [[discount]], [[pos]], [[name]], [[location]], [[dayofweektime]], [[originalprice]], [[outstandingprice]] between [[items]] and [[/items]].
+Before and afterwards you can also use [[sum]], [[semester]], [[semestername]], [[semestershort]], [[firstname]], [[lastname]], [[mail]], [[address]],
+[[date]], [[invoice_number]] and [[order_number]] (outside of [[items]] tag).
+Only use basic HTML supported by TCPDF';
 $string['receipts'] = 'Receipts';
 $string['remainingcredit'] = 'Remaining credit:';
 $string['remainingtotal'] = 'Price:';
 $string['reminderdaysbefore'] = "Reminder x days before";
 $string['reminderdaysbefore_desc'] = "X days before a payment is due, a reminder is shown to the concerned user on your site";
 $string['reports'] = 'Reports';
+$string['reservationuntil'] = 'Reservation until:';
 $string['restart'] = 'Next customer';
 $string['ro'] = "Romania";
 $string['rounddiscounts'] = 'Round discounts';
@@ -605,6 +645,7 @@ $string['shoppingcarthistory'] = 'All purchases of a given user';
 $string['showdailysums'] = '&sum; Show daily sums';
 $string['showdailysumscurrentcashier'] = '&sum; Show daily sums of current cashier';
 $string['showdescription'] = 'Show description';
+$string['showextrareceiptstousers'] = "Show receipts to for credit changes to users in their order history";
 $string['showorderid'] = 'Show Order-ID...';
 $string['showvatnrchecker'] = "Use VAT number and potentially waive VAT";
 $string['showvatnrcheckerdescription'] = "If successfully verified, VAT may be waived";
@@ -635,6 +676,7 @@ $string['titledailysums'] = 'Daily revenue';
 $string['titledailysums:all'] = 'All revenues';
 $string['titledailysums:current'] = 'Current cashier';
 $string['titledailysums:total'] = 'Total revenue';
+$string['titledailysums:totalcash'] = 'Total cash revenue';
 $string['token'] = 'Token';
 $string['tokendesc'] = 'Enter your authentication token. For ERPNext use &lt;api_key&gt;:&lt;api_secret&gt;';
 $string['total'] = 'Total:';
@@ -655,7 +697,10 @@ $string['usernotboughtitem'] = 'User with the userid {$a->userid} could not buy 
 $string['usevatnr'] = "Enter VAT number";
 $string['vatnrcheckerheading'] = "Check VAT number";
 $string['vatnrcheckerheadingdescription'] = "A VAT number can be entered and checked before payment";
+$string['vatnrerrorfeedback'] = 'Vat number is invalid!';
+$string['vatnrvalidationfeedback'] = 'Vat number was successfull validated';
 $string['verify'] = "Verify validity of VAT number";
+$string['wronginputvalue'] = 'The provided input value is invalid.';
 $string['xi'] = "Northern Ireland";
 $string['youcancanceluntil'] = 'You can cancel until {$a}.';
 $string['youcannotcancelanymore'] = 'No cancelation possible.';

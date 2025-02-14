@@ -348,4 +348,12 @@ $capabilities = [
             'manager' => CAP_ALLOW,
         ],
     ],
+    /* Capability to manage users on (new) report.php.  */
+    'mod/booking:managebookedusers' => [
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => [
+            'manager' => CAP_ALLOW,
+        ],
+    ],
 ];

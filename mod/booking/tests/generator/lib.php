@@ -23,6 +23,9 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_booking\booking_rules\booking_rules;
+use mod_booking\booking_rules\rules_info;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -145,7 +148,7 @@ class mod_booking_generator extends testing_module_generator {
         // Finalizing object with required properties.
         $record->id = 0;
         $record->cmid = $booking->cmid;
-        $record->identifier = booking_option::create_truly_unique_option_identifier();
+        $record->identifier = $record->identifier ?? booking_option::create_truly_unique_option_identifier();
 
         $context = context_module::instance($record->cmid);
 
@@ -164,20 +167,10 @@ class mod_booking_generator extends testing_module_generator {
         if (!empty($record->semesterid)) {
             // Force $bookingsettings->semesterid by given $record->semesterid.
             $DB->set_field('booking', 'semesterid', $record->semesterid, ['id' => $record->bookingid]);
-            // It might be necessary to reset cache.
-            // phpcs:ignore
-            //$semester = new semester($record->semesterid);
         }
 
         // Create / save booking option(s).
-        if ($record->id = booking_option::update($record, $context)) {
-            $record->optionid = $record->id;
-
-            // Add price (via API).
-            $price = new Mod_bookingPrice('option', $record->id);
-            $price->set_data($record);
-            booking_option::update($record, $context);
-        }
+        $record->id = booking_option::update($record, $context);
 
         return $record;
     }
@@ -332,6 +325,9 @@ class mod_booking_generator extends testing_module_generator {
      */
     public function create_rule($ruledraft = null) {
         global $DB;
+
+        rules_info::destroy_singletons();
+        booking_rules::$rules = [];
 
         $ruledraft = (object) $ruledraft;
 

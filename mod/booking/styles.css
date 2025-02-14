@@ -286,6 +286,9 @@ if there only was one booking option. */
 #page-mod-booking-edit-rules .booking-rules-cards {
     padding-top: 15px;
 }
+.booking-rules-list .ruleinactive {
+    color: gray; /* Sets the text color to gray */
+}
 
 /* Subbooking Timeslot */
 .mod-booking-timeslotbooking [data-bookable="1"] {
@@ -443,11 +446,16 @@ if there only was one booking option. */
 /* DO NOT USE #page-mod-booking-view because this needs to work in shortcodes too! */
 .mod-booking-view-list-image {
     width: inherit;
-    height: 100%; /* Fallback for unsupported browsers */
-    /* stylelint-disable-next-line declaration-block-no-duplicate-properties, csstree/validator */
-    height: -webkit-fill-available; /* WebKit-specific implementation */
+    height: 100%;
     object-fit: cover;
     max-height: 300px;
+    border-radius: 0;
+}
+
+.mod-booking-view-list-image-half {
+    width: inherit;
+    height: 100%;
+    object-fit: cover;
     border-radius: 0;
 }
 
@@ -501,18 +509,53 @@ if there only was one booking option. */
     color: red;
 }
 
+/* Make sure that spans within this container don't break.
+We need this for teachers for example. */
+.flex-wrap-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.flex-wrap-element {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* Styles for new report.php */
+#accordion-usertables .columnclass.option {
+    max-width: 100px;
+}
+
+/* Styles for new report.php */
+#accordion-usertables .card-header {
+    background: linear-gradient(to bottom, #f0f0f0, #fff);
+    border-bottom: 0;
+}
+
+#page-mod-booking-report2 div[class^='wunderbyte_table_container_'] {
+    /* stylelint-disable-next-line declaration-no-important */
+    margin: 0 !important;
+}
+
+#page-mod-booking-report2 .pagination {
+    font-size: calc(0.9rem + 0.045vw);
+    margin-left: 20px;
+}
+
 .disabled-profeature {
     color: grey;
     pointer-events: none; /* Disables clicks */
     opacity: 0.6; /* Makes it appear lighter */
     cursor: not-allowed; /* Shows a not-allowed cursor */
 }
-
 .disabled-profeature a {
     color: grey; /* Also greys out the link */
     text-decoration: none; /* Optional: Remove underline if it's styled */
 }
-
 .disabled-profeature a:hover {
     color: grey; /* Ensures hover doesn’t change color */
+}
+
+.bookingoption-edit-button {
+    text-decoration: none;
 }

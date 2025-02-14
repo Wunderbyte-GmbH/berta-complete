@@ -24,10 +24,10 @@
  */
 
 
-use local_shopping_cart\form\dynamicvatnrchecker;
 use local_shopping_cart\local\cartstore;
+use local_shopping_cart\local\checkout_process\checkout_manager;
+use local_shopping_cart\local\checkout_process\items_helper\address_operations;
 use local_shopping_cart\local\create_invoice;
-use local_shopping_cart\local\pricemodifier\modifiers\checkout;
 use local_shopping_cart\addresses;
 use local_shopping_cart\output\shoppingcart_history_list;
 use local_shopping_cart\shopping_cart;
@@ -39,6 +39,8 @@ require_once($CFG->dirroot . '/local/shopping_cart/lib.php');
 require_login();
 
 global $USER, $PAGE, $OUTPUT, $CFG, $ME;
+$PAGE->requires->css('/local/shopping_cart/styles.css');
+
 
 // Get the id of the page to be displayed.
 $success = optional_param('success', null, PARAM_INT);
@@ -123,42 +125,11 @@ if (isset($success) && isset($historylist)) {
         $data['failed'] = 1;
         $data['finished'] = 1;
     }
+    $data["userid"] = $USER->id;
 } else {
     $cartstore = cartstore::instance($userid);
     $data = $cartstore->get_localized_data();
-
-    $data["mail"] = $USER->email;
-    $data["name"] = $USER->firstname . $USER->lastname;
-    $data["userid"] = $USER->id;
-
-    // Makes sure no open purchase stays active.
-    shopping_cart::check_for_ongoing_payment($userid);
-
-    // This creates just our list of boght items.
-    $historylist = new shoppingcart_history_list($userid);
-    $historylist->insert_list($data);
-
-    // Here we are before checkout.
-    $expirationtime = shopping_cart::get_expirationtime();
-
-    // Add or reschedule all delete_item_tasks for all the items in the cart.
-    shopping_cart::add_or_reschedule_addhoc_tasks($expirationtime, $userid);
-
-    // The modifier "checkout" prepares our data for the checkout page.
-    // During this process,the new identifier is created, if necessary.
-    checkout::prepare_checkout($data);
-
-    // We add the vatnrcheckerform here, if necessary.
-    if (
-        get_config('local_shopping_cart', 'showvatnrchecker')
-        && !empty(get_config('local_shopping_cart', 'owncountrycode')
-        && !empty(get_config('local_shopping_cart', 'ownvatnrnumber')))
-    ) {
-        $vatnrchecker = new dynamicvatnrchecker();
-        $vatnrchecker->set_data_for_dynamic_submission();
-        $data['showvatnrchecker'] = $vatnrchecker->render();
-    }
-    $data['usecreditvalue'] = $data['usecredit'] == 1 ? 'checked' : '';
+    $cartstore->get_expanded_checkout_data($data);
 }
 
 // Address handling.
@@ -174,7 +145,7 @@ foreach ($requiredaddresskeys as $addresstype) {
         $addressid = "";
     }
     if ($addressid && !empty(trim($addressid)) && is_numeric($addressid)) {
-        $address = addresses::get_address_for_user($userid, $addressid);
+        $address = address_operations::get_specific_user_addresses($addressid);
         if ($address !== false) {
             $address->label = ucfirst($requriedaddresses[$addresstype]['addresslabel']);
             $address->country = $countries[$address->state];
@@ -191,7 +162,11 @@ if ($hasallrequiredaddresses) {
     $data['selected_addresses'] = $selectedaddresses;
     $data['show_selected_addresses'] = true;
 }
-$data['address_selection_required'] = !empty($requiredaddresskeys) && !$hasallrequiredaddresses;
+//$data['address_selection_required'] = !empty($requiredaddresskeys) && !$hasallrequiredaddresses;
+$checkoutmanager = new checkout_manager($data);
+
+$checkoutmanagerdata = $checkoutmanager->render_overview();
+$data = array_merge($data, $checkoutmanagerdata);
 if (empty($jsononly)) {
     // Convert numbers to strings with 2 fixed decimals right before rendering.
     shopping_cart::convert_prices_to_number_format($data);

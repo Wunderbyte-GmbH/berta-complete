@@ -82,11 +82,14 @@ final class booking_importer_test extends advanced_testcase {
         /** @var mod_booking_generator $plugingenerator */
         $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
         $pricecat1 = $plugingenerator->create_pricecategory(
-                ['ordernum' => '1', 'identifier' => 'default', 'name' => 'Price', 'defaultvalue' => '12']);
+            ['ordernum' => '1', 'identifier' => 'default', 'name' => 'Price', 'defaultvalue' => '12', 'pricecatsortorder' => 1]
+        );
         $pricecat2 = $plugingenerator->create_pricecategory(
-                ['ordernum' => '2', 'identifier' => 'intern', 'name' => 'Intern', 'defaultvalue' => '13']);
+            ['ordernum' => '2', 'identifier' => 'intern', 'name' => 'Intern', 'defaultvalue' => '13', 'pricecatsortorder' => 2]
+        );
         $testsemester = $plugingenerator->create_semester(
-                ['identifier' => 'fall2023', 'name' => 'Fall 2023', 'startdate' => '1695168000', 'enddate' => '1704067140']);
+            ['identifier' => 'fall2023', 'name' => 'Fall 2023', 'startdate' => '1695168000', 'enddate' => '1704067140']
+        );
         // For tests startdate = bookingopeningtime = 20.09.2023 00:00 and enddate = bookingclosingtime = 31.12.2023 23:59 GMT.
 
         // Setup booking defaults and create booking course module.
@@ -180,8 +183,8 @@ final class booking_importer_test extends advanced_testcase {
         // phpcs:ignore
         //$dates1 = $bookingoptionobj->return_array_of_sessions()); // Also works.
         $dates = dates_handler::return_array_of_sessions_datestrings($option1->id);
-        $this->assertEquals("25 September 2023, 5:15 PM - 7:30 PM", $dates[0]);
-        $this->assertEquals("25 December 2023, 5:15 PM - 7:30 PM", $dates[13]);
+        $this->assertEquals("25 September 2023, 5:15 PM - 7:30 PM", $dates[0]);
+        $this->assertEquals("25 December 2023, 5:15 PM - 7:30 PM", $dates[13]);
         $this->assertArrayNotHasKey(14, $dates);
 
         // Check prices.
@@ -227,8 +230,8 @@ final class booking_importer_test extends advanced_testcase {
         // Bookimg option must have sessions.
         $this->assertEquals(true, booking_utils::booking_option_has_optiondates($option3->id));
         $dates = dates_handler::return_array_of_sessions_datestrings($option3->id);
-        $this->assertEquals("20 September 2023, 6:10 PM - 7:40 PM", $dates[0]);
-        $this->assertEquals("27 December 2023, 6:10 PM - 7:40 PM", $dates[14]);
+        $this->assertEquals("20 September 2023, 6:10 PM - 7:40 PM", $dates[0]);
+        $this->assertEquals("27 December 2023, 6:10 PM - 7:40 PM", $dates[14]);
         $this->assertArrayNotHasKey(15, $dates);
 
         // Check prices.

@@ -30,15 +30,22 @@ final class DOMDocumentFactory
     {
         if (trim($xml) === '') {
             throw InvalidArgumentException::invalidType('non-empty string', $xml);
+        } elseif (preg_match('/<(\s*)!(\s*)DOCTYPE/', $xml)) {
+            throw new RuntimeException(
+                'Dangerous XML detected, DOCTYPE nodes are not allowed in the XML body'
+            );
         } elseif (PHP_VERSION_ID < 80000) {
             $entityLoader = libxml_disable_entity_loader(true);
+        } else {
+            libxml_set_external_entity_loader(null);
         }
 
         $internalErrors = libxml_use_internal_errors(true);
         libxml_clear_errors();
 
         $domDocument = self::create();
-        $options = LIBXML_DTDLOAD | LIBXML_DTDATTR | LIBXML_NONET | LIBXML_PARSEHUGE;
+        $options = LIBXML_NONET | LIBXML_PARSEHUGE;
+
         if (defined('LIBXML_COMPACT')) {
             $options |= LIBXML_COMPACT;
         }

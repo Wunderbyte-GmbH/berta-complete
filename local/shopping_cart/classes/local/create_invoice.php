@@ -170,10 +170,20 @@ class create_invoice {
      * @param int $userid
      * @param string $filename
      * @param bool $asstring
+     * @param string $idcol can be 'identifier' for normal receipts, or 'id' (ledger id)
+     *                      for special receipts like for credits paid back for example
+     * @param int $paymentstatus the payment status from ledger table
      *
      * @return string
      */
-    public static function create_receipt(int $identifier, int $userid, string $filename = '', bool $asstring = false): string {
+    public static function create_receipt(
+        int $identifier,
+        int $userid,
+        string $filename = '',
+        bool $asstring = false,
+        string $idcol = 'identifier',
+        int $paymentstatus = 2 // 2 means LOCAL_SHOPPING_CART_PAYMENT_SUCCESS.
+    ): string {
 
         global $CFG;
 
@@ -189,9 +199,11 @@ class create_invoice {
         switch (current_language()) {
             case 'de':
                 $dateformat = "d.m.Y";
+                $datetimeformat = "d.m.Y, H:i";
                 break;
             default:
                 $dateformat = "Y-m-d";
+                $datetimeformat = "Y-m-d, g:i a";
                 break;
         }
 
@@ -201,28 +213,107 @@ class create_invoice {
         $pdf = new TCPDF('p', 'pt', 'A4', true, 'UTF-8', false);
         // Set some content to print.
 
-        $filename = get_config('local_shopping_cart', 'receiptimage');
-        $cfghtml = get_config('local_shopping_cart', 'receipthtml');
-        $context = context_system::instance();
-        $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'local_shopping_cart', 'local_shopping_cart_receiptimage');
-        foreach ($files as $file) {
-            if ($file->get_filesize() > 0) {
-                $filename = $file->get_filename();
-                $imgurl = moodle_url::make_pluginfile_url(
-                    $file->get_contextid(),
-                    $file->get_component(),
-                    $file->get_filearea(),
-                    $file->get_itemid(),
-                    $file->get_filepath(),
-                    $file->get_filename(),
-                    true
-                );
+        // HTML templates.
+        $cfghtml = get_config('local_shopping_cart', 'receipthtml'); // Default HTML template.
+        $extrareceiptshtml = get_config('local_shopping_cart', 'extrareceiptshtml'); // For extra receipts like credits correction.
+        $cancelconfirmationshtml = get_config('local_shopping_cart', 'cancelconfirmationshtml'); // For cancel confirmations.
+
+        switch ($idcol) {
+            case 'id':
+                // In this case $identifier stores the ledger id.
+                $items = shopping_cart_history::return_data_from_ledger_via_id($identifier);
+                $newidentifier = $items[array_key_first($items)]->identifier;
+                if (!empty($newidentifier)) {
+                    $identifier = $newidentifier;
+                }
+                break;
+            case 'identifier':
+            default:
+                $items = shopping_cart_history::return_data_from_ledger_via_identifier($identifier);
+                break;
+        }
+
+        $timecreated = $items[array_key_first($items)]->timecreated;
+        $payment = $items[array_key_first($items)]->payment;
+
+        // Check if there as a separate HTML template for special rows without identifier.
+        if (in_array($payment, [8, 9])) {
+            if (!empty(trim(strip_tags($extrareceiptshtml)))) {
+                // If it's not empty, we use it instead of the default HTML template.
+                $cfghtml = $extrareceiptshtml;
+            }
+        } else if ($paymentstatus == 3) { // 3 means LOCAL_SHOPPING_CART_PAYMENT_CANCELED.
+            // For cancel confirmations we have an identifier and a payment status of 3.
+            if (!empty(trim(strip_tags($cancelconfirmationshtml)))) {
+                $cfghtml = $cancelconfirmationshtml;
+            } else if (!empty(trim(strip_tags($extrareceiptshtml)))) {
+                // Fallback.
+                $cfghtml = $extrareceiptshtml;
             }
         }
 
-        $items = shopping_cart_history::return_data_from_ledger_via_identifier($identifier);
-        $timecreated = $items[array_key_first($items)]->timecreated;
+        // Fallback, if no HTML is set.
+        if (empty(trim(strip_tags($cfghtml)))) {
+            $cfghtml =
+                '<table cellpadding="5" cellspacing="0" style="width: 100%; ">
+                    <tr>
+                        <td><!--<img src="url-to-your-logo"--></td>
+                        <td style="text-align: right">
+                        Date: [[date]]<br><br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="font-size:1.3em; font-weight: bold;">
+                        <br><br>
+                        Booking confirmation<br>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: left;">Transaction number: [[id]]</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="text-align: left;">
+                        [[firstname]] [[lastname]]<br>
+                        [[mail]]
+                        </td>
+                    </tr>
+                </table>
+                <br><br><br>
+                <table cellpadding="5" cellspacing="0" style="width: 100%;" border="0">
+                    <tr style="background-color: #cccccc; padding:5px;">
+                        <td style="text-align: center; width: 10%;"><b>#</b></td>
+                        <td style="text-align: left; width: 30%;"><b>Name</b></td>
+                        <td style="text-align: left; width: 15%;"><b>Location</b></td>
+                        <td style="text-align: left; width: 10%;"><b>Day & Time</b></td>
+                        <td style="text-align: center; width: 10%;"><b>Total</b></td>
+                        <td style="text-align: center; width: 10%;"><b>Outstanding</b></td>
+                        <td style="text-align: center; width: 15%;"><b>Paid</b></td>
+                    </tr>
+                    [[items]]
+                    <tr>
+                        <td style="text-align: center;">[[pos]]</td>
+                        <td style="text-align: left;">[[name]]</td>
+                        <td style="text-align: left;">[[location]]</td>
+                        <td style="text-align: left;">[[dayofweektime]]</td>
+                        <td style="text-align: right;">[[originalprice]] EUR</td>
+                        <td style="text-align: right;">[[outstandingprice]] EUR</td>
+                        <td style="text-align: right;">[[price]] EUR</td>
+                    </tr>
+                    [[/items]]
+                </table>
+                <hr>
+                <table cellpadding="5" cellspacing="0" style="width: 100%;" border="0">
+                    <tr>
+                        <td colspan="3"><b>Total sum: </b></td>
+                        <td style="text-align: right;"><b>[[sum]] EUR</b></td>
+                    </tr>
+                </table>';
+        }
+
+        // Make sure items are sorted from the most expensive on top to a credit (negative).
+        usort($items, function ($a, $b) {
+            return $b->price <=> $a->price; // Spaceship operator for comparison.
+        });
 
         foreach ($items as $item) {
             if (empty($addressbilling)) {
@@ -279,9 +370,20 @@ class create_invoice {
             $address .= ': <br>' .  $shippingaddress;
         }
 
-        $invoicenumber = invoicenumber::get_invoicenumber_by_identifier($identifier);
+        switch ($idcol) {
+            case 'id':
+                $invoicenumber = "{$identifier}"; // Special invoices start with X and have the ledger id as invoice number.
+                $cfghtml = str_replace("[[id]]", "{$identifier}", $cfghtml);
+                $cfghtml = str_replace("[[order_number]]", "{$identifier}", $cfghtml);
+                break;
+            case 'identifier':
+            default:
+                $invoicenumber = invoicenumber::get_invoicenumber_by_identifier($identifier);
+                $cfghtml = str_replace("[[id]]", $identifier, $cfghtml);
+                $cfghtml = str_replace("[[order_number]]", $identifier, $cfghtml);
+                break;
+        }
 
-        $cfghtml = str_replace("[[id]]", $identifier, $cfghtml);
         $cfghtml = str_replace("[[date]]", $date, $cfghtml);
         $cfghtml = str_replace("[[username]]", $user->username, $cfghtml);
         $cfghtml = str_replace("[[firstname]]", $user->firstname, $cfghtml);
@@ -291,7 +393,6 @@ class create_invoice {
         $cfghtml = str_replace("[[institution]]", $user->institution, $cfghtml);
         $cfghtml = str_replace("[[department]]", $user->department, $cfghtml);
         $cfghtml = str_replace("[[address]]", $address, $cfghtml);
-        $cfghtml = str_replace("[[order_number]]", $identifier, $cfghtml);
         $cfghtml = str_replace("[[invoice_number]]", $invoicenumber ?: '', $cfghtml);
 
         // We also add the possibility to use any custom user profile field as param.
@@ -374,11 +475,19 @@ class create_invoice {
             }
             $tmp = str_replace("[[name]]", $item->itemname, $tmp);
             $tmp = str_replace("[[pos]]", $pos, $tmp);
+            $tmp = str_replace("[[credits]]", $item->credits ?? 0, $tmp);
+            $tmp = str_replace("[[fee]]", $item->fee ?? 0, $tmp);
+            $tmp = str_replace("[[discount]]", $item->discount ?? 0, $tmp);
 
             // If it's a booking option, we add option-specific data.
             if ($item->area == "option" && class_exists('mod_booking\singleton_service')) {
                 $optionid = $item->itemid;
                 $optionsettings = \mod_booking\singleton_service::get_instance_of_booking_option_settings($optionid);
+                $bookingsettings = \mod_booking\singleton_service::get_instance_of_booking_settings_by_cmid($optionsettings->cmid);
+
+                // If option has no semester id, then use semester id from instance.
+                $semesterid = $optionsettings->semesterid ?? $bookingsettings->semesterid ?? 0;
+
                 if (
                     empty($optionsettings->location) &&
                     !empty($optionsettings->sessions) &&
@@ -391,30 +500,20 @@ class create_invoice {
                         if (empty($entity)) {
                             continue;
                         }
-                        $optionsettings->location = $entity->name;
+                        $optionsettings->location = $entity->name ?? '';
                         break;
                     }
                 }
                 $tmp = str_replace("[[location]]", $optionsettings->location ?? '', $tmp); // Add location.
                 $tmp = str_replace("[[dayofweektime]]", $optionsettings->dayofweektime ?? '', $tmp); // E.g. "Mo, 10:00 - 12:00".
                 $coursestarttime = !empty($optionsettings->coursestarttime)
-                    ? date($dateformat, $optionsettings->coursestarttime) : $date;
+                    ? date($datetimeformat, $optionsettings->coursestarttime) . get_string('h', 'mod_booking') : $date;
                 $tmp = str_replace("[[coursestarttime]]", $coursestarttime ?? '', $tmp); // E.g. "Mo, 10:00 - 12:00".
-
-                // Special handling for semester placeholder.
-                if (
-                    !empty($semesterid = $optionsettings->semesterid) &&
-                    $record = $DB->get_record('booking_semesters', ['id' => $semesterid])
-                ) {
-                    $semester = $record->name . " ($record->identifier)";
-                    $tmp = str_replace("[[semester]]", $semester ?? '', $tmp);
-                };
             } else {
                 // Placeholders should be replaced with an empty string in case it's no booking option.
                 $tmp = str_replace("[[location]]", '', $tmp);
                 $tmp = str_replace("[[dayofweektime]]", '', $tmp);
                 $tmp = str_replace("[[coursestarttime]]", '', $tmp);
-                $tmp = str_replace("[[semester]]", '', $tmp);
             }
 
             $sum += $price;
@@ -439,12 +538,39 @@ class create_invoice {
             }
         </style>
         ' . $prehtml[0] . $itemhtml . $posthtml;
-        // Print text using writeHTMLCell().
+
+        // Special handling for semester placeholder.
+        if (empty($semesterid) && class_exists('mod_booking\booking')) {
+            $semesterid = $DB->get_field_sql(
+                "SELECT id
+                FROM {booking_semesters}
+                WHERE startdate <= :date1
+                AND enddate >= :date2
+                LIMIT 1",
+                [
+                    'date1' => $timecreated,
+                    'date2' => $timecreated,
+                ]
+            );
+        }
+        if (!empty($semesterid) && class_exists('mod_booking\booking')) {
+            $record = $DB->get_record('booking_semesters', ['id' => $semesterid]);
+            $semestername = $record->name;
+            $semestershort = $record->identifier;
+            $semester = $semestername . " ($semestershort)";
+            $html = str_replace("[[semestername]]", $semestername ?? '', $html);
+            $html = str_replace("[[semestershort]]", $semestershort ?? '', $html);
+            $html = str_replace("[[semester]]", $semester ?? '', $html);
+        } else {
+            $html = str_replace("[[semester]]", '', $html);
+            $html = str_replace("[[semestername]]", '', $html);
+            $html = str_replace("[[semestershort]]", '', $html);
+        }
 
         // Set document information.
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor($user->email);
-        $pdf->SetTitle('bookingreceipt_' . $identifier . '_' . $userid . '_' . $date);
+        $pdf->SetTitle('bookingreceipt_' . $invoicenumber . '_' . $userid . '_' . $date);
         $pdf->SetSubject('');
         $pdf->SetKeywords('');
 
@@ -475,26 +601,9 @@ class create_invoice {
 
         $pdf->AddPage();
 
-        if (isset($imgurl)) {
-            $pdf->Image(
-                $imgurl->out(false),
-                0,
-                0,
-                $pdf->getPageWidth(),
-                $pdf->getPageHeight(),
-                "",
-                "",
-                "",
-                true,
-                "300",
-                "",
-                false,
-                false,
-                0
-            );
-        }
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
+        // Print text using writeHTMLCell().
+        // Now, we write the HTML into a TCPDF cell.
+        $pdf->writeHTMLCell(0, 0, null, null, $html, 0, 1, 0, true, '', true);
         ob_end_clean();
 
         $filename = $user->firstname . '_' . $user->lastname . '_' . $date . '.pdf';

@@ -1,3 +1,47 @@
+## Version 0.9.52 (2025020700)
+* Improvement: Improvement: Add setting to always return status 1 in verify purchase
+* Improvement: Add credit changes to shopping cart history for individual users #125
+
+## Version 0.9.51 (2025012900)
+* Improvement: Show cancel confirmations in shopping cart history. #124
+
+## Version 0.9.50 (2025012200)
+* New feature: Cancel confirmations in cash report (#122).
+* Improvement: Allow to increase price MUSI-573 #112
+* Improvement: Enable cashier to change value of downpayment MUSI-590 #113
+* Improvement: Linting (php 7.4 compatibility).
+* Bugfix: Don't use implicit int conversion #121
+* Bugfix: Missing entity name could create a problem.
+* Tests: new behat Scenario: Shopping Cart cashier: use installment and change downpayment (#121)
+* Tests: adjust behat to test downpayment along with discount (#121)
+* Tests: Add new unit test to test purchase and cancelation with discounts (to be extended).
+* Tests: Fix behat and PHPDoc.
+
+## Version 0.9.49 (2025011500)
+* Improvement: When no credits, it's 0 instead of empty in invoice.
+* Improvement: Do not hide receipts for cancelled items. #119
+* Bugfix: Fix erpnext.yml.
+* Bugfix: Correctly display time in receipt
+
+## Version 0.9.48 (2024122000)
+* Improvement: Add possibility to differentiate between receipts and extra receipts.
+* Improvement: Add default html for extrareceiptshtml (#116).
+
+## Version 0.9.47 (2024121800)
+* New feature: Modify expiration of item in cart #114.
+* Improvement: Add minutes & hour to coursestarttime.
+* Bugfix: Fix grunting.
+
+## Version 0.9.46 (2024121200)
+* Improvement: add labels to placeholders in checkout success
+* Bugfix: New placeholders [[semester]], [[semestername]], [[semestershort]] now really work
+* Improvement: apply daily sums to report table
+
+## Version 0.9.45 (2024121100)
+* New feature: Create receipts for ledger records without identifier (for example for credits paid back)
+* Improvement: New placeholder [[credits]]
+* Improvement: Add new semester placeholders to invoices (receipts)
+
 ## Version 0.9.44 (2024120501)
 * Bugfix: Make sure we always get rid of the old costcenter
 

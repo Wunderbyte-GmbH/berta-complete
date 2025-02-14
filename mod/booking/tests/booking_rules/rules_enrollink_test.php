@@ -154,10 +154,10 @@ final class rules_enrollink_test extends advanced_testcase {
         $record->bookingid = $booking->id;
         $record->text = 'Option-2050';
         $record->description = 'Will start 2050';
-        $record->optiondateid_1 = "0";
-        $record->daystonotify_1 = "0";
-        $record->coursestarttime_1 = strtotime('20 June 2050 15:00');
-        $record->courseendtime_1 = strtotime('20 July 2050 14:00');
+        $record->optiondateid_0 = "0";
+        $record->daystonotify_0 = "0";
+        $record->coursestarttime_0 = strtotime('20 June 2050 15:00');
+        $record->courseendtime_0 = strtotime('20 July 2050 14:00');
         $record->teachersforoption = $teacher1->username;
         // Set test objective setting(s).
         $record->chooseorcreatecourse = 1; // Connected existing course.
@@ -168,6 +168,7 @@ final class rules_enrollink_test extends advanced_testcase {
         $record->bo_cond_customform_select_1_1 = 'enrolusersaction';
         $record->bo_cond_customform_label_1_1 = 'Number of user';
         $record->bo_cond_customform_value_1_1 = 1;
+        $record->importing = 1;
 
         $option1 = $plugingenerator->create_option($record);
         singleton_service::destroy_booking_option_singleton($option1->id);

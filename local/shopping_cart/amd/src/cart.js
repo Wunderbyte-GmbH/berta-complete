@@ -36,6 +36,7 @@ import {
     get_string as getString
         }
         from 'core/str';
+import {modifyTimeModal} from './cashier';
 
 export var interval = null;
 export var visbilityevent = false;
@@ -52,6 +53,7 @@ const SELECTORS = {
     NAVBARCONTAINER: '#nav-shopping_cart-popover-container .shopping-cart-items-container',
     TRASHCLASS: 'fa-trash-o',
     DISCOUNTCLASS: 'shoppingcart-discount-icon',
+    MODIFYTIMECLASS: 'shoppingcart-modifytime-icon',
     BADGECOUNT: '#nav-shopping_cart-popover-container div.count-container',
     COUNTDOWN: '#nav-shopping_cart-popover-container span.expirationtime',
     CASHIERSCART: 'div.shopping-cart-cashier-items-container',
@@ -61,7 +63,7 @@ const SELECTORS = {
     PRICELABELAREA: '.sc_price_label',
     CHECKOUTBUTTON: '#nav-shopping_cart-popover-container #shopping-cart-checkout-button',
     PAYMENTREGIONBUTTON: 'div.shopping_cart_payment_region button',
-    ACCEPTTERMS: '#accepttermsnandconditions',
+    ACCEPTTERMS: '#accepttermsandconditions',
     CHECKVATNRFORM: 'div.form_vatnrchecker',
 };
 /**
@@ -70,9 +72,6 @@ const SELECTORS = {
  */
 
  export const init = (expirationtime, nowdate) => {
-
-    // eslint-disable-next-line no-console
-    console.log(expirationtime, nowdate);
 
     initTimer(expirationtime, nowdate);
 
@@ -98,8 +97,9 @@ const SELECTORS = {
 
                 deleteItem(itemid, component, area, userid);
             } else if (element.classList.contains(SELECTORS.DISCOUNTCLASS)) {
-
                 discountModal(event);
+            } else if (element.classList.contains(SELECTORS.MODIFYTIMECLASS)) {
+                modifyTimeModal(event);
             }
         });
     });
@@ -551,13 +551,15 @@ export const updateTotalPrice = (userid = 0, usecredit = true, useinstallments =
  * Looks for the payment buttun, updates cost and adds the listener.
  * @param {*} data
  */
-function addZeroPriceListener(data) {
+export function addZeroPriceListener(data) {
 
-    let paymentbutton = document.querySelector(".shopping_cart_payment_region button");
+    let paymentbutton = document.querySelector(SELECTORS.PAYMENTREGIONBUTTON);
 
     if (paymentbutton) {
 
         if (paymentbutton.classList.contains('disabled')) {
+            // eslint-disable-next-line no-console
+            console.log('button disabled');
             return;
         }
 
@@ -567,10 +569,8 @@ function addZeroPriceListener(data) {
         paymentbutton.dataset.cost = price + " " + currency;
 
         if (price == 0) {
-
             paymentbutton.addEventListener('click', dealWithZeroPrice);
         } else {
-
             paymentbutton.removeEventListener('click', dealWithZeroPrice);
         }
     }
@@ -734,6 +734,9 @@ export function addItemShowNotification(data) {
  * @param {*} event
  */
 async function dealWithZeroPrice(event) {
+
+    // eslint-disable-next-line no-console
+    console.log('click event');
 
     event.stopPropagation();
     event.preventDefault();
@@ -934,9 +937,6 @@ function toggleActiveButtonState(button = null) {
  * @param {*} userid
  */
 export function initPriceLabel(userid) {
-
-    // eslint-disable-next-line no-console
-    console.log('initpricelabel');
 
     if (userid < 1) {
         userid = 0;

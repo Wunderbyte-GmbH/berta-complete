@@ -70,6 +70,7 @@ $string['editdescription'] = 'Edit description';
 $string['editnews'] = 'Edit newselements';
 $string['substitutionspool'] = 'Substitutions pool for {$a}';
 $string['editsubstitutionspool'] = 'Edit substitutions pool';
+$string['viewsapfiles'] = 'View SAP files';
 $string['viewsubstitutionspool'] = 'View substitutions pool';
 $string['mailtosubstitutionspool'] = 'Send email to substitutions pool';
 $string['substitutionspool:infotext'] = 'Teachers allowed to substitute <b>{$a}</b>:';
@@ -82,16 +83,19 @@ $string['sportsdivision'] = 'Type of courses';
 $string['sportsdivisions'] = 'Types of courses';
 $string['titleprefix'] = 'Course number';
 $string['unknown'] = 'Unknown';
+$string['merchantref'] = 'MerchantRef';
+$string['customorderid'] = 'CustomOrderID';
 
 $string['format'] = "Format";
 $string['german'] = 'German';
+$string['germanenglish'] = 'German & English';
 $string['english'] = 'English';
 $string['onsite'] = 'On site';
 $string['hybrid'] = 'Hybrid';
 $string['blendedlearningonsite'] = 'Blended learning with on-site sessions';
 $string['blendedlearningonline'] = 'Blended learning with online sessions';
-$string['blendedlearningonline'] = 'Blended learning with hybrid sessions';
-$string['onsite'] = 'Online session';
+$string['blendedlearninghybrid'] = 'Blended learning with hybrid sessions';
+$string['online'] = 'Online session';
 $string['selfpaced'] = 'Self-paced course';
 
 // Errors.
@@ -105,7 +109,7 @@ $string['allcourses'] = 'All courses';
 $string['listofsports'] = 'Types of courses';
 $string['listofsports_desc'] = 'View and edit the list of courses on this system';
 
-$string['numberofcourses'] = 'Courses';
+$string['numberofcourses'] = 'Moodle Courses';
 $string['numberofcourses_desc'] = 'Information about courses and bookings on this platform.';
 
 $string['numberofentities'] = 'Number of entities';
@@ -247,7 +251,7 @@ $string['vuenotificationtitleactionsuccess'] = 'Configuration was {$a}';
 $string['vuenotificationtextactionsuccess'] = 'Configuration was {$a} successfully.';
 $string['vuenotificationtitleactionfail'] = 'Configuration was not  {$a}';
 $string['vuenotificationtextactionfail'] = 'Something went wrong while saving. The changes have not been made.';
-$string['vuedashboardgotocategory'] = 'Go to category';
+$string['vuedashboardgotocategory'] = 'Go to landing page';
 $string['vuenotabsfounds'] = 'No tabs were found';
 
 // Access.
@@ -319,7 +323,7 @@ $string['waitforconfirmation'] = 'Book only after confirmation';
 // Filter.
 $string['organisation'] = 'Organisation';
 $string['location'] = 'Location';
-$string['competency'] = 'Competency';
+$string['competency'] = 'Competencies';
 
 // Nav.
 $string['urise'] = 'u:rise';
@@ -511,6 +515,7 @@ $string['organisationfilterdefinition'] = "Organisation filter";
 $string['organisationfilterdefinition_desc'] = "You need to add the filter of hierarchical organisation structure here.";
 
 $string['bibliothekszielgruppe'] = 'Library';
+$string['studentmultipliers'] = 'Student multipliers';
 $string['students'] = 'Students';
 $string['doctoralcandidates'] = 'Doctoral candidates';
 $string['lecturers'] = 'University lecturers';
@@ -567,6 +572,11 @@ $string['technologienutzung'] = 'IT skills';
 $string['termsandconditions'] = 'With booking I accept the&nbsp;<a href="{$a}" target="_blank">terms and conditions</a>.';
 $string['fuehrungskompetenzen'] = "Leadership competencies";
 $string['educationalleadershipandmanagement'] = 'Educational Leadership & Management';
+$string['teamfuehrungentwicklung'] = 'Team leadership & development';
+$string['selbstfuehrung'] = 'Self-leadership';
+$string['mitarbeitendefoerdern'] = 'Staff development';
+$string['entscheidungskompetenzen'] = 'Decision-making competence';
+$string['strategischeplanungentwicklung'] = 'Strategic planning & implementation';
 $string['sonstige'] = "Others";
 $string['sonstigekompetenzen'] = 'other competencies';
 
@@ -596,3 +606,5 @@ $string['basiswissenbiblio'] = "Basiswissen Bibliothek";
 $string['literatursuche'] = "Literatursuche";
 $string['orgauethikwissenschaft'] = "Organisation und Ethik des wissenschaftlichen Arbeitens";
 $string['spezialwissenbiblio'] = "Spezialwissen Bibliothek";
+
+$string['roleforselfregisteredusers'] = "Role for self-registered users";

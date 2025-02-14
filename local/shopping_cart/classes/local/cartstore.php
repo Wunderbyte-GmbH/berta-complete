@@ -26,8 +26,12 @@
 namespace local_shopping_cart\local;
 
 use coding_exception;
+use local_shopping_cart\form\dynamicvatnrchecker;
+use local_shopping_cart\local\checkout_process\items_helper\address_operations;
 use local_shopping_cart\local\entities\cartitem;
 use local_shopping_cart\local\pricemodifier\modifier_info;
+use local_shopping_cart\output\shoppingcart_history_list;
+use local_shopping_cart\local\pricemodifier\modifiers\installments;
 use local_shopping_cart\shopping_cart;
 use moodle_exception;
 use context_system;
@@ -158,6 +162,7 @@ class cartstore {
      * @param int $itemid
      * @param float $percent
      * @param float $absolute
+     * @param float $downpayment
      * @return array
      */
     public function add_discount_to_item(
@@ -165,7 +170,9 @@ class cartstore {
         string $area,
         int $itemid,
         float $percent,
-        float $absolute): array {
+        float $absolute,
+        float $downpayment = -1
+    ): array {
 
         $context = context_system::instance();
         if (!has_capability('local/shopping_cart:cashier', $context)) {
@@ -189,7 +196,6 @@ class cartstore {
         $initialprice = $item['price'] + $initialdiscount;
 
         if (!empty($percent)) {
-
             // Validation of percent value.
             if ($percent < 0 || $percent > 100) {
                 throw new moodle_exception('absolutevalueinvalid', 'local_shopping_cart');
@@ -197,14 +203,16 @@ class cartstore {
             $item['discount'] = $initialprice / 100 * $percent;
 
             // If setting to round discounts is turned on, we round to full int.
-            $item['discount'] = round($item['discount'],
-                    $discountprecision);
+            $item['discount'] = round(
+                $item['discount'],
+                $discountprecision
+            );
 
             $item['price'] =
                     $initialprice - $item['discount'];
         } else if (!empty($absolute)) {
             // Validation of absolute value.
-            if ($absolute < 0 || $absolute > $initialprice) {
+            if ($absolute > $initialprice) {
                 throw new moodle_exception('absolutevalueinvalid', 'local_shopping_cart');
             }
             $item['discount'] = $absolute;
@@ -217,6 +225,9 @@ class cartstore {
             // If both are empty, we unset discount.
             $item['price'] = $initialprice;
             unset($item['discount']);
+        }
+        if ($downpayment >= 0) {
+            installments::set_downpayment_for_user_and_option($this->userid, $itemid, $downpayment);
         }
 
         $this->save_item($item);
@@ -235,7 +246,8 @@ class cartstore {
     public function get_item(
         string $component,
         string $area,
-        int $itemid) {
+        int $itemid
+    ) {
 
         $data = $this->get_cache();
 
@@ -505,6 +517,47 @@ class cartstore {
             }
         }
         return $data;
+    }
+
+    /**
+     * Return the data with localized strings.
+     *
+     * @return mixed
+     */
+    public function get_expanded_checkout_data(&$data) {
+        global $USER;
+        $data["mail"] = $USER->email;
+        $data["name"] = $USER->firstname . $USER->lastname;
+        $data["userid"] = $USER->id;
+
+        // Makes sure no open purchase stays active.
+        shopping_cart::check_for_ongoing_payment($USER->id);
+
+        // This creates just our list of boght items.
+        $historylist = new shoppingcart_history_list($USER->id);
+        $historylist->insert_list($data);
+
+        // Here we are before checkout.
+        $expirationtime = shopping_cart::get_expirationtime();
+
+        // Add or reschedule all delete_item_tasks for all the items in the cart.
+        shopping_cart::add_or_reschedule_addhoc_tasks($expirationtime, $USER->id);
+
+        // The modifier "checkout" prepares our data for the checkout page.
+        // During this process,the new identifier is created, if necessary.
+        checkout::prepare_checkout($data);
+
+        // We add the vatnrcheckerform here, if necessary.
+        if (
+            get_config('local_shopping_cart', 'showvatnrchecker')
+            && !empty(get_config('local_shopping_cart', 'owncountrycode')
+            && !empty(get_config('local_shopping_cart', 'onlywithvatnrnumber')))
+        ) {
+            $vatnrchecker = new dynamicvatnrchecker();
+            $vatnrchecker->set_data_for_dynamic_submission();
+            //$data['showvatnrchecker'] = $vatnrchecker->render();
+        }
+        $data['usecreditvalue'] = $data['usecredit'] == 1 ? 'checked' : '';
     }
 
 
@@ -916,7 +969,7 @@ class cartstore {
         }
 
         if ($billingaddressid != null) {
-            $billingaddress = addresses::get_address_for_user($this->userid, $billingaddressid);
+            $billingaddress = address_operations::get_specific_user_addresses($billingaddressid);
             $taxcountrycode = $billingaddress->state;
         }
         $data["taxcountrycode"] = $taxcountrycode;

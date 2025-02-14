@@ -133,6 +133,16 @@ class shoppingcart_history_list implements renderable, templatable {
             }
         } else {
             $items = shopping_cart_history::get_history_list_for_user($userid);
+
+            $ledgeritems = shopping_cart_history::return_extra_lines_from_ledger($userid);
+
+            if (get_config('local_shopping_cart', 'showextrareceiptstousers')) {
+                $items = array_merge($ledgeritems, $items);
+
+                usort($items, function ($a, $b) {
+                    return $b->timemodified <=> $a->timemodified;
+                });
+            }
         }
         $iscashier = false;
         $context = context_system::instance();
@@ -147,6 +157,34 @@ class shoppingcart_history_list implements renderable, templatable {
 
         // We transform the stdClass from DB to array for template.
         foreach ($items as $item) {
+            // We might have an item from ledger.
+            if (
+                get_config('local_shopping_cart', 'showextrareceiptstousers')
+                && empty($item->uniqueid)
+                && in_array($item->payment, [8, 9])
+            ) {
+                // Receipt URL for the item.
+
+                $urloptions = [
+                    'id' => $item->identifier,
+                    'userid' => $item->userid,
+                ];
+
+                if (empty($item->identifier)) {
+                    $urloptions['idcol'] = 'id';
+                    $urloptions['id'] = $item->id;
+                }
+
+                $item->receipturl = new moodle_url("/local/shopping_cart/receipt.php", $urloptions);
+
+                // We want to show the credits at the place of the price.
+                $item->price = $item->credits;
+                $item->date = date('Y-m-d', $item->timemodified);
+                $item->buttonclass = ' hidden ';
+                $this->historyitems[] = (array)$item;
+                continue;
+            }
+
             // Receipt URL for the item.
             $item->receipturl = new moodle_url("/local/shopping_cart/receipt.php", [
                 'id' => $item->identifier,
@@ -168,8 +206,13 @@ class shoppingcart_history_list implements renderable, templatable {
                                 FROM {local_shopping_cart_ledger}
                                WHERE schistoryid = :schistoryid
                                  AND identifier <> :identifier
-                                 AND identifier IS NOT NULL",
-                    ['schistoryid' => $schistoryid, 'identifier' => $item->identifier]
+                                 AND identifier IS NOT NULL
+                                 AND paymentstatus = :paymentstatus",
+                    [
+                        'schistoryid' => $schistoryid,
+                        'identifier' => $item->identifier,
+                        'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_SUCCESS,
+                    ]
                 );
                 if (!empty($additionalidentifiers)) {
                     $item->hasinstallments = true;
@@ -186,6 +229,36 @@ class shoppingcart_history_list implements renderable, templatable {
                             ]),
                         ];
                     }
+                }
+                // If it was canceled, we might have an identifier for the canceled item.
+                $canceledidentifier = $DB->get_field_sql(
+                    "SELECT identifier
+                       FROM {local_shopping_cart_ledger}
+                      WHERE schistoryid = :schistoryid
+                        AND identifier <> :identifier
+                        AND identifier IS NOT NULL
+                        AND paymentstatus = :paymentstatus
+                      LIMIT 1",
+                    [
+                        'schistoryid' => $schistoryid,
+                        'identifier' => $item->identifier,
+                        'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_CANCELED,
+                    ]
+                );
+                if (!empty($canceledidentifier)) {
+                    $item->cancelconfirmation = [
+                        'identifier' => $canceledidentifier,
+                        'cancelconfirmationurl' => new moodle_url(
+                            '/local/shopping_cart/receipt.php',
+                            [
+                                'success' => 1,
+                                'id' => $canceledidentifier,
+                                'idcol' => 'identifier', // Use the identifier to create the receipt.
+                                'userid' => $item->userid,
+                                'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_CANCELED,
+                            ]
+                        ),
+                    ];
                 }
             }
 
@@ -350,6 +423,10 @@ class shoppingcart_history_list implements renderable, templatable {
         if (!empty($historyarray['currency'])) {
             $data['currency'] = $historyarray["currency"];
         }
+
+        usort($data['historyitems'], function ($a, $b) {
+            return $b['price'] <=> $a['price'];
+        });
     }
 
     /**
@@ -408,8 +485,6 @@ class shoppingcart_history_list implements renderable, templatable {
 
         return $returnarray;
     }
-
-
 
     /**
      * Prepare data for use in a template

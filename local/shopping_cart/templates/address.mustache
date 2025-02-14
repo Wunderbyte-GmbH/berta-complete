@@ -44,30 +44,34 @@
             <fieldset>
                 {{#saved_addresses}}
                     <div class="ml-2">
-                        <input type="radio" name="selectedaddress_{{addresskey}}" value="{{id}}" id="{{addresskey}}address{{id}}"/>
+                        <input
+                            type="radio"
+                            name="selectedaddress_{{addresskey}}"
+                            value="{{id}}"
+                            id="{{addresskey}}address{{id}}"
+                            {{#selected}}
+                                checked
+                            {{/selected}}
+                            data-shopping-cart-process-data="true"
+                        />
                         <label for="{{addresskey}}address{{id}}" class="local-shopping_cart-savedaddress">
                             {{> local_shopping_cart/address_singleline }}
                         </label>
                     </div>
                 {{/saved_addresses}}
             </fieldset>
-            <a href="" class="shopping-cart-new-address">{{#str}} addresses:addnew, local_shopping_cart{{/str}}</a>
+            <div class="d-flex justify-content-between mt-2">
+                <a href="" class="shopping-cart-new-address">{{#str}} addresses:addnew, local_shopping_cart{{/str}}</a>
+                <a
+                    href=""
+                    class="shopping-cart-delete-selected-address text-danger"
+                    data-addresskey="{{addresskey}}"
+                >
+                    {{#str}} addresses:delete:selected, local_shopping_cart{{/str}}
+                </a>
+            </div>
         </div>
     {{/required_addresses}}
-</div>
-
-<div class="pull-right mt-3">
-    <button
-            class="btn btn-primary mr-3"
-            type="submit"
-            name="submit">
-        {{#required_addresses_multiple}}
-            {{#str}} addresses:confirm:multiple, local_shopping_cart {{/str}}
-        {{/required_addresses_multiple}}
-        {{^required_addresses_multiple}}
-            {{#str}} addresses:confirm:single, local_shopping_cart {{/str}}
-        {{/required_addresses_multiple}}
-    </button>
 </div>
 
 {{#js}}

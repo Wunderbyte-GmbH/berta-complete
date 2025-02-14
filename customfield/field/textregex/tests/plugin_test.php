@@ -18,6 +18,7 @@
  * Tests for 'customfield_textregex'
  *
  * @package   customfield_textregex
+ * @category  test
  * @author    Bence Molnar <molbence@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @copyright 2024 onwards Bence Molnar
@@ -26,7 +27,6 @@
 namespace customfield_textregex;
 
 use advanced_testcase;
-use coding_exception;
 use core_customfield_generator;
 use core_customfield_test_instance_form;
 use core_customfield\category_controller;
@@ -34,13 +34,16 @@ use core_customfield\data_controller;
 use core_customfield\field_controller;
 use core_customfield\field_config_form;
 use stdClass;
+use coding_exception;
+use moodle_exception;
 
 /**
  * Functional test for 'customfield_textregex'
  *
  * @package    customfield_textregex
- * @copyright  2019 Marina Glancy
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @author    Bence Molnar <molbence@gmail.com>
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2024 onwards Bence Molnar
  */
 final class plugin_test extends advanced_testcase {
 
@@ -76,6 +79,9 @@ final class plugin_test extends advanced_testcase {
         $this->cfields[3] = $this->get_generator()->create_field(
             ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield3', 'type' => 'textregex',
                 'configdata' => ['defaultvalue' => 'defvalue', 'displaysize' => 50, 'regex' => '/^[a-z]+$/']]);
+        $this->cfields[4] = $this->get_generator()->create_field(
+            ['categoryid' => $this->cfcat->get('id'), 'shortname' => 'myfield4', 'type' => 'text',
+                'configdata' => ['link' => 'https://twitter.com/$$', 'displaysize' => 50, 'regex' => '/^[a-z]+$/']]);
 
         $this->courses[1] = $this->getDataGenerator()->create_course();
         $this->courses[2] = $this->getDataGenerator()->create_course();
@@ -102,6 +108,7 @@ final class plugin_test extends advanced_testcase {
      * Test for initialising field and data controllers
      *
      * @covers \core_customfield\field_controller::create
+     * @throws coding_exception|moodle_exception
      */
     public function test_initialise(): void {
         $f = field_controller::create($this->cfields[1]->get('id'));
@@ -178,6 +185,7 @@ final class plugin_test extends advanced_testcase {
     /**
      * Test for data_controller::get_value and export_value
      * @coversNothing
+     * @throws coding_exception|moodle_exception
      */
     public function test_get_export_value(): void {
         $this->assertEquals('valuea', $this->cfdata[1]->get_value());
@@ -187,6 +195,11 @@ final class plugin_test extends advanced_testcase {
         $d = data_controller::create(0, null, $this->cfields[3]);
         $this->assertEquals('defvalue', $d->get_value());
         $this->assertEquals('defvalue', $d->export_value());
+
+        // Field with a link.
+        $d = $this->get_generator()->add_instance_data($this->cfields[4], $this->courses[1]->id, 'mynickname');
+        $this->assertEquals('mynickname', $d->get_value());
+        $this->assertEquals('<a href="https://twitter.com/mynickname">mynickname</a>', $d->export_value());
     }
 
     /**

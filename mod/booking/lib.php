@@ -40,6 +40,7 @@ use mod_booking\singleton_service;
 use mod_booking\teachers_handler;
 use mod_booking\utils\wb_payment;
 use mod_booking\booking_rules\rules_info;
+use mod_booking\booking_rules\booking_rules;
 
 // Default fields for bookingoptions in view.php and for download.
 define('MOD_BOOKING_BOOKINGOPTION_DEFAULTFIELDS', "identifier,titleprefix,text,description,teacher,responsiblecontact," .
@@ -50,6 +51,7 @@ define('MOD_BOOKING_VIEW_PARAM_LIST', 0); // List view.
 define('MOD_BOOKING_VIEW_PARAM_CARDS', 1); // Cards view.
 define('MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT', 2); // List view with image on the left.
 define('MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT', 3); // List view with image on the right.
+define('MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT_HALF', 4); // List view with image on the left taking 50% of the width.
 
 // Currently up to 9 different price categories can be set.
 define('MOD_BOOKING_MAX_PRICE_CATEGORIES', 9);
@@ -128,6 +130,8 @@ define('MOD_BOOKING_BO_COND_SUBBOOKING', 40);
 
 // Careful with changing these JSON COND values! They are stored.
 // If changed, DB Values need to be updated.
+define('MOD_BOOKING_BO_COND_JSON_NOOVERLAPPING', 30);
+define('MOD_BOOKING_BO_COND_JSON_NOOVERLAPPINGPROXY', 29);
 define('MOD_BOOKING_BO_COND_JSON_ALLOWEDTOBOOKININSTANCE', 18); // We might want to moove this up?
 define('MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOHORTS', 17);
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMFORM', 16);
@@ -291,6 +295,11 @@ define('MOD_BOOKING_SQL_FILTER_ACTIVE_BO_TIME', 2);
 define('MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING', [
 ]);
 
+// SQL Filter.
+define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_EMPTY', 0);
+define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_WARN', 1);
+define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_BLOCK', 2);
+
 /**
  * Booking get coursemodule info.
  *
@@ -299,7 +308,7 @@ define('MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING', [
  */
 function booking_get_coursemodule_info($cm) {
     $info = new cached_cm_info();
-    $booking = singleton_service::get_instance_of_booking_by_cmid($cm->id);
+    $booking = singleton_service::get_instance_of_booking_by_cmid((int)$cm->id);
     $booking->apply_tags();
     if (!empty($booking->settings->name)) {
         $info->name = $booking->settings->name;
@@ -1261,14 +1270,14 @@ function booking_extend_settings_navigation(settings_navigation $settings, navig
         }
         if (has_capability('mod/booking:updatebooking', $context)) {
             $navref->add(
-                get_string('duplicatebooking', 'booking'),
+                get_string('duplicatebookingoption', 'booking'),
                 new moodle_url(
                     '/mod/booking/editoptions.php',
                     ['id' => $cm->id, 'optionid' => -1, 'copyoptionid' => $optionid]
                 ),
                 navigation_node::TYPE_CUSTOM,
                 null,
-                'nav_duplicatebooking'
+                'nav_duplicatebookingoption'
             );
         }
 
@@ -2146,6 +2155,9 @@ function booking_delete_instance($id) {
     // When deleting an instance, we need to invalidate the cache for booking instances.
     booking::purge_cache_for_booking_instance_by_cmid($cm->id);
 
+    // Delete rules of this instance.
+    booking_rules::delete_rules_by_context($context->id);
+
     return $result;
 }
 
@@ -2351,11 +2363,14 @@ function clean_string(string $text) {
 
 // With this function, we can execute code at the last moment.
 register_shutdown_function(function () {
+    // Bugfix: Make sure this does not break the update process if class is not existing yet.
+    if (!class_exists('\mod_booking\booking_rules\rules_info')) {
+        return;
+    }
 
     // To avoid loops, we need a counter.
-
     $counter = 0;
-
+    $rules = rules_info::$rulestoexecute;
     while (
         (count(rules_info::$rulestoexecute) > 0
         || count(rules_info::$eventstoexecute) > 0)

@@ -25,6 +25,7 @@ use mod_booking\bo_availability\bo_subinfo;
 use mod_booking\bo_availability\conditions\subbooking;
 use mod_booking\booking_campaigns\campaigns_info;
 use mod_booking\customfield\booking_handler;
+use mod_booking\option\dates_handler;
 use mod_booking\subbookings\subbookings_info;
 use mod_booking\booking_campaigns\booking_campaign;
 use moodle_exception;
@@ -618,11 +619,18 @@ class booking_option_settings {
             if (!isset($dbrecord->campaignisset)) {
                 $campaigns = campaigns_info::get_all_campaigns();
                 foreach ($campaigns as $camp) {
-                    /** @var booking_campaign $campaign */
-                    $campaign = $camp;
-                    if ($campaign->campaign_is_active($this->id, $this)) {
+                    try {
+                        /** @var booking_campaign $campaign */
+                        $campaign = $camp;
+                        if ($campaign->campaign_is_active($this->id, $this)) {
 
-                        $campaign->apply_logic($this, $dbrecord);
+                            $campaign->apply_logic($this, $dbrecord);
+                        }
+                    } catch (\Exception $e) {
+                        global $CFG;
+                        if ($CFG->debug = (E_ALL | E_STRICT)) {
+                            throw $e;
+                        }
                     }
                 }
                 // Campaigns have been applied - let's cache a flag so we do not do it again.
@@ -1440,6 +1448,11 @@ class booking_option_settings {
             'sessions' => array_values(array_map(fn($a) => [
                 'coursestarttime' => userdate($a->coursestarttime),
                 'courseendtime' => userdate($a->courseendtime),
+                'concatinatedstartendtime' => dates_handler::prettify_optiondates_start_end(
+                    $a->coursestarttime,
+                    $a->courseendtime,
+                    current_language(),
+                ),
             ], $this->sessions)),
             'teachers' => array_values(array_map(fn($a) => [
                 'firstname' => $a->firstname,

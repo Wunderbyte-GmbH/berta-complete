@@ -70,7 +70,7 @@ $string['duallogin_help'] = '
 <p>If passive, then the users that are already authenticated into the IDP will be automatically logged in, otherwise they will be sent to Moodle login page.</p>
 <p>If off, then admins can still see the manual login page via /login/index.php?saml=off</p>
 <p>If on, then external pages can deep link into moodle using saml eg /course/view.php?id=45&saml=on</p>
-<p>If set to test IdP connection, the network will be checked for connectivity, and if functional, SAML login will be initiated.<p/>';
+<p>If set to test IdP connection, the network will be checked for connectivity, and if functional, SAML login will be initiated.</p>';
 $string['emailtaken'] = 'Can\'t create a new account, because {$a} email address is already registered';
 $string['emailtakenupdate'] = 'Your email wasn\'t updated, because email address {$a} is already registered';
 $string['errorinvalidautologin'] = 'Invalid autologin request';
@@ -151,6 +151,8 @@ $string['nameidasattrib'] = 'Expose NameID as attribute';
 $string['nameidasattrib_help'] = 'The NameID claim will be exposed to SSPHP as an attribute named nameid';
 $string['noattribute'] = 'You have logged in successfully but we could not find your \'{$a}\' attribute to associate you to an account in Moodle.';
 $string['noidpfound'] = 'The IdP \'{$a}\' was not found as a configured IdP.';
+$string['noredirectips'] = 'Restrict noredirect by IP';
+$string['noredirectips_help'] = 'When dual login is turned off and IPs are set, this will restrict the use of ?saml=off and ?noredirect=1 during SAML login to users with matching IP subnets.';
 $string['nouser'] = 'You have logged in successfully as \'{$a}\' but do not have an account in Moodle.';
 $string['nullprivatecert'] = 'Creation of Private Certificate failed.';
 $string['nullpubliccert'] = 'Creation of Public Certificate failed.';
@@ -176,11 +178,16 @@ $string['spmetadata_help'] = '<a href=\'{$a}\'>View Service Provider Metadata</a
 $string['spmetadatasign_help'] = 'Sign the SP Metadata.';
 $string['spmetadatasign'] = 'SP Metadata signature';
 $string['spmetadata'] = 'SP Metadata';
+$string['tempdirdefault'] = '/tmp/simplesaml';
+$string['tempdir_help'] = 'A directory where SimpleSAMLphp can save temporary files';
+$string['tempdir'] = 'SimpleSAMLphp temporary directory';
 $string['sspversion'] = 'SimpleSAMLphp version';
 $string['stateorprovincename'] = 'State or Province';
 $string['status'] = 'Status';
 $string['suspendeduser'] = 'You have logged in successfully as \'{$a}\' but your account has been suspended in Moodle.';
 $string['taskmetadatarefresh'] = 'Metadata refresh task';
+$string['tempdir'] = 'SimpleSAMLphp temporary directory';
+$string['tempdir_help'] = 'A directory where SimpleSAMLphp can save temporary files';
 $string['test_auth_button_login'] = 'IdP Login';
 $string['test_auth_button_logout'] = 'IdP Logout';
 $string['test_auth_str'] = 'Test isAuthenticated and login';

@@ -183,7 +183,7 @@ if (!empty($colselects)) {
 $fields = "s1.*";
 $from = "(SELECT DISTINCT " . $uniqueidpart .
         " AS uniqueid, scl.id, scl.userid, scl.identifier, scl.price, scl.discount, scl.credits, scl.fee, scl.currency,
-        u.lastname, u.firstname, u.email, scl.itemid, scl.itemname, scl.payment, scl.paymentstatus, " .
+        u.lastname, u.firstname, u.email, scl.itemid, scl.itemname, scl.payment, scl.paymentstatus, scl.schistoryid, " .
         $ootid .
         $DB->sql_concat("um.firstname", "' '", "um.lastname") . " as usermodified, scl.timecreated, scl.timemodified,
         scl.annotation,
@@ -381,6 +381,19 @@ if ($debug != 2) {
     );
     $table->add_filter($datepicker);
 
+    $datepicker = new datepicker(
+        'timemodified',
+        get_string('timemodified', 'local_shopping_cart'),
+    );
+    $datepicker->add_options(
+        'in between',
+        '<',
+        get_string('apply_filter', 'local_wunderbyte_table'),
+        'now',
+        'now'
+    );
+    $table->add_filter($datepicker);
+
     if ($debug == 3) {
         $encodedtable = json_encode($table);
         debugging("TABLE AFTER FILTERCOLS:<br>$encodedtable", DEBUG_ALL);
@@ -474,13 +487,13 @@ if ($debug != 1 && $debug != 3) {
             $date = date('Y-m-d', $dailysumsdate);
             echo $OUTPUT->render_from_template(
                 'local_shopping_cart/report_daily_sums',
-                shopping_cart::get_daily_sums_data($date, $selectorformoutput)
+                shopping_cart::get_daily_sums_data($date, $selectorformoutput, true)
             );
         } else {
             // Show daily sums.
             echo $OUTPUT->render_from_template(
                 'local_shopping_cart/report_daily_sums',
-                shopping_cart::get_daily_sums_data($date, $selectorformoutput)
+                shopping_cart::get_daily_sums_data($date, $selectorformoutput, false)
             );
         }
     }
@@ -506,6 +519,14 @@ if ($debug != 1 && $debug != 3) {
 
 // Debug-mode 2 and 3 we do not output the table.
 if ($debug != 2 && $debug != 3) {
+    // Apply filter from the submission of daily sums, if given.
+    if ($fromform && !empty($dailysumsdate)) {
+        $starting = strtotime("midnight", $dailysumsdate);
+        $ending = strtotime("23:59", $dailysumsdate);
+        $string = get_string('timemodified', 'local_shopping_cart');
+        $filterstring = '{"timemodified":{"' . $string . '":{">=":' . $starting . ',"<=":' . $ending . '}}}';
+        $table->apply_filter($filterstring);
+    }
     $table->out(30, false);
 }
 if ($debug == 3) {

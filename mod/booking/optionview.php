@@ -41,8 +41,13 @@ $userid = optional_param('userid', 0, PARAM_INT);
 $returnto = optional_param('returnto', '', PARAM_ALPHA);
 $returnurl = optional_param('returnurl', '', PARAM_URL);
 
-$syscontext = context_system::instance();
 $modcontext = context_module::instance($cmid);
+$syscontext = context_system::instance();
+
+// If we have this setting.
+if (!get_config('booking', 'showbookingdetailstoall')) {
+    require_login();
+}
 
 // If we have this setting.
 if (!get_config('booking', 'bookonlyondetailspage')) {
@@ -53,6 +58,24 @@ $PAGE->set_context($syscontext);
 
 $url = new moodle_url('/mod/booking/optionview.php', ['cmid' => $cmid, 'optionid' => $optionid]);
 $PAGE->set_url($url);
+
+// If the user is logged-in, we check if (s)he has accepted the site policy.
+if (isloggedin() && !isguestuser()) {
+    $currentpolicyversionids = \tool_policy\api::get_current_versions_ids();
+    if (!empty($currentpolicyversionids)) {
+        foreach ($currentpolicyversionids as $currentpolicyversionid) {
+            if (\tool_policy\api::get_agreement_optional($currentpolicyversionid)) {
+                continue;
+            }
+            $acceptance = \tool_policy\api::get_user_version_acceptance($USER->id, $currentpolicyversionid);
+            if (empty($acceptance)) {
+                // If the user did not yet accept, we redirect to the policy page.
+                $policyurl = new moodle_url('/admin/tool/policy/index.php', ['returnurl' => $url]);
+                redirect($policyurl);
+            }
+        }
+    }
+}
 
 $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
@@ -69,7 +92,8 @@ if (!$cm->uservisible && !get_config('booking', 'bookonlyondetailspage')) {
     die();
 }
 
-if ($settings = singleton_service::get_instance_of_booking_option_settings($optionid)) {
+$settings = singleton_service::get_instance_of_booking_option_settings($optionid);
+if ($settings && !empty($settings->id)) {
     if ($userid == $USER->id || $userid == 0) {
         $user = $USER;
     } else {
@@ -97,7 +121,7 @@ if ($settings = singleton_service::get_instance_of_booking_option_settings($opti
 
     if ($data->is_invisible()) {
         // If the user does have the capability to see invisible options...
-        if (has_capability('mod/booking:canseeinvisibleoptions', $syscontext)) {
+        if (has_capability('mod/booking:canseeinvisibleoptions', $modcontext)) {
             // ... then show it.
             echo $output->render_bookingoption_description_view($data);
         } else {

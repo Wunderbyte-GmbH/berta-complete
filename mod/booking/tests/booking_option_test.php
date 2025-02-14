@@ -56,6 +56,15 @@ final class booking_option_test extends advanced_testcase {
     }
 
     /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        parent::tearDown();
+        // Mandatory clean-up.
+        singleton_service::destroy_instance();
+    }
+
+    /**
      * Test update of bookig option and tracking changes.
      *
      * @covers \mod_booking\event\teacher_added
@@ -99,10 +108,10 @@ final class booking_option_test extends advanced_testcase {
         $record->courseid = $course->id;
         $record->description = 'Deskr-created';
         $record->teachersforoption = $user1->username;
-        $record->optiondateid_1 = "0";
-        $record->daystonotify_1 = "0";
-        $record->coursestarttime_1 = strtotime('20 June 2050');
-        $record->courseendtime_1 = strtotime('20 July 2050');
+        $record->optiondateid_0 = "0";
+        $record->daystonotify_0 = "0";
+        $record->coursestarttime_0 = strtotime('20 June 2050');
+        $record->courseendtime_0 = strtotime('20 July 2050');
 
         /** @var mod_booking_generator $plugingenerator */
         $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
@@ -127,8 +136,8 @@ final class booking_option_test extends advanced_testcase {
         $record->description = 'Deskr-updated';
         $record->limitanswers = 1;
         $record->maxanswers = 5;
-        $record->coursestarttime_1 = strtotime('10 April 2055');
-        $record->courseendtime_1 = strtotime('10 May 2055');
+        $record->coursestarttime_0 = strtotime('10 April 2055');
+        $record->courseendtime_0 = strtotime('10 May 2055');
         $record->teachersforoption = [$user2->id];
         booking_option::update($record);
 
@@ -180,9 +189,6 @@ final class booking_option_test extends advanced_testcase {
                 }
             }
         }
-
-        // Mandatory to solve potential cache issues.
-        singleton_service::destroy_booking_option_singleton($option->id);
     }
 
     /**
@@ -326,14 +332,14 @@ final class booking_option_test extends advanced_testcase {
         $record->chooseorcreatecourse = 1; // Reqiured.
         $record->courseid = $course->id;
         $record->description = 'Test description';
+        $record->optiondateid_0 = "0";
+        $record->daystonotify_0 = "0";
+        $record->coursestarttime_0 = strtotime('now - 2 day');
+        $record->courseendtime_0 = strtotime('now + 1 day');
         $record->optiondateid_1 = "0";
         $record->daystonotify_1 = "0";
-        $record->coursestarttime_1 = strtotime('now - 2 day');
-        $record->courseendtime_1 = strtotime('now + 1 day');
-        $record->optiondateid_2 = "0";
-        $record->daystonotify_2 = "0";
-        $record->coursestarttime_2 = strtotime('now + 2 day');
-        $record->courseendtime_2 = strtotime('now + 3 day');
+        $record->coursestarttime_1 = strtotime('now + 2 day');
+        $record->courseendtime_1 = strtotime('now + 3 day');
 
         /** @var mod_booking_generator $plugingenerator */
         $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
@@ -371,7 +377,7 @@ final class booking_option_test extends advanced_testcase {
         $this->assertEquals(1, $bookinganswers1->is_activity_completed($user1->id));
         // Verify can_rate.
         $this->setUser($user1);
-        $this->assertEquals(false, $bookingoption1->can_rate());
+        $this->assertEquals(true, $bookingoption1->can_rate());
 
         // Delete responses and verivy absence of completion.
         $this->setAdminUser();
@@ -382,9 +388,6 @@ final class booking_option_test extends advanced_testcase {
         $this->setUser($user1);
         $this->assertEquals(0, $bookinganswers1->is_activity_completed($user1->id));
         $this->assertEquals(false, $bookingoption1->can_rate());
-
-        // Mandatory to solve potential cache issues.
-        singleton_service::destroy_booking_option_singleton($option1->id);
     }
 
     /**
@@ -445,10 +448,10 @@ final class booking_option_test extends advanced_testcase {
         $record->chooseorcreatecourse = 1; // Reqiured.
         $record->courseid = $course2->id;
         $record->enrolmentstatus = 0; // Enrol at coursestart.
-        $record->optiondateid_1 = "0";
-        $record->daystonotify_1 = "0";
-        $record->coursestarttime_1 = strtotime('now + 3 day');
-        $record->courseendtime_1 = strtotime('now + 4 day');
+        $record->optiondateid_0 = "0";
+        $record->daystonotify_0 = "0";
+        $record->coursestarttime_0 = strtotime('now + 3 day');
+        $record->courseendtime_0 = strtotime('now + 4 day');
 
         /** @var mod_booking_generator $plugingenerator */
         $plugingenerator = self::getDataGenerator()->get_plugin_generator('mod_booking');
@@ -653,16 +656,6 @@ final class booking_option_test extends advanced_testcase {
         $modules = get_fast_modinfo($courses[$key]);
         $instances = $modules->get_instances();
         $this->assertEquals(true, array_key_exists('page', $instances));
-
-        // Mandatory to solve potential cache issues.
-        singleton_service::destroy_booking_option_singleton($option1->id);
-        singleton_service::destroy_booking_option_singleton($option2->id);
-        singleton_service::destroy_booking_option_singleton($option3->id);
-        singleton_service::destroy_booking_option_singleton($option4->id);
-        singleton_service::destroy_booking_option_singleton($option5->id);
-        singleton_service::destroy_booking_option_singleton($option6->id);
-        singleton_service::destroy_booking_option_singleton($option7->id);
-        singleton_service::destroy_booking_option_singleton($option8->id);
     }
 
     /**

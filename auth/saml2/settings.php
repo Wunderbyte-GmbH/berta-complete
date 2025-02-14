@@ -246,6 +246,13 @@ if ($ADMIN->fulltree) {
         ));
     }
 
+    $settings->add(new admin_setting_configiplist(
+        'auth_saml2/noredirectips',
+        get_string('noredirectips', 'auth_saml2'),
+        get_string('noredirectips_help', 'auth_saml2'),
+        ''
+    ));
+
     // Auto login.
     $autologinoptions = [
         saml2_settings::OPTION_AUTO_LOGIN_NO => get_string('no'),
@@ -359,6 +366,16 @@ urn:mace:dir:attribute-def:mail *</pre>"]),
         get_string('attemptsignout_help', 'auth_saml2'),
         1,
         $yesno));
+
+    // SAMLPHP tempdir.
+    $settings->add(new admin_setting_configtext(
+        'auth_saml2/tempdir',
+        get_string('tempdir', 'auth_saml2'),
+        get_string('tempdir_help', 'auth_saml2'),
+        '/tmp/simplesaml',
+        PARAM_TEXT,
+        50,
+        3));
 
     // SAMLPHP version.
     $authplugin = get_auth_plugin('saml2');

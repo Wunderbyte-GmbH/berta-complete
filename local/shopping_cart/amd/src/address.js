@@ -30,10 +30,9 @@ const SELECTORS = {
     NEWADDRESSBUTTON: '.shopping-cart-new-address',
 };
 
-export const init = () => {
-    // eslint-disable-next-line no-console
-    console.log('run init');
+const DELETESELECTEDADDRESS = '.shopping-cart-delete-selected-address';
 
+export const init = () => {
     const buttons = document.querySelectorAll(SELECTORS.NEWADDRESSBUTTON);
     if (buttons) {
         buttons.forEach(newAddressButton => {
@@ -43,18 +42,119 @@ export const init = () => {
             });
         });
     }
-
+    setDeletionEventListeners();
 };
+
+/**
+ * Show Modal.
+ */
+export function setDeletionEventListeners() {
+    const deleteAddressButtons = document.querySelectorAll(DELETESELECTEDADDRESS);
+    if (deleteAddressButtons) {
+        deleteAddressButtons.forEach(deleteAddressButton => {
+            deleteAddressButton.addEventListener('click', e => {
+                handleAddressDeletion(e, deleteAddressButton);
+            });
+        });
+    }
+}
+
+/**
+ * Show Modal.
+ * @param {Event} event
+ * @param {HTMLElement} deleteAddressButton
+ */
+export function handleAddressDeletion(event, deleteAddressButton) {
+    event.preventDefault();
+    const addressKey = deleteAddressButton.dataset.addresskey;
+    const selectedradio = document.querySelector(
+        `input[name="selectedaddress_${addressKey}"]:checked`
+    );
+
+    if (selectedradio) {
+        const addressId = selectedradio.value;
+        confirmAndDeleteAddress(addressId, deleteAddressButton);
+    } else {
+        getString('addresses:delete:noaddressselected', 'local_shopping_cart').then(str => {
+            showNotification(str, 'warning');
+            return;
+        }).catch(
+            // eslint-disable-next-line no-console
+            console.error
+        );
+    }
+}
+
+/**
+ * Show a confirmation modal and trigger the address deletion process.
+ * @param {string} addressId
+ * @param {string} button
+ */
+function confirmAndDeleteAddress(addressId, button) {
+
+    const modalForm = new ModalForm({
+        formClass: "local_shopping_cart\\form\\delete_user_address",
+        args: {addressid: addressId},
+        modalConfig: {
+            title: getString('addresses:delete:selected', 'local_shopping_cart'),
+        },
+        returnFocus: button,
+        saveButtonText: getString('addresses:delete:submit', 'local_shopping_cart')
+    });
+
+    modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (e) => {
+        deselectAddressCheckbox(button.dataset.addresskey);
+        const response = e.detail;
+        deleteAddress(response);
+        redrawRenderedAddresses(response.templatedata);
+    });
+
+    modalForm.show();
+    return;
+}
+
+/**
+ * @param {String} addressType
+ */
+function deselectAddressCheckbox(addressType) {
+    const selectedRadio = document.querySelector(`input[name="selectedaddress_${addressType}"]:checked`);
+    if (selectedRadio) {
+        selectedRadio.checked = false;
+        const event = new Event('change', {bubbles: true});
+        selectedRadio.dispatchEvent(event);
+    }
+}
+
+/**
+ * Trigger the address deletion via a web service.
+ * @param {string} response
+ */
+function deleteAddress(response) {
+    if (response == 1) {
+
+        getString('addresses:delete:success', 'local_shopping_cart').then(successMessage => {
+            showNotification(successMessage, 'success');
+            return;
+        }).catch(
+            // eslint-disable-next-line no-console
+            console.error
+        );
+    } else {
+        getString('addresses:delete:error', 'local_shopping_cart').then(successMessage => {
+            showNotification(successMessage, 'error');
+            return;
+        }).catch(
+            // eslint-disable-next-line no-console
+            console.error
+        );
+    }
+}
 
 /**
  * Show Modal.
  * @param {htmlElement} button
  */
 export function newAddressModal(button) {
-
-    // eslint-disable-next-line no-console
-    console.log('newAddressModal');
-
     const modalForm = new ModalForm({
 
         // Name of the class where form is defined (must extend \core_form\dynamic_form):
@@ -71,8 +171,6 @@ export function newAddressModal(button) {
     // Event detail will contain everything the process() function returned:
     modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (e) => {
         const response = e.detail;
-        // eslint-disable-next-line no-console
-        console.log('newAddressModal response: ', response);
         getString('addresses:newaddress:saved', 'local_shopping_cart').then(str => {
             showNotification(str, 'info');
             return null;
@@ -80,13 +178,10 @@ export function newAddressModal(button) {
             // eslint-disable-next-line no-console
             console.log(e);
         });
-
         redrawRenderedAddresses(response.templatedata);
     });
 
-    // Show the form.
     modalForm.show();
-
 }
 
 /**
@@ -96,6 +191,8 @@ export function newAddressModal(button) {
 function redrawRenderedAddresses(data) {
     Templates.renderForPromise('local_shopping_cart/address', data).then(({html, js}) => {
         Templates.replaceNodeContents(document.querySelector(SELECTORS.ADDRESSRENDERCONTAINER), html, js);
+        const event = new CustomEvent('local_shopping_cart/addressesRedrawn', {});
+        document.dispatchEvent(event);
         return null;
     }).catch((e) => {
         // eslint-disable-next-line no-console

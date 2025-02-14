@@ -39,8 +39,6 @@ use context_system;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class news {
-
-
     /**
      * IMAGEMODE_HEADER
      *
@@ -164,21 +162,28 @@ class news {
 
         $isactive = false;
         foreach ($this->news as $news) {
-
             if (!empty($news->active)) {
                 $isactive = true;
             }
             if (empty($news->userid)) {
                 continue;
             }
-            $returnarray[] = (array)$this->get_formatted_news_item($news->id);
+
+            $item = (array)$this->get_formatted_news_item($news->id);
+            $returnarray[] = $item;
+
+            if ($item['active']) {
+                $isactive = true;
+            }
         }
 
-        foreach ($returnarray as $index => &$item) {
-            $item['sliderindex'] = $index;
-            if ($index == '0') {
-                $item['slideactive'] = true;
-            }
+        if (count($returnarray) === 1) {
+            $returnarray[0]['dontshowarrows'] = true;
+            $returnarray[0]['active'] = true;
+        }
+
+        if (!$isactive) {
+            $returnarray[0]['active'] = true;
         }
 
         return $returnarray;
@@ -269,15 +274,27 @@ class news {
         $news->cssclasses = empty($news->cssclasses) ? false : $news->cssclasses;
         $news->headline = strip_tags(format_text($news->headline, FORMAT_HTML, ['noclean' => true]), '<br>');
         $news->subheadline = strip_tags(format_text($news->subheadline), '<br>');
-        $news->btntext = strip_tags(format_text($news->btntext),'<br>');
+        $news->btntext = strip_tags(format_text($news->btntext), '<br>');
+        $news->btnlink = format_string($news->btnlink);
+        $news->btnlink = htmlspecialchars_decode($news->btnlink, ENT_QUOTES);
+
+        $attributes = explode(',', $news->btnlinkattributes ?? '');
+        foreach ($attributes as $attribute) {
+            if (strpos($attribute, '_') === 0) {
+                $news->btnlinktarget[] = $attribute;
+            } else {
+                $news->btnlinkrel[] = $attribute;
+            }
+        }
+
         $news->description = format_text($news->description);
         if (!empty($news->bgimagetext)) {
-            $news->bgimagetext = strip_tags(format_text($news->bgimagetext),'<br>');
+            $news->bgimagetext = strip_tags(format_text($news->bgimagetext), '<br>');
         }
         if (!empty($news->headerimagetext)) {
-            $news->headerimagetext = strip_tags(format_text($news->headerimagetext),'<br>');
+            $news->headerimagetext = strip_tags(format_text($news->headerimagetext), '<br>');
         }
-        $news->icontext = strip_tags(format_text($news->icontext),'<br>');
+        $news->icontext = strip_tags(format_text($news->icontext), '<br>');
 
         $strippeddesc = strip_tags($news->description);
         if (strlen($strippeddesc) > 300) {
@@ -417,9 +434,7 @@ class news {
         global $DB, $USER;
 
         if (!empty($data->id)) {
-
             if ($record = $DB->get_record('local_wb_news', ['id' => $data->id])) {
-
                 // Deleted news get the negative instanceid which they had so we can attribute them later.
                 $record->instanceid = -$record->instanceid;
                 $record->userid = $USER->id;
@@ -452,9 +467,7 @@ class news {
         global $DB, $USER;
 
         if (!empty($data->id)) {
-
             if ($record = $DB->get_record('local_wb_news', ['id' => $data->id])) {
-
                 // Deleted news get the negative instanceid which they had so we can attribute them later.
                 $record->userid = $USER->id;
                 $record->timemodified = time();
@@ -556,11 +569,21 @@ class news {
             'columns' => $this->columns,
             'name' => $this->name,
             'contextids' => $this->contextids,
-            'editmode' => ($PAGE->user_is_editing() || (strpos($PAGE->url, 'local/wb_news/index.php') !== false)) && has_capability('local/wb_news:manage', context_system::instance()),
+            'editmode' => (
+                    $PAGE->user_is_editing()
+                    || (strpos($PAGE->url, 'local/wb_news/index.php') !== false)
+                ) && has_capability('local/wb_news:manage', context_system::instance()),
         ];
 
         if (!empty($this->news)) {
             $instanceitem['news'] = $this->return_list_of_news();
+        }
+
+        foreach ($instanceitem['news'] as $index => &$item) {
+            $item['sliderindex'] = $index;
+            if ($index == '0') {
+                $item['slideactive'] = true;
+            }
         }
 
         switch ($this->template) {
@@ -665,7 +688,7 @@ class news {
             $DB->sql_cast_to_char('COALESCE(wni.id, 0)'),
             "'-'",
             $DB->sql_cast_to_char('COALESCE(wn.id, 0)')
-            ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name, wni.contextids, wni.columns
+        ) . " as ident, wn.*, wni.id as instanceid, wni.template, wni.name, wni.contextids, wni.columns
             FROM {local_wb_news} wn
             RIGHT JOIN {local_wb_news_instance} wni ON wni.id = wn.instanceid
             WHERE (wn.instanceid > 0 OR wn.instanceid IS NULL) "; // Deleted Items are not normally included in the results.

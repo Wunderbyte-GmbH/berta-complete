@@ -71,6 +71,7 @@ $string['editdescription'] = 'Beschreibung bearbeiten';
 $string['editnews'] = 'Newselemente bearbeiten';
 $string['substitutionspool'] = 'Vertretungspool für {$a}';
 $string['editsubstitutionspool'] = 'Vertretungspool bearbeiten';
+$string['viewsapfiles'] = 'SAP-Buchungsdateien ansehen';
 $string['viewsubstitutionspool'] = 'Vertretungspool ansehen';
 $string['mailtosubstitutionspool'] = 'E-Mail an Vertretungspool senden';
 $string['substitutionspool:infotext'] = 'Trainer*innen, die <b>{$a}</b> vertreten dürfen:';
@@ -83,16 +84,19 @@ $string['sportsdivision'] = 'Sparte';
 $string['sportsdivisions'] = 'Sparten';
 $string['titleprefix'] = 'Kursnummer';
 $string['unknown'] = 'Unbekannt';
+$string['merchantref'] = 'MerchantRef';
+$string['customorderid'] = 'CustomOrderID';
 
 $string['format'] = "Format";
 $string['german'] = 'Deutsch';
+$string['germanenglish'] = 'Deutsch & Englisch';
 $string['english'] = 'Englisch';
 $string['onsite'] = 'Vor Ort';
 $string['hybrid'] = 'Hybrid';
 $string['blendedlearningonsite'] = 'Blended Learning mit Vor-Ort-Terminen';
 $string['blendedlearningonline'] = 'Blended Learning mit Online-Terminen';
-$string['blendedlearningonline'] = 'Blended Learning mit Hybrid-Terminen';
-$string['onsite'] = 'Online-Termin';
+$string['blendedlearninghybrid'] = 'Blended Learning mit Hybrid-Terminen';
+$string['online'] = 'Online-Termin';
 $string['selfpaced'] = 'Selbstlernkurs';
 
 // Errors.
@@ -106,7 +110,7 @@ $string['allcourses'] = 'Alle Kurse';
 $string['listofsports'] = 'Kursarten';
 $string['listofsports_desc'] = 'Zeige und editiere die Liste der Kursarten auf diesem System.';
 
-$string['numberofcourses'] = 'Kurse';
+$string['numberofcourses'] = 'Moodle Kurse';
 $string['numberofcourses_desc'] = 'Informationen über die Kurse und Buchungen auf der Plattform.';
 
 $string['numberofentities'] = 'Anzahl der Organisations-Einheiten';
@@ -212,6 +216,7 @@ $string['dashboard_auswertung'] = 'Auswertung';
 
 
 // Vue strings.
+$string['vuedashboardbookinginstances'] = 'Buchungsinstanzen';
 $string['vuedashboardchecked'] = 'In "Angebot" sichtbar';
 $string['vuedashboardname'] = 'Name';
 $string['vuedashboardcoursecount'] = 'Anzahl der Moodle Kurse';
@@ -251,7 +256,7 @@ $string['vuenotificationtitleactionsuccess'] = 'Die Konfiguration wurde erfolgre
 $string['vuenotificationtextactionsuccess'] = 'Die Konfiguration wurde erfolgreich {$a}.';
 $string['vuenotificationtitleactionfail'] = 'Die Konfiguration wurde nicht erfolgreich {$a}';
 $string['vuenotificationtextactionfail'] = 'Beim Speichern ist ein Fehler aufgetreten. Die Änderungen wurden nicht vorgenommen.';
-$string['vuedashboardgotocategory'] = 'Zur Kategorie';
+$string['vuedashboardgotocategory'] = 'Zur Landingpage';
 $string['vuedashboardbookinginstances'] = 'Buchungsinstanzen';
 $string['vuenotabsfounds'] = 'Keine Tabs gefunden';
 
@@ -382,7 +387,7 @@ $string['action'] = 'Aktion';
 
 // Easy availability feature.
 $string['easyavailability:overbook'] = 'Sogar dann, wenn der Kurs <b>ausgebucht</b> ist';
-$string['easyavailability:previouslybooked'] = 'Nutzer:innen, die bereits einen bestimmten USI-Kurs gebucht haben, dürfen immer buchen';
+$string['easyavailability:previouslybooked'] = 'Nutzer:innen, die bereits einen bestimmten Kurs gebucht haben, dürfen immer buchen';
 $string['easyavailability:selectusers'] = 'Ausgewählte Nutzer:innen dürfen außerhalb der Buchungszeiten buchen';
 $string['easyavailability:formincompatible'] = '<div class="alert alert-warning">Diese Buchungsoption verwendet Einschränkungen,
  die mit diesem Formular nicht kompatibel sind. Bitte wenden Sie sich an einen urise-Admin.</div>';
@@ -523,6 +528,7 @@ $string['organisationfilterdefinition'] = "Organisationsfilter";
 $string['organisationfilterdefinition_desc'] = "Der hierarchische Filter für die Organisationsstruktur muss hier eingefügt werden.";
 
 $string['bibliothekszielgruppe'] = 'Bibliothekszielgruppe';
+$string['studentmultipliers'] = 'Studentische Multiplikator*innen';
 $string['students'] = 'Studierende';
 $string['doctoralcandidates'] = 'Doktorand*innen';
 $string['lecturers'] = 'Uni-Lehrende';
@@ -578,6 +584,11 @@ $string['technologienutzung'] = 'Technologienutzung';
 $string['termsandconditions'] = 'Bei Anmeldung akzeptiere ich&nbsp;<a href="{$a}" target="_blank">die Teilnahmebedingungen</a>.';
 $string['fuehrungskompetenzen'] = "Führungskompetenzen";
 $string['educationalleadershipandmanagement'] = 'Educational Leadership & Management';
+$string['teamfuehrungentwicklung'] = 'Teamführung & -entwicklung';
+$string['selbstfuehrung'] = 'Selbstführung';
+$string['mitarbeitendefoerdern'] = 'Mitarbeitende fördern';
+$string['entscheidungskompetenzen'] = 'Entscheidungskompetenz';
+$string['strategischeplanungentwicklung'] = 'Strategische Planung & Umsetzung';
 $string['sonstige'] = "Sonstige";
 $string['sonstigekompetenzen'] = 'Sonstige Kompetenzen';
 
@@ -606,3 +617,5 @@ $string['basiswissenbiblio'] = "Basiswissen Bibliothek";
 $string['literatursuche'] = "Literatursuche";
 $string['orgauethikwissenschaft'] = "Organisation und Ethik des wissenschaftlichen Arbeitens";
 $string['spezialwissenbiblio'] = "Spezialwissen Bibliothek";
+
+$string['roleforselfregisteredusers'] = "Rolle für selbstregistrierte Nutzer:innen";

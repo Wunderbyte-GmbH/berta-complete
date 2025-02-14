@@ -111,9 +111,24 @@ class campaign_blockbooking implements booking_campaign {
         $this->bofieldname = $jsonobj->bofieldname ?? "";
         $this->campaignfieldnameoperator = $jsonobj->campaignfieldnameoperator ?? "";
         $this->fieldvalue = $jsonobj->fieldvalue ?? "";
-        $this->cpfield = $jsonobj->cpfield ?? "";
-        $this->cpoperator = $jsonobj->cpoperator ?? "";
-        $this->cpvalue = $jsonobj->cpvalue ?? [];
+
+        if (!empty($jsonobj->cpfield)) {
+            // Cpfield should be type string.
+            if (is_array($jsonobj->cpfield)) {
+                $this->cpfield = $jsonobj->cpfield[0];
+            } else {
+                $this->cpfield = $jsonobj->cpfield;
+            }
+            $this->userspecificprice = true;
+
+            $this->cpoperator = $jsonobj->cpoperator ?? '';
+            // Cpvalue should be type array.
+            if (!is_array($jsonobj->cpvalue)) {
+                $this->cpvalue = [$jsonobj->cpvalue];
+            } else {
+                $this->cpvalue = $jsonobj->cpvalue ?? [];
+            }
+        }
         $this->blockoperator = $jsonobj->blockoperator;
         $this->blockinglabel = $jsonobj->blockinglabel;
         $this->hascapability = $jsonobj->hascapability;
@@ -263,12 +278,12 @@ class campaign_blockbooking implements booking_campaign {
      * @return bool true if the campaign is currently active
      */
     public function campaign_is_active(int $optionid, booking_option_settings $settings): bool {
-        $value = is_array($this->fieldvalue) ? $this->fieldvalue[0] : $this->fieldvalue;
+        $this->fieldvalue = is_array($this->fieldvalue) ? reset($this->fieldvalue) : $this->fieldvalue;
         return campaigns_info::check_if_campaign_is_active(
             $this->starttime,
             $this->endtime,
             $settings->customfields[$this->bofieldname] ?? '',
-            $value ?? '',
+            empty($this->bofieldname) ? "" : $this->fieldvalue,
             $this->campaignfieldnameoperator
         );
     }
@@ -358,5 +373,25 @@ class campaign_blockbooking implements booking_campaign {
             'status' => false,
             'label' => '',
         ];
+    }
+
+    /**
+     * Return name of campaign.
+     *
+     * @return string
+     *
+     */
+    public function get_name_of_campaign(): string {
+        return $this->name ?? '';
+    }
+
+    /**
+     * Return id of campaign.
+     *
+     * @return int
+     *
+     */
+    public function get_id_of_campaign(): int {
+        return $this->id ?? 0;
     }
 }

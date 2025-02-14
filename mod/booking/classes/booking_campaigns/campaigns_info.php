@@ -229,6 +229,18 @@ class campaigns_info {
     }
 
     /**
+     * Destroys all campaigns in db and singleton.
+     * @return bool
+     */
+    public static function delete_all_campaigns(): bool {
+        global $DB;
+        $DB->delete_records('booking_campaigns');
+        singleton_service::destroy_all_campaigns();
+        return true;
+    }
+
+
+    /**
      * Get all campaigns from DB - but already instantiated.
      * @return array
      */
@@ -437,14 +449,20 @@ class campaigns_info {
             }
             switch ($operator) {
                 case "=": // Equals.
-                    $blocking = $user->profile[$fieldname] === $field;
+                    if ($blocking = $user->profile[$fieldname] === $field) {
+                        return true;
+                    }
                     break;
                 case "~": // Contains.
-                    $blocking = strpos($user->profile[$fieldname], $field) !== false;
+                    if ($blocking = strpos($user->profile[$fieldname], $field) !== false) {
+                        return true;
+                    }
                     break;
                 case "!~":
                     // Does not contain.
-                    $blocking = strpos($user->profile[$fieldname], $field) === false;
+                    if (!$blocking = strpos($user->profile[$fieldname], $field) === false) {
+                        return false;
+                    }
                     break;
             }
             $result = $blocking;
@@ -491,6 +509,11 @@ class campaigns_info {
             } else if (
                 !empty($fieldvalue)
                 && $operator == '!~'
+            ) {
+                $isactive = true;
+            } else if (
+                empty($fieldvalue) &&
+                empty($fieldname)
             ) { // No fieldname given in option, and fieldname required in campaign with "does not contain".
                 $isactive = true;
             } else {

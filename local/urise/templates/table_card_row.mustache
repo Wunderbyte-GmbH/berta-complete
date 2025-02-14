@@ -64,12 +64,15 @@
 {{#datafields}}
     data-{{key}}="{{value}}"
 {{/datafields}}
+{{#ariasection}}
+    aria-label="{{value}}"
+{{/ariasection}}
 >
   <div class="d-flex flex-column flex-grow-1 mod-booking-card-content">
     <div class="{{cardimageclass}}">
       {{#url}}
         {{#value}}
-          <a href="{{{value}}}" class="booking-card-image-link">
+          <a href="{{{value}}}" class="booking-card-image-link" target="_blank">
             {{/value}}
         {{/url}}
       {{#cardimage}}

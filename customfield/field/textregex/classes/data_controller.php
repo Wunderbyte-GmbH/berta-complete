@@ -27,6 +27,7 @@ namespace customfield_textregex;
 
 use coding_exception;
 use MoodleQuickForm;
+use html_writer;
 
 /**
  * Class data
@@ -109,6 +110,14 @@ class data_controller extends \core_customfield\data_controller {
         $regex = $this->get_field()->get_configdata_property('regex');
         if (is_null($value) || !preg_match($regex, $value)) {
             return null;
+        }
+
+        $link = $this->get_field()->get_configdata_property('link');
+        if ($link) {
+            $linktarget = $this->get_field()->get_configdata_property('linktarget');
+            $url = str_replace('$$', urlencode($this->get_value()), $link);
+            $attributes = $linktarget ? ['target' => $linktarget] : [];
+            $value = html_writer::link($url, $value, $attributes);
         }
 
         return $value;

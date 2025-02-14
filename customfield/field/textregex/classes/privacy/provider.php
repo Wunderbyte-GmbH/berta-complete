@@ -53,11 +53,11 @@ class provider implements null_provider, customfield_provider {
     /**
      * Preprocesses data object that is going to be exported
      *
-     * @param \core_customfield\data_controller $data
-     * @param \stdClass $exportdata
+     * @param data_controller $data
+     * @param stdClass $exportdata
      * @param array $subcontext
      */
-    public static function export_customfield_data(data_controller $data, stdClass $exportdata, array $subcontext) {
+    public static function export_customfield_data(data_controller $data, stdClass $exportdata, array $subcontext): void {
         $context = $data->get_context();
         // For text fields we want to apply format_string even to raw value to avoid CSS.
         $exportdata->{$data->datafield()} = $data->export_value();
@@ -70,7 +70,7 @@ class provider implements null_provider, customfield_provider {
      * @param string $dataidstest
      * @param array $params
      * @param array $contextids
-     * @return mixed|void
+     * @return void
      */
     public static function before_delete_data(string $dataidstest, array $params, array $contextids): void {
     }
