@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_shopping_cart\tests;
-
-use advanced_testcase;
-use local_shopping_cart\local\checkout_process\items\termsandconditions;
-
 /**
  * Unit tests for the termsandconditions class.
  *
@@ -28,8 +23,15 @@ use local_shopping_cart\local\checkout_process\items\termsandconditions;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+namespace local_shopping_cart\classes;
+
+use advanced_testcase;
+use local_shopping_cart\local\checkout_process\items\termsandconditions;
+
 /**
  * Test for termsandconditions
+ *
+ * @covers \local\checkout_process\items\termsandconditions
  */
 final class termsandconditions_test extends advanced_testcase {
     /**
@@ -121,14 +123,20 @@ final class termsandconditions_test extends advanced_testcase {
             (object)['name' => 'accept_terms', 'value' => true],
             (object)['name' => 'accept_additional', 'value' => true],
         ];
-        $this->assertTrue(termsandconditions::is_valid($validationdata), 'Expected is_valid to return true when all conditions are met.');
+        $this->assertTrue(
+            termsandconditions::is_valid($validationdata),
+            'Expected is_valid to return true when all conditions are met.'
+        );
 
         // Case: One condition not met.
         $validationdata = [
             (object)['name' => 'accept_terms', 'value' => true],
             (object)['name' => 'accept_additional', 'value' => false],
         ];
-        $this->assertFalse(termsandconditions::is_valid($validationdata), 'Expected is_valid to return false when a condition is not met.');
+        $this->assertFalse(
+            termsandconditions::is_valid($validationdata),
+            'Expected is_valid to return false when a condition is not met.'
+        );
     }
 
     /**
@@ -143,6 +151,10 @@ final class termsandconditions_test extends advanced_testcase {
         // Assertions.
         $this->assertArrayHasKey('termsandconditions', $data, 'Expected termsandconditions to remain in the array.');
         $this->assertArrayHasKey('additionalconditions', $data, 'Expected additionalconditions to be added to the array.');
-        $this->assertEquals('Additional terms', $data['additionalconditions'], 'Expected additionalconditions to match cachedata value.');
+        $this->assertEquals(
+            'Additional terms',
+            $data['additionalconditions'],
+            'Expected additionalconditions to match cachedata value.'
+        );
     }
 }

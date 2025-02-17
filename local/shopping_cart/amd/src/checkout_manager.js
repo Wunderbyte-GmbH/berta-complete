@@ -18,8 +18,10 @@
  * @copyright  Wunderbyte GmbH <info@wunderbyte.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+import ModalFactory from 'core/modal_factory';
+import {get_string as getString} from 'core/str';
 
-import {addZeroPriceListener} from 'local_shopping_cart/cart';
+import {reinit} from 'local_shopping_cart/cart';
 
 const SELECTORS = {
     CHECKOUTMANAGERFORMID: '#shopping-cart-checkout-manager-form',
@@ -105,7 +107,15 @@ function vatNumberVerifyCallback() {
     const vatNumber = document.getElementById(IDS.VATNUMBER)?.value;
 
     if (!countryCode || !vatNumber) {
-        alert('alert');
+        ModalFactory.create({type: ModalFactory.types.CANCEL}).then(modal => {
+            modal.setTitle(getString('errorinvalidvatdatatitle', 'local_shopping_cart'));
+            modal.setBody(getString('errorinvalidvatdatadescription', 'local_shopping_cart'));
+            modal.show();
+            return modal;
+        }).catch(e => {
+            // eslint-disable-next-line no-console
+            console.log(e);
+        });
         return;
     }
     triggerButtonControlWebService(WEBSERVICE.CHECKOUTPROCESS, {
@@ -205,7 +215,7 @@ function getChangedInputs() {
  * @param {Object} params - The parameters for the web service call.
  */
 function triggerButtonControlWebService(serviceName, params) {
-    require(['core/ajax'], function (Ajax) {
+    require(['core/ajax'], function(Ajax) {
         const requests = Ajax.call([{
             methodname: serviceName,
             args: params,
@@ -358,10 +368,6 @@ function callZeroPriceListener() {
     // Initially, we need to add the zeroPriceListener once.
     const paymentbutton = document.querySelector(SELECTORS.PAYMENTREGIONBUTTON);
     if (paymentbutton) {
-        const data = {
-            price: paymentbutton.dataset.price,
-            currency: paymentbutton.dataset.currency,
-        };
-        addZeroPriceListener(data);
+        reinit();
     }
 }

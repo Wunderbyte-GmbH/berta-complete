@@ -69,7 +69,7 @@ class checkout_manager {
     /**
      * Constructor with optional parameters.
      *
-     * @param string $identifier Optional identifier.
+     * @param array $data
      * @param array $controlparameter Optional controlparameter.
      */
     public function __construct(
@@ -107,8 +107,14 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $checkoutmanager
+     * @param mixed $currentstep
+     *
+     * @return void
+     *
      */
-    public function set_manager_data(&$checkoutmanager, $currentstep) {
+    public function set_manager_data(&$checkoutmanager, $currentstep): void {
         foreach ($this->itemlist as $item) {
             $filename = basename($item, '.php');
             $classname = self::NAMESPACE_PREFIX . $filename;
@@ -131,8 +137,14 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $checkoutmanagerbody
+     * @param mixed $currentstep
+     *
+     * @return void
+     *
      */
-    public function render_body_buttons(&$checkoutmanagerbody, $currentstep) {
+    public function render_body_buttons(&$checkoutmanagerbody, $currentstep): void {
         if (self::has_multiple_items($checkoutmanagerbody)) {
             $checkoutmanagerbody['buttons'] =
                 self::render_navigation_buttons(
@@ -159,20 +171,28 @@ class checkout_manager {
         return glob($path . '*.php');
     }
 
-
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $changedinput
+     *
+     * @return array
+     *
      */
-    public function check_preprocess($changedinput) {
+    public function check_preprocess($changedinput): array {
         $bodycounter = 0;
         foreach ($this->itemlist as $item) {
             $filename = basename($item, '.php');
             $classname = self::NAMESPACE_PREFIX . $filename;
-            if (self::class_exists_is_active($classname)) {
+            if (
+                self::class_exists_is_active($classname)
+            ) {
                 $iteminstance = new $classname($this->identifier);
-                if ($bodycounter == $this->controlparameter['currentstep']) {
+                if (
+                    $bodycounter == $this->controlparameter['currentstep']
+                ) {
                     $this->managercache['steps'][$filename] = $iteminstance->check_status(
-                        $this->managercache['steps'][$filename],
+                        $this->managercache['steps'][$filename] ?? [],
                         $changedinput
                     );
                     if ($this->managercache['steps'][$filename]['valid']) {
@@ -189,7 +209,7 @@ class checkout_manager {
                     $bodycounter += 1;
                 } else {
                     $this->managercache['steps'][$filename] = $iteminstance->check_status(
-                        $this->managercache['steps'][$filename],
+                        $this->managercache['steps'][$filename] ?? [],
                         $changedinput
                     );
                 }
@@ -203,7 +223,7 @@ class checkout_manager {
     /**
      * Sets the body and mandatory count if not there yet.
      */
-    public function set_body_mandatory_count() {
+    public function set_body_mandatory_count(): void {
         if (!isset($this->managercache['body_mandatory_count'])) {
             $bodycounter = 0;
             $mandatorycounter = 0;
@@ -231,7 +251,7 @@ class checkout_manager {
     /**
      * Applies the given price modifiers on the cached data.
      */
-    public function get_checkout_validation() {
+    public function get_checkout_validation(): void {
         $mandatorycachedcounter = $this->managercache['body_mandatory_count']['mandatory_count'];
         $mandatorycurrentcounter = 0;
         $bodycounter = $this->managercache['body_mandatory_count']['body_count'];
@@ -254,8 +274,15 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $cachedcounter
+     * @param mixed $currentcounter
+     * @param mixed $bodycounter
+     *
+     * @return bool
+     *
      */
-    public function is_checkout_allowed($cachedcounter, $currentcounter, $bodycounter) {
+    public function is_checkout_allowed($cachedcounter, $currentcounter, $bodycounter): bool {
         return (
             $cachedcounter <= $currentcounter &&
             $bodycounter <= count($this->managercache['viewed'] ?? [])
@@ -264,6 +291,9 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $identifier
+     *
      */
     public static function get_cache($identifier) {
         $cache = cache::make('local_shopping_cart', 'cachebookingpreprocess');
@@ -276,15 +306,21 @@ class checkout_manager {
     /**
      * Applies the given price modifiers on the cached data.
      */
-    public function set_cache() {
+    public function set_cache(): void {
         $cache = cache::make('local_shopping_cart', 'cachebookingpreprocess');
         $cache->set($this->identifier, $this->managercache);
     }
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
+     * @param mixed $itemlist
+     * @param mixed $currentstep
+     *
+     * @return void
+     *
      */
-    public function set_active_page(&$itemlist, $currentstep) {
+    public function set_active_page(&$itemlist, $currentstep): void {
         if (empty($itemlist)) {
             return;
         }
@@ -310,7 +346,7 @@ class checkout_manager {
     /**
      * Applies the given price modifiers on the cached data.
      */
-    public function get_pagination_action() {
+    public function get_pagination_action(): int {
         if ($this->controlparameter['action'] == 'next') {
             return 1;
         } else if ($this->controlparameter['action'] == 'previous') {
@@ -321,9 +357,13 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param array $itemlist
+     *
+     * @param mixed $checkoutmanagerhead
+     *
+     * @return void
+     *
      */
-    public function render_checkout_head(&$checkoutmanagerhead) {
+    public function render_checkout_head(&$checkoutmanagerhead): void {
         if (isset($checkoutmanagerhead['item_list'])) {
             $checkoutmanagerhead['body'] = [];
             foreach ($checkoutmanagerhead['item_list'] as $item) {
@@ -337,9 +377,16 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param array $itemlist
+     *
+     * @param mixed $itemlist
+     *
+     * @return array
+     *
      */
-    public function render_checkout_body($itemlist) {
+    public function render_checkout_body($itemlist): array {
+        if (empty($itemlist)) {
+            return [];
+        }
         try {
             foreach ($itemlist as $item) {
                 if ($item['status'] == 'active') {
@@ -355,15 +402,19 @@ class checkout_manager {
                 }
             }
         } catch (Exception $e) {
-            return false;
+            return [];
         }
+        return [];
     }
 
     /**
      * Applies the given price modifiers on the cached data.
+     *
      * @param array $itemlist
+     *
+     * @return void
      */
-    public static function set_first_step_active(&$itemlist) {
+    public static function set_first_step_active(&$itemlist): void {
         if (isset($itemlist[1])) {
             $itemlist[1]['status'] = 'active';
         }
@@ -371,7 +422,6 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param array $itemlist
      */
     public function render_checkout_button() {
         return $this->managercache['checkout_validation'] ?? false;
@@ -379,10 +429,14 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param array $classname
+     *
+     * @param mixed $itemlist
+     * @param mixed $currentstep
+     *
      * @return array
+     *
      */
-    public function render_navigation_buttons($itemlist, $currentstep) {
+    public function render_navigation_buttons($itemlist, $currentstep): array {
         $previousbutton = [
             'text' => get_string('previousbutton', 'local_shopping_cart'),
             'hidden' => $currentstep == 0 ? true : false,
@@ -400,8 +454,7 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param string $classname
-     * @return bool
+     * @param string $classnamepath
      */
     public function is_step_valid($classnamepath) {
         $classname = self::get_class_name($classnamepath);
@@ -413,10 +466,10 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param string $classname
+     * @param string $classnamepath
      * @return string
      */
-    public function get_class_name($classnamepath) {
+    public function get_class_name($classnamepath): string {
         $parts = explode('\\', $classnamepath);
         return end($parts);
     }
@@ -426,7 +479,7 @@ class checkout_manager {
      * @param string $classname
      * @return bool
      */
-    public function class_exists_is_active($classname) {
+    public function class_exists_is_active($classname): bool {
         if (class_exists($classname)) {
             $iteminstance = new $classname($this->identifier);
             if ($iteminstance->is_active()) {
@@ -438,10 +491,10 @@ class checkout_manager {
 
     /**
      * Applies the given price modifiers on the cached data.
-     * @param string $classname
+     * @param array $body
      * @return bool
      */
-    public static function has_multiple_items($body) {
+    public static function has_multiple_items($body): bool {
         if (
             isset($body['item_list']) &&
             count($body['item_list']) > 1
@@ -463,5 +516,28 @@ class checkout_manager {
         $data = self::get_cache($userid);
 
         return $data["steps"]["addresses"]["data"] ?? [];
+    }
+
+    /**
+     * Function to return the stored selected addresses
+     * @param int $userid
+     * @return array
+     */
+    public static function return_stored_vatnuber_country_code(int $userid): array {
+        $taxcountryinformation = [];
+        $data = self::get_cache($userid);
+        $vatnrcheckerdata = json_decode($data["steps"]["vatnrchecker"]["data"] ?? '');
+        if (isset($vatnrcheckerdata->vatCodeCountry)) {
+            $explodedvatnrcheckerdata = explode(',', $vatnrcheckerdata->vatCodeCountry);
+            $taxcountryinformation = [
+                'taxcountrycode' => $explodedvatnrcheckerdata[0] ?? '',
+                'vatnumber' => str_replace(
+                    $explodedvatnrcheckerdata[0],
+                    '',
+                    $explodedvatnrcheckerdata[1] ?? ''
+                ),
+            ];
+        }
+        return $taxcountryinformation;
     }
 }

@@ -25,6 +25,7 @@
 
 namespace local_shopping_cart\local\checkout_process\items;
 
+use local_shopping_cart\local\cartstore;
 use local_shopping_cart\local\checkout_process\checkout_base_item;
 use local_shopping_cart\local\checkout_process\items_helper\address_operations;
 
@@ -40,7 +41,7 @@ class addresses extends checkout_base_item {
      * Renders checkout item.
      * @return bool
      */
-    public function is_active() {
+    public static function is_active(): bool {
         if (get_config('local_shopping_cart', 'addresses_required')) {
             return true;
         }
@@ -51,7 +52,7 @@ class addresses extends checkout_base_item {
      * Renders checkout item.
      * @return string
      */
-    public function get_icon_progress_bar() {
+    public static function get_icon_progress_bar(): string {
         return 'fa-solid fa-address-book';
     }
 
@@ -60,7 +61,7 @@ class addresses extends checkout_base_item {
      * @param array $cachedata
      * @return array
      */
-    public function render_body($cachedata) {
+    public function render_body($cachedata): array {
         global $PAGE;
         $data = self::get_template_render_data();
         $data['required_addresses'] = self::set_data_from_cache(
@@ -76,10 +77,10 @@ class addresses extends checkout_base_item {
 
     /**
      * Generates the data for rendering the templates/address.mustache template.
-     * @param array $data
+     * @param array $requiredaddresses
      * @param array $cachedata
      */
-    public function set_data_from_cache(&$requiredaddresses, $cachedata) {
+    public static function set_data_from_cache(&$requiredaddresses, $cachedata) {
         foreach ($requiredaddresses as &$requiredaddress) {
             $newsavedaddresses = [];
             foreach ($requiredaddress['saved_addresses'] as $savedaddress) {
@@ -101,7 +102,7 @@ class addresses extends checkout_base_item {
     /**
      * Generates the data for rendering the templates/address.mustache template.
      *
-     * @return object all required template data
+     * @return array all required template data
      */
     public function get_template_render_data(): array {
         $data = self::get_user_data();
@@ -132,7 +133,7 @@ class addresses extends checkout_base_item {
      *
      * @return array list of all required addresses with a key and localized string
      */
-    public function get_user_data(): array {
+    public static function get_user_data(): array {
         global $USER;
         return [
             "usermail" => $USER->email,
@@ -161,7 +162,7 @@ class addresses extends checkout_base_item {
     /**
      * Renders checkout item.
      */
-    public function is_mandatory() {
+    public static function is_mandatory(): bool {
         return true;
     }
 
@@ -170,7 +171,7 @@ class addresses extends checkout_base_item {
      *
      * @return array list of all required address keys
      */
-    private function get_required_address_keys(): array {
+    private static function get_required_address_keys(): array {
         $addressesrequired = get_config('local_shopping_cart', 'addresses_required');
         $requiredaddresskeys = array_filter(explode(',', $addressesrequired));
         return $requiredaddresskeys;
@@ -179,18 +180,22 @@ class addresses extends checkout_base_item {
     /**
      * Returns the required-address keys as specified in the plugin config.
      *
+     * @param mixed $managercachestep
+     * @param mixed $validationdata
+     *
      * @return array list of all required address keys
+     *
      */
     public function check_status(
         $managercachestep,
         $validationdata
-    ) {
-        $data = $managercachestep['data'];
+    ): array {
+        $data = $managercachestep['data'] ?? [];
         $requiredaddresskeys = self::get_required_address_keys();
         $validationdata = json_decode($validationdata);
         foreach ($requiredaddresskeys as $requiredaddresskey) {
             foreach ($validationdata as $address) {
-                if (str_contains($address->name, $requiredaddresskey)) {
+                if (mb_strpos($address->name, $requiredaddresskey) !== false) {
                     $data[$address->name] = $address->value;
                 }
             }
@@ -205,18 +210,33 @@ class addresses extends checkout_base_item {
     /**
      * Returns the required-address keys as specified in the plugin config.
      *
-     * @return bool list of all required address keys
+     * @param mixed $requiredaddresskeys
+     * @param mixed $data
+     *
+     * @return bool
+     *
      */
     private function is_valid(
         $requiredaddresskeys,
         $data
-    ) {
+    ): bool {
         $requiredkeys = $requiredaddresskeys ? count($requiredaddresskeys) : null;
         $currentkeys = count($data);
         if (
             $requiredkeys === $currentkeys &&
             self::is_address_valid($requiredaddresskeys)
         ) {
+            $cartstore = cartstore::instance($this->identifier);
+
+            $cartstoredata = [];
+            if (!empty($requiredaddresskeys["selectedaddress_billing"])) {
+                $cartstoredata['billing'] = $requiredaddresskeys["selectedaddress_billing"];
+            }
+            if (!empty($requiredaddresskeys["selectedaddress_shipping"])) {
+                $cartstoredata['shipping'] = $requiredaddresskeys["selectedaddress_shipping"];
+            }
+            $cartstore->local_shopping_cart_save_address_in_cache($cartstoredata);
+
             return true;
         }
         return false;
@@ -225,11 +245,14 @@ class addresses extends checkout_base_item {
     /**
      * Returns the required-address keys as specified in the plugin config.
      *
-     * @return bool list of all required address keys
+     * @param array $requiredaddresskeys
+     *
+     * @return bool
+     *
      */
     private function is_address_valid(
         $requiredaddresskeys
-    ) {
+    ): bool {
         $addressesfromdb = address_operations::get_all_user_addresses($this->identifier);
         foreach ($requiredaddresskeys as $requiredaddresskey) {
             if (!isset($addressesfromdb[$requiredaddresskey])) {
