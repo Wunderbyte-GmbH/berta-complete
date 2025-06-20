@@ -138,7 +138,6 @@ class allowedtobookininstance implements bo_condition {
 
             // If the user is not yet booked we return true.
             if (has_capability('mod/booking:choose', $context)) {
-
                 $isavailable = true;
             }
         }
@@ -155,10 +154,10 @@ class allowedtobookininstance implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -226,7 +225,6 @@ class allowedtobookininstance implements bo_condition {
 
         // Check if PRO version is activated.
         if (wb_payment::pro_version_is_activated()) {
-
             $mform->addElement(
                 'advcheckbox',
                 'bo_cond_allowedtobookininstance_restrict',
@@ -238,6 +236,7 @@ class allowedtobookininstance implements bo_condition {
                 'bo_cond_allowedtobookininstance_capabilitynotneeded',
                 get_string('bocondallowedtobookininstanceanyways', 'mod_booking')
             );
+            $mform->setDefault('bo_cond_allowedtobookininstance_capabilitynotneeded', 1);
             $mform->hideIf(
                 'bo_cond_allowedtobookininstance_capabilitynotneeded',
                 'bo_cond_allowedtobookininstance_restrict',
@@ -462,7 +461,6 @@ class allowedtobookininstance implements bo_condition {
             $description = $full ?
                     get_string('bocondallowedtobookininstancefullnotavailable', 'mod_booking') :
                     get_string('bocondallowedtobookininstancenotavailable', 'mod_booking');
-
         }
 
         return $description;

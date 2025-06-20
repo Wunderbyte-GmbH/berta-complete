@@ -194,6 +194,11 @@ You can define the suppression like this.
         1 => get_string('active', 'myplugin'),
     ]);
 
+### Filter position
+By default, filters will be shown at the left of the table. If you want to show them on top of the table, you can do it like this:
+
+    $table->showfilterontop = true;
+
 ### Hierarchical filter
 The hierarchical filter will allow to order your results in a special way. Assume you have the following values: one, two, three, four, five, six in your database. They belong to three different categories. You can then add the filter like this:
 
@@ -327,6 +332,27 @@ WB Table has implemented the javascript and most of the php to support reorderin
 This will add a column with drag n drop handles. But you will need to add a method "action_reorderrows" to actually do the reordering to your wb table child class. For obvious reasons, this can't be done generically.
 You'll find a non functional template for this method in your wunderbyte_table.php in the classes folder.
 
+## Download
+
+If your table supports download, you can activate the download button like this:
+
+    $table->showdownloadbutton = true;
+
+By default, the download button will be shown at the top of the table.
+If you want to show it at the bottom of the table, you can use this:
+
+    $table->showdownloadbuttonatbottom = true;
+
+## Allow users to add their own filters
+
+You can allow users with the capabiltiy 'local/wunderbyte_table:canedittable'
+to set individual filters for their table from the user interface.
+For this to work, the global setting 'allowedittable' needs to be turned on.
+
+You can add the "add filter" button like this:
+
+    $table->showaddfilterbutton = true;
+
 ### Display
 
 If you want to display multiple tables on one page, tabs can be enabled in templates.
@@ -346,6 +372,27 @@ For the display of localized names in tableheaders, use the define_headers funct
 
 ## Lazy loading vs. direct out
 To lazy load wunderbyte table (eg. for loading in tabs or modals) you need to call $table->lazyout() instead of $table->out. While out will return the html to echo, lazyout echos right away. If you want the html of lazyout, use $table->lazyouthtml();
+
+## Sortable classes
+The sortable classes give you the possibility to
+- Add SQL Code which is only needed when a given sorting is applied
+- Use a different cache for this sorting
+
+Example for a sortable:
+    $standardsortable = new standardsortable(
+        'freeplaces',
+        get_string('freeplaces', 'local_musi')
+    );
+    $select = '(SELECT COALESCE(NULLIF(s1.maxanswers, 0), 999999) - COUNT(ba.id)
+                FROM {booking_answers} ba
+                WHERE ba.optionid = s1.id AND ba.waitinglist < 3) AS freeplaces';
+    $from = '';
+    $where = '';
+    $standardsortable->define_sql($select, $from, $where);
+
+    $standardsortable->define_cache('mod_booking', 'bookedusertable');
+    $table->add_sortable($standardsortable);
+
 
 ## Installing via uploaded ZIP file ##
 1. Log in to your Moodle site as an admin and go to _Site administration >

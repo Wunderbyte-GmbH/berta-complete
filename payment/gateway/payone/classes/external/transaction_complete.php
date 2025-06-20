@@ -40,6 +40,7 @@ use paygw_payone\payone_helper;
 use local_shopping_cart\interfaces\interface_transaction_complete;
 use paygw_payone\interfaces\interface_transaction_complete as pu_interface_transaction_complete;
 use paygw_payone\payone_sdk;
+use Throwable;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -206,7 +207,7 @@ class transaction_complete extends external_api implements interface_transaction
 
         // Now we check of the amount from the open orders table is the same that the user actually paid.
 
-        $sdk = new payone_sdk($config->clientid, $config->secret, $config->brandname, $sandbox);
+        $sdk = payone_sdk::create($config->clientid, $config->secret, $config->brandname, $sandbox);
         $orderdetails = $sdk->check_status($tid);
         $statusorder = $orderdetails->getStatus();
         if ($orderdetails && $statusorder == 'PAYMENT_CREATED') {
@@ -214,8 +215,17 @@ class transaction_complete extends external_api implements interface_transaction
             $url = $serverurl;
             // SANDBOX OR PROD.
             $statuspayment = $orderdetails->getCreatedPaymentOutput()->getPaymentStatusCategory();
+            try {
+                $paymentstatus = $orderdetails->getCreatedPaymentOutput()->getPayment()->getStatus();
+            } catch (Throwable $e) {
+                $paymentstatus = '';
+            }
+
             if ($sandbox == true) {
-                if ($statuspayment == 'SUCCESSFUL') {
+                if (
+                    $statuspayment === 'SUCCESSFUL'
+                    && $paymentstatus === 'CAPTURED'
+                ) {
                     // Approved.
                     $status = 'success';
                     $message = get_string('payment_successful', 'paygw_payone');
@@ -227,7 +237,10 @@ class transaction_complete extends external_api implements interface_transaction
                     $status = false;
                 }
             } else {
-                if ($statuspayment == 'SUCCESSFUL') {
+                if (
+                    $statuspayment == 'SUCCESSFUL'
+                    && $paymentstatus === 'CAPTURED'
+                ) {
                     // Approved.
                     $status = 'success';
                     $message = get_string('payment_successful', 'paygw_payone');

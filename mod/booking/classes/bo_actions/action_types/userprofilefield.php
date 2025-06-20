@@ -75,7 +75,7 @@ class userprofilefield extends booking_action {
 
             switch ($actiondata->boactionuserprofileoperator) {
                 case 'set':
-                    $user->profile[$actiondata->boactionselectuserprofilefield] = $actiondata->boactionuserprofilefieldvalue;
+                    $user->{$key} = $actiondata->boactionuserprofilefieldvalue;
                     break;
                 case 'add':
 
@@ -100,13 +100,13 @@ class userprofilefield extends booking_action {
                     } else {
                         list($startstring, $endstring) = explode(' - ', $user->{$key});
 
-                        $startdate = strtotime($endstring) ?? null;
+                        $startdate = strtotime($endstring, time()) ?? null;
                     }
 
                     $enddate = strtotime($actiondata->boactionuserprofilefieldvalue, $startdate);
 
                     if (!empty($startstring)) {
-                        $startdate = strtotime($startstring);
+                        $startdate = strtotime($startstring, time());
                     } else if (empty($startdate)) {
                         $startdate = time();
                     }

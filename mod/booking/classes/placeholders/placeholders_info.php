@@ -42,7 +42,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class placeholders_info {
-
     /**
      * @var array $placeholders
      */
@@ -90,14 +89,12 @@ class placeholders_info {
         }
 
         if (!empty($placeholders)) {
-
             self::return_list_of_placeholders();
         }
         $noreturn = [];
         $return = [];
 
         foreach ($placeholders as $placeholder) {
-
             // We might need more complex placeholder for iteration...
             // ... (like {{# sessiondates}} or {{teacher 1}}). Therefore...
             // ... we need to explode the placeholders here.
@@ -127,7 +124,6 @@ class placeholders_info {
 
                 // In some cases, we might receive an array instead of string.
                 if (is_array($value)) {
-
                     // First we check if we had a number in our original placeholder.
                     $number = str_replace($identifier, '', $placeholder);
 
@@ -223,7 +219,7 @@ class placeholders_info {
 
         $placeholders = [];
         foreach (self::$localizedplaceholders as $key => $value) {
-            $placeholders[] = "<li data-id='$value'>{" . $value . "} " . $key ."</li>";
+            $placeholders[] = "<li data-id='$value'>{" . $value . "} " . $key . "</li>";
         }
 
         $returnstring = implode('<br>', $placeholders);
@@ -256,7 +252,6 @@ class placeholders_info {
         ];
 
         foreach ($placeholders as $key => $value) {
-
             if (!$key::is_applicable()) {
                 continue;
             }
@@ -264,9 +259,9 @@ class placeholders_info {
             $class = substr(strrchr($key, '\\'), 1);
 
             if (isset($specialtreatmentclasses[$class])) {
+                self::$localizedplaceholders[$specialtreatmentclasses[$class]] = $class;
                 continue;
             }
-
             // We use the localized strings as keys and the classnames as values.
             self::$localizedplaceholders[get_string($class, 'mod_booking')] = $class;
         }

@@ -219,13 +219,16 @@ class canceluntil extends field_base {
                 $oldvalue = "";
             }
 
-            if ($oldvalue != $newvalue
-                && !(empty($oldvalue) && empty($newvalue))) {
+            if (
+                $oldvalue != $newvalue
+                && !(empty($oldvalue) && empty($newvalue))
+            ) {
                 $changes = [
                     'changes' => [
                         'fieldname' => $classname,
                         'oldvalue' => $oldvalue,
                         'newvalue' => $newvalue,
+                        'formkey' => 'canceluntil',
                     ],
                 ];
             }

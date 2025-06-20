@@ -771,7 +771,6 @@ body.limitedwidth #page.drawers .footer-popover {
     /* eslint-enable */
 }
 
-
 .booking-button-area .booking-button-area:not(#page-mod-booking-optionview .booking-button-area .booking-button-area), .urisebutton:not(#page-mod-booking-optionview .urisebutton) {
     background: transparent;
     border: black 1px solid;
@@ -801,6 +800,32 @@ body.limitedwidth #page.drawers .footer-popover {
     color: black;
     font-weight: normal;
     text-shadow: none;
+}
+
+.dots-horizontal-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0.25rem 1rem; /* more internal spacing */
+    font-family: Roboto, monospace; /* fallback for better dot spacing */
+    font-size: 1rem; /* slightly bigger for visibility */
+    border: 1px solid black;
+    border-radius: 8px;
+    font-weight: 500;
+    height: 100%;
+    color: black;
+    background-color: #fff;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+}
+
+.dots-horizontal-button:hover,
+.dots-horizontal-button:focus {
+    background: linear-gradient(90deg, #0063a6 0%, #0cbac5 101%);
+    color: white;
+    border: none;
+    text-decoration: none;
 }
 
 .urisecalendarcard {
@@ -1611,14 +1636,55 @@ border-radius: 10px !important;
     font-size: 26px;
 }
 
+/* Styling for template switcher */
+.lexa-templateswitcher-container {
+    border: 1px solid $primary_900;
+    padding: 4px;
+    border-radius: 10px;
+}
+.lexa-templateswitcher-icon-container {
+    display: inline-flex;
+    height: fit-content;
+    vertical-align: middle;
+    margin-left: 3px;
+}
+.lexa-templateswitcher-icon {
+    color: $primary_900 !important;
+    font-size: 1.2em;
+}
+.lexa-templateswitcher-select option {
+    color: $primary_900 !important;
+}
+.lexa-templateswitcher-select {
+    appearance: none;
+    padding-left: 0;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 18px;
+    height: fit-content;
+    border: none;
+    padding: 4px 0;
+    text-align: center;
+    margin-right: 3px;
+}
+.lexa-templateswitcher-text {
+    color: $primary_900 !important;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: 18px;
+}
+
+
+/* Styling for sorting select */
 .wunderbyteTableSelect {
     border: 1px solid $primary_900;
     padding: 4px;
     border-radius: 10px;
 }
 
-.wunderbyteTableSelect a i
-{
+.wunderbyteTableSelect a i {
     color: $primary_900 !important;
 }
 
@@ -1655,8 +1721,6 @@ border-radius: 10px !important;
     display: flex;
     width: 100%;
 }
-
-
 
 .text-pd {
     color: $primary_900 !important;
@@ -2978,6 +3042,17 @@ img {
     display: inline;
 }
 
+.wunderbyteTableFilter .parent .form-check-label::before {
+    left: 5px;
+}
+  
+.wunderbyteTableFilter .parent .form-check-label::after {
+    left: calc(0.25rem + 5px);
+}
+.wunderbyteTableFilter .parent .form-check-label {
+    width: 28px;
+}
+
 #theme_boost_union-loginorder-local #loginbtn {
     padding: 6px 10px !important;
-  }
+}

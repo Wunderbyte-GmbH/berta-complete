@@ -37,6 +37,8 @@ Feature: Sorting functionality of wunderbyte_table works as expected
     And the following "activities" exist:
       | activity | name       | intro      | course | idnumber |
       | page     | PageName1  | PageDesc1  | C1     | PAGE1    |
+    And I change viewport size to "1600x3000"
+    And I clean wbtable cache
 
   @javascript
   Scenario: Wunderbyte Table: sort Users tab table using select field

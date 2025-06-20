@@ -35,7 +35,6 @@ use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
  * Wunderbyte table class is an extension of table_sql.
  */
 class filter {
-
     /**
      * Filter creation is an expensive operation which is cached as far as possible.
      * Filter is language specific and tries to serve as many requests as possible.
@@ -48,7 +47,6 @@ class filter {
     public static function create_filter(wunderbyte_table $table) {
 
         if (!$table->filterjson) {
-
             // We need to localize the filter for every user.
             $lang = self::current_language();
             $key = $table->tablecachehash . $lang . '_filterjson';
@@ -83,23 +81,21 @@ class filter {
         $filtersettings = editfilter::return_filtersettings($table, $cachekey);
 
         if (empty($filtersettings)) {
-            return;
+            return '';
         }
 
         // Here, we create the filter first like this:
         // For every field we want to filter for, we look in our rawdata...
         // ... to fetch all the available values once.
         foreach ($filtersettings as $key => $value) {
-
             // Instead of, like previously, fetching rawdata once and iterating multiple times over it, we make another sql.
             // We just use the distinct method.
 
             // We won't generate a filter for the id column, but it will be present because we need it as dataset.
             if (strtolower($key) == 'id') {
-
                 // If the id checkbox is not checked, we don't show the filter at all.
                 if (empty($value[$key . '_wb_checked'])) {
-                    return;
+                    return '';
                 }
                 continue;
             }
@@ -121,7 +117,6 @@ class filter {
             $filtercolumns[$key] = [];
 
             foreach ($rawdata as $row) {
-
                 // Do not use empty(...) here because we want to show 0 values.
                 if ($row->{$key} === null || $row->{$key} === '') {
                     // Here the check if entries are set.
@@ -226,80 +221,17 @@ class filter {
         }
 
         // If there are only empty strings, we don't want the filter to show.
-        if (!$records
+        if (
+            !$records
             || (reset($records)->{$key} === null
-            || reset($records)->{$key} === '')) {
+            || reset($records)->{$key} === '')
+        ) {
             return [
                 'continue' => true,
             ];
         } else {
             return $records;
         }
-    }
-
-    /**
-     * Makes sql requests.
-     * @param wunderbyte_table $table
-     * @param string $key
-     * @return array
-     */
-    public static function get_db_filter_column_hours(wunderbyte_table $table, string $key) {
-
-        global $DB;
-
-        $databasetype = $DB->get_dbfamily();
-
-        // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
-        switch ($databasetype) {
-            case 'postgres':
-                $sql = "SELECT $key, COUNT($key)
-                        FROM ( SELECT EXTRACT(HOUR FROM TIMESTAMP 'epoch' + $key * interval '1 second') AS $key
-                        FROM {$table->sql->from}
-                        WHERE {$table->sql->where} AND $key IS NOT NULL AND $key <> 0) as hourss1
-                        GROUP BY $key ";
-                break;
-            case 'mysql':
-                $sql = "SELECT $key, COUNT($key)
-                        FROM ( SELECT EXTRACT(HOUR FROM FROM_UNIXTIME($key)) AS $key
-                        FROM {$table->sql->from}
-                        WHERE {$table->sql->where} AND $key IS NOT NULL AND $key <> 0) as hourss1
-                        GROUP BY $key ";
-                break;
-            default:
-                $sql = '';
-                break;
-        }
-
-        if (empty($sql)) {
-            return [];
-        }
-
-        $records = $DB->get_records_sql($sql, $table->sql->params);
-
-        return $records;
-    }
-
-    /**
-     * Apply the filter for postgres & mariadb DB.
-     * @param string $fieldname
-     * @param string $param
-     * @return string
-     */
-    public static function apply_hourlist_filter(string $fieldname, string $param) {
-        global $DB;
-
-        $databasetype = $DB->get_dbfamily();
-
-        // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
-        switch ($databasetype) {
-            case 'postgres':
-                $sql = " EXTRACT(HOUR FROM TIMESTAMP 'epoch' + $fieldname * interval '1 second') = $param";
-                break;
-            default:
-                $sql = " EXTRACT(HOUR FROM FROM_UNIXTIME($fieldname)) = $param";
-        }
-
-        return $sql;
     }
 
     /**
@@ -312,10 +244,12 @@ class filter {
      * @throws coding_exception
      * @throws dml_exception
      */
-    public static function save_settings(wunderbyte_table $table,
-                                        string $cachekey,
-                                        array $tablesettings,
-                                        bool $onlyinsert = true) {
+    public static function save_settings(
+        wunderbyte_table $table,
+        string $cachekey,
+        array $tablesettings,
+        bool $onlyinsert = true
+    ) {
 
         global $USER, $DB;
 
@@ -324,11 +258,12 @@ class filter {
 
         // We use this to avoid unnecessary check.
         if (!$onlyinsert) {
-
-            if ($data = $DB->get_record('local_wunderbyte_table', [
+            if (
+                $data = $DB->get_record('local_wunderbyte_table', [
                 'hash' => $cachekey,
                 'userid' => 0,
-            ], 'id, timemodified, jsonstring')) {
+                ], 'id, timemodified, jsonstring')
+            ) {
                 $data->timemodified = $now;
                 $data->jsonstring = json_encode($tablesettings);
 
@@ -360,10 +295,10 @@ class filter {
     public static function get_timezone_offset() {
 
         $now = new DateTime("now", new DateTimeZone('GMT'));
-        $gmttime = $now->format('h');
+        $gmttime = $now->format('H');
 
         $now = new DateTime("now", core_date::get_user_timezone_object());
-        $userhour = $now->format('h');
+        $userhour = $now->format('H');
 
         $delta = $gmttime - $userhour;
 

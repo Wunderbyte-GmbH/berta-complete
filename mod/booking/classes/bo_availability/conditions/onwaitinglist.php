@@ -49,7 +49,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class onwaitinglist implements bo_condition {
-
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_ONWAITINGLIST;
 
@@ -109,10 +108,18 @@ class onwaitinglist implements bo_condition {
             // If user is confirmed, we don't block.
             $ba = $bookinganswer->usersonwaitinglist[$userid];
 
-            if (($bookinginformation['onwaitinglist']['fullybooked'] === false)) {
+            $firstonlist = self::is_first_on_waitinglist($userid, $bookinganswer->usersonwaitinglist);
+
+            if (
+                ($bookinginformation['onwaitinglist']['fullybooked'] === false)
+                && $firstonlist
+                // Only confirm is this person is next on the list.
+            ) {
                 // If there are places free, we might want to allow booking.
                 // Either when we don't need confirmation.
-                if (empty($settings->waitforconfirmation)) {
+                if (
+                    empty($settings->waitforconfirmation)
+                ) {
                     $isavailable = true;
                 } else if (!empty($ba->json)) {
                     // Or when confirmation is already given.
@@ -139,10 +146,10 @@ class onwaitinglist implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -190,9 +197,11 @@ class onwaitinglist implements bo_condition {
         $description = $this->get_description_string($isavailable, $full, $userid, $settings);
 
         // If the user is in principle allowed to overbook AND the overbook setting is set in the instance, overbooking is possible.
-        if (!empty($settings->waitforconfirmation)
+        if (
+            !empty($settings->waitforconfirmation)
             && !empty(get_config('booking', 'allowoverbooking'))
-            && has_capability('mod/booking:canoverbook', context_system::instance())) {
+            && has_capability('mod/booking:canoverbook', context_system::instance())
+        ) {
             $buttontype = MOD_BOOKING_BO_BUTTON_MYALERT;
         } else {
             $buttontype = MOD_BOOKING_BO_BUTTON_JUSTMYALERT;
@@ -274,14 +283,11 @@ class onwaitinglist implements bo_condition {
             $description = $full ? get_string('bocondonwaitinglistfullavailable', 'mod_booking') :
                 get_string('bocondonwaitinglistavailable', 'mod_booking');
         } else {
-
             if (get_config('booking', 'waitinglistshowplaceonwaitinglist')) {
-
                 $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
                 $placeonwaitinglist = $bookinganswer->return_place_on_waitinglist($userid);
 
                 $description = get_string('yourplaceonwaitinglist', 'mod_booking', $placeonwaitinglist);
-
             } else {
                 $description = $full ? get_string('bocondonwaitinglistfullnotavailable', 'mod_booking') :
                 get_string('bocondonwaitinglistnotavailable', 'mod_booking');
@@ -289,5 +295,32 @@ class onwaitinglist implements bo_condition {
         }
 
         return $description;
+    }
+
+    /**
+     * Check if a user is the first on the list.
+     *
+     * @param int $userid
+     * @param array $usersonwaitinglist
+     *
+     * @return bool
+     *
+     */
+    private static function is_first_on_waitinglist(int $userid, array $usersonwaitinglist) {
+
+        $islowest = false;
+
+        if (isset($usersonwaitinglist[$userid])) {
+            $targettime = $usersonwaitinglist[$userid]->timemodified;
+
+            $islowest = true;
+            foreach ($usersonwaitinglist as $user => $obj) {
+                if ($user !== $userid && $obj->timemodified < $targettime) {
+                    $islowest = false;
+                    break;
+                }
+            }
+        }
+        return $islowest;
     }
 }

@@ -33,10 +33,12 @@ class addresses {
      * @return array all required template data
      */
     public static function get_template_render_data(): array {
-        global $USER, $DB;
-        $userid = $USER->id;
-        $data["usermail"] = $USER->email;
-        $data["username"] = $USER->firstname . $USER->lastname;
+        global $USER;
+        $userid = $USER->id ?? 0;
+        $data["email"] = $USER->email ?? "";
+        $data["username"] = $USER->username ?? "";
+        $data["firstname"] = $USER->firstname ?? "";
+        $data["lastname"] = $USER->lastname ?? "";
         $data["userid"] = $userid;
 
         // Get saved addresses for current user.
@@ -52,7 +54,7 @@ class addresses {
 
         $requiredaddresseslocalized = self::get_required_address_data();
         $data['required_addresses'] = array_values($requiredaddresseslocalized);
-        $data['required_addresses_keys'] = array_reduce($requiredaddresseslocalized, function($keys, $addressdata) {
+        $data['required_addresses_keys'] = array_reduce($requiredaddresseslocalized, function ($keys, $addressdata) {
             $keys[] = $addressdata['addresskey'];
             return $keys;
         }, []);
@@ -97,7 +99,7 @@ class addresses {
      * @return string|null the address in a single line string, or false if no matching address was found
      */
     public static function get_address_string_for_user(int $userid, int $addressid): ?string {
-        $address = address_operations::get_specific_user_addresses($addressid);
+        $address = address_operations::get_specific_user_address($addressid);
         if ($address) {
             $countries = get_string_manager()->get_list_of_countries();
             return $address->address . trim(" " . $address->address2) . ", " . $address->zip . " " . $address->city . ", " .

@@ -36,6 +36,7 @@ use local_shopping_cart\shopping_cart_history;
 use local_shopping_cart\local\cartstore;
 use local_shopping_cart\output\shoppingcart_history_list;
 use stdClass;
+use tool_mocktesttime\time_mock;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
@@ -57,6 +58,9 @@ final class condition_all_test extends advanced_testcase {
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -738,6 +742,7 @@ final class condition_all_test extends advanced_testcase {
         $student2 = $this->getDataGenerator()->create_user();
         $student3 = $this->getDataGenerator()->create_user();
         $student4 = $this->getDataGenerator()->create_user();
+        $student5 = $this->getDataGenerator()->create_user();
         $teacher = $this->getDataGenerator()->create_user();
         $bookingmanager = $this->getDataGenerator()->create_user(); // Booking manager.
 
@@ -752,6 +757,7 @@ final class condition_all_test extends advanced_testcase {
         $this->getDataGenerator()->enrol_user($student2->id, $course->id);
         $this->getDataGenerator()->enrol_user($student3->id, $course->id);
         $this->getDataGenerator()->enrol_user($student4->id, $course->id);
+        $this->getDataGenerator()->enrol_user($student5->id, $course->id);
         $this->getDataGenerator()->enrol_user($teacher->id, $course->id);
         $this->getDataGenerator()->enrol_user($bookingmanager->id, $course->id);
 
@@ -853,18 +859,42 @@ final class condition_all_test extends advanced_testcase {
         // Now student3 is on waitinglist.
         $result = booking_bookit::bookit('option', $settings->id, $student3->id);
         [$id, $isavailable, $description] = $boinfo->is_available($settings->id, $student3->id, false);
-
-        // User really is booked to waitinglist.
         $this->assertEquals(MOD_BOOKING_BO_COND_ONWAITINGLIST, $id);
 
-        // Use notification list.
-        $res = set_config('usenotificationlist', 1, 'booking');
-
+        // Waitinglist is full, no further user can be booked.
         $this->setUser($student4);
+        [$id, $isavailable, $description] = $boinfo->is_available($settings->id, $student4->id, false);
+        $this->assertEquals(MOD_BOOKING_BO_COND_FULLYBOOKED, $id);
 
-        // Now student4 is on notification list.
+        // Now we set waitinglist to unlimited.
+        $this->setAdminUser();
+        $record->id = $option1->id;
+        $record->maxoverbooking = -1;
+        $record->cmid = $settings->cmid;
+        booking_option::update($record);
+
+        // And try again to book user4 again.
+        $this->setUser($student4);
         $result = booking_bookit::bookit('option', $settings->id, $student4->id);
         [$id, $isavailable, $description] = $boinfo->is_available($settings->id, $student4->id, false);
+        $this->assertEquals(MOD_BOOKING_BO_COND_CONFIRMBOOKIT, $id);
+        $result = booking_bookit::bookit('option', $settings->id, $student4->id);
+        [$id, $isavailable, $description] = $boinfo->is_available($settings->id, $student4->id, false);
+        $this->assertEquals(MOD_BOOKING_BO_COND_ONWAITINGLIST, $id);
+
+        // Make sure, waitinglist is full and use notification list.
+        $this->setAdminUser();
+        $record->id = $option1->id;
+        $record->maxoverbooking = 2;
+        $record->cmid = $settings->cmid;
+        booking_option::update($record);
+        $res = set_config('usenotificationlist', 1, 'booking');
+
+        $this->setUser($student5);
+
+        // Now student4 is on notification list.
+        $result = booking_bookit::bookit('option', $settings->id, $student5->id);
+        [$id, $isavailable, $description] = $boinfo->is_available($settings->id, $student5->id, false);
 
         // User really is booked to notifylist.
         $this->assertEquals(MOD_BOOKING_BO_COND_NOTIFYMELIST, $id);
@@ -1630,7 +1660,8 @@ final class condition_all_test extends advanced_testcase {
 
         // Disable allowoverbooking at all.
         $res = set_config('allowoverbooking', 0, 'booking');
-        $res = set_config('allowoverbooking', null, 'booking');
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+        /* $res = set_config('allowoverbooking', null, 'booking'); */
 
         $record = new stdClass();
         $record->bookingid = $booking1->id;
@@ -1820,7 +1851,7 @@ final class condition_all_test extends advanced_testcase {
         [$id, $isavailable, $description] = $boinfo3->is_available($settings3->id, $student1->id, true);
         $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $id);
 
-        singleton_service::destroy_answers_for_user($student1->id);
+        singleton_service::destroy_answers_for_user($student1->id); // Destroy all answers for this user.
         // Now try to book an option that doesn't contain the nooverlapping flab BUT overlaps with previously booked option 3.
         [$id, $isavailable, $description] = $boinfo4->is_available($settings4->id, $student1->id, true);
         $this->assertEquals(MOD_BOOKING_BO_COND_JSON_NOOVERLAPPINGPROXY, $id);
@@ -1960,8 +1991,9 @@ final class condition_all_test extends advanced_testcase {
         [$id, $isavailable, $description] = $boinfo3->is_available($settings3->id, $student1->id, true);
         $this->assertEquals(MOD_BOOKING_BO_COND_ALREADYBOOKED, $id);
 
-        singleton_service::destroy_answers_for_user($student1->id);
-        // Now try to book an option that doesn't contain the nooverlapping flab BUT overlaps with previously booked option 3.
+        singleton_service::destroy_answers_for_user($student1->id); // Destroy all answers for this user.
+
+        // Now try to book an option that doesn't contain the nooverlapping flag BUT overlaps with previously booked option 3.
         [$id, $isavailable, $description] = $boinfo4->is_available($settings4->id, $student1->id, true);
         $this->assertEquals(MOD_BOOKING_BO_COND_JSON_NOOVERLAPPINGPROXY, $id);
 
@@ -1993,7 +2025,7 @@ final class condition_all_test extends advanced_testcase {
             'userleave' => ['text' => 'text'],
             'tags' => '',
             'completion' => 2,
-            'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+            'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
         ];
         return ['bdata' => [$bdata]];
     }
@@ -2005,5 +2037,6 @@ final class condition_all_test extends advanced_testcase {
         parent::tearDown();
         // Mandatory clean-up.
         singleton_service::destroy_instance();
+        cartstore::reset();
     }
 }

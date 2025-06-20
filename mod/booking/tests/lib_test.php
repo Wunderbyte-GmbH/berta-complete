@@ -26,6 +26,8 @@
 
 namespace mod_booking;
 
+use tool_mocktesttime\time_mock;
+
 defined('MOODLE_INTERNAL') || die();
 
 use advanced_testcase;
@@ -45,13 +47,26 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends advanced_testcase {
-
     /**
      * Tests set up.
      */
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        global $DB;
+
+        parent::tearDown();
+        // Mandatory clean-up.
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -79,7 +94,7 @@ final class lib_test extends advanced_testcase {
                     'pollurlteacherstext' => ['text' => 'text'], 'notificationtext' => ['text' => 'text'],
                     'userleave' => ['text' => 'text'], 'bookingpolicy' => 'bookingpolicy',
                     'tags' => '', 'course' => $course->id, 'bookingmanager' => $user->username,
-                    'showviews' => ['showall, showactive, mybooking, myoptions, myinstitution'],
+                    'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
         ];
 
         $booking = $this->getDataGenerator()->create_module('booking', $bdata);
@@ -107,7 +122,5 @@ final class lib_test extends advanced_testcase {
         $this->assertEquals(1, $DB->count_records('booking_teachers', ['userid' => $user->id, 'optionid' => $option->id]));
 
         $this->assertEquals(true, groups_is_member($group->id, $user->id));
-
     }
-
 }

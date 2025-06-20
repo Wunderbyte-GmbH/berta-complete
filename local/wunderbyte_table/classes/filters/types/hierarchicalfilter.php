@@ -43,7 +43,6 @@ class hierarchicalfilter extends base {
      * @return void
      */
     public function add_options(array $options = []) {
-
         foreach ($options as $key => $value) {
             $this->options[$key] = $value;
         }
@@ -57,10 +56,9 @@ class hierarchicalfilter extends base {
      * @param array $filtersettings
      * @param string $fckey
      * @param array $values
-     * @return array
+     * @return void
      */
     public static function add_to_categoryobject(array &$categoryobject, array $filtersettings, string $fckey, array $values) {
-
         // Don't treat this filter if there are no values here.
         if (!is_array($values)) {
             return;
@@ -93,14 +91,7 @@ class hierarchicalfilter extends base {
         }
 
         // We have to check if we have a sortarray for this filtercolumn.
-        if (
-            isset($filtersettings[$fckey])
-            && count($filtersettings[$fckey]) > 0
-        ) {
-                            $sortarray = $filtersettings[$fckey];
-        } else {
-            $sortarray = null;
-        }
+        $sortarray = isset($filtersettings[$fckey]) && (count($filtersettings[$fckey]) > 0) ? $filtersettings[$fckey] : null;
 
         // First we create our sortedarray and add all values in the right order.
         if ($sortarray != null) {
@@ -143,7 +134,6 @@ class hierarchicalfilter extends base {
         foreach ($values as $subcategorykey => $subcategoryarray) {
             $categorycount = 0;
             foreach ($subcategoryarray as $valuekey => $valuevalue) {
-
                 // For custom fields, we get the actual string value from field controller.
                 $fieldcontroller = wbt_field_controller_info::get_instance_by_shortname($fckey);
                 if (!empty($fieldcontroller)) {
@@ -177,7 +167,7 @@ class hierarchicalfilter extends base {
                 || count($categoryobject['hierarchy'][$subcategorykey]['values']) == 0
             ) {
                 // We don't add the filter if there is nothing in there.
-                return [];
+                return;
             }
 
             if ($sortarray == null) {
@@ -216,8 +206,125 @@ class hierarchicalfilter extends base {
         $categoryvalue,
         wunderbyte_table &$table
     ): void {
-
         $standardfilter = new standardfilter($columnname);
         $standardfilter->apply_filter($filter, $columnname, $categoryvalue, $table);
+    }
+
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param array $data
+     * @param string $filterspecificvalue
+     */
+    public static function render_mandatory_fields(&$mform, $data = [], $filterspecificvalue = '') {
+        foreach ($data as $key => $keyvaluepair) {
+            if (count($data) > 1 && empty($key)) {
+                continue;
+            }
+            $elements = [];
+            $keylabel = 'keyvaluepairs[' . $key . ']';
+            $elements[] = $mform->createElement('text', $keylabel . '[key]', '', ['placeholder' => 'Hierarchical key']);
+            if (!empty($keyvaluepair['key'])) {
+                $mform->setDefault($keylabel . '[key]', $keyvaluepair['key']);
+            }
+            $elements[] = $mform->createElement('text', $keylabel . '[parent]', '', ['placeholder' => 'Parent']);
+            if (!empty($keyvaluepair['parent'])) {
+                $mform->setDefault($keylabel . '[parent]', $keyvaluepair['parent']);
+            }
+            $elements[] = $mform->createElement('text', $keylabel . '[localizedname]', '', ['placeholder' => 'Localized name']);
+            if (!empty($keyvaluepair['localizedname'])) {
+                $mform->setDefault($keylabel . '[localizedname]', $keyvaluepair['localizedname']);
+            }
+            if (!empty($key)) {
+                $elements[] = self::generate_delete_button($mform, $key);
+            }
+            $grouplabelname = empty($key) ? 'New' : $key;
+            $mform->addGroup($elements, $key . '_group', $grouplabelname . ' values', '<br>', false);
+        }
+    }
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param string $key
+     */
+    private static function generate_delete_button($mform, $key) {
+        $trashicon = '<i class="fa fa-trash"></i>';
+        return $mform->createElement(
+            'button',
+            "remove[{$key}_group]",
+            $trashicon,
+            [
+                'class' => 'btn remove-key-value',
+                'type' => 'button',
+                'data-groupid' => $key . '_group',
+                'aria-label' => "Remove key-value pair for {$key}",
+            ]
+        );
+    }
+
+    /**
+     * The expected value.
+     * @param array $data
+     * @return array
+     */
+    public static function validate_input($data) {
+        $errors = [];
+        foreach ($data['keyvaluepairs'] as $key => $keyvaluepair) {
+            if (
+                empty($keyvaluepair['key']) != empty($keyvaluepair['parent']) ||
+                empty($keyvaluepair['key']) != empty($keyvaluepair['localizedname'])
+            ) {
+                $errors[$key . '_group'] = 'Either all or no values have to be filled out';
+            }
+        }
+        return $errors;
+    }
+
+    /**
+     * The expected value.
+     * @param array $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_filterspecific_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterunspecificvalues = [
+            'localizedname',
+            'wbfilterclass',
+            $filterenablelabel,
+        ];
+        $filterspecificvalues = [];
+        foreach ($data as $key => $value) {
+            if (!in_array($key, $filterunspecificvalues)) {
+                $filterspecificvalues[$key] = [
+                    'key' => $value['key'] ?? $key,
+                    'parent' => $value['parent'],
+                    'localizedname' => $value['localizedname'],
+                ];
+            }
+        }
+        return [$filterspecificvalues, ''];
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_new_filter_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+        ];
+        foreach ($data->keyvaluepairs as $key => $keyvaluepair) {
+            $filterspecificvalues[$keyvaluepair['key']] = (object)[
+                'parent' => $keyvaluepair['parent'],
+                'localizedname' => $keyvaluepair['localizedname'],
+            ];
+        }
+        return $filterspecificvalues;
     }
 }

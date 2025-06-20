@@ -1,17 +1,39 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## [2.6.2] 2025-02-10 (dev)
+## [2.7.0] 2025-05-05
 ### Added
-- New {menubookmarks} tag. (PRO version only)
-- Performance optimization: Now caches login state.
+- New {ifnotingroup} tag (without parameters).
+- Primary/Custom menu text, such as course or category names, can now contain a pipe (|) character.
 - New {firstnamephonetic} tag.
 - New {lastnamephonetic} tag.
 - New {middlename} tag.
+- New Add New User and Upload Users to {menuadmin} tag.
 ### Updated
+- Fix-323: Escape arguments used to construct link from button code.
+- Fix-210: {if*rolename*} tags now work correctly.
+- Fix-319: Moodle 4.5 and 5.0 Plugin CI runs.
+- Fix-318: Language tags now work inside {global_...} tags.
+- Performance optimization: Now caches login state.
+- Issue #329: Increase maximum globaltagcount to 100.
+- Issue #335: Refactor text_filter to construct archetypes only once.
+- Fixed several issues relating to Multi-language text.
+
+## [2.6.3] 2025-04-27
+### Updated
+- Fixed warning if the {ifprofile_field_shortname} field does not exist.
+- The {sitesummary} tag now displays the site summary instead of the site full name.
 - Managers can no longer access the Themes menu.
-- Only Site Administrators can access User: Profile Fields in Admin menu.
-- Fix-312: ifactivitycompleted and ifnotactivitycompleted now works correctly with graded activities.
+- Refactored {menuwishlist}. No functional change.
+- Fixed coding style guidelines compliance issue.
+- Only Site Administrators can now access User: Profile Fields in the `Admin` menu.
+- Fix-312: {ifactivitycompleted} and {ifnotactivitycompleted} now work correctly with graded activities.
+- Fix-311: {global_...} tags can now include numbers in their name.
+- Fix-322: Made path to settings PHP files more specific.
+- Fixed ALT text for {userpictureimg} tag.
+- Fixed compatibility issues with Moodle LMS 5.0.
+- Fixed issue with profile image if size was not specified.
+- Now prevents recursive calls.
 - Copyright notice to include 2025.
 
 ## [2.6.1] 2024-11-20

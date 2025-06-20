@@ -40,14 +40,15 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class wbt_field_controller extends field_controller implements wbt_field_controller_base {
-
     /**
      * Get the actual string value of the customfield by index.
      *
      * @param string $key
+     * @param bool $formatstring
+     * @param bool $keyisencoded
      * @return string the string value for the index
      */
-    public function get_option_value_by_key(string $key): string {
+    public function get_option_value_by_key(string $key, bool $formatstring = true, bool $keyisencoded = false): string {
         $index = (int) $key;
         $optionsstring = $this->get_configdata_property('options');
         $optionsarray = explode(PHP_EOL, $optionsstring);
@@ -58,6 +59,25 @@ class wbt_field_controller extends field_controller implements wbt_field_control
         if ($i < 0 || $i >= count($optionsarray)) {
             return wbt_field_controller_info::WBTABLE_CUSTOMFIELD_VALUE_NOTFOUND;
         }
-        return format_string($optionsarray[$i]);
+        $returnvalue = $optionsarray[$i];
+        if ($formatstring) {
+            $returnvalue = format_string($returnvalue);
+        }
+        return $returnvalue;
+    }
+
+    /**
+     * Get an array containing all key value pairs for the customfield.
+     * Depending on the type, these can be actually used values or possible values.
+     *
+     * @return array an array containing all key value pairs for the customfield
+     */
+    public function get_values_array(): array {
+        $optionsstring = $this->get_configdata_property('options');
+        $optionsarray = explode(PHP_EOL, $optionsstring);
+        if (empty($optionsarray)) {
+            return [];
+        }
+        return $optionsarray;
     }
 }

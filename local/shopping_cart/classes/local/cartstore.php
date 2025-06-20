@@ -51,7 +51,6 @@ require_once($CFG->dirroot . '/local/shopping_cart/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class cartstore {
-
     /** @var array */
     protected static $instance = [];
 
@@ -92,6 +91,7 @@ class cartstore {
 
         $data = $this->get_cache();
         $expirationtime = shopping_cart::get_expirationtime();
+        $expirationtime = $this->set_expiration($expirationtime);
 
         $itemdata = $item->as_array();
         $itemdata['expirationtime'] = $expirationtime;
@@ -144,6 +144,7 @@ class cartstore {
                     $data['expirationtime'] = 0;
                     unset($data['paymentaccountid']);
                     unset($data['costcenter']);
+                    $this->delete_saved_items_from_db();
                 }
                 $this->set_cache($data);
             }
@@ -217,8 +218,10 @@ class cartstore {
             }
             $item['discount'] = $absolute;
             // If setting to round discounts is turned on, we round to full int.
-            $item['discount'] = round($item['discount'],
-                    $discountprecision);
+            $item['discount'] = round(
+                $item['discount'],
+                $discountprecision
+            );
             $item['price'] =
                     $initialprice - $item['discount'];
         } else {
@@ -284,7 +287,8 @@ class cartstore {
      * @throws coding_exception
      */
     public function save_item(
-        array $item) {
+        array $item
+    ) {
 
         $data = $this->get_cache();
 
@@ -297,6 +301,57 @@ class cartstore {
             }
         }
         return false;
+    }
+
+    /**
+     * This function saves items in DB.
+     *
+     * @return [type]
+     *
+     */
+    public function save_cart_to_db() {
+
+        global $DB, $USER;
+
+        $data = $this->get_cache();
+
+        reservations::save_reservation($data);
+    }
+
+    /**
+     * Is called when cart is empty to make sure that there is no saved item either.
+     *
+     * @param int $identifier
+     * @return bool
+     *
+     */
+    public function delete_saved_items_from_db($identifier = null) {
+
+        return reservations::delete_reservation($this->userid, $identifier);
+    }
+
+    /**
+     * This function saves items in DB.
+     *
+     * @param int $identifier
+     *
+     * @return bool
+     *
+     */
+    public function restore_cart_from_db($identifier = null) {
+        global $DB, $USER;
+
+        $now = time();
+        if (
+            $data = reservations::get_json_from_db($this->userid, $identifier)
+        ) {
+            $data['nowdate'] = $now;
+            unset($data['identifier']);
+            $this->set_cache($data);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -320,6 +375,7 @@ class cartstore {
                 $data['expirationtime'] = 0;
                 unset($data['costcenter']);
                 $this->set_cache($data);
+                $this->delete_saved_items_from_db();
             }
         }
     }
@@ -371,16 +427,26 @@ class cartstore {
     /**
      * Expirationtime.
      * @param int $expirationtime
-     * @return void
+     * @return int
      * @throws coding_exception
      */
     public function set_expiration(int $expirationtime) {
 
         $data = $this->get_cache();
 
-        $data['expirationtime'] = $expirationtime;
+        if (($data['expirationtime'] ?? 0) > $expirationtime) {
+            $expirationtime = $data['expirationtime'];
+        } else {
+            $data['expirationtime'] = $expirationtime;
+        }
+
+        foreach ($data['items'] ?? [] as $key => $item) {
+            $data['items'][$key]['expirationtime'] = $expirationtime;
+        }
 
         $this->set_cache($data);
+
+        return $expirationtime;
     }
 
     /**
@@ -455,7 +521,6 @@ class cartstore {
         $cache = \cache::make('local_shopping_cart', 'schistory');
         // If there is a schistory cache...
         if ($data = $cache->get('schistorycache')) {
-
             $identifier = $data['identifier'];
             // We need to replace it.
             $data = $this->get_data();
@@ -471,7 +536,7 @@ class cartstore {
      * @return void
      * @throws coding_exception
      */
-    private function set_cache($cachedata) {
+    public function set_cache($cachedata) {
 
         $this->cachedata = $cachedata;
 
@@ -491,8 +556,11 @@ class cartstore {
         $data = self::get_cache();
 
         // If we have cachedrawdata, we need to check the expiration date.
-        if (isset($data['expirationtime']) && !is_null($data['expirationtime'])
-                    && $data['expirationtime'] < time()) {
+        if (
+            isset($data['expirationtime'])
+            && !is_null($data['expirationtime'])
+            && $data['expirationtime'] < time()
+        ) {
                 self::delete_all_items();
                 $data = self::get_cache();
         }
@@ -533,22 +601,13 @@ class cartstore {
         $data["name"] = $USER->firstname . $USER->lastname;
         $data["userid"] = $USER->id;
 
-        // Makes sure no open purchase stays active.
-        shopping_cart::check_for_ongoing_payment($USER->id);
-
         // This creates just our list of boght items.
         $historylist = new shoppingcart_history_list($USER->id);
         $historylist->insert_list($data);
 
-        // Here we are before checkout.
-        $expirationtime = shopping_cart::get_expirationtime();
-
-        // Add or reschedule all delete_item_tasks for all the items in the cart.
-        shopping_cart::add_or_reschedule_addhoc_tasks($expirationtime, $USER->id);
-
         // The modifier "checkout" prepares our data for the checkout page.
         // During this process,the new identifier is created, if necessary.
-        checkout::prepare_checkout($data);
+        $data = checkout::prepare_checkout($data);
 
         // We add the vatnrcheckerform here, if necessary.
         if (
@@ -706,8 +765,10 @@ class cartstore {
 
         $items = $this->get_items();
         foreach ($items as $item) {
-            if (($item['area'] === 'rebookitem')
-                && ($item['componentname'] === 'local_shopping_cart') ) {
+            if (
+                ($item['area'] === 'rebookitem')
+                && ($item['componentname'] === 'local_shopping_cart')
+            ) {
                 return true;
             }
         }
@@ -733,31 +794,35 @@ class cartstore {
         $cachedata = $cache->get($cachekey);
 
         if (empty($cachedata)) {
-            $taxesenabled = get_config('local_shopping_cart', 'enabletax') == 1;
-            $usecredit = 1;
+            if (!$this->restore_cart_from_db()) {
+                $taxesenabled = get_config('local_shopping_cart', 'enabletax') == 1;
+                $usecredit = 1;
 
-            [$credit, $currency] = shopping_cart_credits::get_balance($this->userid);
+                [$credit, $currency] = shopping_cart_credits::get_balance($this->userid);
 
-            $cachedata = [
-                'userid' => $this->userid,
-                'credit' => $credit,
-                'remainingcredit' => $credit,
-                'currency' => $currency,
-                'count' => 0,
-                'maxitems' => get_config('local_shopping_cart', 'maxitems'),
-                'items' => [],
-                'price' => 0.00,
-                'taxesenabled' => $taxesenabled,
-                'initialtotal' => 0.00,
-                'deductible' => 0.00,
-                'checkboxid' => bin2hex(random_bytes(3)),
-                'usecredit' => $usecredit,
-                'useinstallments' => 0,
-                'expirationtime' => 0,
-                'nowdate' => time(),
-                'checkouturl' => $CFG->wwwroot . "/local/shopping_cart/checkout.php",
-            ];
-            $this->set_cache($cachedata);
+                $cachedata = [
+                    'userid' => $this->userid,
+                    'credit' => $credit,
+                    'remainingcredit' => $credit,
+                    'currency' => $currency,
+                    'count' => 0,
+                    'maxitems' => get_config('local_shopping_cart', 'maxitems'),
+                    'items' => [],
+                    'price' => 0.00,
+                    'taxesenabled' => $taxesenabled,
+                    'initialtotal' => 0.00,
+                    'deductible' => 0.00,
+                    'checkboxid' => bin2hex(random_bytes(3)),
+                    'usecredit' => $usecredit,
+                    'useinstallments' => 0,
+                    'expirationtime' => 0,
+                    'nowdate' => time(),
+                    'checkouturl' => $CFG->wwwroot . "/local/shopping_cart/checkout.php",
+                ];
+                $this->set_cache($cachedata);
+            } else {
+                $cachedata = $this->get_cache();
+            }
         }
         $this->cachedata = $cachedata;
         return $cachedata;
@@ -801,7 +866,6 @@ class cartstore {
             $now = time();
 
             foreach ($openinstallements as $openinstallment) {
-
                 if (strpos($openinstallment['area'], 'installment') === false) {
                     continue;
                 }
@@ -854,16 +918,16 @@ class cartstore {
         $data = $this->get_cache();
 
         foreach ($data['items'] as $item) {
-
             if ($item['componentname'] !== $component) {
                 continue;
             }
 
             $identifierarray = explode('_', $item['linkeditem'] ?? '');
 
-            if (($area != $identifierarray[0] ?? '')
-                || ($itemid != $identifierarray[1] ?? 0)) {
-
+            if (
+                ($area != $identifierarray[0] ?? '')
+                || ($itemid != $identifierarray[1] ?? 0)
+            ) {
                 continue;
             }
             $returnarray[] = $item;
@@ -992,7 +1056,7 @@ class cartstore {
         }
 
         if ($billingaddressid != null) {
-            $billingaddress = address_operations::get_specific_user_addresses($billingaddressid);
+            $billingaddress = address_operations::get_specific_user_address($billingaddressid);
             $taxcountrycode = $billingaddress->state;
         }
         $data["taxcountrycode"] = $taxcountrycode;
@@ -1030,5 +1094,15 @@ class cartstore {
         $data["taxcountrycode"] = $taxcountrycode;
 
         $this->set_cache($data);
+    }
+
+    /**
+     * Resets everything, for unit tests.
+     *
+     * @return void
+     *
+     */
+    public static function reset() {
+        self::$instance = [];
     }
 }

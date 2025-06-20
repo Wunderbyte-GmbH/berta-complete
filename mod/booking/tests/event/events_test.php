@@ -28,6 +28,7 @@ namespace mod_booking;
 use advanced_testcase;
 use context_course;
 use stdClass;
+use tool_mocktesttime\time_mock;
 
 /**
  * Tests for forum events.
@@ -38,13 +39,26 @@ use stdClass;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class events_test extends advanced_testcase {
-
     /**
      * Tests set up.
      */
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        global $DB;
+
+        parent::tearDown();
+        // Mandatory clean-up.
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -104,7 +118,7 @@ final class events_test extends advanced_testcase {
      */
     public function test_teacher_added(): void {
 
-        list($user1, $option, $coursectx) = $this->returntestdata();
+        [$user1, $option, $coursectx] = $this->returntestdata();
 
         $params = ['relateduserid' => $user1->id, 'objectid' => $option->id, 'context' => $coursectx];
 
@@ -137,7 +151,7 @@ final class events_test extends advanced_testcase {
      */
     public function test_teacher_removed(): void {
 
-        list($user1, $option, $coursectx) = $this->returntestdata();
+        [$user1, $option, $coursectx] = $this->returntestdata();
 
         $params = ['relateduserid' => $user1->id, 'objectid' => $option->id, 'context' => $coursectx];
 

@@ -25,17 +25,14 @@
 namespace mod_booking\option;
 
 use coding_exception;
-use core_component;
 use mod_booking\booking_option_settings;
 use mod_booking\singleton_service;
 use moodle_exception;
 use MoodleQuickForm;
 use stdClass;
-use context_coursecat;
 use context_module;
 use dml_exception;
 use Exception;
-use mod_booking\price;
 use mod_booking\settings\optionformconfig\optionformconfig_info;
 
 defined('MOODLE_INTERNAL') || die();
@@ -50,7 +47,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class fields_info {
-
      /**
       * This function runs through all installed field classes and executes the prepare save function.
       * Returns an array of warnings as string.
@@ -59,18 +55,20 @@ class fields_info {
       * @param int $updateparam
       * @return array
       */
-    public static function prepare_save_fields(stdClass &$formdata, stdClass &$newoption,
-        int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT): array {
+    public static function prepare_save_fields(
+        stdClass &$formdata,
+        stdClass &$newoption,
+        int $updateparam = MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT
+    ): array {
 
         $feedback = [];
         $error = [];
-        // TODO: implement error handling.
+        // Todo: implement error handling.
 
         $context = context_module::instance($formdata->cmid);
         $classes = self::get_field_classes($context->id);
 
         foreach ($classes as $classname) {
-
             if (class_exists($classname)) {
                 // We want to ignore some classes here.
                 if (self::ignore_class($formdata, $classname)) {
@@ -151,7 +149,7 @@ class fields_info {
             case MOD_BOOKING_HEADER_DATES:
                 $headericon = '<i class="fa fa-fw fa-calendar" aria-hidden="true"></i>';
                 break;
-            // TODO: Add icons for the other headers here...
+            // Todo: Add icons for the other headers here...
         }
 
         if (!empty($headericon)) {
@@ -181,7 +179,7 @@ class fields_info {
      * Add all available fields in the right order.
      * @param MoodleQuickForm $mform
      * @param array $formdata
-     * @return void
+     * @return array
      */
     public static function instance_form_definition(MoodleQuickForm &$mform, array &$formdata) {
 
@@ -196,15 +194,16 @@ class fields_info {
 
         $classes = self::get_field_classes($context->id);
 
-        foreach ($classes as $classname) {
-
+        foreach ($classes as $key => $classname) {
             // We want to ignore some classes here.
             if (self::ignore_class((object)$formdata, $classname)) {
+                unset($classes[$key]);
                 continue;
             }
-
             $classname::instance_form_definition($mform, $formdata, []);
         }
+
+        return $classes;
     }
 
     /**
@@ -220,7 +219,6 @@ class fields_info {
         $classes = self::get_field_classes($context->id);
 
         foreach ($classes as $classname) {
-
             // We want to ignore some classes here.
             if (self::ignore_class((object)$data, $classname)) {
                 continue;
@@ -243,12 +241,10 @@ class fields_info {
         $classes = self::get_field_classes($context->id, MOD_BOOKING_EXECUTION_POSTSAVE);
         $changes = [];
         foreach ($classes as $classname) {
-
             // We want to ignore some classes here.
             if (self::ignore_class($formdata, $classname)) {
                 continue;
             }
-
             $changes[$classname] = $classname::save_data($formdata, $option);
         }
         return $changes;
@@ -277,7 +273,6 @@ class fields_info {
 
         try {
             foreach ($classes as $classname) {
-
                 // We want to ignore some classes here.
                 if (self::ignore_class($data, $classname)) {
                     continue;
@@ -315,7 +310,6 @@ class fields_info {
         $classes = self::get_field_classes($context->id);
 
         foreach ($classes as $classname) {
-
             // We want to ignore some classes here.
             if (self::ignore_class($formdata, $classname)) {
                 continue;
@@ -345,7 +339,6 @@ class fields_info {
         $classes = [];
         $namespace = "mod_booking\\option\\fields\\";
         foreach ($fields as $field) {
-
             $classname = $namespace . $field->classname;
 
             // We might only want postsave classes.
@@ -390,11 +383,12 @@ class fields_info {
             $shortclassname = array_pop($array);
 
             // If the class is not necessary and not part of the imported fields, ignore it.
-            if (!in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $classname::$fieldcategories)
-                && !isset($data->{$shortclassname})) {
-
+            if (
+                !in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $classname::$fieldcategories)
+                && !isset($data->{$shortclassname})
+            ) {
                 if ($classname::$id === MOD_BOOKING_OPTION_FIELD_PRICE) {
-                    // TODO: if a column is called like any price category.
+                    // Todo: if a column is called like any price category.
                     $existingpricecategories = $DB->get_records('booking_pricecategories', ['disabled' => 0]);
                     $results = array_filter($existingpricecategories, fn($a) => isset($data->{$a->identifier}));
                     if (!empty($results)) {
@@ -416,5 +410,43 @@ class fields_info {
             }
         }
         return false;
+    }
+
+    /**
+     * Once all changes are collected, also those triggered in save data, this is a possible hook for the fields.
+     *
+     * @param array $changes
+     * @param object $data
+     * @param object $newoption
+     * @param object $originaloption
+     *
+     * @return void
+     *
+     */
+    public static function all_changes_collected_actions(
+        array $changes,
+        object $data,
+        object $newoption,
+        object $originaloption
+    ) {
+        if (!empty($data->cmid)) {
+            $context = context_module::instance($data->cmid);
+        } else if (!empty($formdata['optionid'])) {
+            $settings = singleton_service::get_instance_of_booking_option_settings($newoption->id);
+            $context = context_module::instance($settings->cmid);
+        } else {
+            throw new moodle_exception('formconfig.php: missing context in function instance_form_definition');
+        }
+        $classes = self::get_field_classes($context->id);
+
+        foreach ($classes as $classname) {
+            $classname::changes_collected_action(
+                $changes,
+                $data,
+                $newoption,
+                $originaloption
+            );
+        }
+        return;
     }
 }

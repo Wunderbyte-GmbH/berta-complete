@@ -28,14 +28,10 @@ namespace local_urise;
 
 use Closure;
 use coding_exception;
-use context_system;
-use context_module;
 use dml_exception;
 use local_wunderbyte_table\filters\types\hierarchicalfilter;
 use local_wunderbyte_table\wunderbyte_table;
 use mod_booking\customfield\booking_handler;
-use mod_booking\output\page_allteachers;
-use local_urise\output\userinformation;
 use local_urise\table\urise_table;
 use local_urise\table\calendar_table;
 use local_shopping_cart\shopping_cart;
@@ -45,7 +41,6 @@ use local_wunderbyte_table\filters\types\standardfilter;
 use mod_booking\booking;
 use mod_booking\singleton_service;
 use moodle_url;
-use stdClass;
 
 /**
  * Deals with local_shortcodes regarding booking.
@@ -67,42 +62,6 @@ class shortcodes {
         return $filter;
     }
 
-    /**
-     * Prints out list of bookingoptions.
-     * Arguments can be 'category' or 'perpage'.
-     *
-     * @param string $shortcode
-     * @param array $args
-     * @param string|null $content
-     * @param object $env
-     * @param Closure $next
-     * @return string
-     */
-    public static function userinformation($shortcode, $args, $content, $env, $next) {
-
-        global $USER, $PAGE;
-
-        self::fix_args($args);
-
-        $userid = $args['userid'] ?? 0;
-        // If the id argument was not passed on, we have a fallback in the connfig.
-        $context = context_system::instance();
-        if (empty($userid) && has_capability('local/shopping_cart:cashier', $context)) {
-            $userid = shopping_cart::return_buy_for_userid();
-        } else if (!has_capability('local/shopping_cart:cashier', $context)) {
-            $userid = $USER->id;
-        }
-
-        if (!isset($args['fields'])) {
-
-            $args['fields'] = '';
-        }
-
-        $data = new userinformation($userid, $args['fields']);
-        $output = $PAGE->get_renderer('local_urise');
-        return $output->render_userinformation($data);
-    }
-
      /**
       * Prints out list of bookingoptions.
       * Arguments can be 'category' or 'perpage'.
@@ -116,25 +75,15 @@ class shortcodes {
       */
     public static function unifiedlist($shortcode, $args, $content, $env, $next) {
         [$table, $perpage] = self::unifiedview($shortcode, $args, $content, $env, $next, true);
-
         if (empty($table)) {
             return get_string('nobookinginstancesselected', 'local_urise');
         }
-
-        // If we find "nolazy='1'", we return the table directly, without lazy loading.
-        if (!empty($args['lazy'])) {
-            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
-            return $out;
-        }
-
-        $out = $table->outhtml($perpage, true);
-
-        return $out;
+        return self::generate_output($args, $table, $perpage);
     }
 
 
     /**
-     * Prints out list of bookingoptions.
+     * Prints out cards of bookingoptions.
      * Arguments can be 'category' or 'perpage'.
      *
      * @param string $shortcode
@@ -150,21 +99,11 @@ class shortcodes {
         if (empty($table)) {
             return get_string('nobookinginstancesselected', 'local_urise');
         }
-
-        // If we find "nolazy='1'", we return the table directly, without lazy loading.
-        if (!empty($args['lazy'])) {
-            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
-            return $out;
-        }
-
-        $out = $table->outhtml($perpage, true);
-
-        return $out;
+        return self::generate_output($args, $table, $perpage);
     }
 
     /**
-     * Prints out list of bookingoptions.
-     * Arguments can be 'category' or 'perpage'.
+     * Unifiedview for List and Cards.
      *
      * @param string $shortcode
      * @param array $args
@@ -172,10 +111,10 @@ class shortcodes {
      * @param object $env
      * @param Closure $next
      * @param string $rendertype
-     * @return array
+     * @return mixed
      */
     public static function unifiedview($shortcode, $args, $content, $env, $next, $renderascard = false) {
-        global $DB;
+        global $PAGE;
 
         self::fix_args($args);
         $booking = self::get_booking($args);
@@ -194,7 +133,6 @@ class shortcodes {
         if (empty($args['filterontop'])) {
             $args['filterontop'] = false;
         }
-
         if (
             !isset($args['perpage'])
             || !is_int((int)$args['perpage'])
@@ -205,14 +143,33 @@ class shortcodes {
             $infinitescrollpage = 0;
         }
 
-        $table = self::inittableforcourses();
+        $table = self::inittableforcourses('unifiedview');
 
         if (empty($args['reload'])) {
             $args['reload'] = false;
         }
         $table->showreloadbutton = $args['reload'];
 
+        // Currently not used.
         $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
+
+        // Pagination is on by default, but it can be turned off.
+        if (
+            isset($args['showpagination'])
+            && (
+                $args['showpagination'] == "false"
+                || $args['showpagination'] == "0"
+            )
+        ) {
+            $table->showpagination = false;
+        } else {
+            // By default, showpagination is turned on.
+            $table->showpagination = true;
+        }
+
+        if (!empty($args['showminanswers'])) {
+            $subcolumnsinfo[] = 'minanswers';
+        }
 
         $wherearray = ['bookingid' => $bookingids];
 
@@ -238,23 +195,16 @@ class shortcodes {
 
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
-            [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(0, 0, '', null, $context, [], $wherearray, null, [], $additionalwhere);
-        } else {
-            [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(0, 0, '', null, $context, [], $wherearray, null, [], $additionalwhere);
         }
 
+        [$fields, $from, $where, $params, $filter] = self::get_sql_params($context, $wherearray, $additionalwhere);
         $params['timenow'] = strtotime('today 00:00');
         $table->set_filter_sql($fields, $from, $where, $filter, $params);
 
         $table->use_pages = true;
 
-        if (!empty($args['countlabel']) && $args['countlabel'] == "false") {
-            $table->showcountlabel = false;
-        } else {
-            $table->showcountlabel = true;
-        }
+        $table->showcountlabel = (!empty($args['countlabel']) && $args['countlabel'] == "false") ? false : true;
+
 
         if ($showimage !== false) {
             $table->set_tableclass('cardimageclass', 'pr-0 pl-1');
@@ -262,26 +212,44 @@ class shortcodes {
             $table->add_subcolumns('ariasection', ['puretext']);
         }
 
-        if (empty($args['showpagination'])) {
-            $args['showpagination'] = true;
-        }
-
         self::set_table_options_from_arguments($table, $args);
 
-        if ($renderascard) {
-            self::generate_table_for_cards($table, $args);
-            $table->tabletemplate = 'local_urise/table_card';
-            $table->add_subcolumns('ariasection', ['puretext']);
-            if ($args['showpagination'] == "true") {
-                $table->showpagination = true;
-            } else {
-                $table->showpagination = false;
+        if (!empty($args['switchtemplates'])) {
+            // Template switcher is activated.
+            $table->add_template_to_switcher(
+                'local_urise/table_card',
+                get_string('viewcards', 'local_wunderbyte_table'),
+                $renderascard
+            );
+            $table->add_template_to_switcher(
+                'local_urise/table_list',
+                get_string('viewlist', 'local_wunderbyte_table'),
+                !$renderascard
+            );
+
+            // If template switcher is active, we need to check if the user has already a saved preferred template.
+            $chosentemplate = get_user_preferences('wbtable_chosen_template_' . $table->uniqueid);
+            if (empty($chosentemplate)) {
+                $chosentemplate = 'local_urise/table_card'; // Fallback.
+            }
+
+            // Switch view type (cards view or list view).
+            switch ($chosentemplate) {
+                case 'local_urise/table_list':
+                    self::generate_table_for_list($table);
+                    break;
+                case 'local_urise/table_card':
+                default:
+                    self::generate_table_for_cards($table);
+                    break;
             }
         } else {
-            self::generate_table_for_list($table, $args);
-            $table->cardsort = true;
-            $table->infinitescroll = $infinitescrollpage;
-            $table->tabletemplate = 'local_urise/table_list';
+            // Template switcher is not activated.
+            if ($renderascard) {
+                self::generate_table_for_cards($table);
+            } else {
+                self::generate_table_for_list($table);
+            }
         }
 
         $table->showfilterontop = $args['filterontop'];
@@ -305,6 +273,12 @@ class shortcodes {
         global $USER, $PAGE;
 
         $userid = optional_param('userid', $USER->id, PARAM_INT);
+        $perpage = \mod_booking\shortcodes::check_perpage($args);
+        $bookingparams = [MOD_BOOKING_STATUSPARAM_BOOKED,
+        MOD_BOOKING_STATUSPARAM_RESERVED,
+        MOD_BOOKING_STATUSPARAM_WAITINGLIST,
+        MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
+        MOD_BOOKING_STATUSPARAM_DELETED];
 
         if ($userid != $USER->id) {
             shopping_cart::buy_for_user($userid);
@@ -331,29 +305,18 @@ class shortcodes {
 
         if (empty($args['filterontop'])) {
             $args['filterontop'] = false;
-        }
-
-        if (
-            !isset($args['perpage'])
-            || !is_int((int)$args['perpage'])
-            || !$perpage = ($args['perpage'])
-        ) {
-            $perpage = 100;
         } else {
             $infinitescrollpage = 0;
         }
 
         if (!empty($args['initcourses']) && $args['initcourses'] == "false") {
-            $table = self::inittableforcourses(false);
+            $table = self::inittableforcourses('unifiedmybookingslist', false);
         } else {
-            $table = self::inittableforcourses();
+            $table = self::inittableforcourses('unifiedmybookingslist');
         }
 
-        if (!empty($args['countlabel']) && $args['countlabel'] == "false") {
-            $table->showcountlabel = false;
-        } else {
-            $table->showcountlabel = true;
-        }
+        $table->showcountlabel = (!empty($args['countlabel']) && $args['countlabel'] == "false") ? false : true;
+
 
         if (empty($args['reload'])) {
             $args['reload'] = false;
@@ -364,10 +327,11 @@ class shortcodes {
 
         $wherearray = ['bookingid' => $bookingids];
 
-        // Additional where condition for both card and list views
+        // Additional where condition for both card and list views.
         $additionalwhere = self::set_wherearray_from_arguments($args, $wherearray) ?? '';
 
-        $additionalwhere .= ' ((waitinglist <> ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 0) OR (waitinglist = ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 1))';
+        $additionalwhere .= ' ((waitinglist <> ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 0)
+            OR (waitinglist = ' . MOD_BOOKING_STATUSPARAM_DELETED . ' AND status = 1))';
 
         // Additional where has to be added here. We add the param later.
         if (empty($args['all'])) {
@@ -380,84 +344,48 @@ class shortcodes {
         // If we want to find only the teacher relevant options, we chose different sql.
         if (isset($args['teacherid']) && (is_int((int)$args['teacherid']))) {
             $wherearray['teacherobjects'] = '%"id":' . $args['teacherid'] . ',%';
-            [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(
-                    0,
-                    0,
-                    '',
-                    null,
-                    null,
-                    [],
-                    $wherearray,
-                    $userid,
-                    [
-                        MOD_BOOKING_STATUSPARAM_BOOKED,
-                        MOD_BOOKING_STATUSPARAM_RESERVED,
-                        MOD_BOOKING_STATUSPARAM_WAITINGLIST,
-                        MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
-                        MOD_BOOKING_STATUSPARAM_DELETED,
-                    ],
-                    $additionalwhere
-                );
-        } else {
-            [$fields, $from, $where, $params, $filter] =
-                booking::get_options_filter_sql(
-                    0,
-                    0,
-                    '',
-                    null,
-                    null,
-                    [],
-                    $wherearray,
-                    $userid,
-                    [
-                        MOD_BOOKING_STATUSPARAM_BOOKED,
-                        MOD_BOOKING_STATUSPARAM_RESERVED,
-                        MOD_BOOKING_STATUSPARAM_WAITINGLIST,
-                        MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
-                        MOD_BOOKING_STATUSPARAM_DELETED,
-                    ],
-                    $additionalwhere
-                );
         }
-
+        [$fields, $from, $where, $params, $filter] =
+            self::get_sql_params(null, $wherearray, $additionalwhere, $bookingparams, $userid);
         $params['timenow'] = strtotime('today 00:00');
         $table->set_filter_sql($fields, $from, $where, $filter, $params);
 
-        $table->use_pages = empty($args['showpagination']) ? false : true;
+        // Pagination is on by default, but it can be turned off.
+        if (
+            isset($args['showpagination'])
+            && (
+                $args['showpagination'] == "false"
+                || $args['showpagination'] == "0"
+            )
+        ) {
+            $table->showpagination = false;
+        } else {
+            // By default, showpagination is turned on.
+            $table->showpagination = true;
+        }
+        $table->use_pages = $table->showpagination;
+
+        if (!empty($args['showminanswers'])) {
+            $subcolumnsinfo[] = 'minanswers';
+        }
 
         if ($showimage !== false) {
             $table->set_tableclass('cardimageclass', 'pr-0 pl-1');
             $table->add_subcolumns('cardimage', ['image']);
         }
 
-        if (empty($args['showpagination'])) {
-            $args['showpagination'] = true;
-        }
-
         self::set_table_options_from_arguments($table, $args);
         if (!empty($args['cards'])) {
-            self::generate_table_for_cards($table, $args);
-            $table->tabletemplate = 'local_urise/table_card';
+            self::generate_table_for_cards($table);
         } else {
-            self::generate_table_for_list($table, $args);
-            $table->infinitescroll = $infinitescrollpage;
-            $table->tabletemplate = 'local_urise/table_list';
+            self::generate_table_for_list($table);
         }
 
         $table->showfilterontop = $args['filterontop'];
 
         $table->define_cache('mod_booking', 'mybookingoptionstable');
 
-        // If we find "nolazy='1'", we return the table directly, without lazy loading.
-        if (!empty($args['lazy'])) {
-            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
-            return $out;
-        }
-
-        $out = $table->outhtml($perpage, true);
-
-        return $out;
+        return self::generate_output($args, $table, $perpage);
     }
 
     /**
@@ -469,7 +397,7 @@ class shortcodes {
      * @param string|null $content
      * @param object $env
      * @param Closure $next
-     * @return void
+     * @return string
      */
     public static function mytaughtcourses($shortcode, $args, $content, $env, $next) {
 
@@ -480,6 +408,7 @@ class shortcodes {
         self::fix_args($args);
 
         $bookingids = explode(',', get_config('local_urise', 'multibookinginstances'));
+        $perpage = \mod_booking\shortcodes::check_perpage($args);
 
         $bookingids = array_filter($bookingids, fn($a) => !empty($a));
 
@@ -503,6 +432,8 @@ class shortcodes {
             $args['filterontop'] = false;
         }
 
+
+
         $infinitescrollpage = is_numeric($args['infinitescrollpage'] ?? '') ? (int)$args['infinitescrollpage'] : 30;
 
         if (
@@ -513,13 +444,8 @@ class shortcodes {
             $perpage = 100;
         }
 
-        $table = self::inittableforcourses();
+        $table = self::inittableforcourses('mytaughtcourses');
 
-        if (!empty($args['countlabel']) && $args['countlabel'] == "false") {
-            $table->showcountlabel = false;
-        } else {
-            $table->showcountlabel = true;
-        }
         $table->showreloadbutton = $args['reload'];
 
         $wherearray = ['bookingid' => $bookingids];
@@ -534,8 +460,8 @@ class shortcodes {
 
         // This is the important part: We only filter for booking options where the current user is a teacher!
         // Also we only want to show courses for the currently set booking instance (semester instance).
-        list($fields, $from, $where, $params, $filter) =
-            booking::get_all_options_of_teacher_sql($teacherid, (int)$booking->id);
+        [$fields, $from, $where, $params, $filter] =
+            booking::get_all_options_of_teacher_sql($teacherid, (int)$bookingids);
 
         $table->set_filter_sql($fields, $from, $where, $filter, $params);
 
@@ -549,11 +475,9 @@ class shortcodes {
 
         self::set_table_options_from_arguments($table, $args);
         if (!empty($args['cards'])) {
-            self::generate_table_for_cards($table, $args);
-            $table->tabletemplate = 'local_urise/table_card';
+            self::generate_table_for_cards($table);
         } else {
-            self::generate_table_for_list($table, $args);
-            $table->tabletemplate = 'local_urise/table_list';
+            self::generate_table_for_list($table);
         }
 
         $table->cardsort = true;
@@ -564,17 +488,7 @@ class shortcodes {
         $table->showfilterontop = $args['filterontop'];
         $table->showfilterbutton = false;
 
-        // If we find "nolazy='1'", we return the table directly, without lazy loading.
-        if (!empty($args['lazy'])) {
-
-            list($idstring, $encodedtable, $out) = $table->lazyouthtml($perpage, true);
-
-            return $out;
-        }
-
-        $out = $table->outhtml($perpage, true);
-
-        return $out;
+        return self::generate_output($args, $table, $perpage);
     }
 
     /**
@@ -644,7 +558,7 @@ class shortcodes {
      * @param string|null $content
      * @param object $env
      * @param Closure $next
-     * @return void
+     * @return string
      */
     public static function userdashboardcards($shortcode, $args, $content, $env, $next) {
         global $DB, $PAGE, $USER;
@@ -666,8 +580,11 @@ class shortcodes {
         $user = $USER;
 
         $booked = $booking->get_user_booking_count($USER);
-        $asteacher = $DB->get_fieldset_select('booking_teachers', 'optionid',
-            "userid = {$USER->id} AND bookingid = $booking->id ");
+        $asteacher = $DB->get_fieldset_select(
+            'booking_teachers',
+            'optionid',
+            "userid = {$USER->id} AND bookingid = $booking->id "
+        );
         $credits = shopping_cart_credits::get_balance($USER->id);
 
         $data['booked'] = $booked;
@@ -676,7 +593,6 @@ class shortcodes {
 
         $output = $PAGE->get_renderer('local_urise');
         return $output->render_user_dashboard_overview($data);
-
     }
 
     /**
@@ -689,7 +605,7 @@ class shortcodes {
 
         global $PAGE, $USER;
 
-        $tablename = bin2hex(random_bytes(12));
+        $tablename = 'inittableforcalendar' . $PAGE->context->instanceid;
 
         // It's important to have the baseurl defined, we use it as a return url at one point.
         $baseurl = $PAGE->url ?? new moodle_url('');
@@ -707,15 +623,14 @@ class shortcodes {
 
     /**
      * Init the table.
-     *
+     * @param string $tablename
+     * @param bool $addcols optional add columns
      * @return wunderbyte_table
      *
      */
-    private static function inittableforcourses($addcols = true) {
+    private static function inittableforcourses(string $tablename, bool $addcols = true) {
 
         global $PAGE, $USER;
-
-        $tablename = bin2hex(random_bytes(12));
 
         // It's important to have the baseurl defined, we use it as a return url at one point.
         $baseurl = $PAGE->url ?? new moodle_url('');
@@ -728,7 +643,8 @@ class shortcodes {
             $buyforuserid = $USER->id;
         }
 
-        $table = new urise_table($tablename);
+        // We add instanceid of current page context because we maybe want to use the shortcode more than once.
+        $table = new urise_table($tablename . $PAGE->context->instanceid);
 
         $table->define_baseurl($baseurl->out());
         $table->cardsort = true;
@@ -773,8 +689,8 @@ class shortcodes {
     /**
      * Define filtercolumns.
      *
-     * @param mixed $table
-     * @param mixed $args
+     * @param urise_table $table
+     * @param array $args
      *
      * @return void
      *
@@ -880,6 +796,8 @@ class shortcodes {
                 11 => get_string('literatursuche', 'local_urise'),
                 12 => get_string('orgauethikwissenschaft', 'local_urise'),
                 13 => get_string('spezialwissenbiblio', 'local_urise'),
+                14 => get_string('sciencecommunicationprogramme', 'local_urise'),
+                15 => get_string('kompakttrainingfuehrungs', 'local_urise'),
             ];
 
             $standardfilter->add_options($options);
@@ -892,7 +810,6 @@ class shortcodes {
         }
 
         if (get_config('local_urise', 'uriseshortcodesshowfiltercoursetime')) {
-
             $datepicker = new datepicker(
                 'coursestarttime',
                 get_string('timefilter:coursetime', 'mod_booking'),
@@ -911,7 +828,6 @@ class shortcodes {
         }
 
         if (get_config('local_urise', 'uriseshortcodesshowfilterbookingtime')) {
-
             $datepicker = new datepicker(
                 'bookingopeningtime',
                 get_string('bookingopeningtime', 'mod_booking'),
@@ -934,9 +850,9 @@ class shortcodes {
     /**
      * Get booking from shortcode arguments.
      *
-     * @param mixed $args
+     * @param array $args
      *
-     * @return [type]
+     * @return mixed
      *
      */
     private static function get_booking($args) {
@@ -961,18 +877,30 @@ class shortcodes {
     /**
      * Set table from shortcodes arguments.
      *
-     * @param mixed $table
-     * @param mixed $args
+     * @param urise_table$table
+     * @param array $args
      *
-     * @return [type]
+     * @return void
      *
      */
     private static function set_table_options_from_arguments(&$table, $args) {
         self::fix_args($args);
 
-        /** @var urise_table $table */
         $table->set_display_options($args);
+        \mod_booking\shortcodes::set_common_table_options_from_arguments($table, $args);
+        self::set_common_table_options_from_arguments($table, $args);
+    }
 
+    /**
+     * Setting options from shortcodes arguments common for urise_table.
+     *
+     * @param urise_table $table reference to table
+     * @param array $args
+     *
+     * @return void
+     *
+     */
+    private static function set_common_table_options_from_arguments(&$table, $args) {
         if (!empty($args['filter'])) {
             self::define_filtercolumns($table, $args);
         }
@@ -1001,24 +929,6 @@ class shortcodes {
             }
             $table->define_sortablecolumns($sortablecolumns);
         }
-
-        $defaultorder = SORT_ASC; // Default.
-        if (!empty($args['sortorder'])) {
-            if (strtolower($args['sortorder']) === "desc") {
-                $defaultorder = SORT_DESC;
-            }
-        }
-
-        if (!empty($args['sortby'])) {
-            $table->sortable(true, $args['sortby'], $defaultorder);
-        } else {
-            $table->sortable(true, 'text', $defaultorder);
-        }
-
-        if (isset($args['requirelogin']) && $args['requirelogin'] == "false") {
-            $table->requirelogin = false;
-        }
-
         if (!empty($args['showfilterbutton'])) {
             $table->showfilterbutton = true;
         } else {
@@ -1029,7 +939,7 @@ class shortcodes {
     /**
      * Sets columns for calendar.
      *
-     * @return wunderbyte_table
+     * @return void
      *
      */
     private static function generate_table_for_calendar(&$table, $args) {
@@ -1042,45 +952,65 @@ class shortcodes {
      * Generate table for card design.
      * @param mixed $table
      * @param mixed $args
-     * @return [type]
+     * @return void
      */
-    private static function generate_table_for_cards(&$table, $args) {
-        self::fix_args($args);
+    public static function generate_table_for_cards(&$table) {
         $table->define_cache('mod_booking', 'bookingoptionstable');
+
+        $table->tabletemplate = 'local_urise/table_card';
+
+        // We also need to set the user preference for the template.
+        set_user_preference('wbtable_chosen_template_' . $table->uniqueid, 'local_urise/table_card');
+
+        $table->add_subcolumns('ariasection', ['puretext']);
 
         // We define it here so we can pass it with the mustache template.
         $table->add_subcolumns('optionid', ['id']);
 
         $table->add_subcolumns('url', ['url']);
         $table->add_subcolumns('cardimage', ['image']);
-        $table->set_tableclass('cardimageclass', 'imagecontainer');
+        $table->set_tableclass('cardimageclass', 'imageforcard');
         $table->add_subcolumns('cardheader', ['botags', 'action', 'bookings']);
-        $table->add_subcolumns('cardlist', ['showdates', 'umfang', 'kurssprache', 'format', 'kompetenzen', 'organisation', 'course']);
         $table->add_subcolumns('cardfooter', ['price']);
 
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-regular fa-message fa-fw text-primary mr-2'],
-         ['kurssprache']);
-         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'],
-         ['umfang']);
-         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-computer fa-fw  text-primary mr-2'],
-         ['format']);
-         $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa-solid fa-hashtag fa-fw  text-primary mr-2'],
-         ['kompetenzen']);
-        $table->add_classes_to_subcolumns('cardlist', ['columniclassbefore' => 'fa fa-calendar text-primary fa-fw  showdatesicon mr-2'], ['showdates']);
+        self::add_urise_infolist($table);
+
+        $table->add_classes_to_subcolumns(
+            'cardlist',
+            ['columniclassbefore' => 'fa-regular fa-message fa-fw text-primary mr-2'],
+            ['kurssprache']
+        );
+        $table->add_classes_to_subcolumns(
+            'cardlist',
+            ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'],
+            ['umfang']
+        );
+        $table->add_classes_to_subcolumns(
+            'cardlist',
+            ['columniclassbefore' => 'fa-solid fa-computer fa-fw  text-primary mr-2'],
+            ['format']
+        );
+        $table->add_classes_to_subcolumns(
+            'cardlist',
+            ['columniclassbefore' => 'fa-solid fa-hashtag fa-fw  text-primary mr-2'],
+            ['kompetenzen']
+        );
+        $table->add_classes_to_subcolumns(
+            'cardlist',
+            ['columniclassbefore' => 'fa fa-calendar text-primary fa-fw  showdatesicon mr-2'],
+            ['showdates']
+        );
         $table->add_classes_to_subcolumns('cardlist', ['columnclass' => 'd-flex align-item-center'], ['showdates']);
-        // $table->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'mt-auto'], ['price']);
         $table->add_classes_to_subcolumns('cardheader', ['columnkeyclass' => 'd-none']);
         $table->add_classes_to_subcolumns('cardheader', ['columnvalueclass' => 'mr-auto'], ['botags']);
         $table->add_classes_to_subcolumns('cardheader', ['columnvalueclass' => 'ml-auto'], ['bookings']);
-        // $table->add_classes_to_subcolumns('cardlist', ['columnvalueclass' =>
-        // 'bg-secondary orga'], ['organisation']);
 
         $table->add_subcolumns('cardbody', ['text', 'description']);
         $table->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'mr-auto'], ['text']);
 
-        $table->add_classes_to_subcolumns('cardlist', ['columnkeyclass' => 'd-none']);
         $table->add_classes_to_subcolumns('cardbody', ['columnkeyclass' => 'd-none']);
         $table->add_classes_to_subcolumns('cardfooter', ['columnkeyclass' => 'd-none']);
+        $table->tabletemplate = 'local_urise/table_card';
     }
 
     /**
@@ -1091,12 +1021,9 @@ class shortcodes {
      * @throws dml_exception
      * @throws coding_exception
      */
-    private static function generate_table_for_list(&$table, $args) {
-
-        self::fix_args($args);
+    public static function generate_table_for_list(&$table) {
 
         // Columns.
-
         $subcolumnsleftside = ['text', 'description'];
         $subcolumnsfooter = ['kurssprache', 'format', 'kompetenzen'];
         $subcolumnsinfo = ['showdates'];
@@ -1106,9 +1033,13 @@ class shortcodes {
             $subcolumnsleftside[] = 'description';
         }
 
-        if (!empty($args['showminanswers'])) {
-            $subcolumnsinfo[] = 'minanswers';
-        }
+        $table->cardsort = true;
+        // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
+        /* $table->infinitescroll = $infinitescrollpage; // We don't want this currently. */
+        $table->tabletemplate = 'local_urise/table_list';
+
+        // We also need to set the user preference for the template.
+        set_user_preference('wbtable_chosen_template_' . $table->uniqueid, 'local_urise/table_list');
 
         $table->define_cache('mod_booking', 'bookingoptionstable');
 
@@ -1117,26 +1048,17 @@ class shortcodes {
 
         $table->add_subcolumns('cardimage', ['image']);
 
-        $table->set_tableclass('cardimageclass', 'customimg');
+        $table->set_tableclass('cardimageclass', 'imageforlist');
 
-        // $table->add_subcolumns('top', ['organisation', 'action']);
         $table->add_subcolumns('top', ['botags', 'action', 'bookings' ]);
-        // $table->add_subcolumns('top', ['botags', 'bookings' ]);
         $table->add_subcolumns('leftside', $subcolumnsleftside);
         $table->add_subcolumns('info', $subcolumnsinfo);
-        $table->add_subcolumns('footer', $subcolumnsfooter );
+        $table->add_subcolumns('footer', $subcolumnsfooter);
 
         $table->add_subcolumns('rightside', ['organisation', 'invisibleoption', 'course', 'price']);
-        // $table->add_subcolumns('rightside', ['organisation', 'invisibleoption', 'price']);
 
         $table->add_classes_to_subcolumns('top', ['columnkeyclass' => 'd-none']);
-        // $table->add_classes_to_subcolumns('top', ['columniclassbefore' => 'fa-solid fa-people-group'], ['bookings']);
-        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'border border-2 border-dark p-1 rounded d-flex align-items-center'], ['bookings']);
         $table->add_classes_to_subcolumns('top', ['columnclass' => 'mr-auto text-uppercase'], ['botags']);
-        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-left col-md-8'], ['organisation']);
-        // $table->add_classes_to_subcolumns('top', ['columnvalueclass' =>
-        //     'organisation-badge rounded-sm text-gray-800 mt-2'], ['organisation']);
-        // $table->add_classes_to_subcolumns('top', ['columnclass' => 'text-right col-md-2 position-relative pr-0'], ['action']);
 
         $table->add_classes_to_subcolumns('leftside', ['columnkeyclass' => 'd-none']);
         $table->add_classes_to_subcolumns('leftside', ['columnclass' => 'text-left mt-1 mb-1 title'], ['text']);
@@ -1156,22 +1078,73 @@ class shortcodes {
         $table->add_classes_to_subcolumns('info', ['columnalt' => get_string('locationalt', 'local_urise')], ['location']);
         $table->add_classes_to_subcolumns('cardimage', ['cardimagealt' => get_string('imagealt', 'local_urise')], ['image']);
 
-        $table->add_classes_to_subcolumns('rightside',
+        // We still need to clean this up.
+        $table->add_subcolumns('userinfolist', ['organisation', 'invisibleoption', 'course', 'price']);
+        $table->add_classes_to_subcolumns(
+            'uriseinfolist',
             ['columnvalueclass' => 'text-right mb-auto align-self-end shortcodes_option_info_invisible '],
-            ['invisibleoption']);
-        $table->add_classes_to_subcolumns('rightside', ['columnclass' =>
+            ['invisibleoption']
+        );
+        $table->add_classes_to_subcolumns('uriseinfolist', ['columnclass' =>
              'theme-text-color bold ml-auto'], ['price']);
-            //  $table->add_classes_to_subcolumns('rightside', ['columnvalueclass' =>
-            //  'bg-secondary orga mb-2'], ['organisation']);
+        self::add_urise_infolist($table);
 
-        $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-regular fa-message text-primary'],
-         ['kurssprache']);
-         $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-solid fa-computer text-primary'],
-         ['format']);
-         $table->add_classes_to_subcolumns('footer', ['columniclassbefore' => 'fa-solid fa-hashtag text-primary'],
-         ['kompetenzen']);
-
+        $table->add_classes_to_subcolumns(
+            'footer',
+            ['columniclassbefore' => 'fa-regular fa-message text-primary'],
+            ['kurssprache']
+        );
+         $table->add_classes_to_subcolumns(
+             'footer',
+             ['columniclassbefore' => 'fa-solid fa-computer text-primary'],
+             ['format']
+         );
+         $table->add_classes_to_subcolumns(
+             'footer',
+             ['columniclassbefore' => 'fa-solid fa-hashtag text-primary'],
+             ['kompetenzen']
+         );
+        $table->tabletemplate = 'local_urise/table_list';
         $table->is_downloading('', 'List of booking options');
+    }
+
+    /**
+     * Add the urise infolist to the table.
+     * @param mixed $table
+     * @return void
+     * @throws dml_exception
+     * @throws coding_exception
+     */
+    public static function add_urise_infolist(&$table) {
+        $table->add_subcolumns('uriseinfolist', [
+            'showdates', 'umfang', 'kurssprache', 'format', 'kompetenzen', 'organisation', 'course']);
+        $table->add_classes_to_subcolumns(
+            'uriseinfolist',
+            ['columniclassbefore' => 'fa-regular fa-message fa-fw text-primary mr-2'],
+            ['kurssprache']
+        );
+         $table->add_classes_to_subcolumns(
+             'uriseinfolist',
+             ['columniclassbefore' => 'fa fa-clock-o text-primary fa-fw  showdatesicon mr-2'],
+             ['umfang']
+         );
+         $table->add_classes_to_subcolumns(
+             'uriseinfolist',
+             ['columniclassbefore' => 'fa-solid fa-computer fa-fw  text-primary mr-2'],
+             ['format']
+         );
+         $table->add_classes_to_subcolumns(
+             'uriseinfolist',
+             ['columniclassbefore' => 'fa-solid fa-hashtag fa-fw  text-primary mr-2'],
+             ['kompetenzen']
+         );
+        $table->add_classes_to_subcolumns(
+            'uriseinfolist',
+            ['columniclassbefore' => 'fa fa-calendar text-primary fa-fw  showdatesicon mr-2'],
+            ['showdates']
+        );
+        $table->add_classes_to_subcolumns('uriseinfolist', ['columnclass' => 'd-flex align-item-center'], ['showdates']);
+        $table->add_classes_to_subcolumns('uriseinfolist', ['columnkeyclass' => 'd-none']);
     }
 
     /**
@@ -1187,7 +1160,7 @@ class shortcodes {
     }
 
     /**
-     * Modify there wherearray via arguments.
+     * Modify the wherearray via arguments.
      *
      * @param array $args
      *
@@ -1220,7 +1193,6 @@ class shortcodes {
                             }
 
                             foreach ($values as $vkey => $vvalue) {
-
                                 $additonalwhere .= $vkey > 0 ? ' OR ' : '';
                                 $vvalue = "'%$vvalue%'";
                                 $additonalwhere .= " $key LIKE $vvalue ";
@@ -1229,11 +1201,9 @@ class shortcodes {
                             if (!empty($values)) {
                                 $additonalwhere .= " ) ";
                             }
-
                         } else {
                             $wherearray[$key] = strip_tags(trim($value));
                         }
-
                         break;
                     }
                 }
@@ -1453,6 +1423,51 @@ class shortcodes {
             '5' => get_string('pupilsandteachers', 'local_urise'),
             '6' => get_string('generalpublic', 'local_urise'),
         ];
+    }
 
+    /**
+     * Helperfunction to generate output
+     *
+     * @param mixed $args
+     * @param urise_table $table
+     * @param int $perpage
+     *
+     * @return string
+     *
+     */
+    private static function generate_output($args, $table, $perpage) {
+        if (!empty($args['lazy'])) {
+            [$idstring, $encodedtable, $out] = $table->lazyouthtml($perpage, true);
+            return $out;
+        }
+        return $table->outhtml($perpage, true);
+    }
+
+    /**
+     * [Description for get_sql_params]
+     *
+     * @param mixed $context
+     * @param mixed $wherearray
+     * @param string $additionalwhere
+     * @param array $bookingparams
+     * @param int $userid
+     *
+     * @return [type]
+     *
+     */
+    private static function get_sql_params($context, $wherearray, $additionalwhere, $bookingparams = [], $userid = null) {
+        return  [$fields, $from, $where, $params, $filter] =
+                booking::get_options_filter_sql(
+                    0,
+                    0,
+                    '',
+                    null,
+                    $context,
+                    [],
+                    $wherearray,
+                    $userid,
+                    $bookingparams,
+                    $additionalwhere
+                );
     }
 }

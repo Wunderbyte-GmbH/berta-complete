@@ -128,7 +128,7 @@ Feature: Managers can manage course custom fields textregex
       | Short name         | testfield                 |
       | Visible to         | Everyone                  |
       | Link               | https://www.moodle.org/$$ |
-      | Regular expression | /^[a-z0-9\/\?=]*$/                |
+      | Regular expression | /^[a-z0-9\/\?=]*$/        |
     And I click on "Save changes" "button" in the "Adding a new Short text with regex validation" "dialogue"
     And I log out
     Then I log in as "teacher1"

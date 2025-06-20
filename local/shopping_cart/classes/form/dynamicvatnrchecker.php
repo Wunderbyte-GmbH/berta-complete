@@ -26,6 +26,7 @@ use context_system;
 use core_form\dynamic_form;
 use local_shopping_cart\local\cartstore;
 use local_shopping_cart\local\vatnrchecker;
+use local_shopping_cart\local\checkout_process\items_helper\vatnumberhelper;
 use moodle_url;
 use stdClass;
 
@@ -47,10 +48,12 @@ class dynamicvatnrchecker extends dynamic_form {
         global $USER;
 
         $mform = $this->_form;
-        $options = vatnrchecker::return_countrycodes_array();
+        $options = vatnumberhelper::get_countrycodes_array();
         $mform->addElement('select', 'checkvatnrcountrycode', get_string('checkvatnrcountrycode', 'local_shopping_cart'), $options);
         $mform->addElement('text', 'checkvatnrnumber', get_string('checkvatnrnumber', 'local_shopping_cart'), '');
         $mform->setType('checkvatnrnumber', PARAM_ALPHANUM);
+        // Disable VAT number input when "novatnr" is selected.
+        $mform->disabledIf('checkvatnrnumber', 'checkvatnrcountrycode', 'eq', 'novatnr');
         $mform->addElement(
             'submit',
             'submitbutton',
@@ -208,7 +211,6 @@ class dynamicvatnrchecker extends dynamic_form {
      * @return array
      */
     public function validation($data, $files) {
-
         $errors = [];
 
         // If there actually is a VATNR number... we check online.
@@ -225,29 +227,25 @@ class dynamicvatnrchecker extends dynamic_form {
                     'countryCode' => false,
                 ];
             } else {
-
-                $count = 1;
-                // If we enter the country as well, we strip the uid number.
+                // If we enter the country as well, we strip the vatid number.
                 if (strpos($data['checkvatnrnumber'], $data['checkvatnrcountrycode']) === 0) {
-                    $data['checkvatnrnumber'] = str_replace($data['checkvatnrcountrycode'], '', $data['checkvatnrnumber'], $count);
+                    $data['checkvatnrnumber'] = str_replace($data['checkvatnrcountrycode'], '', $data['checkvatnrnumber']);
                 }
 
-                $response = vatnrchecker::check_vatnr_number(
+                $validvat = vatnumberhelper::is_vatnr_valid(
                     $data['checkvatnrcountrycode'],
                     $data['checkvatnrnumber'],
                 );
 
-                $result = json_decode($response);
-
-                if (!isset($result->valid) || !$result->valid) {
+                if (!$validvat) {
                     $a = $data['checkvatnrcountrycode'] . $data['checkvatnrnumber'];
                     $errors['checkvatnrnumber'] = get_string('errorinvalidvatnr', 'local_shopping_cart', $a);
                 } else {
-                    // phpcs:ignore
-                    // $errors['checkvatnrnumber'] = $response;
-                    vatnrchecker::$vatnrdataset = $result;
+                    vatnrchecker::$vatnrdataset = (object)[
+                            'vatNumber' => $data['checkvatnrcountrycode'] ,
+                            'countryCode' => $data['checkvatnrnumber'],
+                    ];
                 }
-
             }
         } else {
             vatnrchecker::$vatnrdataset = (object)[

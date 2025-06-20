@@ -33,6 +33,7 @@ use context_system;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_campaigns\campaigns_info;
 use stdClass;
+use tool_mocktesttime\time_mock;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
@@ -47,13 +48,15 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class booking_campaigns_test extends advanced_testcase {
-
     /**
      * Tests set up.
      */
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -63,8 +66,7 @@ final class booking_campaigns_test extends advanced_testcase {
         parent::tearDown();
         // Mandatory clean-up.
         singleton_service::reset_campaigns();
-        singleton_service::get_instance()->users = [];
-        singleton_service::get_instance()->bookinganswers = [];
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -1039,15 +1041,15 @@ final class booking_campaigns_test extends advanced_testcase {
         [$id, $isavailable, $description] = $boinfo3->is_available($settings3->id, $student3->id, true);
         $this->assertEquals(MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING, $id);
 
-        // Try to book options with teacher. Everything blocks because doesn't have values in the profile field.
+        // Try to book options with teacher.
         $this->setUser($teacher);
         singleton_service::destroy_user($teacher->id);
         [$id, $isavailable, $description] = $boinfo1->is_available($settings1->id, $teacher->id, true);
-        $this->assertEquals(MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING, $id);
+        $this->assertEquals(MOD_BOOKING_BO_COND_BOOKITBUTTON, $id);
         [$id, $isavailable, $description] = $boinfo2->is_available($settings2->id, $teacher->id, true);
-        $this->assertEquals(MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING, $id);
+        $this->assertEquals(MOD_BOOKING_BO_COND_BOOKITBUTTON, $id);
         [$id, $isavailable, $description] = $boinfo3->is_available($settings3->id, $teacher->id, true);
-        $this->assertEquals(MOD_BOOKING_BO_COND_CAMPAIGN_BLOCKBOOKING, $id);
+        $this->assertEquals(MOD_BOOKING_BO_COND_BOOKITBUTTON, $id);
 
         // Try to book options with employee.
         $this->setUser($employee);
@@ -1081,7 +1083,7 @@ final class booking_campaigns_test extends advanced_testcase {
             'userleave' => ['text' => 'text'],
             'tags' => '',
             'completion' => 2,
-            'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+            'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
         ];
         return ['bdata' => [$bdata]];
     }

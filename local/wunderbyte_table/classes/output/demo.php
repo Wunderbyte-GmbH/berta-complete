@@ -32,6 +32,7 @@ use local_wunderbyte_table\filters\types\hierarchicalfilter;
 use local_wunderbyte_table\filters\types\hourlist;
 use local_wunderbyte_table\filters\types\intrange;
 use local_wunderbyte_table\filters\types\standardfilter;
+use local_wunderbyte_table\filters\types\weekdays;
 use local_wunderbyte_table\wunderbyte_table;
 use renderable;
 use renderer_base;
@@ -82,6 +83,10 @@ class demo implements renderable, templatable {
         // It is recommended to avoid of usage of simple single words like "table" to reduce chance of affecting by Moodle`s core CSS
         $table = new demo_table('demotable_1');
 
+        // Add template switcher to table.
+        $table->add_template_to_switcher('local_wunderbyte_table/twtable_list', get_string('viewlist', 'local_wunderbyte_table'), true);
+        $table->add_template_to_switcher('local_wunderbyte_table/twtable_cards', get_string('viewcards', 'local_wunderbyte_table'));
+
         $columns = [
             'id' => get_string('id', 'local_wunderbyte_table'),
             'username' => get_string('username'),
@@ -90,6 +95,7 @@ class demo implements renderable, templatable {
             'email' => get_string('email'),
             'action' => get_string('action'),
             'department' => get_string('department'),
+            'timemodified' => get_string('modified'),
 
         ];
 
@@ -130,13 +136,12 @@ class demo implements renderable, templatable {
         $table->add_filter($standardfilter);
 
         $hierarchicalfilter = new hierarchicalfilter('firstname', get_string('firstname'));
-        $hierarchicalfilter->add_options([
-            'Anna' => 'Anna localized',
-        ]);
+
         $hierarchicalfilter->add_options(
             [
                 'Anna' => [
                     'parent' => 'A',
+                    'localizedname' => 'Anna localized',
                 ],
                 'Billy' => [
                     'parent' => 'B',
@@ -151,7 +156,7 @@ class demo implements renderable, templatable {
         $table->add_filter($hierarchicalfilter);
 
         $standardfilter = new standardfilter('lastname', get_string('lastname'));
-        $table->add_filter($standardfilter);
+        //$table->add_filter($standardfilter);
 
         $standardfilter = new standardfilter('email', get_string('email'));
         $table->add_filter($standardfilter);
@@ -257,7 +262,7 @@ class demo implements renderable, templatable {
             'class' => 'btn btn-warning',
             'href' => '#',
             // 'methodname' => 'additem',
-            'formname' => 'local_wunderbyte_table\\form\\edittable', // To include a dynamic form to open and edit entry in modal.
+            'formname' => 'local_wunderbyte_table\\form\\demoform', // To include a dynamic form to open and edit entry in modal.
             'nomodal' => false,
             'id' => -1,
             'selectionmandatory' => false,
@@ -362,18 +367,18 @@ class demo implements renderable, templatable {
 
         $table->cardsort = true;
 
-        $table->tabletemplate = 'local_wunderbyte_table/twtable_list';
+        // $table->tabletemplate = 'local_wunderbyte_table/twtable_list';
 
         $table->pageable(true);
 
         $table->stickyheader = true;
         $table->showcountlabel = true;
         // $table->showfilterontop = true;
+        // $table->showdownloadbuttonatbottom = true;
         $table->showdownloadbutton = true;
         $table->showreloadbutton = true;
         $table->showrowcountselect = true;
         //$table->filteronloadinactive = true; // By default, filter will be displayed next to table. Set filteronloadinactive true, if you want them to be hidden on load.
-
 
         return $table->outhtml(10, true);
     }
@@ -396,6 +401,7 @@ class demo implements renderable, templatable {
             'action' => get_string('action'),
             'startdate' => get_string('startdate'),
             'enddate' => get_string('enddate'),
+            'timecreated' => get_string('timecreated'),
         ];
 
         $standardfilter = new standardfilter('fullname', get_string('fullname'));
@@ -428,6 +434,9 @@ class demo implements renderable, templatable {
             'now'
         );
         $table->add_filter($datepicker);
+
+        $hourslistfilter = new hourlist('timecreated', "timecreated");
+        $table->add_filter($hourslistfilter);
 
         $table->define_headers(array_values($columns));
         $table->define_columns(array_keys($columns));
@@ -503,7 +512,8 @@ class demo implements renderable, templatable {
             'id' => get_string('id', 'local_wunderbyte_table'),
             'course' => get_string('course'),
             'module' => get_string('module', 'local_wunderbyte_table'),
-            'idnumber' => get_string('module', 'local_wunderbyte_table'),
+            'idnumber' => get_string('idnumber'),
+            'added' => get_string('timecreated'),
             'action' => get_string('action'),
         ];
 
@@ -616,8 +626,8 @@ class demo implements renderable, templatable {
         // It is recommended to avoid of usage of simple single words like "table" to reduce chance of affecting by Moodle`s core CSS
         $table = new demo_table('demotable_4');
 
-        $table->define_headers(['id', 'username', 'firstname', 'lastname', 'email', 'action']);
-        $table->define_columns(['id', 'username', 'firstname', 'lastname', 'email', 'action']);
+        $table->define_headers(['id', 'username', 'firstname', 'lastname', 'email', 'action', 'timecreated', 'timemodified']);
+        $table->define_columns(['id', 'username', 'firstname', 'lastname', 'email', 'action', 'timecreated', 'timemodified']);
 
         $standardfilter = new standardfilter('firstname',  get_string('firstname'));
         $table->add_filter($standardfilter);
@@ -627,6 +637,13 @@ class demo implements renderable, templatable {
         $table->add_filter($standardfilter);
         $intrangefilter = new intrange('username', "Range of numbers given in Username");
         $table->add_filter($intrangefilter);
+        $weekdaysfilter = new weekdays(
+            'timecreated',
+            get_string('timecreated'),
+            'timemodified',
+            get_string('modified')
+        );
+        $table->add_filter($weekdaysfilter);
 
         //$table->define_fulltextsearchcolumns(['username', 'firstname', 'lastname']);
         $table->define_sortablecolumns(['id', 'username', 'firstname', 'lastname']);
@@ -713,6 +730,10 @@ class demo implements renderable, templatable {
      * @return array
      */
     public function return_as_array():array {
+        // $data = [
+        //     'table1' => $this->render_table_1(),
+        //     'tab1_name' => TABLE1NAME,
+        // ];
         $data = [
             'table1' => $this->render_table_1(),
             'tab1_name' => TABLE1NAME,

@@ -25,6 +25,7 @@
 namespace local_shopping_cart;
 
 use local_shopping_cart\local\checkout_process\checkout_manager;
+use local_shopping_cart\local\reservations;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -270,7 +271,7 @@ class shopping_cart_history {
      * @return int true if the history was written to the database, false otherwise
      *  (e.g. if record already exists)
      */
-    private static function write_to_db(stdClass $data): int {
+    public static function write_to_db(stdClass $data): int {
         global $DB, $USER;
 
         $now = time();
@@ -313,6 +314,7 @@ class shopping_cart_history {
                     // We also need to insert the record into the ledger table.
                     // We only write the old schistoryid, if we have it.
                     $data->schistoryid = $data->schistoryid ?? $id;
+                    $data->id = $id;
 
                     /* There is one exception, when we don't write to ledger.
                      The reason is that we want to write installments in a separate process.
@@ -676,7 +678,7 @@ class shopping_cart_history {
 
         global $DB;
 
-        if (!$records = self::return_data_via_identifier($identifier, $userid)) {
+        if (!$records = self::return_data_via_identifier($identifier)) {
             return false;
         }
 
@@ -796,51 +798,6 @@ class shopping_cart_history {
     }
 
     /**
-     * Function prepare_data_from_cache and store it in the session cache of the user.
-     *
-     * @param int $userid
-     * @param int $identifier optional identifier
-     * @return array
-     */
-    public function prepare_data_from_cache(int $userid, int $identifier = 0): array {
-        global $USER;
-
-        $userfromid = $USER->id;
-        $userid = $USER->id;
-        $cartstore = cartstore::instance($userid);
-        $cachedrawdata = $cartstore->get_data();
-        $dataarr = [];
-
-        if (empty($identifier)) {
-            $identifier = self::create_unique_cart_identifier($userid);
-        }
-
-        foreach ($cachedrawdata['items'] as $item) {
-            $data = $item;
-            $data['currency'] = $item['currency'];
-            $data['expirationtime'] = $cachedrawdata["expirationtime"];
-            $data['identifier'] = $identifier; // The identifier of the cart session.
-            $data['usermodified'] = $userfromid; // The user who actually effected the transaction.
-            $data['userid'] = $userid; // The user for which the item was bought.
-            $data['payment'] = LOCAL_SHOPPING_CART_PAYMENT_METHOD_ONLINE; // This function is only used for online payment.
-            $data['paymentstatus'] = LOCAL_SHOPPING_CART_PAYMENT_PENDING;
-            $data['discount'] = $item['discount'] ?? null;
-            $dataarr['items'][] = $data;
-        }
-
-        $dataarr['price'] = $cachedrawdata['price'];
-        $dataarr['price_net'] = $cachedrawdata['price_net'];
-        $dataarr['currency'] = $cachedrawdata['currency'];
-
-        // As the identifier will always stay the same, we pass it here for easy acces.
-        $dataarr['identifier'] = $identifier;
-
-        $this->store_in_schistory_cache($dataarr);
-
-        return $dataarr;
-    }
-
-    /**
      * On loading the checkout.php, the shopping cart is stored in the schistory cache.
      * This is because we don't pass the individual items, but only a total sum and description to the payment provider.
      * To identify the items in the cart, we have to store them with an identifier.
@@ -849,7 +806,7 @@ class shopping_cart_history {
      * @param array $data
      * @return bool|null
      */
-    public function store_in_schistory_cache(array $data) {
+    public static function store_in_schistory_cache(array $data) {
 
         if (!isset($data['identifier'])) {
             return null;
@@ -866,22 +823,48 @@ class shopping_cart_history {
      * @param string $identifier
      * @return mixed|false
      */
-    public function fetch_data_from_schistory_cache(string $identifier) {
+    public static function fetch_data_from_schistory_cache(string $identifier) {
+
+        global $USER;
 
         $cache = \cache::make('local_shopping_cart', 'schistory');
-
         $shoppingcart = $cache->get('schistorycache');
 
-        // We must never get the wrong identifier in this process.
-        if (isset($shoppingcart['identifier']) && ($shoppingcart['identifier'] != $identifier)) {
-            throw new moodle_exception('wrongidentifier', 'local_shopping_cart');
+        // If we have no valid cache, we need to get the information via the identifier.
+        if (!$shoppingcart) {
+            $nocache = true;
+            $shoppingcart = reservations::get_json_from_db_via_identifier($identifier);
+
+            if (empty($shoppingcart)) {
+                throw new moodle_exception('noshoppingcartfound', 'local_shopping_cart');
+            }
+        } else if (
+            // If there is a cart but it has the wrong identifier, we need to restore the cart from the database.
+            isset($shoppingcart['identifier'])
+            && $shoppingcart['identifier'] != $identifier
+        ) {
+            $shoppingcart = reservations::get_json_from_db_via_identifier($identifier);
+            $shoppingcart['storedinhistory'] = true;
+            self::store_in_schistory_cache($shoppingcart);
+        } else if (reservations::different_cart_with_same_identifier($shoppingcart, $identifier, true)) {
+            // The cart must still correspond to the identifier we first used.
+            // If there is nothing stored, we add it here.
+            $shoppingcart = reservations::get_json_from_db_via_identifier($identifier);
+            $shoppingcart['storedinhistory'] = true;
+            self::store_in_schistory_cache($shoppingcart);
         }
 
+        // This should, in every case, only happen once.
         if (isset($shoppingcart['identifier']) && !isset($shoppingcart['storedinhistory'])) {
             self::write_to_db((object)$shoppingcart);
+            // Here we are before checkout.
+            $expirationtime = shopping_cart::get_expirationtime();
+
+            // Add or reschedule all delete_item_tasks for all the items in the cart.
+            shopping_cart::add_or_reschedule_addhoc_tasks($expirationtime, $USER->id);
 
             $shoppingcart['storedinhistory'] = true;
-            $cache->set('schistorycache', $shoppingcart);
+            self::store_in_schistory_cache($shoppingcart);
         } else if (!isset($shoppingcart['identifier'])) {
             throw new moodle_exception('noidentifierfound', 'local_shopping_cart');
         }
@@ -902,7 +885,7 @@ class shopping_cart_history {
 
         global $DB;
 
-        $vatnr = $DB->insert_record('local_shopping_cart_id', [
+        $uniqueidentifier = $DB->insert_record('local_shopping_cart_id', [
             'userid' => $userid,
             'timecreated' => time(),
         ]);
@@ -910,14 +893,14 @@ class shopping_cart_history {
         $basevalue = (int)get_config('local_shopping_cart', 'uniqueidentifier') ?? 0;
 
         // The base value defines the number of digits.
-        $vatnr = $basevalue + $vatnr;
+        $uniqueidentifier = $basevalue + $uniqueidentifier;
 
         // We need to keep it below 7 digits.
-        if ((!empty($basevalue) && (($vatnr / $basevalue) > 10))) {
-            throw new moodle_exception('vatnristoobig', 'local_shopping_cart');
+        if ((!empty($basevalue) && (($uniqueidentifier / $basevalue) > 10))) {
+            throw new moodle_exception('uniqueidentifieristoobig', 'local_shopping_cart');
         }
 
-        return $vatnr;
+        return $uniqueidentifier;
     }
 
     /**
@@ -1066,12 +1049,12 @@ class shopping_cart_history {
     /**
      * Return true or false, depending on item.
      * @param int $historyid
-     * @param mixed $userid
-     * @return true
+     * @param int $userid
+     * @return bool
      * @throws coding_exception
      * @throws dml_exception
      */
-    public static function is_marked_for_rebooking(int $historyid, $userid) {
+    public static function is_marked_for_rebooking(int $historyid, int $userid): bool {
 
         $cachekey = 'rebook_userid_' . $userid;
         $cache = \cache::make('local_shopping_cart', 'cacherebooking');

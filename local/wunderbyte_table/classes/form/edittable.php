@@ -37,7 +37,6 @@ use stdClass;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class edittable extends dynamic_form {
-
     /**
      * {@inheritdoc}
      * @see moodleform::definition()
@@ -56,14 +55,31 @@ class edittable extends dynamic_form {
             $mform->addElement('hidden', 'id', $ajaxformdata['id']);
         }
 
-        $mform->addElement('header', 'wbtablefiltersettingsheader',
-            get_string('wbtablefiltersettingsheader', 'local_wunderbyte_table'));
-        filters_info::defintion($mform, $data, []);
+        $mform->addElement(
+            'header',
+            'wbtablefiltersettingsheader',
+            get_string('wbtablefiltersettingsheader', 'local_wunderbyte_table')
+        );
+        filters_info::defintion($mform, $data);
 
-        $mform->addElement('header', 'wbtabletablesettingsheader',
-            get_string('wbtabletablesettingsheader', 'local_wunderbyte_table'));
+        $mform->addElement(
+            'header',
+            'wbtabletablesettingsheader',
+            get_string('wbtabletablesettingsheader', 'local_wunderbyte_table')
+        );
         tablesettings::definition($mform, (array)$data);
+    }
 
+    /**
+     * Definition after data
+     *
+     * @return void
+     *
+     */
+    public function definition_after_data() {
+        $mform = $this->_form;
+        $customdata = $this->_customdata;
+        $ajaxformdata = $this->_ajaxformdata;
     }
 
     /**
@@ -91,14 +107,15 @@ class edittable extends dynamic_form {
         $data = (object)$this->_ajaxformdata;
 
         $encodedtable = $data->encodedtable;
+        if (empty($encodedtable)) {
+            // Do nothing if table is missing.
+            return;
+        }
         $table = wunderbyte_table::instantiate_from_tablecache_hash($encodedtable);
 
         filters_info::set_data($data, $table);
-
         tablesettings::set_data($data, $table);
-
         $this->set_data($data);
-
     }
 
     /**

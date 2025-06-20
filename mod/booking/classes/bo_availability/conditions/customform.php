@@ -49,7 +49,6 @@ use stdClass;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class customform implements bo_condition {
-
     /** @var int $id Id is set via json during construction but we still need a default ID */
     public $id = MOD_BOOKING_BO_COND_JSON_CUSTOMFORM;
 
@@ -161,10 +160,10 @@ class customform implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -232,9 +231,11 @@ class customform implements bo_condition {
 
         // Check if PRO version is activated.
         if (wb_payment::pro_version_is_activated()) {
-
-            $mform->addElement('advcheckbox', 'bo_cond_customform_restrict',
-                    get_string('bocondcustomformrestrict', 'mod_booking'));
+            $mform->addElement(
+                'advcheckbox',
+                'bo_cond_customform_restrict',
+                get_string('bocondcustomformrestrict', 'mod_booking')
+            );
 
             $formelementsarray = [
                 0 => get_string('noelement', 'mod_booking'),
@@ -256,47 +257,81 @@ class customform implements bo_condition {
                 $buttonarray = [];
 
                 // Create a select to chose which type of form element to display.
-                $buttonarray[] =& $mform->createElement('select', 'bo_cond_customform_select_1_' . $counter,
-                    get_string('formtype', 'mod_booking'), $formelementsarray);
+                $buttonarray[] =& $mform->createElement(
+                    'select',
+                    'bo_cond_customform_select_1_' . $counter,
+                    get_string('formtype', 'mod_booking'),
+                    $formelementsarray
+                );
 
                 $mform->addGroup($buttonarray, 'formgroupelement_1_' . $counter, '', '', false, []);
                 $mform->hideIf('formgroupelement_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
 
-                $mform->addElement('text', 'bo_cond_customform_label_1_' . $counter,
-                        get_string('bocondcustomformlabel', 'mod_booking'), []);
+                $mform->addElement(
+                    'text',
+                    'bo_cond_customform_label_1_' . $counter,
+                    get_string('bocondcustomformlabel', 'mod_booking'),
+                    []
+                );
                 $mform->setType('bo_cond_customform_label_1_' . $counter, PARAM_TEXT);
 
                 // We need a few rules. We don't show label...
                 // ... when no element is chosen, when upper button is not checked.
                 $mform->hideIf('bo_cond_customform_label_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
-                $mform->hideIf('bo_cond_customform_label_1_' . $counter,
+                $mform->hideIf(
+                    'bo_cond_customform_label_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
-                    'eq', 0);
+                    'eq',
+                    0
+                );
                 $mform->hideIf( // For deleteinfoscheckboxuser, we don't need to fill out any information.
                     'bo_cond_customform_label_1_' . $counter,
-                'bo_cond_customform_select_1_' . $counter,
-                'eq',
-                'deleteinfoscheckboxuser'
+                    'bo_cond_customform_select_1_' . $counter,
+                    'eq',
+                    'deleteinfoscheckboxuser'
                 );
 
                 // We need to create all possible elements and hide them via "hideif" right now.
-                $mform->addElement('textarea', 'bo_cond_customform_value_1_' . $counter,
-                    get_string('bocondcustomformvalue', 'mod_booking'), []);
+                $mform->addElement(
+                    'textarea',
+                    'bo_cond_customform_value_1_' . $counter,
+                    get_string('bocondcustomformvalue', 'mod_booking'),
+                    []
+                );
                 $mform->addHelpButton('bo_cond_customform_value_1_' . $counter, 'bocondcustomformvalue', 'mod_booking');
                 // We need a few rules. We don't show label...
                 // ... when no element is chosen, when upper button is not checked, when form element is static.
                 $mform->hideIf('bo_cond_customform_value_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
-                $mform->hideIf('bo_cond_customform_value_1_' . $counter,
+                $mform->hideIf(
+                    'bo_cond_customform_value_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
-                    'eq', 0);
-                $mform->hideIf('bo_cond_customform_value_1_' . $counter,
+                    'eq',
+                    0
+                );
+                $mform->hideIf(
+                    'bo_cond_customform_value_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
-                    'eq', 'advcheckbox');
+                    'eq',
+                    'advcheckbox'
+                );
                 $mform->hideIf(
                     'bo_cond_customform_value_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
                     'eq',
                     'deleteinfoscheckboxuser'
+                );
+
+                $mform->addElement(
+                    'advcheckbox',
+                    'bo_cond_customform_enroluserstowaitinglist' . $counter,
+                    get_string('enroluserstowaitinglist', 'mod_booking'),
+                    [],
+                );
+                $mform->hideIf(
+                    'bo_cond_customform_enroluserstowaitinglist' . $counter,
+                    'bo_cond_customform_select_1_' . $counter,
+                    'neq',
+                    'enrolusersaction'
                 );
 
                 if ($CFG->version >= 2023100900) {
@@ -330,19 +365,29 @@ class customform implements bo_condition {
                 );
 
                 // We need to create all possible elements and hide them via "hideif" right now.
-                $mform->addElement('advcheckbox', 'bo_cond_customform_notempty_1_' . $counter,
-                        get_string('bocondcustomformnotempty', 'mod_booking'), []);
+                $mform->addElement(
+                    'advcheckbox',
+                    'bo_cond_customform_notempty_1_' . $counter,
+                    get_string('bocondcustomformnotempty', 'mod_booking'),
+                    []
+                );
 
                 // We need a few rules. We don't show label...
                 // ... when no element is chosen, when upper button is not checked.
                 // Or if it's only the checkbox for users to delete their own data.
                 $mform->hideIf('bo_cond_customform_notempty_1_' . $counter, 'bo_cond_customform_restrict', 'notchecked');
-                $mform->hideIf('bo_cond_customform_notempty_1_' . $counter,
+                $mform->hideIf(
+                    'bo_cond_customform_notempty_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
-                    'eq', 0);
-                $mform->hideIf('bo_cond_customform_notempty_1_' . $counter,
+                    'eq',
+                    0
+                );
+                $mform->hideIf(
+                    'bo_cond_customform_notempty_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
-                    'eq', 'static');
+                    'eq',
+                    'static'
+                );
                 $mform->hideIf(
                     'bo_cond_customform_notempty_1_' . $counter,
                     'bo_cond_customform_select_1_' . $counter,
@@ -351,9 +396,12 @@ class customform implements bo_condition {
                 );
 
                 if (!empty($previous)) {
-                    $mform->hideIf('formgroupelement_1_' . $counter,
-                    'bo_cond_customform_select_1_' . $previous,
-                    'eq', 0);
+                    $mform->hideIf(
+                        'formgroupelement_1_' . $counter,
+                        'bo_cond_customform_select_1_' . $previous,
+                        'eq',
+                        0
+                    );
                 }
 
                 $previous = $counter;
@@ -373,9 +421,10 @@ class customform implements bo_condition {
             );
             $mform->hideIf(
                 'bo_cond_customform_deleteinfoscheckboxadmin',
-            'bo_cond_customform_select_1_1',
-            'eq',
-            0);
+                'bo_cond_customform_select_1_1',
+                'eq',
+                0
+            );
             if ($CFG->version >= 2023100900) {
                 $rulesmoodleurl = new moodle_url('/mod/booking/edit_rules.php');
                 $rulesurl = $rulesmoodleurl->out(true);
@@ -392,20 +441,25 @@ class customform implements bo_condition {
                 );
                 $mform->hideIf(
                     'deleteinfoscheckboxadminwarning',
-                'bo_cond_customform_select_1_1',
-                'eq',
-                0);
+                    'bo_cond_customform_select_1_1',
+                    'eq',
+                    0
+                );
                 $mform->hideIf(
                     'deleteinfoscheckboxadminwarning',
                     'bo_cond_customform_deleteinfoscheckboxadmin',
                     'eq',
-                    0);
+                    0
+                );
             }
         } else {
             // No PRO license is active.
-            $mform->addElement('static', 'bo_cond_customform_restrict',
+            $mform->addElement(
+                'static',
+                'bo_cond_customform_restrict',
                 get_string('bocondcustomformrestrict', 'mod_booking'),
-                get_string('proversiononly', 'mod_booking'));
+                get_string('proversiononly', 'mod_booking')
+            );
         }
 
         $mform->addElement('html', '<hr class="w-50"/>');
@@ -475,7 +529,6 @@ class customform implements bo_condition {
 
         $key = 'bo_cond_customform_select_' . $formcounter . '_' . $counter;
         while (isset($fromform->{$key})) {
-
             $formobject = new stdClass();
 
             $formobject->formtype = $fromform->{$key};
@@ -488,6 +541,9 @@ class customform implements bo_condition {
 
             $key = 'bo_cond_customform_notempty_' . $formcounter . '_' . $counter;
             $formobject->notempty = $fromform->{$key} ?? null;
+
+            $key = 'bo_cond_customform_enroluserstowaitinglist' . $counter;
+            $formobject->enroluserstowaitinglist = $fromform->{$key} ?? null;
 
             $newform[$counter] = $formobject;
 
@@ -523,9 +579,7 @@ class customform implements bo_condition {
         }
 
         foreach ($acdefault->formsarray as $formcounter => $form) {
-
             foreach ($form as $counter => $formelement) {
-
                 $key = 'bo_cond_customform_select_' . $formcounter . '_' . $counter;
                 $defaultvalues->{$key} = $formelement->formtype;
 
@@ -537,6 +591,9 @@ class customform implements bo_condition {
 
                 $key = 'bo_cond_customform_notempty_' . $formcounter . '_' . $counter;
                 $defaultvalues->{$key} = $formelement->notempty ?? 0;
+
+                $key = 'bo_cond_customform_enroluserstowaitinglist' . $counter;
+                $defaultvalues->{$key} = $formelement->enroluserstowaitinglist ?? 0;
             }
         }
         if (isset($acdefault->deleteinfoscheckboxadmin) && !empty($acdefault->deleteinfoscheckboxadmin)) {
@@ -557,8 +614,13 @@ class customform implements bo_condition {
      * @param bool $fullwidth
      * @return array
      */
-    public function render_button(booking_option_settings $settings,
-        $userid = 0, $full = false, $not = false, bool $fullwidth = true): array {
+    public function render_button(
+        booking_option_settings $settings,
+        $userid = 0,
+        $full = false,
+        $not = false,
+        bool $fullwidth = true
+    ): array {
 
         $label = $this->get_description_string(false, $full, $settings);
 
@@ -586,22 +648,22 @@ class customform implements bo_condition {
             $description = $full ? get_string('boconduserprofilefieldfullavailable', 'mod_booking') :
                 get_string('boconduserprofilefieldavailable', 'mod_booking');
         } else {
-
             if (!$this->customsettings) {
                 // This description can only works with the right custom settings.
                 $availabilityarray = json_decode($settings->availability);
 
                 foreach ($availabilityarray as $availability) {
                     if (strpos($availability->class, 'userprofilefield_1_default') > 0) {
-
                         $this->customsettings = (object)$availability;
                     }
                 }
             }
 
-            $description = $full ? get_string('boconduserprofilefieldfullnotavailable',
+            $description = $full ? get_string(
+                'boconduserprofilefieldfullnotavailable',
                 'mod_booking',
-                $this->customsettings) :
+                $this->customsettings
+            ) :
                 get_string('boconduserprofilefieldnotavailable', 'mod_booking');
         }
         return $description;
@@ -734,25 +796,6 @@ class customform implements bo_condition {
      * @return array
      */
     public static function validation(array $data, array $files, array &$errors) {
-
-        if (
-            empty($data['chooseorcreatecourse'])
-            || (is_array($data['courseid']) && empty($data['courseid'][0]))
-            || empty($data['courseid'])
-        ) {
-            foreach ($data as $key => $value) {
-                // We need a courseid for the customform_enrolusersaction.
-                if (preg_match('/^bo_cond_customform_select_/', $key) && $data[$key] === "enrolusersaction") {
-                    if (empty($data['chooseorcreatecourse'])) {
-                        $errors['chooseorcreatecourse'] = get_string('relatedcourseidneeded', 'mod_booking');
-                    } else {
-                        $errors['courseid'] = get_string('relatedcourseidneeded', 'mod_booking');
-                    }
-                    return $errors;
-                }
-            }
-            return $errors;
-        }
         return $errors;
     }
 }

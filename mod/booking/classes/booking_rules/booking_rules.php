@@ -27,10 +27,12 @@ namespace mod_booking\booking_rules;
 
 use coding_exception;
 use context;
+use context_system;
 use context_module;
 use dml_exception;
 use mod_booking\output\ruleslist;
 use mod_booking\singleton_service;
+use Throwable;
 
 /**
  * Class to handle display and management of rules.
@@ -110,9 +112,12 @@ class booking_rules {
      * @throws dml_exception
      */
     public static function get_list_of_saved_rules_by_context(int $contextid = 1, string $eventname = '') {
-
-        $context = context::instance_by_id($contextid);
-        $path = $context->path;
+        try {
+            $context = context::instance_by_id($contextid);
+            $path = $context->path;
+        } catch (Throwable $e) {
+            return [];
+        }
 
         $patharray = explode('/', $path);
 
@@ -124,8 +129,10 @@ class booking_rules {
         if (empty($eventname)) {
             return array_filter($rules, fn($a) => in_array($a->contextid, $patharray));
         } else {
-            return array_filter($rules,
-                fn($a) => (in_array($a->contextid, $patharray) && ($a->eventname == $eventname)));
+            return array_filter(
+                $rules,
+                fn($a) => (in_array($a->contextid, $patharray) && ($a->eventname == $eventname))
+            );
         }
     }
 
@@ -148,5 +155,20 @@ class booking_rules {
         foreach ($rulesofcontext as $rule) {
             rules_info::delete_rule($rule->id);
         }
+    }
+
+    /**
+     * Check if rules in a given contextid match with the bookingid.
+     * @param int $bookingcmid
+     * @param int $contextid
+     */
+    public static function booking_matches_rulecontext(int $bookingcmid, int $contextid) {
+
+        if ($contextid == 1) {
+            return true;
+        }
+        // Context of the rule.
+        $context = context::instance_by_id($contextid);
+        return $context->instanceid == $bookingcmid;
     }
 }

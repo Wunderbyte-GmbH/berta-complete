@@ -28,7 +28,6 @@ declare(strict_types=1);
 namespace local_wunderbyte_table\external;
 
 use cache;
-use context_system;
 use Exception;
 use external_api;
 use external_function_parameters;
@@ -50,7 +49,6 @@ require_once($CFG->libdir . '/externallib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class load_data extends external_api {
-
     /**
      * Describes the parameters this webservice.
      *
@@ -67,8 +65,7 @@ class load_data extends external_api {
             'treset'  => new external_value(PARAM_INT, 'reset value', VALUE_REQUIRED),
             'wbtfilter'  => new external_value(PARAM_RAW, 'reset value', VALUE_REQUIRED),
             'searchtext'  => new external_value(PARAM_TEXT, 'reset value', VALUE_REQUIRED),
-        ]
-        );
+        ]);
     }
 
     /**
@@ -96,7 +93,7 @@ class load_data extends external_api {
         $searchtext = null
     ) {
 
-        global $CFG, $PAGE;
+        global $PAGE;
 
         $params = [
                 'encodedtable' => $encodedtable,
@@ -153,7 +150,6 @@ class load_data extends external_api {
         }
 
         if (empty($table->baseurl)) {
-
             if (!empty($table->baseurlstring)) {
                 $table->define_baseurl($table->baseurlstring);
             } else {
@@ -162,17 +158,32 @@ class load_data extends external_api {
             }
         }
 
+        // We need to support both keys, for legacy reasons.
+        $params['wbtsearch'] = $params['searchtext'];
+
         // The table lib class expects $_POST variables to be present, so we have to set them.
         foreach ($params as $key => $value) {
             $_POST[$key] = $value;
         }
 
-        if ($params['searchtext'] !== "") {
-            $table->apply_searchtext($params['searchtext']);
-        }
-
         if (!empty($params['tsort'])) {
             $table->unset_sorting_settings();
+        }
+
+        // Make sure the chosen template is marked as selected.
+        if (!empty($table->switchtemplates['templates'])) {
+            foreach ($table->switchtemplates['templates'] as &$t) {
+                if (
+                    ($t['template'] == get_user_preferences('wbtable_chosen_template_' . $table->uniqueid))
+                    && ($t['viewparam'] == get_user_preferences(
+                        'wbtable_chosen_template_viewparam_' . $table->uniqueid
+                    ))
+                ) {
+                    $t['selected'] = true;
+                } else {
+                    unset($t['selected']);
+                }
+            }
         }
 
         // No we return the json object and the matching method.

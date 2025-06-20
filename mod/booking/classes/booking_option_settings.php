@@ -31,6 +31,7 @@ use mod_booking\booking_campaigns\booking_campaign;
 use moodle_exception;
 use stdClass;
 use moodle_url;
+use Throwable;
 
 /**
  * Settings class for booking option instances.
@@ -41,7 +42,6 @@ use moodle_url;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class booking_option_settings {
-
     /** @var int $id The ID of the booking option. */
     public $id = null;
 
@@ -99,6 +99,9 @@ class booking_option_settings {
 
     /** @var int $limitanswers */
     public $limitanswers = null;
+
+    /** @var int $timecreated */
+    public $timecreated = null;
 
     /** @var int $timemodified */
     public $timemodified = null;
@@ -177,6 +180,9 @@ class booking_option_settings {
 
     /** @var int $invisible */
     public $invisible = null;
+
+    /** @var int $timemadevisible */
+    public $timemadevisible = 0;
 
     /** @var int $annotation */
     public $annotation = null;
@@ -289,6 +295,9 @@ class booking_option_settings {
     /** @var array $attachedfiles The links on the attached files */
     public $attachedfiles = [];
 
+    /** @var string $competencies The links on the attached files */
+    public $competencies = '';
+
     /**
      * Constructor for the booking option settings class.
      * The constructor can take the dbrecord stdclass which is the initial DB request for this option.
@@ -300,13 +309,17 @@ class booking_option_settings {
      */
     public function __construct(int $optionid, ?stdClass $dbrecord = null) {
 
-        // Even if we have a record, we still get the cache...
-        // Because in the cache, we have also information from other tables.
+        $savecache = false;
+        $cachedoption = false;
         $cache = \cache::make('mod_booking', 'bookingoptionsettings');
-        if (!$cachedoption = $cache->get($optionid)) {
-            $savecache = true;
-        } else {
-            $savecache = false;
+        if (!get_config('booking', 'cacheturnoffforbookingsettings')) {
+            // Even if we have a record, we still get the cache...
+            // Because in the cache, we have also information from other tables.
+            if (
+                !$cachedoption = $cache->get($optionid)
+            ) {
+                $savecache = true;
+            }
         }
 
         // If there is no cache present...
@@ -345,14 +358,12 @@ class booking_option_settings {
 
         // If we don't get the cached object, we have to fetch it here.
         if ($dbrecord === null) {
-
             $params['id'] = $optionid;
             $sql = "SELECT cm.id
                     FROM {booking_options} bo
                     JOIN {course_modules} cm ON bo.bookingid=cm.instance
                     JOIN {modules} m ON m.id=cm.module
                     WHERE m.name='booking'
-
                     AND bo.id=:id";
             $cmid = $DB->get_field_sql($sql, $params);
 
@@ -362,8 +373,15 @@ class booking_option_settings {
                 $context = context_system::instance();
             }
 
-            list($select, $from, $where, $params) = booking::get_options_filter_sql(null, 1, null, '*',
-                $context, [], ['id' => $optionid]);
+            [$select, $from, $where, $params] = booking::get_options_filter_sql(
+                0,
+                1,
+                null,
+                '*',
+                $context,
+                [],
+                ['id' => $optionid]
+            );
 
             $sql = "SELECT $select
                     FROM $from
@@ -391,6 +409,7 @@ class booking_option_settings {
             $this->description = $dbrecord->description;
             $this->descriptionformat = $dbrecord->descriptionformat;
             $this->limitanswers = $dbrecord->limitanswers;
+            $this->timecreated = $dbrecord->timecreated;
             $this->timemodified = $dbrecord->timemodified;
             $this->addtocalendar = $dbrecord->addtocalendar;
             $this->calendarid = $dbrecord->calendarid;
@@ -417,12 +436,14 @@ class booking_option_settings {
             $this->semesterid = $dbrecord->semesterid;
             $this->dayofweektime = $dbrecord->dayofweektime;
             $this->invisible = $dbrecord->invisible;
+            $this->timemadevisible = $dbrecord->timemadevisible;
             $this->annotation = $dbrecord->annotation;
             $this->dayofweek = $dbrecord->dayofweek;
             $this->availability = $dbrecord->availability;
             $this->status = $dbrecord->status;
             $this->responsiblecontact = $dbrecord->responsiblecontact;
             $this->sqlfilter = $dbrecord->sqlfilter;
+            $this->competencies = $dbrecord->competencies;
 
             // If we have a responsible contact id, we load the corresponding user object.
             if (!isset($dbrecord->responsiblecontactuser)) {
@@ -474,18 +495,14 @@ class booking_option_settings {
                 $cm = get_coursemodule_from_instance('booking', $dbrecord->bookingid);
 
                 if (!$cm) {
-
                     // Set cmid to 0 for option templates as they are set globally (not only for one instance).
 
                     $this->cmid = 0;
                     $dbrecord->cmid = 0;
-
                 } else {
-
                     $this->cmid = $cm->id;
                     $dbrecord->cmid = $cm->id;
                 }
-
             } else {
                 $this->cmid = $dbrecord->cmid;
             }
@@ -623,12 +640,11 @@ class booking_option_settings {
                         /** @var booking_campaign $campaign */
                         $campaign = $camp;
                         if ($campaign->campaign_is_active($this->id, $this)) {
-
                             $campaign->apply_logic($this, $dbrecord);
                         }
                     } catch (\Exception $e) {
                         global $CFG;
-                        if ($CFG->debug = (E_ALL | E_STRICT)) {
+                        if ($CFG->debug = (E_ALL)) {
                             throw $e;
                         }
                     }
@@ -656,18 +672,19 @@ class booking_option_settings {
     private function load_sessions_from_db(int $optionid) {
         global $DB;
         // Multi-sessions.
-        if (!$this->sessions = $DB->get_records_sql(
-            "SELECT id, id optiondateid, coursestarttime, courseendtime, daystonotify
-            FROM {booking_optiondates}
-            WHERE optionid = ?
-            ORDER BY coursestarttime ASC", [$optionid])) {
-
+        if (
+            !$this->sessions = $DB->get_records_sql(
+                "SELECT bod.*, bod.id AS optiondateid
+                FROM {booking_optiondates} bod
+                WHERE bod.optionid = ?
+                ORDER BY bod.coursestarttime ASC",
+                [$optionid]
+            )
+        ) {
             // If there are no multisessions, but we still have the option's ...
             // ... coursestarttime and courseendtime, then store them as if they were a session.
             if (!empty($this->coursestarttime) && !empty($this->courseendtime)) {
-
-                $bookingsettings = singleton_service::get_instance_of_booking_settings_by_bookingid($this->bookingid);
-
+                // NOTE: This part is legacy code. We need to check if we can safely remove it.
                 $singlesession = new stdClass();
                 $singlesession->id = 0;
                 $singlesession->coursestarttime = $this->coursestarttime;
@@ -702,23 +719,35 @@ class booking_option_settings {
         global $DB;
 
         $teachers = $DB->get_records_sql(
-            'SELECT DISTINCT t.userid, u.firstname, u.lastname, u.email, u.institution, u.description, u.descriptionformat
+            "SELECT DISTINCT
+                        t.userid,
+                        u.firstname,
+                        u.lastname,
+                        u.email,
+                        u.institution,
+                        u.description,
+                        u.descriptionformat,
+                        u.username
                     FROM {booking_teachers} t
                LEFT JOIN {user} u ON t.userid = u.id
-                   WHERE t.optionid = :optionid',
+                   WHERE t.optionid = :optionid",
             ['optionid' => $this->id]
         );
 
         foreach ($teachers as $key => $teacher) {
-            $context = context_user::instance($teacher->userid, MUST_EXIST);
-            $descriptiontext = file_rewrite_pluginfile_urls(
-                $teacher->description,
-                'pluginfile.php',
-                $context->id,
-                'user',
-                'profile',
-                null,
-            );
+            try {
+                $context = context_user::instance($teacher->userid, MUST_EXIST);
+                $descriptiontext = file_rewrite_pluginfile_urls(
+                    $teacher->description,
+                    'pluginfile.php',
+                    $context->id,
+                    'user',
+                    'profile',
+                    null,
+                );
+            } catch (Throwable $e) {
+                $descriptiontext = $teacher->description;
+            }
 
             $teachers[$key]->description = $descriptiontext;
             $teachers[$key]->descriptionformat = $teacher->descriptionformat;
@@ -744,7 +773,9 @@ class booking_option_settings {
         global $DB;
 
         $teacherids = $DB->get_fieldset_select(
-            'booking_teachers', 'userid', "optionid = :optionid",
+            'booking_teachers',
+            'userid',
+            "optionid = :optionid",
             ['optionid' => $this->id]
         );
 
@@ -792,7 +823,6 @@ class booking_option_settings {
     private function generate_editoption_url(int $optionid) {
 
         if (!empty($this->cmid) && !empty($optionid)) {
-
             /* IMPORTANT NOTICE: We CANNOT use new moodle_url here, as it is already used in the
 
             add_return_url function of the booking_option_settings class. */
@@ -809,8 +839,10 @@ class booking_option_settings {
         global $CFG;
 
         if (!empty($this->cmid) && !empty($optionid)) {
-            $manageresponsesmoodleurl = new moodle_url('/mod/booking/report.php',
-                ['id' => $this->cmid, 'optionid' => $optionid]);
+            $manageresponsesmoodleurl = new moodle_url(
+                '/mod/booking/report.php',
+                ['id' => $this->cmid, 'optionid' => $optionid]
+            );
 
             // Use html_entity_decode to convert "&amp;" to a simple "&" character.
             if ($CFG->version >= 2023042400) {
@@ -832,8 +864,10 @@ class booking_option_settings {
         global $CFG;
 
         if (!empty($this->cmid) && !empty($optionid)) {
-            $optiondatesteachersmoodleurl = new moodle_url('/mod/booking/optiondates_teachers_report.php',
-                ['cmid' => $this->cmid, 'optionid' => $optionid]);
+            $optiondatesteachersmoodleurl = new moodle_url(
+                '/mod/booking/optiondates_teachers_report.php',
+                ['cmid' => $this->cmid, 'optionid' => $optionid]
+            );
 
             // Use html_entity_decode to convert "&amp;" to a simple "&" character.
             if ($CFG->version >= 2023042400) {
@@ -859,14 +893,15 @@ class booking_option_settings {
 
         $imgfile = null;
         // Let's check if an image has been uploaded for the option.
-        if ($imgfile = $DB->get_record_sql("SELECT id, contextid, filepath, filename
+        if (
+            $imgfile = $DB->get_record_sql("SELECT id, contextid, filepath, filename
                                  FROM {files}
                                  WHERE component = 'mod_booking'
                                  AND itemid = :optionid
                                  AND filearea = 'bookingoptionimage'
                                  AND filesize > 0
-                                 AND source is not null", ['optionid' => $optionid], IGNORE_MULTIPLE)) {
-
+                                 AND source is not null", ['optionid' => $optionid], IGNORE_MULTIPLE)
+        ) {
             // If an image has been uploaded for the option, let's create the according URL.
             $this->imageurl = $CFG->wwwroot . "/pluginfile.php/" . $imgfile->contextid .
                 "/mod_booking/bookingoptionimage/" . $optionid . $imgfile->filepath . $imgfile->filename;
@@ -884,13 +919,17 @@ class booking_option_settings {
             $customfieldid = $bookingsettings->bookingimagescustomfield;
 
             if (!empty($customfieldid)) {
-                $customfieldvalue = $DB->get_field('customfield_data', 'value',
-                    ['fieldid' => $customfieldid, 'instanceid' => $optionid]);
+                $customfieldvalue = $DB->get_field(
+                    'customfield_data',
+                    'value',
+                    ['fieldid' => $customfieldid, 'instanceid' => $optionid]
+                );
 
                 if (!empty($customfieldvalue)) {
                     $customfieldvalue = strtolower($customfieldvalue);
 
-                    if (!$imgfiles = $DB->get_records_sql("SELECT id, contextid, filepath, filename
+                    if (
+                        !$imgfiles = $DB->get_records_sql("SELECT id, contextid, filepath, filename
                                  FROM {files}
                                  WHERE component = 'mod_booking'
                                  AND itemid = :bookingid
@@ -899,7 +938,8 @@ class booking_option_settings {
                                  AND filesize > 0
                                  AND source is not null", ['bookingid' => $bookingid,
                                     'customfieldvaluewithextension' => "$customfieldvalue.%",
-                                    ])) {
+                                    ])
+                    ) {
                         return;
                     }
 
@@ -955,7 +995,6 @@ class booking_option_settings {
         $datas = $handler->get_instance_data($optionid, true);
 
         foreach ($datas as $data) {
-
             $field = $data->get_field();
             $shortname = $field->get('shortname');
             $label = $field->get('name');
@@ -1108,8 +1147,15 @@ class booking_option_settings {
             foreach ($files as $file) {
                 if ($file->get_filesize() > 0) {
                     $filename = $file->get_filename();
-                    $url = moodle_url::make_pluginfile_url($file->get_contextid(), $file->get_component(), $file->get_filearea(),
-                        $file->get_itemid(), $file->get_filepath(), $file->get_filename(), true);
+                    $url = moodle_url::make_pluginfile_url(
+                        $file->get_contextid(),
+                        $file->get_component(),
+                        $file->get_filearea(),
+                        $file->get_itemid(),
+                        $file->get_filepath(),
+                        $file->get_filename(),
+                        true
+                    );
                     $attachedfiles[] = html_writer::link($url, $filename);
                 }
             }
@@ -1180,7 +1226,7 @@ class booking_option_settings {
                     'mod_booking',
                     '',
                     $name,
-                    "This shorname of a booking customfield contains forbidden characters"
+                    "This shortname of a booking customfield contains forbidden characters"
                 );
             }
 
@@ -1314,7 +1360,6 @@ class booking_option_settings {
         // As this is a complete subrequest, we have to add the "where" to the outer table, where it is already rendered.
         $counter = 0;
         foreach ($searchparams as $searchparam) {
-
             if (!$key = key($searchparam)) {
                 throw new moodle_exception('wrongstructureofsearchparams', 'mod_booking');
             }
@@ -1357,17 +1402,22 @@ class booking_option_settings {
         $select = ' f.filename ';
 
         $where = '';
-        $params = ['componentname3' => 'mod_booking', 'bookingoptionimage' => 'bookingoptionimage'];
+        $params = [];
 
-        $from = " LEFT JOIN {files} f
-            ON f.itemid=bo.id and f.component=:componentname3
-            AND f.filearea=:bookingoptionimage
-            AND f.mimetype LIKE 'image%'";
+        // We have to join images with itemid and contextid to be sure to have the right image.
+        // We use contextlevel 70 as it is the contextlevel for course modules.
+        $from = " LEFT JOIN {course_modules} cm ON bo.bookingid = cm.instance AND bo.bookingid <> 0 AND bo.bookingid IS NOT NULL
+            LEFT JOIN {modules} m ON m.id = cm.module AND m.name = 'booking'
+            LEFT JOIN {context} ctx ON ctx.contextlevel = 70 AND ctx.instanceid = cm.id
+            LEFT JOIN {files} f ON f.itemid = bo.id
+                AND f.contextid = ctx.id
+                AND f.component = 'mod_booking'
+                AND f.filearea = 'bookingoptionimage'
+                AND f.mimetype LIKE 'image%'";
 
         // As this is a complete subrequest, we have to add the "where" to the outer table, where it is already rendered.
         $counter = 0;
         foreach ($searchparams as $searchparam) {
-
             if (!$key = key($searchparam)) {
                 throw new moodle_exception('wrongstructureofsearchparams', 'mod_booking');
             }
@@ -1457,7 +1507,7 @@ class booking_option_settings {
             'teachers' => array_values(array_map(fn($a) => [
                 'firstname' => $a->firstname,
                 'lastname' => $a->lastname,
-                'email' => str_replace('@', '&#64;', $a->email),
+                'email' => str_replace('@', '&#64;', $a->email ?? ''),
             ], $this->teachers)),
         ];
 

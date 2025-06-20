@@ -27,8 +27,6 @@ namespace mod_booking;
 use coding_exception;
 use mod_booking\output\report_edit_bookingnotes;
 use html_writer;
-use mod_booking\bo_availability\conditions\customform;
-use mod_booking\utils\wb_payment;
 use moodle_url;
 use stdClass;
 use user_picture;
@@ -41,7 +39,6 @@ require_once('../../lib/tablelib.php');
  *
  */
 class all_userbookings extends \table_sql {
-
     /** @var booking_option|null */
     public $bookingdata = null;
 
@@ -85,7 +82,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * This function is called for each data row to allow processing of the username value.
-     * @param mixed $values
+     * @param object $values
      * @return string
      * @throws coding_exception
      */
@@ -99,7 +96,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * For status column.
-     * @param mixed $values
+     * @param object $values
      * @return string
      * @throws coding_exception
      */
@@ -127,6 +124,15 @@ class all_userbookings extends \table_sql {
     }
 
     /**
+     * For email column.
+     * @param object $values
+     * @return string
+     */
+    protected function col_email($values) {
+        return $values->email;
+    }
+
+    /**
      * Fullname column.
      * @param object $values
      * @return string
@@ -134,19 +140,23 @@ class all_userbookings extends \table_sql {
     public function col_fullname($values) {
         if (empty($values->otheroptions)) {
             return html_writer::link(
-                    new moodle_url('/user/profile.php', ['id' => $values->userid]),
-                    "{$values->firstname} {$values->lastname} ({$values->username})", []);
+                new moodle_url('/user/profile.php', ['id' => $values->userid]),
+                "{$values->firstname} {$values->lastname} ({$values->username})",
+                []
+            );
         } else {
             return html_writer::link(
-                    new moodle_url('/user/profile.php', ['id' => $values->userid]),
-                    "{$values->firstname} {$values->lastname} ({$values->username})", []) .
-                     "&nbsp;({$values->otheroptions})";
+                new moodle_url('/user/profile.php', ['id' => $values->userid]),
+                "{$values->firstname} {$values->lastname} ({$values->username})",
+                []
+            ) .
+            "&nbsp;({$values->otheroptions})";
         }
     }
 
     /**
      * Numrec column.
-     * @param mixed $values
+     * @param object $values
      * @return mixed
      */
     protected function col_numrec($values) {
@@ -159,7 +169,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * Completed column.
-     * @param mixed $values
+     * @param object $values
      * @return mixed
      * @throws coding_exception
      */
@@ -167,7 +177,7 @@ class all_userbookings extends \table_sql {
         if (!$this->is_downloading()) {
             $completed = '';
             if ($values->completed) {
-                $completed = '&#x2713;';
+                $completed = '&#x2705;';
             }
             return $completed;
         } else {
@@ -177,7 +187,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * Rating column.
-     * @param mixed $values
+     * @param object $values
      * @return string
      */
     protected function col_rating($values) {
@@ -185,8 +195,11 @@ class all_userbookings extends \table_sql {
         $output = '';
         $renderer = $PAGE->get_renderer('mod_booking');
         if (!empty($values->rating)) {
-            $output .= html_writer::tag('div', $renderer->render($values->rating),
-                    ['class' => 'booking-option-rating']);
+            $output .= html_writer::tag(
+                'div',
+                $renderer->render($values->rating),
+                ['class' => 'booking-option-rating']
+            );
         }
         return $output;
     }
@@ -207,7 +220,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * Courseendtimecolumn.
-     * @param mixed $values
+     * @param object $values
      * @return string
      * @throws coding_exception
      */
@@ -221,7 +234,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * Waitinglist column.
-     * @param mixed $values
+     * @param object $values
      * @return mixed
      * @throws coding_exception
      */
@@ -241,24 +254,21 @@ class all_userbookings extends \table_sql {
 
     /**
      * City column.
-     * @param mixed $values
+     * @param object $values
      * @return mixed
      * @throws coding_exception
      */
-    protected function col_city($values) {
-        if ($this->is_downloading()) {
-            return $values->city;
-        }
-        return  $values->city;
+    protected function col_city($values): string {
+        return format_string($values->city);
     }
 
     /**
      * Selected column.
-     * @param mixed $values
+     * @param object $values
      * @return string
      * @throws coding_exception
      */
-    protected function col_selected($values) {
+    protected function col_selected($values): string {
         if (!$this->is_downloading()) {
             return '<input id="check' . $values->id .
                      '" type="checkbox" class="usercheckbox" name="user[][' . $values->userid .
@@ -270,7 +280,7 @@ class all_userbookings extends \table_sql {
 
     /**
      * Notes column.
-     * @param mixed $values
+     * @param object $values
      * @return mixed
      * @throws coding_exception
      */
@@ -289,9 +299,23 @@ class all_userbookings extends \table_sql {
     }
 
     /**
+     * Returns link that was generated as enrollink.
+     *
+     * @param object $values
+     *
+     * @return string
+     *
+     */
+    public function col_enrollink($values): string {
+        $erlid = enrollink::get_erlid_from_baid($values->id) ?? "";
+        $value = empty($erlid) ? "" : \mod_booking\enrollink::create_enrollink($erlid);
+        return $value;
+    }
+
+    /**
      * Renders image of user.
      *
-     * @param mixed $values
+     * @param object $values
      *
      * @return string
      *
@@ -303,13 +327,16 @@ class all_userbookings extends \table_sql {
         $userpic->size = 200;
         $userpictureurl = $userpic->get_url($PAGE);
         return html_writer::img(
-            $userpictureurl, "link", ['height' => 100]);
+            $userpictureurl,
+            "link",
+            ['height' => 100]
+        );
     }
 
     /**
      * Renders image of user.
      *
-     * @param mixed $values
+     * @param object $values
      *
      * @return string
      *
@@ -338,7 +365,7 @@ class all_userbookings extends \table_sql {
                 if ($tmp[0] == 'datetime') {
                     return userdate($tmp[1], get_string('strftimedate', 'langconfig'));
                 } else {
-                    return $tmp[1];
+                    return format_string($tmp[1]);
                 }
             } else {
                 return '';
@@ -356,13 +383,13 @@ class all_userbookings extends \table_sql {
 
                 if (
                     isset($answer->json) &&
-                    $jsonobject = json_decode($answer->json)) {
+                    $jsonobject = json_decode($answer->json)
+                ) {
                     if (isset($jsonobject->condition_customform)) {
                         foreach ($jsonobject->condition_customform as $key => $value) {
-
                             $array = explode('_', $key);
                             if (isset($array[2]) &&  $array[2] == $counter) {
-                                return "$value";
+                                return format_string((string)$value);
                             }
                         }
                     }
@@ -396,9 +423,11 @@ class all_userbookings extends \table_sql {
     public function wrap_html_finish() {
         global $DB;
         echo '<input type="hidden" name="sesskey" value="' . sesskey() . '">';
-        if (!$this->bookingdata->booking->settings->autoenrol &&
+        if (
+            !$this->bookingdata->booking->settings->autoenrol &&
                  has_capability('mod/booking:communicate', \context_module::instance($this->cm->id)) &&
-                 $this->bookingdata->option->courseid > 0) {
+                 $this->bookingdata->option->courseid > 0
+        ) {
             echo '<div class="singlebutton">' .
                 '<input type="submit" class="btn btn-secondary btn-sm" name="subscribetocourse" value="' .
                 get_string('subscribetocourse', 'booking') . '" /></div>';
@@ -411,14 +440,20 @@ class all_userbookings extends \table_sql {
                 $result = $DB->get_record_sql(
                     'SELECT cm.id, cm.course, cm.module, cm.instance, m.name
                 FROM {course_modules} cm LEFT JOIN {modules} m ON m.id = cm.module WHERE cm.id = ?',
-                    [$this->bookingdata->booking->settings->completionmodule]);
+                    [$this->bookingdata->booking->settings->completionmodule]
+                );
                 if ($result) {
-                    $dynamicactivitymodulesdata = $DB->get_record($result->name,
-                        ['id' => $result->instance]);
+                    $dynamicactivitymodulesdata = $DB->get_record(
+                        $result->name,
+                        ['id' => $result->instance]
+                    );
                     echo '<div class="singlebutton">' .
                         '<input type="submit" class="btn btn-danger btn-sm" name="deleteusersactivitycompletion" value="' .
-                        get_string('deleteresponsesactivitycompletion', 'booking',
-                            $dynamicactivitymodulesdata->name) . '" /></div>';
+                        get_string(
+                            'deleteresponsesactivitycompletion',
+                            'booking',
+                            $dynamicactivitymodulesdata->name
+                        ) . '" /></div>';
                 }
             }
         }
@@ -439,21 +474,29 @@ class all_userbookings extends \table_sql {
                      get_string('sendcustommsg', 'booking') . '" /></div>';
         }
 
-        if (booking_check_if_teacher($this->bookingdata->option) ||
-                 has_capability('mod/booking:updatebooking',
-                        \context_module::instance($this->cm->id))) {
+        if (
+            booking_check_if_teacher($this->bookingdata->option) ||
+                 has_capability(
+                     'mod/booking:updatebooking',
+                     \context_module::instance($this->cm->id)
+                 )
+        ) {
                             $course = $DB->get_record('course', ['id' => $this->bookingdata->booking->settings->course]);
             if (strpos($this->bookingdata->booking->settings->responsesfields, 'completed') !== false) {
                 echo '<div class="singlebutton">' .
                 '<input type="submit"  class="btn btn-success btn-sm" name="activitycompletion" value="' .
                 (empty($this->bookingdata->booking->settings->btncacname) ? get_string(
-                'confirmoptioncompletion', 'booking') : $this->bookingdata->booking->settings->btncacname) .
+                    'confirmoptioncompletion',
+                    'booking'
+                ) : $this->bookingdata->booking->settings->btncacname) .
                 '" /></div>';
             }
 
             // Output rating button.
-            if (has_capability('moodle/rating:rate', \context_module::instance($this->cm->id)) &&
-                     $this->bookingdata->booking->settings->assessed != 0) {
+            if (
+                has_capability('moodle/rating:rate', \context_module::instance($this->cm->id)) &&
+                     $this->bookingdata->booking->settings->assessed != 0
+            ) {
                 $ratingbutton = '<div class="singlebutton">' . html_writer::start_tag('span', ['class' => "ratingsubmit"]);
                 $attributes = ['type' => 'submit',
                     'class' => 'postratingmenusubmit btn btn-secondary btn-sm',
@@ -467,20 +510,31 @@ class all_userbookings extends \table_sql {
             }
 
             // Output transfer users to other option.
-            if (has_capability('mod/booking:bookforothers', \context_module::instance($this->cm->id)) &&
+            if (
+                has_capability('mod/booking:bookforothers', \context_module::instance($this->cm->id)) &&
                 (has_capability('mod/booking:subscribeusers', \context_module::instance($this->cm->id)) ||
-                booking_check_if_teacher($this->bookingdata->option))) {
-                if (has_capability('mod/booking:subscribeusers',
-                        \context_module::instance($this->cm->id))) {
+                booking_check_if_teacher($this->bookingdata->option))
+            ) {
+                if (
+                    has_capability(
+                        'mod/booking:subscribeusers',
+                        \context_module::instance($this->cm->id)
+                    )
+                ) {
                             $optionids = \mod_booking\booking::get_all_optionids($this->bookingdata->booking->id);
                 } else {
                     $optionids = \mod_booking\booking::get_all_optionids_of_teacher($this->bookingdata->booking->id);
                 }
                 $optionids = array_values(array_diff($optionids, [$this->optionid]));
                 if (!empty($optionids)) {
-                    list($insql, $inparams) = $DB->get_in_or_equal($optionids);
-                    $options = $DB->get_records_select('booking_options', "id {$insql}",
-                            $inparams, '', 'id,text,coursestarttime,location');
+                    [$insql, $inparams] = $DB->get_in_or_equal($optionids);
+                    $options = $DB->get_records_select(
+                        'booking_options',
+                        "id {$insql}",
+                        $inparams,
+                        '',
+                        'id,text,coursestarttime,location'
+                    );
                     $transferto = [];
                     foreach ($options as $key => $value) {
                         $string = [];
@@ -493,8 +547,10 @@ class all_userbookings extends \table_sql {
                         }
                         $transferto[$value->id] = implode(', ', $string);
                     }
-                    $optionbutton = '<div class="singlebutton">' . \html_writer::start_tag('span',
-                            ['class' => "transfersubmit"]);
+                    $optionbutton = '<div class="singlebutton">' . \html_writer::start_tag(
+                        'span',
+                        ['class' => "transfersubmit"]
+                    );
                     echo \html_writer::div(get_string('transferheading', 'mod_booking'), 'mt-2');
                     echo $dropdown = \html_writer::select($transferto, 'transferoption');
                     $attributes = ['type' => 'submit',
@@ -516,23 +572,30 @@ class all_userbookings extends \table_sql {
                     get_string('generaterecnumareyousure', 'booking') . '\')"/></div>';
             }
 
-            $connectedbooking = $DB->get_record("booking",
-                    ['conectedbooking' => $this->bookingdata->booking->settings->id], 'id',
-                    IGNORE_MULTIPLE);
+            $connectedbooking = $DB->get_record(
+                "booking",
+                ['conectedbooking' => $this->bookingdata->booking->settings->id],
+                'id',
+                IGNORE_MULTIPLE
+            );
 
             if ($connectedbooking) {
-
                 $nolimits = $DB->get_records_sql(
-                        "SELECT bo.*, b.text
+                    "SELECT bo.*, b.text
                         FROM {booking_other} bo
                         LEFT JOIN {booking_options} b ON b.id = bo.optionid
                         WHERE b.bookingid = ?",
-                        [$connectedbooking->id]);
+                    [$connectedbooking->id]
+                );
 
                 if (!$nolimits) {
-                    $result = $DB->get_records_select("booking_options",
-                            "bookingid = {$connectedbooking->id} AND id <> {$this->optionid}", null,
-                            'text ASC', 'id, text');
+                    $result = $DB->get_records_select(
+                        "booking_options",
+                        "bookingid = {$connectedbooking->id} AND id <> {$this->optionid}",
+                        null,
+                        'text ASC',
+                        'id, text'
+                    );
 
                     $options = [];
 
@@ -545,19 +608,23 @@ class all_userbookings extends \table_sql {
                     echo html_writer::select($options, 'selectoptionid', '');
 
                     $label = (empty(
-                            $this->bookingdata->booking->settings->booktootherbooking) ? get_string(
-                            'booktootherbooking', 'booking') : $this->bookingdata->booking->settings->booktootherbooking);
+                        $this->bookingdata->booking->settings->booktootherbooking
+                    ) ? get_string(
+                        'booktootherbooking',
+                        'booking'
+                    ) : $this->bookingdata->booking->settings->booktootherbooking);
 
                     echo '<div class="singlebutton">' .
                         '<input type="submit" class="btn btn-secondary btn-sm" name="booktootherbooking" value="' .
                              $label . '" /></div>';
                 } else {
                     $alllimits = $DB->get_records_sql(
-                            "SELECT bo.*, b.text
+                        "SELECT bo.*, b.text
                         FROM {booking_other} bo
                         LEFT JOIN {booking_options} b ON b.id = bo.optionid
                         WHERE b.bookingid = ? AND bo.otheroptionid = ?",
-                            [$connectedbooking->id, $this->optionid]);
+                        [$connectedbooking->id, $this->optionid]
+                    );
 
                     if ($alllimits) {
                         $options = [];
@@ -571,8 +638,11 @@ class all_userbookings extends \table_sql {
                         echo html_writer::select($options, 'selectoptionid', '');
 
                         $label = (empty(
-                                $this->bookingdata->booking->settings->booktootherbooking) ? get_string(
-                                'booktootherbooking', 'booking') : $this->bookingdata->booking->settings->booktootherbooking);
+                            $this->bookingdata->booking->settings->booktootherbooking
+                        ) ? get_string(
+                            'booktootherbooking',
+                            'booking'
+                        ) : $this->bookingdata->booking->settings->booktootherbooking);
 
                         echo '<div class="singlebutton">' .
                             '<input type="submit" class="btn btn-warning btn-sm" name="booktootherbooking" value="' .
@@ -581,43 +651,103 @@ class all_userbookings extends \table_sql {
                 }
             }
 
-            if ($this->bookingdata->booking->settings->enablepresence) {
-                // Change presence status.
-                // Status order: Unknown, Attending, Complete, Incomplete, No Show, and Failed.
-                echo "<br>";
+            // Change presence status.
+            // Status order: Unknown, Attending, Complete, Incomplete, No Show, and Failed.
+            echo "<br>";
+            echo html_writer::select(
+                booking::get_possible_presences(false),
+                'selectpresencestatus',
+                '',
+                ['' => 'choosedots'],
+                ['class' => 'mt-3']
+            );
 
-                $possiblepresences = [
-                    5 => get_string('statusunknown', 'mod_booking'),
-                    6 => get_string('statusattending', 'mod_booking'),
-                    1 => get_string('statuscomplete', 'mod_booking'),
-                    2 => get_string('statusincomplete', 'mod_booking'),
-                    3 => get_string('statusnoshow', 'mod_booking'),
-                    4 => get_string('statusfailed', 'mod_booking'),
-                    7 => get_string('statusexcused', 'mod_booking'),
-                ];
-
-                $presences = [];
-                $storedpresences = explode(',', get_config('booking', 'presenceoptions'));
-                if (wb_payment::pro_version_is_activated()) {
-                    foreach ($storedpresences as $id) {
-                        $presences[$id] = $possiblepresences[$id];
-                    }
-                } else {
-                    // Without PRO version, use all possible presences.
-                    $presences = $possiblepresences;
-                }
-
-                echo html_writer::select($presences, 'selectpresencestatus', '', ['' => 'choosedots'],
-                    ['class' => 'mt-3']);
-
-                echo '<div class="singlebutton ml-2">' .
-                    '<input type="submit" class="btn btn-success btn-sm mt-3" name="changepresencestatus" value="' .
-                    get_string('confirmpresence', 'booking') . '" /></div>';
-            }
+            echo '<div class="singlebutton ml-2">' .
+                '<input type="submit" class="btn btn-success btn-sm mt-3" name="changepresencestatus" value="' .
+                get_string('confirmpresence', 'booking') . '" /></div>';
         }
 
         echo '</form>';
 
         echo '<hr>';
+    }
+    /**
+     * Column for latest Certificate.
+     *
+     * @param stdClass $values
+     *
+     * @return string
+     *
+     */
+    public function col_certificate(stdClass $values) {
+        $checkmark = '&#x2705; ';
+        $cross = '&#x274C; ';
+        $now = time();
+
+        if (!isset($values->certificate)) {
+            return "";
+        }
+
+        $certificates = json_decode($values->certificate);
+        $expiredates = [];
+        foreach ($certificates as $cert) {
+            $expiredates[] = $cert->expires;
+            $timecreated[] = $cert->timecreated;
+            $code[] = $cert->code;
+        }
+
+        $lastexpiredate = end($expiredates);
+        $lasttimecreated = end($timecreated);
+        $lastcode = end($code);
+
+        if (empty($lastexpiredate)) {
+            $text = get_string('certificatewithoutexperation', 'mod_booking');
+        } else {
+            $dateformatted = userdate($lastexpiredate);
+            $text = get_string('certificatewithexperation', 'mod_booking', $dateformatted);
+        }
+        $statusicon = ($now < $lastexpiredate) ? $checkmark : $cross;
+        $url = new moodle_url("/pluginfile.php/1/tool_certificate/issues/{$lasttimecreated}/{$lastcode}.pdf");
+        $output = $statusicon . html_writer::link($url, $text, ['target' => '_blank']);
+        return $output;
+    }
+
+    /**
+     * Column for all Certificates in the Bookingoption for a user.
+     *
+     * @param stdClass $values
+     *
+     * @return string
+     *
+     */
+    public function col_allusercertificates(stdClass $values) {
+        global $OUTPUT;
+        static $id = 1;
+        if (empty($values->certificate)) {
+            return "";
+        }
+        $certificates = json_decode($values->certificate);
+        $certdata = [];
+        $fullname = "{$values->firstname} {$values->lastname}";
+
+        foreach ($certificates as $cert) {
+            $timecreated = $cert->timecreated;
+            $code = $cert->code;
+            $url = new moodle_url("/pluginfile.php/1/tool_certificate/issues/{$timecreated}/{$code}.pdf");
+            $certdata[] = [
+                'code' => $code,
+                'timecreated' => userdate($timecreated),
+                'expires' => !empty($cert->expires) ? userdate($cert->expires)
+                    : get_string('certificatewithoutexperation', 'mod_booking'),
+                'url' => $url,
+            ];
+        }
+        $data = [
+            'title' => get_string('certificatemodalheader', 'mod_booking', $fullname),
+            'certificates' => $certdata,
+            'id' => $id,
+        ];
+        $id++;
+        return $OUTPUT->render_from_template('mod_booking/report/allusercertificate_modal', $data);
     }
 }

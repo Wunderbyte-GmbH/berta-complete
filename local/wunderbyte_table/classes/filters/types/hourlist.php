@@ -25,17 +25,13 @@
 namespace local_wunderbyte_table\filters\types;
 
 use core_date;
-use DateTime;
-use DateTimeZone;
 use local_wunderbyte_table\filters\base;
-use local_wunderbyte_table\filter;
 use local_wunderbyte_table\wunderbyte_table;
 
 /**
  * Wunderbyte table class is an extension of table_sql.
  */
 class hourlist extends base {
-
     /**
      * Set the column which should be filtered and possibly localize it.
      * @param string $columnidentifier
@@ -44,12 +40,26 @@ class hourlist extends base {
      * @param string $secondcolumnlocalized
      * @return void
      */
-    public function __construct(string $columnidentifier,
-                                string $localizedstring = '',
-                                string $secondcolumnidentifier = '',
-                                string $secondcolumnlocalized = '') {
+    public function __construct(
+        string $columnidentifier,
+        string $localizedstring = '',
+        string $secondcolumnidentifier = '',
+        string $secondcolumnlocalized = ''
+    ) {
+        $this->options = self::get_possible_timed_options();
 
-        $this->options = [
+        $this->columnidentifier = $columnidentifier;
+        $this->localizedstring = empty($localizedstring) ? $columnidentifier : $localizedstring;
+        $this->secondcolumnidentifier = $secondcolumnidentifier;
+        $this->secondcolumnlocalized = empty($secondcolumnlocalized) ? $secondcolumnidentifier : $secondcolumnlocalized;
+    }
+
+    /**
+     * Add the filter to the array.
+     * @return array
+     */
+    public static function get_possible_timed_options() {
+        return [
             0  => get_string('from0to1', 'local_wunderbyte_table'),
             1  => get_string('from1to2', 'local_wunderbyte_table'),
             2  => get_string('from2to3', 'local_wunderbyte_table'),
@@ -75,11 +85,6 @@ class hourlist extends base {
             22 => get_string('from22to23', 'local_wunderbyte_table'),
             23 => get_string('from23to24', 'local_wunderbyte_table'),
         ];
-
-        $this->columnidentifier = $columnidentifier;
-        $this->localizedstring = empty($localizedstring) ? $columnidentifier : $localizedstring;
-        $this->secondcolumnidentifier = $secondcolumnidentifier;
-        $this->secondcolumnlocalized = empty($secondcolumnlocalized) ? $secondcolumnidentifier : $secondcolumnlocalized;
     }
 
     /**
@@ -87,7 +92,7 @@ class hourlist extends base {
      * @param array $filter
      * @param bool $invisible
      * @return void
-     * @throws moodle_exception
+     * @throws \moodle_exception
      */
     public function add_filter(array &$filter, bool $invisible = false) {
 
@@ -109,12 +114,13 @@ class hourlist extends base {
         if (!isset($filter[$this->columnidentifier])) {
             $filter[$this->columnidentifier] = $options;
         } else {
-            throw new moodle_exception(
+            throw new \moodle_exception(
                 'filteridentifierconflict',
                 'local_wunderbyte_table',
                 '',
                 $this->columnidentifier,
-                'Every column can have only one filter applied');
+                'Every column can have only one filter applied'
+            );
         }
     }
 
@@ -129,7 +135,6 @@ class hourlist extends base {
      * @return void
      */
     public function add_options(array $options = []) {
-
         foreach ($options as $key => $value) {
             $this->options[$key] = $value;
         }
@@ -143,21 +148,147 @@ class hourlist extends base {
      */
     public static function get_data_for_filter_options(wunderbyte_table $table, string $key) {
 
-        $array = filter::get_db_filter_column_hours($table, $key);
-
-        $delta = filter::get_timezone_offset();
-
+        $array = self::get_db_filter_column_hours($table, $key);
         $returnarray = [];
-        // We get back the GMT timestamps. We need to translate them.
-        foreach ($array as $key => $value) {
 
-            $key = $key - $delta;
-
-            $value->coursestarttime = "$key";
-            $returnarray[$key] = $value;
+        foreach ($array as $hour => $value) {
+            $value->$key = "$hour";
+            $returnarray[$hour] = $value;
         }
-
         return $returnarray ?? [];
     }
 
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param array $data
+     * @param string $filterspecificvalue
+     */
+    public static function render_mandatory_fields(&$mform, $data = [], $filterspecificvalue = '') {
+        $mform->addElement('html', '<p id="no-pairs-message" class="alert alert-info">No further seetings needed</p>');
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_filterspecific_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            $data->wbfilterclass => true,
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+        ];
+        $filterspecificvalues = array_merge($filterspecificvalues, self::get_possible_timed_options());
+        return [$filterspecificvalues, ''];
+    }
+
+    /**
+     * Makes sql requests.
+     * @param wunderbyte_table $table
+     * @param string $key
+     * @return array
+     */
+    protected static function get_db_filter_column_hours(wunderbyte_table $table, string $key) {
+
+        global $DB, $USER;
+
+        $databasetype = $DB->get_dbfamily();
+        $tz = core_date::get_user_timezone($USER); // We must apply user's timezone there.
+
+        // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
+        switch ($databasetype) {
+            case 'postgres':
+                $sql = "SELECT hours, COUNT(hours)
+                        FROM (
+                            SELECT EXTRACT(
+                                HOUR FROM (TIMESTAMP 'epoch' + $key * interval '1 second') AT TIME ZONE 'UTC' AT TIME ZONE '$tz'
+                            ) AS hours
+                            FROM {$table->sql->from}
+                            WHERE {$table->sql->where} AND $key IS NOT NULL
+                        ) as hourss1
+                        GROUP BY hours ";
+                break;
+            case 'mysql':
+                $sql = "SELECT hours, COUNT(*) as count
+                        FROM (
+                            SELECT EXTRACT(
+                                HOUR FROM CONVERT_TZ(FROM_UNIXTIME($key), 'UTC', '$tz')
+                            ) AS hours
+                            FROM {$table->sql->from}
+                            WHERE {$table->sql->where} AND $key IS NOT NULL
+                        ) as hourss1
+                        GROUP BY hours";
+                break;
+            default:
+                $sql = '';
+                break;
+        }
+
+        if (empty($sql)) {
+            return [];
+        }
+
+        $records = $DB->get_records_sql($sql, $table->sql->params);
+
+        return $records;
+    }
+
+    /**
+     * Apply the filter of hourlist class.
+     *
+     * @param string $filter
+     * @param string $columnname
+     * @param mixed $categoryvalue
+     * @param wunderbyte_table $table
+     *
+     * @return void
+     *
+     */
+    public function apply_filter(
+        string &$filter,
+        string $columnname,
+        $categoryvalue,
+        wunderbyte_table &$table
+    ): void {
+        global $DB, $USER;
+
+        $databasetype = $DB->get_dbfamily();
+        $tz = core_date::get_user_timezone($USER); // We must apply user's timezone there.
+        $filtercounter = 1;
+        $filter .= " ( ";
+        foreach ($categoryvalue as $key => $value) {
+            $filter .= $filtercounter == 1 ? "" : " OR ";
+            $paramsvaluekey = $table->set_params((string) ($value), false);
+            // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
+            switch ($databasetype) {
+                case 'postgres':
+                    $filter .= " EXTRACT(
+                     HOUR FROM (TIMESTAMP 'epoch' + $columnname * interval '1 second') AT TIME ZONE 'UTC' AT TIME ZONE '$tz'
+                     ) = :$paramsvaluekey
+                     AND $columnname IS NOT NULL";
+                    break;
+                default:
+                    $filter .= " EXTRACT(
+                     HOUR FROM CONVERT_TZ(FROM_UNIXTIME($columnname), 'UTC', '$tz')
+                     ) = :$paramsvaluekey
+                     AND $columnname IS NOT NULL";
+            }
+            $filtercounter++;
+        }
+        $filter .= " ) ";
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_new_filter_values($data, $filtercolumn) {
+        return [];
+    }
 }

@@ -46,7 +46,6 @@ require_once($CFG->dirroot . '/cohort/lib.php');
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class enrolledincohorts implements bo_condition {
-
     /** @var int $id set via json during construction */
     public $id = MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOHORTS;
 
@@ -163,35 +162,59 @@ class enrolledincohorts implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
         global $USER, $DB;
-        $usercohorts = singleton_service::get_cohorts_of_user($USER->id);
+
+        $params = [];
+
+        if (empty($userid)) {
+            $userid = $USER->id;
+        }
+
+        // We get the first userid from the restriction on which booking answers we see.
+        // But here we need to open this up. If we don't have the table for a given user...
+        // ... we want to see the one of USER.
+
+        $usercohorts = singleton_service::get_cohorts_of_user($userid);
         $databasetype = $DB->get_dbfamily();
         if (empty($usercohorts)) {
-
             if ($databasetype == 'postgres') {
                 $where = "
-                    availability IS NOT NULL
-                    AND (NOT availability::jsonb @> '[{\"sqlfilter\": \"1\"}]'::jsonb)";
-            } else if ($databasetype == 'mysql') {
+                    (
+                        availability IS NOT NULL
+                        AND NOT EXISTS (
+                            SELECT 1
+                            FROM jsonb_array_elements(availability::jsonb) elem
+                            WHERE elem ->> 'sqlfilter' = '1'
+                        )
+                    )";
+            } else if (
+                $databasetype == 'mysql'
+                && db_is_at_least_mariadb_106_or_mysql_8() // JSON_TABLE is only available in MariaDB 10.6+ and MySQL 8.0+.
+            ) {
                 $where = "
-                availability IS NOT NULL
-                AND (NOT JSON_CONTAINS(availability, '{\"sqlfilter\": \"1\"}'))";
+                (
+                    availability IS NOT NULL
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM JSON_TABLE(availability, '$[*]' COLUMNS (sqlfilter VARCHAR(10) PATH '$.sqlfilter')) jt
+                        WHERE jt.sqlfilter = '1'
+                    )
+                )";
             } else {
-                return ["", "", "", [], ""];
+                return ["", "", "", $params, ""];
             }
-
-            return ["", "", "", [], $where];
+            return ["", "", "", $params, $where];
         }
 
         // The $key param is the name of the param in json.
         if ($databasetype == 'postgres') {
             // Appended as string for DB syntax reasons.
             $appendwhere1 = "";
-            $cohortids = array_map(fn($c) => '"' . $c->id. '"', $usercohorts);
+            $cohortids = array_map(fn($c) => '"' . $c->id . '"', $usercohorts);
             $appendwhere1 = implode(', ', $cohortids);
 
             $cohorts = [];
@@ -206,31 +229,38 @@ class enrolledincohorts implements bo_condition {
             // Default is AND - all cohorts must be met by user.
             $where = "
             availability IS NOT NULL
-            AND ((NOT availability::jsonb @> '[{\"sqlfilter\": \"1\"}]'::jsonb)
-            OR (CASE
-                WHEN (availability::jsonb->0->>'cohortidsoperator') = 'OR' THEN
-                    EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(availability::jsonb) AS obj
-                        WHERE obj->>'cohortids' IS NOT NULL
-                        AND EXISTS (
+            AND ((NOT EXISTS (
                             SELECT 1
-                            FROM jsonb_array_elements_text((obj->'cohortids')::jsonb) AS cohortids
-                            WHERE cohortids::text IN ($appendwhere2)
+                            FROM jsonb_array_elements(availability::jsonb) elem
+                            WHERE elem ->> 'sqlfilter' = '1'
+                        ))
+                OR (CASE
+                    WHEN (availability::jsonb->0->>'cohortidsoperator') = 'OR' THEN
+                        EXISTS (
+                            SELECT 1
+                            FROM jsonb_array_elements(availability::jsonb) AS obj
+                            WHERE obj->>'cohortids' IS NOT NULL
+                            AND EXISTS (
+                                SELECT 1
+                                FROM jsonb_array_elements_text((obj->'cohortids')::jsonb) AS cohortids
+                                WHERE cohortids::text IN ($appendwhere2)
+                            )
                         )
-                    )
-                ELSE
-                    NOT EXISTS (
-                        SELECT 1
-                        FROM jsonb_array_elements(availability::jsonb) AS obj
-                        WHERE obj->>'cohortids' IS NOT NULL
-                        AND NOT (obj->'cohortids')::jsonb <@ '[$appendwhere1]'::jsonb
-                    )
-                END
-            ))";
-            return ['', '', '', [], $where];
-        } else if ($databasetype == 'mysql') {
-
+                    ELSE
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM jsonb_array_elements(availability::jsonb) AS obj
+                            WHERE obj->>'cohortids' IS NOT NULL
+                            AND NOT (obj->'cohortids')::jsonb <@ '[$appendwhere1]'::jsonb
+                        )
+                    END
+                )
+            )";
+            return ['', '', '', $params, $where];
+        } else if (
+            $databasetype == 'mysql'
+            && db_is_at_least_mariadb_106_or_mysql_8() // JSON_TABLE is only available in MariaDB 10.6+ and MySQL 8.0+.
+        ) {
             $andcases = '';
             foreach (array_keys($usercohorts) as $cohortid) {
                 $andcases .= "
@@ -242,28 +272,37 @@ class enrolledincohorts implements bo_condition {
             $andcases = rtrim($andcases, ' +');
 
             $where = "
-            availability IS NOT NULL
-            AND ((NOT JSON_CONTAINS(availability, '{\"sqlfilter\": \"1\"}'))
-            OR (
-                id IN (
-                    SELECT id
-                        FROM (
-                            SELECT id,
-                            JSON_UNQUOTE(JSON_EXTRACT(availability, '$[0].cohortidsoperator')) AS operator,
-                            JSON_LENGTH(JSON_EXTRACT(availability, '$[*].cohortids[*]')) AS length,
-                                ($andcases) AS true_conditions_count
-                        FROM {booking_options}
-                    WHERE availability IS NOT NULL
-                ) s1
-            WHERE (CASE
-                    WHEN operator LIKE \"AND\" THEN length = true_conditions_count
-                    ELSE true_conditions_count > 0
-                END)
-            )
-            ))";
-            return ['', '', '', [], $where];
+                availability IS NOT NULL
+                AND ((
+                    (NOT EXISTS (
+                        SELECT 1
+                        FROM JSON_TABLE(availability, '$[*]' COLUMNS (sqlfilter VARCHAR(10) PATH '$.sqlfilter')) jt
+                        WHERE jt.sqlfilter = '1'
+                    ))
+                )
+                OR (
+                    id IN (
+                        SELECT id
+                            FROM (
+                                        SELECT id,
+                                        JSON_UNQUOTE(JSON_EXTRACT(availability, '$[0].cohortidsoperator')) AS operator,
+                                        JSON_LENGTH(JSON_EXTRACT(availability, '$[*].cohortids[*]')) AS length,
+                                            ($andcases) AS true_conditions_count
+                                    FROM {booking_options}
+                                WHERE availability IS NOT NULL
+                            ) s1
+                        WHERE (
+                                CASE
+                                    WHEN operator LIKE \"AND\" THEN length = true_conditions_count
+                                    ELSE true_conditions_count > 0
+                                END
+                        )
+                    )
+                )
+            )";
+            return ['', '', '', $params, $where];
         } else {
-            return ['', '', '', [], ''];
+            return ['', '', '', $params, ''];
         }
     }
 
@@ -330,16 +369,18 @@ class enrolledincohorts implements bo_condition {
 
         // Check if PRO version is activated.
         if (wb_payment::pro_version_is_activated()) {
-
             $cohortssarray = [];
 
             $cohorts = cohort_get_all_cohorts(0, 500);
 
             if ($cohorts) {
-
                 if ($cohorts["totalcohorts"] > count($cohorts["cohorts"])) {
-                    $mform->addElement('static', 'bo_cond_enrolledincohorts_warning', '',
-                    get_string('bocondenrolledincohortswarning', 'mod_booking'));
+                    $mform->addElement(
+                        'static',
+                        'bo_cond_enrolledincohorts_warning',
+                        '',
+                        get_string('bocondenrolledincohortswarning', 'mod_booking')
+                    );
                 }
 
                 foreach ($cohorts['cohorts'] as $cohortrecord) {
@@ -348,8 +389,11 @@ class enrolledincohorts implements bo_condition {
                 }
             }
 
-            $mform->addElement('advcheckbox', 'bo_cond_enrolledincohorts_restrict',
-                    get_string('bocondenrolledincohorts', 'mod_booking'));
+            $mform->addElement(
+                'advcheckbox',
+                'bo_cond_enrolledincohorts_restrict',
+                get_string('bocondenrolledincohorts', 'mod_booking')
+            );
 
             $enrolledincohortsoptions = [
                 'tags' => false,
@@ -361,8 +405,13 @@ class enrolledincohorts implements bo_condition {
                 'AND' => get_string('overrideoperator:and', 'mod_booking'),
             ];
 
-            $mform->addElement('autocomplete', 'bo_cond_enrolledincohorts_cohortids',
-                get_string('cohorts', 'mod_booking'), $cohortssarray, $enrolledincohortsoptions);
+            $mform->addElement(
+                'autocomplete',
+                'bo_cond_enrolledincohorts_cohortids',
+                get_string('cohorts', 'mod_booking'),
+                $cohortssarray,
+                $enrolledincohortsoptions
+            );
             $mform->hideIf('bo_cond_enrolledincohorts_cohortids', 'bo_cond_enrolledincohorts_restrict', 'notchecked');
 
             $cohortoperator = [
@@ -370,27 +419,44 @@ class enrolledincohorts implements bo_condition {
                 'AND' => get_string('allcohortsmustbefound', 'mod_booking'),
             ];
 
-            $mform->addElement('select', 'bo_cond_enrolledincohorts_cohortids_operator',
-            get_string('overrideoperator', 'mod_booking'), $cohortoperator);
+            $mform->addElement(
+                'select',
+                'bo_cond_enrolledincohorts_cohortids_operator',
+                get_string('overrideoperator', 'mod_booking'),
+                $cohortoperator
+            );
             $mform->setDefault('bo_cond_enrolledincohorts_cohortids_operator', 'OR');
             $mform->hideIf('bo_cond_enrolledincohorts_cohortids_operator', 'bo_cond_enrolledincohorts_restrict', 'notchecked');
 
-            $mform->addElement('advcheckbox', 'bo_cond_enrolledincohorts_sqlfiltercheck',
-                get_string('sqlfiltercheckstring', 'mod_booking'));
+            $mform->addElement(
+                'advcheckbox',
+                'bo_cond_enrolledincohorts_sqlfiltercheck',
+                get_string('sqlfiltercheckstring', 'mod_booking')
+            );
             $mform->hideIf('bo_cond_enrolledincohorts_sqlfiltercheck', 'bo_cond_enrolledincohorts_restrict', 'notchecked');
 
-            $mform->addElement('advcheckbox', 'bo_cond_enrolledincohorts_overrideconditioncheckbox',
-                get_string('overrideconditioncheckbox', 'mod_booking'));
+            $mform->addElement(
+                'advcheckbox',
+                'bo_cond_enrolledincohorts_overrideconditioncheckbox',
+                get_string('overrideconditioncheckbox', 'mod_booking')
+            );
             $mform->hideIf(
                 'bo_cond_enrolledincohorts_overrideconditioncheckbox',
                 'bo_cond_enrolledincohorts_restrict',
                 'notchecked'
             );
 
-            $mform->addElement('select', 'bo_cond_enrolledincohorts_overrideoperator',
-                get_string('overrideoperator', 'mod_booking'), $overrideoperators);
-            $mform->hideIf('bo_cond_enrolledincohorts_overrideoperator',
-                'bo_cond_enrolledincohorts_overrideconditioncheckbox', 'notchecked');
+            $mform->addElement(
+                'select',
+                'bo_cond_enrolledincohorts_overrideoperator',
+                get_string('overrideoperator', 'mod_booking'),
+                $overrideoperators
+            );
+            $mform->hideIf(
+                'bo_cond_enrolledincohorts_overrideoperator',
+                'bo_cond_enrolledincohorts_overrideconditioncheckbox',
+                'notchecked'
+            );
 
             $overrideconditions = bo_info::get_conditions(MOD_BOOKING_CONDPARAM_CANBEOVERRIDDEN);
             $overrideconditionsarray = [];
@@ -418,9 +484,11 @@ class enrolledincohorts implements bo_condition {
                             $currentclassname = $jsoncondition->class;
                             $currentcondition = $currentclassname::instance();
                             // Currently conditions of the same type cannot be combined with each other.
-                            if ($jsoncondition->id != $this->id
+                            if (
+                                $jsoncondition->id != $this->id
                                 && isset($currentcondition->overridable)
-                                && ($currentcondition->overridable == true)) {
+                                && ($currentcondition->overridable == true)
+                            ) {
                                 $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
                                     str_replace("_", "", $jsoncondition->name), 'mod_booking'); // Remove underscroll.
                             }
@@ -434,16 +502,26 @@ class enrolledincohorts implements bo_condition {
                 'tags' => false,
                 'multiple' => true,
             ];
-            $mform->addElement('autocomplete', 'bo_cond_enrolledincohorts_overridecondition',
-                get_string('overridecondition', 'mod_booking'), $overrideconditionsarray, $options);
-            $mform->hideIf('bo_cond_enrolledincohorts_overridecondition',
+            $mform->addElement(
+                'autocomplete',
+                'bo_cond_enrolledincohorts_overridecondition',
+                get_string('overridecondition', 'mod_booking'),
+                $overrideconditionsarray,
+                $options
+            );
+            $mform->hideIf(
+                'bo_cond_enrolledincohorts_overridecondition',
                 'bo_cond_enrolledincohorts_overrideconditioncheckbox',
-                'notchecked');
+                'notchecked'
+            );
         } else {
             // No PRO license is active.
-            $mform->addElement('static', 'bo_cond_enrolledincohorts_restrict',
+            $mform->addElement(
+                'static',
+                'bo_cond_enrolledincohorts_restrict',
                 get_string('bocondenrolledincohorts', 'mod_booking'),
-                get_string('proversiononly', 'mod_booking'));
+                get_string('proversiononly', 'mod_booking')
+            );
         }
 
         $mform->addElement('html', '<hr class="w-50"/>');
@@ -585,8 +663,10 @@ class enrolledincohorts implements bo_condition {
             }
             $a = implode(', ', $coursestringsarr);
 
-            if (isset($this->customsettings->cohortidsoperator)
-                && $this->customsettings->cohortidsoperator == 'OR') {
+            if (
+                isset($this->customsettings->cohortidsoperator)
+                && $this->customsettings->cohortidsoperator == 'OR'
+            ) {
                 $description = $full ?
                     get_string('bocondenrolledincohortsfullnotavailable', 'mod_booking', $a) :
                     get_string('bocondenrolledincohortsnotavailable', 'mod_booking', $a);
@@ -595,7 +675,6 @@ class enrolledincohorts implements bo_condition {
                     get_string('bocondenrolledincohortsfullnotavailableand', 'mod_booking', $a) :
                     get_string('bocondenrolledincohortsnotavailableand', 'mod_booking', $a);
             }
-
         }
 
         return $description;

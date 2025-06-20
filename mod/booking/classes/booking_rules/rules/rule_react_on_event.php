@@ -22,6 +22,7 @@ use mod_booking\booking_rules\booking_rule;
 use mod_booking\booking_rules\booking_rules;
 use mod_booking\booking_rules\conditions_info;
 use mod_booking\booking_rules\rules_info;
+use mod_booking\option\fields\applybookingrules;
 use mod_booking\singleton_service;
 use moodle_url;
 use MoodleQuickForm;
@@ -129,6 +130,7 @@ class rule_react_on_event implements booking_rule {
             'optiondates_teacher_deleted',
             'rest_script_success',
             'enrollink_triggered',
+            'bookingoption_bookedviaautoenrol',
         ];
 
         // Get a list of all booking events.
@@ -338,6 +340,10 @@ class rule_react_on_event implements booking_rule {
             }
         }
 
+        if (!applybookingrules::apply_rule($optionid, $this->ruleid)) {
+            return;
+        }
+
         // Only execute rules for bookingoption_changed event according to settings.
         if (
             !empty(get_config('booking', 'limitchangestrackinginrules'))
@@ -374,7 +380,6 @@ class rule_react_on_event implements booking_rule {
         $action->ruleid = $this->ruleid;
 
         foreach ($records as $record) {
-
             // Set the time of when the task should run.
             $nextruntime = time();
             $record->rulename = $this->rulename;
@@ -465,7 +470,6 @@ class rule_react_on_event implements booking_rule {
         } else {
             return true;
         }
-
     }
 
     /**
@@ -512,6 +516,11 @@ class rule_react_on_event implements booking_rule {
         $condition->execute($sql, $params);
 
         $sqlstring = "SELECT $sql->select FROM $sql->from WHERE $sql->where";
+
+        // Sorting is used for interval notification (action send_mail_interval).
+        if (isset($sql->sort)) {
+            $sqlstring .= "ORDER BY $sql->sort";
+        }
 
         $records = $DB->get_records_sql($sqlstring, $params);
 

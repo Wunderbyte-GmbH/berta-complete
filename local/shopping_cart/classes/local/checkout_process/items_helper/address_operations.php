@@ -25,6 +25,8 @@
 
 namespace local_shopping_cart\local\checkout_process\items_helper;
 
+use moodle_exception;
+
 /**
  * Class checkout
  *
@@ -33,11 +35,6 @@ namespace local_shopping_cart\local\checkout_process\items_helper;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class address_operations {
-    /**
-     * Database table name for all addresses.
-     */
-    private const DATABASE_TABLE = 'local_shopping_cart_address';
-
     /**
      * Saves a new Address in the database for the current $USER.
      *
@@ -49,7 +46,34 @@ class address_operations {
         $address->address2 = $record->address2 ?? '';
         $address->phone = $record->phone ?? '';
         $address->userid = $USER->id;
-        return $DB->insert_record(self::DATABASE_TABLE, $address, true);
+        return $DB->insert_record('local_shopping_cart_address', $address, true);
+    }
+
+    /**
+     * Updates an existing address in the database for the current $USER.
+     *
+     * @param int $addressid Id of the address in table
+     * @param object $address The already validated address data from the form
+     * @return bool Whether the update was successful
+     */
+    public static function update_address_for_user(int $addressid, object $address): bool {
+        global $DB, $USER;
+
+        // Check if the record exists for the given address ID and is owned by the current user.
+        if (!$DB->record_exists('local_shopping_cart_address', ['id' => $addressid, 'userid' => $USER->id])) {
+            throw new moodle_exception('Address does not exist or you do not have permission to update it.');
+        }
+
+        // Ensure the user ID is assigned to the address for ownership.
+        $address->id = $addressid; // Make sure the ID is set for updating.
+        $address->userid = $USER->id;
+
+        // Handle optional fields with default values if not provided.
+        $address->address2 = $address->address2 ?? '';
+        $address->phone = $address->phone ?? '';
+
+        // Update the record in the database.
+        return $DB->update_record('local_shopping_cart_address', $address);
     }
 
     /**
@@ -57,25 +81,20 @@ class address_operations {
      * @param int $addressid
      * @return bool
      */
-    public static function delete_user_address(int $addressid) {
+    public static function delete_user_address(int $addressid): bool {
         global $DB;
-        return $DB->delete_records(self::DATABASE_TABLE, ['id' => $addressid]);
+        return $DB->delete_records('local_shopping_cart_address', ['id' => $addressid]);
     }
 
     /**
      * Generates complete required-address data as specified by the plugin config.
+     *
      * @param int $addressid
      * @return mixed
      */
-    public static function get_specific_user_addresses(int $addressid): object {
+    public static function get_specific_user_address(int $addressid) {
         global $DB;
-        $sql = "SELECT *
-                FROM {" . self::DATABASE_TABLE . "}
-                WHERE id=:addressid
-                ORDER BY id DESC";
-
-        $params = ['addressid' => $addressid];
-        return $DB->get_record_sql($sql, $params);
+        return $DB->get_record('local_shopping_cart_address', ['id' => $addressid]);
     }
 
     /**
@@ -85,12 +104,6 @@ class address_operations {
      */
     public static function get_all_user_addresses(int $userid): array {
         global $DB;
-        $sql = "SELECT *
-                FROM {" . self::DATABASE_TABLE . "}
-                WHERE userid=:userid
-                ORDER BY id DESC";
-
-        $params = ['userid' => $userid];
-        return $DB->get_records_sql($sql, $params);
+        return $DB->get_records('local_shopping_cart_address', ['userid' => $userid]);
     }
 }

@@ -13,12 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/*
- * @package    local_wunderbyte_table
+/**
+ * @module    local_wunderbyte_table
  * @copyright  Wunderbyte GmbH <info@wunderbyte.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 import ModalFactory from 'core/modal_factory';
 import ModalEvents from 'core/modal_events';
 import Ajax from 'core/ajax';
@@ -43,24 +42,20 @@ const SELECTOR = {
  * @returns {void}
  */
 export function initializeActionButton(selector, idstring, encodedtable) {
-
   const container = document.querySelector(selector);
 
   if (!container) {
     return;
   }
   const actionbuttons = container.querySelectorAll(SELECTOR.ACTIONBUTTON);
-
   actionbuttons.forEach(button => {
     if (button.dataset.initialized) {
       return;
     }
-
     button.dataset.initialized = true;
 
     // First check if we have a valid methodname.
     if (button.dataset.methodname && button.dataset.methodname.length > 0) {
-
       // Second check if it's a checkbox, then we need a change listener.
       if (button.dataset.ischeckbox) {
         button.addEventListener('change', () => {
@@ -68,11 +63,32 @@ export function initializeActionButton(selector, idstring, encodedtable) {
           const data = button.dataset;
           data.state = button.checked;
 
-          // eslint-disable-next-line no-console
-          console.log(data.state);
+          transmitAction(button.dataset.id, button.dataset.methodname,
+            JSON.stringify(data), idstring, encodedtable);
+        });
+      } else if (button.tagName == 'INPUT') {
+        const debouncedInputHandler = debounce(() => {
+          const data = button.dataset;
+          data.value = button.value;
 
           transmitAction(button.dataset.id, button.dataset.methodname,
             JSON.stringify(data), idstring, encodedtable);
+        }, 300);
+
+        button.addEventListener('input', debouncedInputHandler);
+      } else if (button.tagName == 'SELECT') {
+        button.addEventListener('change', () => {
+          const data = button.dataset;
+          if (data.selectedValue != button.value) {
+            data.selectedValue = button.value;
+            transmitAction(
+              button.dataset.id,
+              button.dataset.methodname,
+              JSON.stringify(data),
+              idstring,
+              encodedtable
+            );
+          }
         });
       } else {
         // Else it's a button, we attach the click listener.
@@ -83,8 +99,8 @@ export function initializeActionButton(selector, idstring, encodedtable) {
           var selectionresult = await getSelectionData(idstring, button.dataset);
           // Button Data will either return as int (1 for true) as bool, or as "true" string. We want all cases to return true.
           if (button.dataset.selectionmandatory == "1"
-          || button.dataset.selectionmandatory == true
-          || button.dataset.selectionmandatory == "true") {
+            || button.dataset.selectionmandatory == true
+            || button.dataset.selectionmandatory == "true") {
             var selectionmandatory = true;
           }
           // eslint-disable-next-line block-scoped-var
@@ -129,45 +145,14 @@ export function initializeActionButton(selector, idstring, encodedtable) {
  * @param {*} result
  */
 async function showConfirmationModal(button, idstring, encodedtable, result) {
-
   // Checking if we have data from selection result. Otherwise generating default string for body.
   let datastring = result.labelstring ?? '';
   let strings = [];
   if (result.labelstring.length > 0) {
-    strings = [
-      {
-        key: button.dataset.titlestring ?? 'generictitle',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-      },
-      {
-        key: button.dataset.bodystring ?? 'genericbody',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-        param: {
-          data: datastring,
-        },
-      },
-      {
-        key: button.dataset.submitbuttonstring ?? 'genericsubmit',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-      },
-    ];
+    strings = getStringsFromDataset(button, datastring, false);
   } else {
-    strings = [
-      {
-        key: button.dataset.titlestring ?? 'generictitle',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-      },
-      {
-        key: button.dataset.noselectionbodystring ?? 'noselectionbody',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-      },
-      {
-        key: button.dataset.submitbuttonstring ?? 'genericsubmit',
-        component: button.dataset.component ?? 'local_wunderbyte_table',
-      },
-    ];
+    strings = getStringsFromDataset(button, '', true);
   }
-
   const localizedstrings = await getStrings(strings);
 
   ModalFactory.create({type: ModalFactory.types.SAVE_CANCEL}).then(modal => {
@@ -186,9 +171,21 @@ async function showConfirmationModal(button, idstring, encodedtable, result) {
   });
 }
 
+/**
+ * Shows generic confirmation modal.
+ * @param {*} func
+ * @param {int} delay
+ */
+function debounce(func, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), delay);
+  };
+}
 
 /**
- * Function to collect the ids, check if selection of ids is mandatory and prepare a string of selected lables.
+ * Function to collect the ids, check if selection of ids is mandatory and prepare a string of selected labels.
  * @param {*} idstring
  * @param {*} data //the dataset of the button that triggerd the action.
  * @returns {object}
@@ -231,7 +228,7 @@ export function transmitAction(id, methodname, datastring, idstring, encodedtabl
   // Show the call spinner.
   let callspinner = document.querySelector(".wunderbyte_table_container_" + idstring + " .wb-table-call-spinner");
   if (callspinner) {
-      callspinner.classList.remove('hidden');
+    callspinner.classList.remove('hidden');
   }
 
   Ajax.call([{
@@ -246,7 +243,7 @@ export function transmitAction(id, methodname, datastring, idstring, encodedtabl
       // Hide the call spinner.
       let callspinner = document.querySelector(".wunderbyte_table_container_" + idstring + " .wb-table-call-spinner");
       if (callspinner) {
-          callspinner.classList.add('hidden');
+        callspinner.classList.add('hidden');
       }
 
       if (data.success == 1) {
@@ -278,7 +275,7 @@ export function transmitAction(id, methodname, datastring, idstring, encodedtabl
       // Hide the call spinner.
       let callspinner = document.querySelector(".wunderbyte_table_container_" + idstring + " .wb-table-call-spinner");
       if (callspinner) {
-          callspinner.classList.add('hidden');
+        callspinner.classList.add('hidden');
       }
 
       showNotification("row " + id + " was not treated", "danger");
@@ -294,7 +291,6 @@ export function transmitAction(id, methodname, datastring, idstring, encodedtabl
  * @returns {object}
  */
 function getIds(id, idstring, data) {
-
   var checkedids = [];
 
   const labelarray = [];
@@ -306,7 +302,6 @@ function getIds(id, idstring, data) {
   // Make sure we treat id as int.
   id = parseInt(id);
   if (id < 1) {
-
     const checkboxes = container.querySelectorAll(SELECTOR.CHECKBOX);
 
     // Create an array of ids of the checked boxes.
@@ -358,10 +353,15 @@ function getIds(id, idstring, data) {
  * @param {*} idstring
  * @param {*} encodedtable
  */
-function showEditFormModal(button, titleText, bodyText, saveButtonText, idstring, encodedtable) {
-
+async function showEditFormModal(button, titleText, bodyText, saveButtonText, idstring, encodedtable) {
   // eslint-disable-next-line no-console
   console.log(button, bodyText, saveButtonText, idstring, encodedtable);
+
+  let strings = [];
+  strings = getStringsFromDataset(button, '', true);
+  const localizedstrings = await getStrings(strings);
+  titleText = localizedstrings[0];
+  saveButtonText = localizedstrings[2];
 
   const formname = button.dataset.formname;
   let data = button.dataset;
@@ -404,9 +404,7 @@ function showEditFormModal(button, titleText, bodyText, saveButtonText, idstring
   // Listen to events if you want to execute something on form submit.
   // Event detail will contain everything the process() function returned:
   modalForm.addEventListener(modalForm.events.FORM_SUBMITTED, (e) => {
-
     const data = e.detail;
-
     if (data.reload) {
       // Reload whole site.
       window.location.reload();
@@ -443,18 +441,52 @@ function chooseActionToTransmit(button, idstring, encodedtable, selectionresult)
     transmitAction(button.dataset.id,
       button.dataset.methodname,
       JSON.stringify(button.dataset), idstring, encodedtable);
-      return;
+    return;
   }
 
   if (id != 0) { // -1 means we want single line execution.
-        // eslint-disable-next-line no-console
-        console.log("single call");
+    // eslint-disable-next-line no-console
+    console.log("single call");
     transmitAction(id, methodname, JSON.stringify({...data, checkedids}), idstring, encodedtable);
   } else {
-      // eslint-disable-next-line no-console
-      console.log("multiple call");
+    // eslint-disable-next-line no-console
+    console.log("multiple call");
     checkedids.forEach(cid => {
       transmitAction(cid, methodname, JSON.stringify(data), idstring, encodedtable);
     });
   }
+}
+
+/**
+ * Helper function to get strings from dataset of first element (e.g. button).
+ * @param {object} button
+ * @param {string} datastring
+ * @param {boolean} noselection
+ * @returns {Array}
+ */
+function getStringsFromDataset(button, datastring, noselection) {
+  let strings = [];
+  strings.push({
+    key: button.dataset.titlestring ?? 'generictitle',
+    component: button.dataset.component ?? 'local_wunderbyte_table',
+  });
+  if (noselection) {
+    strings.push({
+      key: button.dataset.noselectionbodystring ?? 'noselectionbody',
+      component: button.dataset.component ?? 'local_wunderbyte_table',
+    });
+  } else {
+    strings.push({
+      key: button.dataset.bodystring ?? 'genericbody',
+      component: button.dataset.component ?? 'local_wunderbyte_table',
+      param: {
+        data: datastring,
+      },
+    });
+  }
+  strings.push({
+    key: button.dataset.submitbuttonstring ?? 'genericsubmit',
+    component: button.dataset.component ?? 'local_wunderbyte_table',
+  });
+  return strings;
 }

@@ -1,7 +1,7 @@
 moodle-theme_boost_union
 ========================
 
-[![Moodle Plugin CI](https://github.com/moodle-an-hochschulen/moodle-theme_boost_union/workflows/Moodle%20Plugin%20CI/badge.svg?branch=MOODLE_404_STABLE)](https://github.com/moodle-an-hochschulen/moodle-theme_boost_union/actions?query=workflow%3A%22Moodle+Plugin+CI%22+branch%3AMOODLE_404_STABLE)
+[![Moodle Plugin CI](https://github.com/moodle-an-hochschulen/moodle-theme_boost_union/actions/workflows/moodle-plugin-ci.yml/badge.svg?branch=MOODLE_404_STABLE)](https://github.com/moodle-an-hochschulen/moodle-theme_boost_union/actions?query=workflow%3A%22Moodle+Plugin+CI%22+branch%3AMOODLE_404_STABLE)
 
 Theme Boost Union is an enhanced child theme of Boost which is intended, on the one hand, to make Boost simply more configurable and, on the other hand, to provide helpful additional features for the daily Moodle operation of admins, teachers and students.
 
@@ -138,6 +138,12 @@ With these settings, you can overwrite the Bootstrap colors which are used withi
 
 ##### Navbar
 
+###### Maximal width of logo in navbar
+
+If the logo for the navbar on the top left is too wide or has a special aspect ratio, you can limit the logo's maximum width. Use css definition to limit the max-width.
+
+###### Navbar color
+
 With this setting, you can change the navbar color from the default light navbar to a dark one or a colored one.
 
 #### Tab "Activity Branding"
@@ -197,9 +203,7 @@ With this setting, you can make the login form slightly transparent to let the b
 
 ###### Local login
 
-With this setting, you control if the local login form is shown on the login page or not. By default, the local login form is shown and users an login into the site as normal. If you disable this setting, the local login form is hidden. This allows you to just provide login buttons for external identity providers like OAuth2 or OIDC.
-
-Please note: As soon as you hide the local login form, you risk that admins cannot log in anymore with a local account if there is a problem with the external identity provider. To allow local logins anyway in such cases, a side entrance local login page is provided on /theme/boost_union/locallogin.php. On this side entrance local login page, all of Moodle's login security measures apply as well.
+With this setting, you control if the local login form is shown on the login page or not. By default, the local login form is shown and users can login into the site as normal. If you disable this setting, the local login form is hidden. This allows you to just provide login buttons for external identity providers like OAuth2 or OIDC.
 
 ###### Local login intro
 
@@ -213,6 +217,10 @@ With this setting, you control if the 'Log in using your account on' intro is sh
 
 With these settings, you control the order of the login methods in the login form. The presented order will be defined from lowest to highest ordinal number, skipping all login methods and login form elements which are disabled in Moodle.
 
+##### Side entrance login
+
+With this setting, you can enable a side entrance local login page. It is enabled automatically if you disable the local login form (see above), but you can also enable is constantly to allow local users to bypass the main login page and login process which is particularly helpful in SSO setups. On the side entrance local login page, all of Moodle's login security measures apply as well, of course.
+
 #### Tab "Dashboard / My courses"
 
 ##### Course overview block
@@ -224,6 +232,16 @@ With this setting, you can control whether the course image is visible inside th
 ###### Show course completion progress
 
 With this setting, you can control whether the course completion progress is visible inside the course overview block or not.
+
+#### Tab "Category index / Site home"
+
+##### Course listing
+
+In this section, you can modify the look & feel of the course listing on the category index pages and on site home. As an alternative to the way how Moodle core presents them, you can present the course listing as course cards (similar to the course cards on the 'My courses' page) or course list  (similar to the course list on the 'My courses' page). And, of course, you can configure the look of the course cards or rows with multiple dependent settings.
+
+##### Category listing
+
+With this setting, you can modify the look & feel of the category listing on the category index pages and on site home. As an alternative to the way how Moodle core presents them, you can present the category listing as a refreshed list of boxes.
 
 #### Tab "Blocks"
 
@@ -360,6 +378,10 @@ With this setting, you can add a 'Set preferred language' setting to the languag
 ###### Show starred courses popover in the navbar
 
 With this setting, you can show a popover menu with links to starred courses next to the messages and notifications menus.
+
+###### Starred courses popover cog icon link target
+
+With this setting, you can set the link target of the cog icon in the starred courses popover. By default, the cog icon links to the 'My courses' page. However, you can also link to the 'Dashboard' page, especially if you have disabled the 'My courses' page in the primary navigation.
 
 ##### Breadcrumbs
 
@@ -693,8 +715,8 @@ As you have read in the introduction, the main design principle of Boost Union i
   As soon as you click the footer button (questionmark icon) in the bottom right corner of the screen, a popover with several links appears. However, the content of this link list is far from being well-structured and looks more like a garage sale. When implementing the settings to individually suppress each of these popover links, we had to make some code re-arrangements which result in the fact that the popover links are slightly more well-structured even if you do not enable any setting in Boost Union.
 * Suppress footer outputs by plugin / core component:
   Due to the way how the settings `theme_boost_union | footersuppressstandardfooter_*` had to be built, it was not possible to quickly and reliably detect if Boost Union (or a Boost Union child theme) is the active theme. Thus, these settings are also applied if another theme than Boost Union is active. Please make sure to disable these settings if Boost Union is installed but should not be used.
-* Clickable header in the user's menu third level:
-  Due to the way how the smart menu was integrated into the user menu, as soon as at least one smart menu exists on the page, the header of the language menu in the user menu is now fully clickable - compared to Boost core where only the 'back' arrow in the language menu is clickable. This should be a neglectible difference to Boost core.
+* Clickable header and transition time in the user's menu third level:
+  Due to the way how the smart menu was integrated into the user menu, as soon as at least one smart menu exists on the page, the header of the language menu in the user menu is now fully clickable - compared to Boost core where only the 'back' arrow in the language menu is clickable - and the transition time to open the language menu is shortened. This should be a neglectible difference to Boost core.
 
 
 Companion plugin local_navbarplus
@@ -901,6 +923,7 @@ This theme is a collaboration result of multiple organisations.
 Moodle an Hochschulen e.V. would like to thank these main contributors (in alphabetical order of the institutions) for their work:
 
 * Academic Moodle Cooperation (AMC): Ideating, Code
+* Adapta, Daniel Neis Araujo: Code
 * Baden-Württemberg Cooperative State University (DHBW), Katja Neubehler: Code
 * bdecent GmbH, Stefan Scholz: Code, Ideating, Funding
 * Bern University of Applied Sciences (BFH), Luca Bösch: Code, Peer Review, Ideating
@@ -912,17 +935,20 @@ Moodle an Hochschulen e.V. would like to thank these main contributors (in alpha
 * Hochschule Hannover - University of Applied Sciences and Arts: Code, Funding, Ideating
 * Käferfreie Software, Nina Herrmann: Code
 * lern.link GmbH, Alexander Bias: Code, Peer Review, Ideating, Funding
-* lern.link GmbH, Lukas MuLu Müller: Code
 * lern.link GmbH, Beata Waloszczyk: Code
+* lern.link GmbH, Danou Nauck: Code
+* lern.link GmbH, Lukas MuLu Müller: Code
 * Lutheran University of Applied Sciences Nuremberg: Funding
 * Moodle.NRW / Ruhr University Bochum, Annika Lambert: Code
 * Moodle.NRW / Ruhr University Bochum, Matthias Buttgereit: Code, Ideating
 * Moodle.NRW / Ruhr University Bochum, Tim Trappen: Code, Ideating
 * moodleSCHULE e.V., Ralf Krause: German translation and curation, Ideating
 * Plakos GmbH, Waldemar Erdmann: Funding, Ideating
+* Ruhr University Bochum, Thorsten Bartel: Code
 * Ruhr University Bochum, Melanie Treitinger: Code, Ideating
 * RWTH Aachen, Amrita Deb Dutta: Code
 * RWTH Aachen, Josha Bartsch: Code
+* RWTH Aachen, Tim Schröder: Code
 * Solent University, Mark Sharp: Code
 * ssystems GmbH, Alexander Bias: Code, Peer Review, Ideating, Funding
 * Technische Universität Berlin, Lars Bonczek: Code

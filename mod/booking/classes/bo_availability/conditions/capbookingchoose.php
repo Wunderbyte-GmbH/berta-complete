@@ -27,9 +27,7 @@ namespace mod_booking\bo_availability\conditions;
 use mod_booking\bo_availability\bo_condition;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
-use mod_booking\singleton_service;
 use MoodleQuickForm;
-use context_module;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -102,10 +100,10 @@ class capbookingchoose implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }

@@ -65,11 +65,12 @@ final class addresses_test extends advanced_testcase {
      */
     public function test_check_status(): void {
         $validationdata = json_encode([
-            (object)['name' => 'home', 'value' => '123 Main Street'],
+            (object)['name' => 'selectedaddress_billing', 'value' => 1],
         ]);
 
         $managercachestep = ['data' => []];
-        $result = addresses::check_status($managercachestep, $validationdata);
+        $addresses = new addresses(5);
+        $result = $addresses->check_status($managercachestep, $validationdata);
 
         $this->assertIsArray($result, 'Expected check_status to return an array.');
         $this->assertArrayHasKey('data', $result, 'Expected result to include data.');
@@ -82,18 +83,21 @@ final class addresses_test extends advanced_testcase {
     public function test_get_user_data(): void {
         global $USER;
         $USER = (object)[
-            'email' => 'test@example.com',
+            'id' => 5,
+            'username' => 'johndoe',
             'firstname' => 'John',
             'lastname' => 'Doe',
-            'id' => 42,
+            'email' => 'test@example.com',
         ];
 
         $result = addresses::get_user_data();
 
         // Assertions.
-        $this->assertEquals('test@example.com', $result['usermail'], 'Expected usermail to match.');
-        $this->assertEquals('JohnDoe', $result['username'], 'Expected username to match.');
-        $this->assertEquals(42, $result['userid'], 'Expected userid to match.');
+        $this->assertEquals(5, $result['userid'], 'Expected userid to match.');
+        $this->assertEquals('johndoe', $result['username'], 'Expected username to match.');
+        $this->assertEquals('John', $result['firstname'], 'Expected firstname to match.');
+        $this->assertEquals('Doe', $result['lastname'], 'Expected lastname to match.');
+        $this->assertEquals('test@example.com', $result['email'], 'Expected email to match.');
     }
 
     /**
@@ -101,32 +105,16 @@ final class addresses_test extends advanced_testcase {
      */
     public function test_get_required_address_keys(): void {
         // Mock the configuration.
-        set_config('addresses_required', 'home,work', 'local_shopping_cart');
+        set_config('addresses_required', 'selectedaddress_billing,selectedaddress_shipping', 'local_shopping_cart');
 
         $result = addresses::get_required_address_keys();
 
         // Assertions.
         $this->assertCount(2, $result, 'Expected two required address keys.');
-        $this->assertEquals(['home', 'work'], $result, 'Expected required address keys to match.');
+        $this->assertEquals(
+            ['selectedaddress_billing', 'selectedaddress_shipping'],
+            $result,
+            'Expected required address keys to match.'
+        );
     }
-
-    /**
-     * Test the is_valid method.
-     */
-    public function test_is_valid(): void {
-        // Case: All required keys are present.
-        $requiredkeys = ['home', 'work'];
-        $data = [
-            'home' => '123 Main Street',
-            'work' => '456 Office Park',
-        ];
-        $this->assertTrue(addresses::is_valid($requiredkeys, $data), 'Expected is_valid to return true when all keys are present.');
-
-        // Case: Missing a required key.
-        $data = [
-            'home' => '123 Main Street',
-        ];
-        $this->assertFalse(addresses::is_valid($requiredkeys, $data), 'Expected is_valid to return false when a key is missing.');
-    }
-
 }

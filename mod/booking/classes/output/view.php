@@ -28,13 +28,17 @@ namespace mod_booking\output;
 use coding_exception;
 use context_module;
 use context_system;
+use dml_exception;
 use local_wunderbyte_table\filters\types\datepicker;
 use local_wunderbyte_table\filters\types\standardfilter;
 use local_wunderbyte_table\wunderbyte_table;
 use mod_booking\booking;
+use mod_booking\customfield\booking_handler;
 use mod_booking\elective;
+use mod_booking\option\fields\competencies;
 use mod_booking\singleton_service;
 use mod_booking\table\bookingoptions_wbtable;
+use mod_booking\utils\wb_payment;
 use moodle_exception;
 use moodle_url;
 use renderer_base;
@@ -52,7 +56,6 @@ use templatable;
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class view implements renderable, templatable {
-
     /** @var int $cmid course module id */
     private $cmid = null;
 
@@ -77,6 +80,9 @@ class view implements renderable, templatable {
     /** @var string $renderedoptionsiteachtable the rendered table of options I teach */
     private $renderedoptionsiteachtable = null;
 
+    /** @var string $renderedresponsiblecontacttable the rendered table of options I teach */
+    private $renderedresponsiblecontacttable = null;
+
     /** @var string $renderedshowonlyonetable the rendered table of one specific option */
     private $renderedshowonlyonetable = null;
 
@@ -92,6 +98,9 @@ class view implements renderable, templatable {
     /** @var string $renderedfieldofstudyoptionstable the rendered table of all options from my field of study */
     private $renderedfieldofstudyoptionstable = null;
 
+    /** @var string $renderedwhatsnewtable the rendered "What's new?" table */
+    private $renderedwhatsnewtable = null;
+
     /** @var string $myinstitutionname */
     private $myinstitutionname = null;
 
@@ -103,6 +112,9 @@ class view implements renderable, templatable {
 
     /** @var string $myoptions */
     private $myoptions = null; // We kept this name for backwards compatibility!
+
+    /** @var string $optionsiamresponsiblefor */
+    private $optionsiamresponsiblefor = null;
 
     /** @var string $myinstitution */
     private $myinstitution = null; // We kept this name for backwards compatibility!
@@ -119,13 +131,16 @@ class view implements renderable, templatable {
     /** @var string $showinvisible */
     private $showinvisible = null;
 
-    /** @var string $showinvisible */
+    /** @var string $showfieldofstudy */
     private $showfieldofstudy = null;
 
-    /** @var string $elective */
+    /** @var string $showwhatsnew */
+    private $showwhatsnew = null;
+
+    /** @var string $renderelectivetable */
     private $renderelectivetable = null;
 
-    /** @var array $elective */
+    /** @var array $electivemodal */
     private $electivemodal = null;
 
     /** @var bool $showheaderimageleft */
@@ -134,11 +149,14 @@ class view implements renderable, templatable {
     /** @var bool $showheaderimageright */
     private $showheaderimageright = null;
 
-      /** @var bool $showheaderimagelefthalf */
-      private $showheaderimagelefthalf = null;
+    /** @var bool $showheaderimagelefthalf */
+    private $showheaderimagelefthalf = null;
 
     /** @var bool $noheaderimage */
     private $noheaderimage = null;
+
+    /** @var string $whatsnewtabtitle */
+    private $whatsnewtabtitle = null;
 
     /**
      * Constructor
@@ -197,6 +215,9 @@ class view implements renderable, templatable {
             case 'myoptions':
                 $this->myoptions = true;
                 break;
+            case 'optionsiamresponsiblefor':
+                $this->optionsiamresponsiblefor = true;
+                break;
             case 'myinstitution':
                 $this->myinstitution = true;
                 break;
@@ -216,6 +237,12 @@ class view implements renderable, templatable {
             case 'showfieldofstudy':
                 $this->showfieldofstudy = true;
                 break;
+            case 'showwhatsnew':
+                // The "What's new?" tab is a PRO feature.
+                if (wb_payment::pro_version_is_activated()) {
+                    $this->showwhatsnew = true;
+                }
+                break;
             case 'shownothing':
                 // Don't do anything.
                 $showviews = [];
@@ -227,7 +254,7 @@ class view implements renderable, templatable {
         }
 
         if (!empty($bookingsettings->iselective)) {
-            list($tablestring, $rawdata) = $this->get_rendered_elective_table();
+            [$tablestring, $rawdata] = $this->get_rendered_elective_table();
 
             $this->renderelectivetable = $tablestring;
             $modal = new elective_modal($bookingsettings, $rawdata);
@@ -270,7 +297,15 @@ class view implements renderable, templatable {
         if (in_array('myoptions', $showviews) && booking_check_if_teacher()) {
             // If we show this table first, we don't load it lazy.
             $lazy = $whichview !== 'myoptions';
-            $this->renderedoptionsiteachtable = $this->get_rendered_table_for_teacher($USER->id, false, true, true, $lazy);
+            $this->renderedoptionsiteachtable = $this->get_rendered_table_for_teacher($USER->id, true, true, true, $lazy);
+        }
+
+        // Options I am responsible for (as responsible contact).
+        if (in_array('optionsiamresponsiblefor', $showviews)) {
+            // If we show this table first, we don't load it lazy.
+            $lazy = $whichview !== 'optionsiamresponsiblefor';
+            $this->renderedresponsiblecontacttable =
+                $this->get_rendered_table_for_responsible_contact($USER->id, true, true, $lazy);
         }
 
         // Only the booking options of my institution.
@@ -302,6 +337,18 @@ class view implements renderable, templatable {
             $this->renderedfieldofstudyoptionstable
                 = format_text('[fieldofstudyoptions sortby="coursestarttime" sortorder="asc"]');
         }
+
+        // PRO feature: "What's new?" tab.
+        if (wb_payment::pro_version_is_activated()) {
+            if (in_array('showwhatsnew', $showviews)) {
+                // If we show this table first, we don't load it lazy.
+                $lazy = $whichview !== 'showwhatsnew';
+                $this->renderedwhatsnewtable = $this->get_rendered_whatsnew_table($lazy);
+
+                // Get the tab title.
+                $this->whatsnewtabtitle = get_string('whatsnew', 'mod_booking');
+            }
+        }
     }
 
     /**
@@ -317,13 +364,13 @@ class view implements renderable, templatable {
         $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} electivetable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $allbookingoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($allbookingoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($allbookingoptionstable, true, true, true);
 
         $out = $allbookingoptionstable->outhtml($booking->get_pagination_setting(), true);
 
@@ -347,16 +394,16 @@ class view implements renderable, templatable {
         $allbookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} allbookingoptionstable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $allbookingoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($allbookingoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($allbookingoptionstable, true, true, true);
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $allbookingoptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $allbookingoptionstable->outhtml($booking->get_pagination_setting(), true);
@@ -378,12 +425,25 @@ class view implements renderable, templatable {
         // Create the table.
         $activebookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid} activebookingoptionstable");
 
-        $wherearray = ['bookingid' => (int)$booking->id];
-        $additionalwhere = '((courseendtime > :timenow OR courseendtime = 0) AND status = 0)';
+        $wherearray = [
+            'bookingid' => (int)$booking->id,
+            'status' => 0, // Active. Not cancelled.
+        ];
+        $additionalwhere = '(courseendtime > :timenow OR courseendtime = 0)';
 
-        list($fields, $from, $where, $params, $filter) =
-            booking::get_options_filter_sql(0, 0, '', null, $booking->context, [],
-                $wherearray, null, [MOD_BOOKING_STATUSPARAM_BOOKED], $additionalwhere);
+        [$fields, $from, $where, $params, $filter] =
+            booking::get_options_filter_sql(
+                0,
+                0,
+                '',
+                null,
+                $booking->context,
+                [],
+                $wherearray,
+                null,
+                [MOD_BOOKING_STATUSPARAM_BOOKED],
+                $additionalwhere
+            );
 
         // Timenow is today at at 00.00.
         // The test is on courseendtime, if it has finished not already yesterday.
@@ -392,10 +452,10 @@ class view implements renderable, templatable {
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($activebookingoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($activebookingoptionstable, true, true, true);
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $activebookingoptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $activebookingoptionstable->outhtml($booking->get_pagination_setting(), true);
@@ -419,19 +479,19 @@ class view implements renderable, templatable {
         $mybookingoptionstable = new bookingoptions_wbtable("cmid_{$cmid}_userid_{$USER->id} mybookingoptionstable");
 
         $wherearray = ['bookingid' => (int)$booking->id];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray, $USER->id);
         $mybookingoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($mybookingoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($mybookingoptionstable, true, true, true);
 
         // For mybookingstable we need to apply a different cache, because it changes with every booking of a user.
         $mybookingoptionstable->define_cache('mod_booking', 'mybookingoptionstable');
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $mybookingoptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $mybookingoptionstable->outhtml($booking->get_pagination_setting(), true);
@@ -449,8 +509,13 @@ class view implements renderable, templatable {
      * @param bool $lazy for lazy-loading
      * @return string the rendered table
      */
-    public function get_rendered_table_for_teacher(int $teacherid,
-        bool $tfilter = true, bool $tsearch = true, bool $tsort = true, $lazy = false) {
+    public function get_rendered_table_for_teacher(
+        int $teacherid,
+        bool $tfilter = true,
+        bool $tsearch = true,
+        bool $tsort = true,
+        bool $lazy = false
+    ) {
         $cmid = $this->cmid;
         $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
 
@@ -461,22 +526,87 @@ class view implements renderable, templatable {
             'bookingid' => (int)$booking->id,
             'teacherobjects' => '%"id":' . $teacherid . ',%',
         ];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $teacheroptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
-        // Initialize the default columnes, headers, settings and layout for the table.
+        // Initialize the default columns, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($teacheroptionstable, $tfilter, $tsearch, $tsort);
+        $this->wbtable_initialize_layout($teacheroptionstable, $tfilter, $tsearch, $tsort);
 
         $teacheroptionstable->showreloadbutton = false; // No reload button on teacher pages.
         $teacheroptionstable->requirelogin = false; // Teacher pages need to be accessible without login.
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $teacheroptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $teacheroptionstable->outhtml($booking->get_pagination_setting(), true);
+        }
+
+        return $out;
+    }
+
+    /**
+     * Render table for options where I'm a responsible contact.
+     * @param bool $tfilter turn on filter in wunderbyte table
+     * @param bool $tsearch turn on search in wunderbyte table
+     * @param bool $tsort turn on sorting in wunderbyte table
+     * @param bool $lazy for lazy-loading
+     * @return string|null the rendered table
+     */
+    public function get_rendered_table_for_responsible_contact(
+        bool $tfilter = true,
+        bool $tsearch = true,
+        bool $tsort = true,
+        bool $lazy = false
+    ) {
+        global $USER;
+        $cmid = $this->cmid;
+
+        $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
+
+        // Create the table.
+        $responsiblecontacttable = new bookingoptions_wbtable("cmid_{$cmid} responsiblecontacttable");
+
+        $wherearray = ['bookingid' => (int)$booking->id];
+        $additionalwhere = "responsiblecontact = $USER->id";
+
+        [$fields, $from, $where, $params, $filter] =
+            booking::get_options_filter_sql(
+                0,
+                0,
+                '',
+                null,
+                $booking->context,
+                [],
+                $wherearray,
+                null,
+                [MOD_BOOKING_STATUSPARAM_BOOKED],
+                $additionalwhere
+            );
+        $responsiblecontacttable->set_filter_sql($fields, $from, $where, $filter, $params);
+
+        // Initialize the default columnes, headers, settings and layout for the table.
+        // In the future, we can parametrize this function so we can use it on many different places.
+        $this->wbtable_initialize_layout($responsiblecontacttable, $tfilter, $tsearch, $tsort);
+
+        $responsiblecontacttable->showreloadbutton = false; // No reload button on teacher pages.
+        $responsiblecontacttable->requirelogin = true;
+
+        if ($lazy) {
+            // This line is only necessary, so we get rawdata.
+            $responsiblecontacttable->printtable($booking->get_pagination_setting(), true);
+
+            [$idstring, $encodedtable, $out]
+                = $responsiblecontacttable->lazyouthtml($booking->get_pagination_setting(), true);
+        } else {
+            $out = $responsiblecontacttable->outhtml($booking->get_pagination_setting(), true);
+        }
+
+        // Return null if no rows are there, so no tab will be rendered.
+        if (empty($responsiblecontacttable->rawdata)) {
+            return null;
         }
 
         return $out;
@@ -499,13 +629,13 @@ class view implements renderable, templatable {
             'bookingid' => (int) $booking->id,
             'id' => $optionid,
         ];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $showonlyonetable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($showonlyonetable, false, false, false);
+        $this->wbtable_initialize_layout($showonlyonetable, false, false, false);
 
         $out = $showonlyonetable->outhtml(1, true);
 
@@ -530,16 +660,16 @@ class view implements renderable, templatable {
             'bookingid' => (int) $booking->id,
             'institution' => $institution,
         ];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
                 booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $myinstitutiontable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($myinstitutiontable, true, true, true);
+        $this->wbtable_initialize_layout($myinstitutiontable, true, true, true);
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $myinstitutiontable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $myinstitutiontable->outhtml($booking->get_pagination_setting(), true);
@@ -565,16 +695,16 @@ class view implements renderable, templatable {
             'bookingid' => (int) $booking->id,
             'invisible' => 0,
         ];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $visibleoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($visibleoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($visibleoptionstable, true, true, true);
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $visibleoptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $visibleoptionstable->outhtml($booking->get_pagination_setting(), true);
@@ -600,16 +730,16 @@ class view implements renderable, templatable {
             'bookingid' => (int) $booking->id,
             'invisible' => 1,
         ];
-        list($fields, $from, $where, $params, $filter) =
+        [$fields, $from, $where, $params, $filter] =
             booking::get_options_filter_sql(0, 0, '', null, $booking->context, [], $wherearray);
         $invisibleoptionstable->set_filter_sql($fields, $from, $where, $filter, $params);
 
         // Initialize the default columnes, headers, settings and layout for the table.
         // In the future, we can parametrize this function so we can use it on many different places.
-        $this->wbtable_initialize_list_layout($invisibleoptionstable, true, true, true);
+        $this->wbtable_initialize_layout($invisibleoptionstable, true, true, true);
 
         if ($lazy) {
-            list($idstring, $encodedtable, $out)
+            [$idstring, $encodedtable, $out]
                 = $invisibleoptionstable->lazyouthtml($booking->get_pagination_setting(), true);
         } else {
             $out = $invisibleoptionstable->outhtml($booking->get_pagination_setting(), true);
@@ -619,14 +749,69 @@ class view implements renderable, templatable {
     }
 
     /**
-     * Helper function to set the default layout for the table (list view).
+     * Render table for the "What's new?" tab.
+     * @param bool $lazy for lazy-loading
+     * @return string the rendered table
+     */
+    public function get_rendered_whatsnew_table($lazy = false) {
+        $cmid = $this->cmid;
+
+        $booking = singleton_service::get_instance_of_booking_by_cmid($cmid);
+
+        // Create the table.
+        $whatsnewtable = new bookingoptions_wbtable("cmid_{$cmid} whatsnewtable");
+
+        $wherearray = [
+            'bookingid' => (int)$booking->id,
+            'status' => 0, // Active. Not cancelled.
+            'invisible' => 0, // Never show invisible options in this table.
+        ];
+        $additionalwhere = '(timemadevisible > :comparedate)';
+
+        [$fields, $from, $where, $params, $filter] =
+            booking::get_options_filter_sql(
+                0,
+                0,
+                '',
+                null,
+                $booking->context,
+                [],
+                $wherearray,
+                null,
+                [MOD_BOOKING_STATUSPARAM_BOOKED],
+                $additionalwhere
+            );
+
+        // Timenow is today at at 00.00.
+        $params['comparedate'] = (int)strtotime('today 00:00') - (int)get_config('booking', 'tabwhatsnewdays') * 86400;
+        $whatsnewtable->set_filter_sql($fields, $from, $where, $filter, $params);
+
+        // Initialize the default columnes, headers, settings and layout for the table.
+        // In the future, we can parametrize this function so we can use it on many different places.
+        $this->wbtable_initialize_layout($whatsnewtable, true, true, true);
+
+        if ($lazy) {
+            [$idstring, $encodedtable, $out]
+                = $whatsnewtable->lazyouthtml($booking->get_pagination_setting(), true);
+        } else {
+            $out = $whatsnewtable->outhtml($booking->get_pagination_setting(), true);
+        }
+        return $out;
+    }
+
+    /**
+     * Helper function to initialize the layout for the table.
      * @param wunderbyte_table $wbtable reference to the table class that should be initialized
      * @param bool $filter
      * @param bool $search
      * @param bool $sort
      */
-    private function wbtable_initialize_list_layout(wunderbyte_table &$wbtable,
-        bool $filter = true, bool $search = true, bool $sort = true) {
+    public function wbtable_initialize_layout(
+        wunderbyte_table &$wbtable,
+        bool $filter = true,
+        bool $search = true,
+        bool $sort = true
+    ) {
 
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($this->cmid);
         $optionsfields = explode(',', $bookingsettings->optionsfields);
@@ -669,13 +854,69 @@ class view implements renderable, templatable {
             $wbtable->showdownloadbutton = true;
         }
 
-        // Get view param from JSON of booking instance settings.
+        // Get cd param from JSON of booking instance settings.
         $viewparam = (int)booking::get_value_of_json_by_key($bookingsettings->id, 'viewparam');
         if (empty($viewparam)) {
             $viewparam = MOD_BOOKING_VIEW_PARAM_LIST; // List view is the default view.
         }
 
-        self::apply_standard_params_for_bookingtable($wbtable, $optionsfields, $filter, $search, $sort, true, true, $viewparam);
+        if ($bookingsettings->switchtemplates) {
+            $selectedtemplates = $bookingsettings->switchtemplatesselection ?? [];
+            // If template switcher is turned on, we add it.
+            // Only add templates that have been selected in instance.
+            if (in_array(MOD_BOOKING_VIEW_PARAM_LIST, $selectedtemplates)) {
+                $wbtable->add_template_to_switcher(
+                    'mod_booking/table_list',
+                    get_string('viewparam:list', 'mod_booking'),
+                    $viewparam === MOD_BOOKING_VIEW_PARAM_LIST ? true : false,
+                    MOD_BOOKING_VIEW_PARAM_LIST
+                );
+            }
+            if (in_array(MOD_BOOKING_VIEW_PARAM_CARDS, $selectedtemplates)) {
+                $wbtable->add_template_to_switcher(
+                    'mod_booking/table_cards',
+                    get_string('viewparam:cards', 'mod_booking'),
+                    $viewparam === MOD_BOOKING_VIEW_PARAM_CARDS ? true : false,
+                    MOD_BOOKING_VIEW_PARAM_CARDS
+                );
+            }
+            if (in_array(MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT, $selectedtemplates)) {
+                $wbtable->add_template_to_switcher(
+                    'mod_booking/table_list',
+                    get_string('viewparam:listimgleft', 'mod_booking'),
+                    $viewparam === MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT ? true : false,
+                    MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT
+                );
+            }
+            if (in_array(MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT, $selectedtemplates)) {
+                $wbtable->add_template_to_switcher(
+                    'mod_booking/table_list',
+                    get_string('viewparam:listimgright', 'mod_booking'),
+                    $viewparam === MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT ? true : false,
+                    MOD_BOOKING_VIEW_PARAM_LIST_IMG_RIGHT
+                );
+            }
+            if (in_array(MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT_HALF, $selectedtemplates)) {
+                $wbtable->add_template_to_switcher(
+                    'mod_booking/table_list',
+                    get_string('viewparam:listimglefthalf', 'mod_booking'),
+                    $viewparam === MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT_HALF ? true : false,
+                    MOD_BOOKING_VIEW_PARAM_LIST_IMG_LEFT_HALF
+                );
+            }
+        }
+
+        self::apply_standard_params_for_bookingtable(
+            $wbtable,
+            $optionsfields,
+            $filter,
+            $search,
+            $sort,
+            true,
+            true,
+            $viewparam,
+            $this->cmid
+        );
     }
 
 
@@ -690,6 +931,7 @@ class view implements renderable, templatable {
      * @param bool $reload
      * @param bool $filterinactive
      * @param int $viewparam list view or card view
+     * @param int $cmid optional cmid of booking instance
      * @return void
      * @throws moodle_exception
      * @throws coding_exception
@@ -702,12 +944,35 @@ class view implements renderable, templatable {
         bool $sort = true,
         bool $reload = true,
         bool $filterinactive = true,
-        int $viewparam = MOD_BOOKING_VIEW_PARAM_LIST) {
+        int $viewparam = MOD_BOOKING_VIEW_PARAM_LIST,
+        int $cmid = 0
+    ) {
+
+        global $PAGE;
+
+        if (!empty($cmid)) {
+            $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
+            $selectedtemplates = $bookingsettings->switchtemplatesselection ?? [];
+        }
+
         // Activate sorting.
         $wbtable->cardsort = true;
 
         // Without defining sorting won't work!
         $wbtable->define_columns(['titleprefix', 'coursestarttime', 'courseendtime']);
+
+        // If template switcher is active, we need to use the table's viewparam.
+        $chosenviewparam = get_user_preferences('wbtable_chosen_template_viewparam_' . $wbtable->uniqueid);
+        if (!empty($wbtable->switchtemplates) && is_number($chosenviewparam)) {
+            $viewparam = $chosenviewparam;
+            // Extra safety, if the selected templates in instance change, we use the first one available.
+            if (!empty($selectedtemplates)) {
+                if (!in_array($viewparam, $selectedtemplates)) {
+                    $viewparam = (int)$selectedtemplates[0] ?? MOD_BOOKING_VIEW_PARAM_LIST;
+                    set_user_preference('wbtable_chosen_template_viewparam_' . $wbtable->uniqueid, $viewparam);
+                }
+            }
+        }
 
         // Switch view type (cards view or list view).
         switch ($viewparam) {
@@ -764,50 +1029,74 @@ class view implements renderable, templatable {
 
         if ($filter) {
             if (in_array('teacher', $optionsfields)) {
-
                 $standardfilter = new standardfilter('teacherobjects', get_string('teachers', 'mod_booking'));
                 $standardfilter->add_options(['jsonattribute' => 'name']);
                 $wbtable->add_filter($standardfilter);
             }
             if (in_array('location', $optionsfields)) {
-
                 $standardfilter = new standardfilter('location', get_string('location', 'mod_booking'));
                 $wbtable->add_filter($standardfilter);
             }
             if (in_array('institution', $optionsfields)) {
-
                 $standardfilter = new standardfilter('institution', get_string('institution', 'mod_booking'));
                 $wbtable->add_filter($standardfilter);
             }
 
-            $datepicker = new datepicker(
-                'coursestarttime',
-                get_string('timefilter:coursetime', 'mod_booking'),
-                'courseendtime'
-            );
-            $datepicker->add_options(
-                'in between',
-                '<',
-                get_string('apply_filter', 'local_wunderbyte_table'),
-                'now',
-                'now + 1 year'
-            );
-            $wbtable->add_filter($datepicker);
+            if (in_array('coursestarttime', $optionsfields)) {
+                $datepicker = new datepicker(
+                    'coursestarttime',
+                    get_string('timefilter:coursetime', 'mod_booking'),
+                    'courseendtime'
+                );
+                $datepicker->add_options(
+                    'in between',
+                    '<',
+                    get_string('apply_filter', 'local_wunderbyte_table'),
+                    'now',
+                    'now + 1 year'
+                );
+                $wbtable->add_filter($datepicker);
+            }
 
-            $datepicker = new datepicker(
-                'bookingopeningtime',
-                get_string('timefilter:bookingtime', 'mod_booking'),
-                'bookingclosingtime'
-            );
-            $datepicker->add_options(
-                'in between',
-                '<',
-                get_string('apply_filter', 'local_wunderbyte_table'),
-                'now',
-                'now + 1 year'
-            );
+            if (in_array('bookingopeningtime', $optionsfields)) {
+                $datepicker = new datepicker(
+                    'bookingopeningtime',
+                    get_string('timefilter:bookingtime', 'mod_booking'),
+                    'bookingclosingtime'
+                );
+                $datepicker->add_options(
+                    'in between',
+                    '<',
+                    get_string('apply_filter', 'local_wunderbyte_table'),
+                    'now',
+                    'now + 1 year'
+                );
+                $wbtable->add_filter($datepicker);
+            }
 
-            $wbtable->add_filter($datepicker);
+            $url = $PAGE->url ?? false;
+            if (
+                $url
+                && !empty($path = $url->get_path(true))
+                && strpos($path, 'mod/booking/view.php') !== false
+            ) {
+                $cmid = optional_param('id', 0, PARAM_INT) ?? 0;
+                $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($cmid);
+                $jsonsettings = $bookingsettings->jsonobject ?? [];
+                if (!empty($jsonsettings->customfieldsforfilter)) {
+                    foreach ($jsonsettings->customfieldsforfilter as $shortname => $localizedname) {
+                        $localizedname = format_string($localizedname);
+                        $standardfilter = new standardfilter($shortname, $localizedname);
+                        $wbtable->add_filter($standardfilter);
+                    }
+                }
+            }
+            if (in_array('competencies', $optionsfields)) {
+                $standardfilter = new standardfilter('competencies', get_string('competencies', 'mod_booking'));
+                $comptencyoptions = competencies::get_filter_options();
+                $standardfilter->add_options($comptencyoptions);
+                $wbtable->add_filter($standardfilter);
+            }
         }
 
         if ($sort) {
@@ -879,8 +1168,11 @@ class view implements renderable, templatable {
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['description']);
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnvalueclass' => 'd-block pt-1'], ['statusdescription']);
         if (in_array('attachment', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardbody',
-                ['columnvalueclass' => 'd-block pt-1'], ['attachment']);
+            $wbtable->add_classes_to_subcolumns(
+                'cardbody',
+                ['columnvalueclass' => 'd-block pt-1'],
+                ['attachment']
+            );
         }
         $wbtable->add_classes_to_subcolumns('cardbody', ['columnalt' => get_string('teacher', 'mod_booking')], ['teacher']);
 
@@ -917,80 +1209,116 @@ class view implements renderable, templatable {
         $wbtable->add_classes_to_subcolumns('cardlist', ['columnkeyclass' => 'd-none']);
 
         if (in_array('dayofweektime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left text-gray pr-2'],
-                ['dayofweektime']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['dayofweektime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-clock-o fa-fw text-gray'],
-                ['dayofweektime']);
+                ['dayofweektime']
+            );
         }
         if (in_array('responsiblecontact', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left pr-2 text-gray'],
-                ['responsiblecontact']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['responsiblecontact']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-user fa-fw text-gray'],
-                ['responsiblecontact']);
+                ['responsiblecontact']
+            );
         }
         if (in_array('bookingopeningtime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left pr-2 text-gray d-block'],
-                ['bookingopeningtime']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['bookingopeningtime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-forward fa-fw text-gray'],
-                ['bookingopeningtime']);
+                ['bookingopeningtime']
+            );
         }
         if (in_array('bookingclosingtime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left pr-2 text-gray d-block'],
-                ['bookingclosingtime']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['bookingclosingtime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-step-forward fa-fw text-gray'],
-                ['bookingclosingtime']);
+                ['bookingclosingtime']
+            );
         }
         if (in_array('showdates', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left pr-2 text-gray'],
-                ['showdates']);
+                ['showdates']
+            );
         }
         if (in_array('location', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left text-gray  pr-2'],
-                ['location']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['location']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-map-marker fa-fw text-gray'],
-                ['location']);
+                ['location']
+            );
         }
         if (in_array('institution', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left text-gray  pr-2'],
-                ['institution']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['institution']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-building-o fa-fw text-gray'],
-                ['institution']);
+                ['institution']
+            );
         }
-        $wbtable->add_classes_to_subcolumns('cardlist',
+        $wbtable->add_classes_to_subcolumns(
+            'cardlist',
             ['columnclass' => 'text-left text-gray pr-2'],
-            ['bookings']);
-        $wbtable->add_classes_to_subcolumns('cardlist',
+            ['bookings']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'cardlist',
             ['columniclassbefore' => 'fa fa-ticket fa-fw text-gray'],
-            ['bookings']);
+            ['bookings']
+        );
         if (in_array('minanswers', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('cardlist',
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columnclass' => 'text-left text-gray pr-2'],
-                ['minanswers']);
-            $wbtable->add_classes_to_subcolumns('cardlist',
+                ['minanswers']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'cardlist',
                 ['columniclassbefore' => 'fa fa-arrow-up fa-fw text-gray'],
-                ['minanswers']);
+                ['minanswers']
+            );
         }
 
         // 3. Cardfooter.
         $wbtable->add_subcolumns('cardfooter', ['booknow', 'course', 'progressbar', 'ratings']);
         $wbtable->add_classes_to_subcolumns('cardfooter', ['columnkeyclass' => 'd-none']);
         $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'text-right'], ['booknow']);
-        $wbtable->add_classes_to_subcolumns('cardfooter',
+        $wbtable->add_classes_to_subcolumns(
+            'cardfooter',
             ['columnclass' => 'text-left mt-1 text-gray'],
-            ['progressbar']);
+            ['progressbar']
+        );
         $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'mt-1'], ['ratings']);
         $wbtable->add_classes_to_subcolumns('cardfooter', ['columnclass' => 'theme-text-color bold '], ['price']);
 
@@ -1007,18 +1335,32 @@ class view implements renderable, templatable {
         );
 
         // Additional descriptions.
-        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('location', 'mod_booking')],
-            ['location']);
-        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('dayofweektime', 'mod_booking')],
-            ['dayofweektime']);
-        $wbtable->add_classes_to_subcolumns('cardlist', ['columnalt' => get_string('bookings', 'mod_booking')],
-            ['bookings']);
-        $wbtable->add_classes_to_subcolumns('cardimage', ['cardimagealt' => get_string('bookingoptionimage', 'mod_booking')],
-            ['image']);
+        $wbtable->add_classes_to_subcolumns(
+            'cardlist',
+            ['columnalt' => get_string('location', 'mod_booking')],
+            ['location']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'cardlist',
+            ['columnalt' => get_string('dayofweektime', 'mod_booking')],
+            ['dayofweektime']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'cardlist',
+            ['columnalt' => get_string('bookings', 'mod_booking')],
+            ['bookings']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'cardimage',
+            ['cardimagealt' => get_string('bookingoptionimage', 'mod_booking')],
+            ['image']
+        );
 
         // At last, we set the correct template!
         $wbtable->tabletemplate = 'mod_booking/table_cards';
 
+        // We also need to set the user preference for the template.
+        set_user_preference('wbtable_chosen_template_' . $wbtable->uniqueid, 'mod_booking/table_cards');
     }
 
     /**
@@ -1073,6 +1415,9 @@ class view implements renderable, templatable {
         if (in_array('showdates', $optionsfields)) {
             $columnsfooter[] = 'showdates';
         }
+        if (in_array('competencies', $optionsfields)) {
+            $columnsfooter[] = 'competencies';
+        }
         $columnsfooter[] = 'comments';
 
         $wbtable->add_subcolumns('footer', $columnsfooter);
@@ -1081,8 +1426,11 @@ class view implements renderable, templatable {
         // Add header image.
         $wbtable->add_subcolumns('headerimage', ['image']);
         $wbtable->add_classes_to_subcolumns('headerimage', ['columnvalueclass' => 'w-100'], ['image']);
-        $wbtable->add_classes_to_subcolumns('headerimage', ['headerimagealt' => get_string('bookingoptionimage', 'mod_booking')],
-            ['image']);
+        $wbtable->add_classes_to_subcolumns(
+            'headerimage',
+            ['headerimagealt' => get_string('bookingoptionimage', 'mod_booking')],
+            ['image']
+        );
 
         $wbtable->add_classes_to_subcolumns('leftside', ['columnkeyclass' => 'd-none']);
         $wbtable->add_classes_to_subcolumns(
@@ -1097,76 +1445,112 @@ class view implements renderable, templatable {
         }
         $wbtable->add_classes_to_subcolumns('footer', ['columnkeyclass' => 'd-none']);
         if (in_array('dayofweektime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left text-gray pr-2 font-size-sm'],
-                ['dayofweektime']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['dayofweektime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-clock-o fa-fw text-gray font-size-sm'],
-                ['dayofweektime']);
+                ['dayofweektime']
+            );
         }
         if (in_array('responsiblecontact', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left pr-2 text-gray font-size-sm'],
-                ['responsiblecontact']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['responsiblecontact']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-user fa-fw text-gray font-size-sm'],
-                ['responsiblecontact']);
+                ['responsiblecontact']
+            );
         }
         if (in_array('bookingopeningtime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left pr-2 text-gray font-size-sm d-block'],
-                ['bookingopeningtime']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['bookingopeningtime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-forward fa-fw text-gray font-size-sm'],
-                ['bookingopeningtime']);
+                ['bookingopeningtime']
+            );
         }
         if (in_array('bookingclosingtime', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left pr-2 text-gray font-size-sm d-block'],
-                ['bookingclosingtime']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['bookingclosingtime']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-step-forward fa-fw text-gray font-size-sm'],
-                ['bookingclosingtime']);
+                ['bookingclosingtime']
+            );
         }
         if (in_array('showdates', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left pr-2 text-gray font-size-sm'],
-                ['showdates']);
+                ['showdates']
+            );
         }
         if (in_array('location', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left text-gray  pr-2 font-size-sm'],
-                ['location']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['location']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-map-marker fa-fw text-gray font-size-sm'],
-                ['location']);
+                ['location']
+            );
         }
         if (in_array('institution', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left text-gray  pr-2 font-size-sm'],
-                ['institution']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['institution']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-building-o fa-fw text-gray font-size-sm'],
-                ['institution']);
+                ['institution']
+            );
         }
-        $wbtable->add_classes_to_subcolumns('footer',
+        $wbtable->add_classes_to_subcolumns(
+            'footer',
             ['columnclass' => 'text-left text-gray pr-2 font-size-sm'],
-            ['bookings']);
-        $wbtable->add_classes_to_subcolumns('footer',
+            ['bookings']
+        );
+        $wbtable->add_classes_to_subcolumns(
+            'footer',
             ['columniclassbefore' => 'fa fa-ticket fa-fw text-gray font-size-sm'],
-            ['bookings']);
+            ['bookings']
+        );
         if (in_array('minanswers', $optionsfields)) {
-            $wbtable->add_classes_to_subcolumns('footer',
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columnclass' => 'text-left text-gray pr-2 font-size-sm'],
-                ['minanswers']);
-            $wbtable->add_classes_to_subcolumns('footer',
+                ['minanswers']
+            );
+            $wbtable->add_classes_to_subcolumns(
+                'footer',
                 ['columniclassbefore' => 'fa fa-arrow-up fa-fw text-gray font-size-sm'],
-                ['minanswers']);
+                ['minanswers']
+            );
         }
         $wbtable->add_classes_to_subcolumns('rightside', ['columnclass' => 'text-right'], ['booknow']);
-        $wbtable->add_classes_to_subcolumns('rightside',
+        $wbtable->add_classes_to_subcolumns(
+            'rightside',
             ['columnclass' => 'text-left mt-1 text-gray font-size-sm'],
-            ['progressbar']);
+            ['progressbar']
+        );
         $wbtable->add_classes_to_subcolumns('rightside', ['columnclass' => 'mt-1'], ['ratings']);
 
         // Override naming for columns.
@@ -1183,6 +1567,8 @@ class view implements renderable, templatable {
 
         // At last, we set the correct template!
         $wbtable->tabletemplate = 'mod_booking/table_list';
+
+        set_user_preference('wbtable_chosen_template_' . $wbtable->uniqueid, 'mod_booking/table_list');
     }
 
     /**
@@ -1194,8 +1580,10 @@ class view implements renderable, templatable {
 
         return [
             'alloptionstable' => $this->renderedalloptionstable,
+            'whatsnewtable' => $this->renderedwhatsnewtable,
             'activeoptionstable' => $this->renderedactiveoptionstable,
             'myoptionstable' => $this->renderedmyoptionstable,
+            'responsiblecontacttable' => $this->renderedresponsiblecontacttable,
             'optionsiteachtable' => $this->renderedoptionsiteachtable,
             'showonlyonetable' => $this->renderedshowonlyonetable,
             'myinstitutiontable' => $this->renderedmyinstitutiontable,
@@ -1208,15 +1596,19 @@ class view implements renderable, templatable {
             'showall' => $this->showall,
             'mybooking' => $this->mybooking, // My booked options. We kept the name for backward compatibility.
             'myoptions' => $this->myoptions, // Options I teach. We kept the name for backward compatibility.
+            'optionsiamresponsiblefor' => $this->optionsiamresponsiblefor, // Options where I am a responsible contact.
             'myinstitution' => $this->myinstitution,
             'myinstitutionname' => $this->myinstitutionname,
             'showvisible' => $this->showvisible,
             'showinvisible' => $this->showinvisible,
             'showfieldofstudy' => $this->showfieldofstudy,
+            'showwhatsnew' => $this->showwhatsnew,
             'elective' => empty($this->renderelectivetable) ? false : $this->electivemodal,
             'showheaderimageleft' => $this->showheaderimageleft,
+            'showheaderimagelefthalf' => $this->showheaderimagelefthalf,
             'showheaderimageright' => $this->showheaderimageright,
             'noheaderimage' => $this->noheaderimage,
+            'whatsnewtabtitle' => $this->whatsnewtabtitle,
         ];
     }
 }

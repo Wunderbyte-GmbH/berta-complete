@@ -48,7 +48,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class booking_time implements bo_condition {
-
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_BOOKING_TIME;
 
@@ -56,7 +55,7 @@ class booking_time implements bo_condition {
     public $overridable = true;
 
     /** @var bool $overwrittenbybillboard Indicates if the condition can be overwritten by the billboard. */
-    public $overwrittenbybillboard = true;
+    public $overwrittenbybillboard = false;
 
     /**
      * Get the condition id.
@@ -101,17 +100,21 @@ class booking_time implements bo_condition {
         $isavailable = true;
 
         // Get opening and closing time from option settings.
-        list($openingtime, $closingtime) = $this->get_booking_opening_and_closing_time($settings);
+        [$openingtime, $closingtime] = $this->get_booking_opening_and_closing_time($settings);
 
         // If there is a bookingopeningtime and now is smaller, we return false.
-        if (!empty($openingtime)
-            && ($now < $openingtime)) {
+        if (
+            !empty($openingtime)
+            && ($now < $openingtime)
+        ) {
             $isavailable = false;
         }
 
         // If there is a bookingclosingtime and now is bigger, we return false.
-        if (!empty($closingtime)
-            && ($now > $closingtime)) {
+        if (
+            !empty($closingtime)
+            && ($now > $closingtime)
+        ) {
             $isavailable = false;
         }
 
@@ -126,13 +129,18 @@ class booking_time implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
+        $where = "(
+                    sqlfilter <> 2
 
-        $where = "((bookingopeningtime < 1 OR bookingopeningtime < :bookingopeningtimenow1)
-                  AND (bookingclosingtime < 1 OR bookingclosingtime > :bookingopeningtimenow2))";
+                    OR (
+                        (bookingopeningtime < 1 OR bookingopeningtime < :bookingopeningtimenow1)
+                        AND (bookingclosingtime < 1 OR bookingclosingtime > :bookingopeningtimenow2)
+                    )
+                  )";
 
         // Using realtime here would destroy our caching.
         // Cache would be invalidated every second.
@@ -210,22 +218,31 @@ class booking_time implements bo_condition {
     public function add_condition_to_mform(MoodleQuickForm &$mform, int $optionid = 0) {
         global $DB;
 
-        $mform->addElement('advcheckbox', 'restrictanswerperiodopening',
-                get_string('restrictanswerperiodopening', 'mod_booking'));
+        $mform->addElement(
+            'advcheckbox',
+            'restrictanswerperiodopening',
+            get_string('restrictanswerperiodopening', 'mod_booking')
+        );
 
         $mform->addElement('date_time_selector', 'bookingopeningtime', get_string('from', 'mod_booking'));
         $mform->setType('bookingopeningtime', PARAM_INT);
         $mform->hideIf('bookingopeningtime', 'restrictanswerperiodopening', 'notchecked');
 
-        $mform->addElement('advcheckbox', 'restrictanswerperiodclosing',
-                get_string('restrictanswerperiodclosing', 'mod_booking'));
+        $mform->addElement(
+            'advcheckbox',
+            'restrictanswerperiodclosing',
+            get_string('restrictanswerperiodclosing', 'mod_booking')
+        );
 
         $mform->addElement('date_time_selector', 'bookingclosingtime', get_string('until', 'mod_booking'));
         $mform->setType('bookingclosingtime', PARAM_INT);
         $mform->hideIf('bookingclosingtime', 'restrictanswerperiodclosing', 'notchecked');
 
-        $mform->addElement('advcheckbox', 'bo_cond_booking_time_sqlfiltercheck',
-            get_string('sqlfiltercheckstring', 'mod_booking'));
+        $mform->addElement(
+            'advcheckbox',
+            'bo_cond_booking_time_sqlfiltercheck',
+            get_string('sqlfiltercheckstring', 'mod_booking')
+        );
 
         // Override conditions should not be necessary here - but let's keep it if we change our mind.
         // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
@@ -320,8 +337,13 @@ class booking_time implements bo_condition {
      * @param bool $fullwidth
      * @return array
      */
-    public function render_button(booking_option_settings $settings,
-        $userid = 0, $full = false, $not = false, bool $fullwidth = true): array {
+    public function render_button(
+        booking_option_settings $settings,
+        $userid = 0,
+        $full = false,
+        $not = false,
+        bool $fullwidth = true
+    ): array {
 
         $label = $this->get_description_string(false, $full, $settings);
 
@@ -349,7 +371,7 @@ class booking_time implements bo_condition {
             $description = get_string('bocondbookingtimeavailable', 'mod_booking');
         } else {
             // Localized time format.
-            switch(current_language()) {
+            switch (current_language()) {
                 case 'de':
                     $timeformat = "d.m.Y, H:i";
                     break;
@@ -359,7 +381,7 @@ class booking_time implements bo_condition {
             }
 
             // Get opening and closing time from option settings.
-            list($openingtime, $closingtime) = $this->get_booking_opening_and_closing_time($settings);
+            [$openingtime, $closingtime] = $this->get_booking_opening_and_closing_time($settings);
 
             $description = '';
             if (!empty($openingtime) && time() < $openingtime) {
@@ -395,7 +417,6 @@ class booking_time implements bo_condition {
             $openingtime = $settings->bookingopeningtime ?? null;
             $closingtime = $settings->bookingclosingtime ?? null;
         } else {
-
             $jsonstring = $settings->availability ?? '';
 
             $jsonobject = json_decode($jsonstring);

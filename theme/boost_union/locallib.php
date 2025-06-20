@@ -801,9 +801,11 @@ function theme_boost_union_get_additionalresources_templatecontext() {
         // Iterate over the files and fill the templatecontext of the file list.
         $filesforcontext = [];
         foreach ($files as $af) {
-            $urlpersistent = new moodle_url('/pluginfile.php/1/theme_boost_union/additionalresources/0/'.$af->get_filename());
-            $urlrevisioned = new moodle_url('/pluginfile.php/1/theme_boost_union/additionalresources/'.theme_get_revision().
-                    '/'.$af->get_filename());
+            $urlpersistent = new moodle_url('/pluginfile.php/' . $systemcontext->id .
+                '/theme_boost_union/additionalresources/0/' . $af->get_filename());
+                $urlrevisioned = new moodle_url('/pluginfile.php/' . $systemcontext->id .
+                '/theme_boost_union/additionalresources/' . theme_get_revision().
+                '/' . $af->get_filename());
             $filesforcontext[] = ['filename' => $af->get_filename(),
                                         'filetype' => $af->get_mimetype(),
                                         'filesize' => display_size($af->get_filesize()),
@@ -860,7 +862,8 @@ function theme_boost_union_get_customfonts_templatecontext() {
             }
 
             // Otherwise, fill the templatecontext of the file list.
-            $urlpersistent = new moodle_url('/pluginfile.php/1/theme_boost_union/customfonts/0/'.$filename);
+            $urlpersistent = new moodle_url('/pluginfile.php/'. $systemcontext->id .
+                '/theme_boost_union/customfonts/0/' . $filename);
             $filesforcontext[] = ['filename' => $filename,
                     'fileurlpersistent' => $urlpersistent->out(), ];
         }
@@ -1680,6 +1683,28 @@ function theme_boost_union_get_scss_courseoverview_block($theme) {
     return $scss;
 }
 
+
+/**
+ * Returns the SCSS code to be used in the navbar.
+ *
+ * @param theme_config $theme The theme config object.
+ * @return string
+ */
+function theme_boost_union_get_scss_navbar($theme) {
+    // Initialize SCSS snippet.
+    $scss = '';
+
+    // Set styles bases on the maxlogowidth setting.
+    if (!empty(get_config('theme_boost_union', 'maxlogowidth'))) {
+        $scss .= '.navbar-brand, .navbar-brand .logo {
+                max-width: '.get_config('theme_boost_union', 'maxlogowidth').';
+                height: auto;
+        }'.PHP_EOL;
+    }
+
+    return $scss;
+}
+
 /**
  * Helper function which returns an array of login methods on the login page.
  *
@@ -1905,7 +1930,8 @@ function theme_boost_union_get_touchicons_html_for_page() {
             // If the file exists (i.e. it has been uploaded).
             if ($file->exists == true) {
                 // Build the file URL.
-                $fileurl = new moodle_url('/pluginfile.php/1/theme_boost_union/touchiconsios/' .
+                $systemcontext = \context_system::instance();
+                $fileurl = new moodle_url('/pluginfile.php/' . $systemcontext->id . '/theme_boost_union/touchiconsios/' .
                     theme_get_revision().'/'.$file->filename);
 
                 // Compose and append the HTML tag.
@@ -2028,8 +2054,29 @@ function theme_boost_union_get_navbar_starredcoursespopover() {
         });
     }
 
+    // Get the cog icon link target.
+    $cogiconlinktarget = get_config('theme_boost_union', 'starredcourseslinktarget');
+    switch($cogiconlinktarget) {
+        case THEME_BOOST_UNION_SETTING_STARREDCOURSES_LINKTARGET_DASHBOARD:
+            $cogiconlinktargeturl = new moodle_url('/my/');
+            $cogiconlinktargettitle =
+                    get_string('shownavbarstarredcourses_config', 'theme_boost_union', get_string('myhome', 'core'));
+            break;
+        case THEME_BOOST_UNION_SETTING_STARREDCOURSES_LINKTARGET_MYCOURSES:
+        default:
+            $cogiconlinktargeturl = new moodle_url('/my/courses.php');
+            $cogiconlinktargettitle =
+                    get_string('shownavbarstarredcourses_config', 'theme_boost_union', get_string('mycourses', 'core'));
+            break;
+    }
+
     // Compose the popover menu.
-    $html = $OUTPUT->render_from_template('theme_boost_union/popover-favourites', ['favourites' => $coursesfortemplate]);
+    $html = $OUTPUT->render_from_template('theme_boost_union/popover-favourites',
+            [
+                'favourites' => $coursesfortemplate,
+                'cogiconlinktargeturl' => $cogiconlinktargeturl,
+                'cogiconlinktargettitle' => $cogiconlinktargettitle,
+            ]);
 
     return $html;
 }
@@ -2058,12 +2105,18 @@ function theme_boost_union_callbackimpl_before_standard_html(&$hook = null) {
     // Initialize HTML.
     $html = '';
 
-    // If a theme other than Boost Union or a child theme of it is active, return directly.
-    // This is necessary as the callback is called regardless of the active theme.
+    // Add some SCSS to the page to style the tertiary navigation.
+    $html .= \theme_boost_union\admin_settingspage_tabs_with_tertiary::get_tertiary_navigation_css_for_head();
+
+    // If a theme other than Boost Union or a child theme of it is active, return now.
+    // This is necessary as the callback is called regardless of the active theme and we must not add the Boost Union specific
+    // CSS then.
     if (theme_boost_union_is_active_theme() != true) {
         if ($hook != null) {
-            return;
+            // Add the HTML code to the hook.
+            $hook->add_html($html);
         } else {
+            // Return the HTML code.
             return $html;
         }
     }

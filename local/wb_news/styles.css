@@ -198,6 +198,10 @@
     color: #005C99;
 }
 
+.wb_news .carousel-inner {
+  overflow: visible;
+}
+
 @media (min-width: 981px) {
 
     .wb_news_tabcontainer .rounded-background {
@@ -601,5 +605,18 @@
     .wb-news-image-row .reverseonmobile {
         flex-direction: column-reverse !important;
     }
+}
+
+.course-card-name.bg-primary {
+    position: absolute;
+    bottom: 10px;
+    padding: 1px 15px;
+    width: 70%;
+    font-size: 24px;
+    font-weight: 600;
+    border: 1px solid #000 !important;
+}
+.course-card, .list-course-card {
+    border: 1px solid #000 !important;
 }
 

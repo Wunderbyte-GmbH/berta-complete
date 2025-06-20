@@ -39,12 +39,11 @@ $confirm = optional_param('confirm', 0, PARAM_INT);
 $sesskey = optional_param('sesskey', '', PARAM_INT);
 $mode = optional_param('mode', '', PARAM_RAW);
 
-$returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
+// Fallback url when there is no returnurl.
+$returnurl = new moodle_url('/mod/booking/view.php', ['id' => $cmid]);
+$returnurl = optional_param('returnurl', $returnurl->out(), PARAM_LOCALURL);
 
-// phpcs:ignore Squiz.PHP.CommentedOutCode.Found
-/* $PAGE->requires->jquery_plugin('ui-css'); */
-
-list($course, $cm) = get_course_and_cm_from_cmid($cmid);
+[$course, $cm] = get_course_and_cm_from_cmid($cmid);
 
 require_course_login($course, false, $cm);
 
@@ -69,8 +68,12 @@ if (!$context = context_module::instance($cmid)) {
     throw new moodle_exception('badcontext');
 }
 
-if ((has_capability('mod/booking:updatebooking', $context) || (has_capability(
-    'mod/booking:addeditownoption', $context) && booking_check_if_teacher($optionid))) == false) {
+if (
+    (has_capability('mod/booking:updatebooking', $context) || (has_capability(
+        'mod/booking:addeditownoption',
+        $context
+    ) && booking_check_if_teacher($optionid))) == false
+) {
     throw new moodle_exception('nopermissions');
 }
 

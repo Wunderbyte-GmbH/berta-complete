@@ -75,17 +75,36 @@ class termsandconditions extends checkout_base_item {
      * @return array
      *
      */
-    public function render_body($cachedata): array {
+    public static function render_body($cachedata): array {
         global $PAGE;
 
         $data = [];
-        if (get_config('local_shopping_cart', 'accepttermsandconditions')) {
-            $data['termsandconditions'] = get_config('local_shopping_cart', 'termsandconditions');
-        }
-        if (get_config('local_shopping_cart', 'acceptadditionalconditions')) {
-            $data['additionalconditions'] = get_config('local_shopping_cart', 'additionalconditions');
-        }
+
+        // Add data from cache.
         self::set_data_from_cache($data, $cachedata['data'] ?? []);
+
+        $termsandconditions = get_config('local_shopping_cart', 'termsandconditions');
+        $additionalconditions = get_config('local_shopping_cart', 'additionalconditions');
+
+        // Correctly set terms and conditions.
+        if (
+            get_config('local_shopping_cart', 'accepttermsandconditions')
+            && !empty(trim(strip_tags($termsandconditions)))
+        ) {
+            $data['termsandconditions'] = $termsandconditions;
+        } else {
+            unset($data['termsandconditions']);
+        }
+
+        // Correctly set additional conditions.
+        if (
+            get_config('local_shopping_cart', 'acceptadditionalconditions')
+            && !empty(trim(strip_tags($additionalconditions)))
+        ) {
+            $data['additionalconditions'] = $additionalconditions;
+        } else {
+            unset($data['additionalconditions']);
+        }
 
         $template = $PAGE->get_renderer('local_shopping_cart')
             ->render_from_template("local_shopping_cart/termsandconditions", $data);
@@ -103,7 +122,7 @@ class termsandconditions extends checkout_base_item {
      * @return array
      *
      */
-    public function check_status(
+    public static function check_status(
         $managercachestep,
         $validationdata
     ): array {
@@ -125,7 +144,7 @@ class termsandconditions extends checkout_base_item {
      * @param array $validationdata
      * @return bool list of all required address keys
      */
-    public function is_valid($validationdata): bool {
+    public static function is_valid($validationdata): bool {
         foreach ($validationdata as $validationvalue) {
             if (
                 !isset($validationvalue->value) ||

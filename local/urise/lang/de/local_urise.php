@@ -38,6 +38,7 @@ $string['urise:viewcourselistindashboard'] = 'Kann Kursliste im Dashboard sehen'
 $string['cachedef_cachedpaymenttable'] = 'Zahlungstransaktionen (Cache)';
 
 // Shortcodes.
+$string['sciencecommunicationprogramme'] = "Science Communication Programme";
 $string['shortcodelists'] = 'Shortcode-Listen';
 $string['shortcodelists_desc'] = 'Hier können Sie Listen konfigurieren, die durch Shortcodes (z.B. [allekurseliste]) generiert werden.';
 $string['shortcodelists_showdescriptions'] = 'Beschreibungen von Buchungsoptionen anzeigen';
@@ -165,8 +166,7 @@ $string['createbotag:helptext'] = '<p>
 </div>
 </div>';
 
-// Edit sports.
-$string['youneedcustomfieldsport'] = 'Diese Veranstaltung ist keiner Organisation zugeordnet';
+$string['youneedcustomfieldkompetenzen'] = 'Das benutzerdefinierte Buchungsoptionsfeld "Kompetenzen (Shortname: kompetenzen)" ist nicht angelegt oder enthält keinen Wert.';
 
 // Shortcodes.
 $string['shortcodeslistofbookingoptions'] = 'Liste der buchbaren Kurse';
@@ -181,7 +181,6 @@ $string['shortcodessetinstancedesc'] = 'Wenn Du hier einen Wert setzt, kann der 
 Es ist also nicht mehr nötig, eine ID zu übergeben.';
 $string['shortcodesnobookinginstance'] = '<div class="text-danger font-weight-bold">Noch keine Buchungsinstanz erstellt!</div>';
 $string['shortcodesnobookinginstancedesc'] = 'Sie müssen mindestens eine Buchungsinstanz in einem Moodle-Kurs erstellen, bevor Sie hier eine auswählen können.';
-$string['shortcodes::userinformation'] = 'Zeige Informationen von NutzerInnen';
 $string['shortcodesarchivecmids'] = 'Liste von IDs für das "Meine Kurse"-Archiv';
 $string['shortcodesarchivecmids_desc'] = 'Geben Sie eine Komma-getrennte Liste von Kursmodul-IDs (cmids) der Semester-Instanzen (Buchungsinstanzen) an,
 die im "Meine Kurse"-Archiv aufscheinen sollen.';
@@ -354,9 +353,6 @@ $string['contractformula_desc'] = 'Hier können Sie eine JSON-Formel angeben, di
 $string['contractformulatest'] = 'Vertragsformel testen';
 $string['editcontractformula'] = 'Vertragsformel bearbeiten';
 
-// Userinformation.mustache.
-$string['userinfo'] = 'Benutzer-Information';
-
 // My Courses List.
 $string['tocoursecontent'] = 'Zum Moodle Kurs';
 
@@ -445,7 +441,7 @@ $string['fbaltegeschichte'] = "FB Alte Geschichte";
 $string['fbanglistikundamerikanistik'] = "FB Anglistik und Amerikanistik";
 $string['fbarchaelogieundnumismatik'] = "FB Archäologie und Numismatik";
 $string['fbastronomie'] = "FB Astronomie";
-$string['fbbildungswissenschaftsprachwissenschaftundvergleichendeliteraturwissenschaft'] = "FB Bildungswissenschaft, Sprachwissenschaft und vergleichende Literaturwissenschaft";
+$string['fbbildungswissenschaftsprachwissenschaftundvergleichendeliteraturwissenschaft'] = "FB Bildungswissenschaft, Linguistik, Europäische und Vergleichende Sprach- und Literaturwissenschaft";
 $string['fbbiologieundbotanikstandortbiologie'] = "FB Biologie und Botanik, Standort Biologie";
 $string['fbbiologieundbotanikstandortbotanik'] = "FB Biologie und Botanik, Standort Botanik";
 $string['fbbyzantistikundneograezistik'] = "FB Byzantistik und Neogräzistik";
@@ -509,6 +505,7 @@ $string['lpallgemeinesuniversitaetspersonal'] = "LP Allgemeines Universitätsper
 $string['lpstudierende'] = "LP Studierende";
 $string['lpexterne'] = "LP Externe";
 $string['lpbibliothek'] = "LP Bibliothek";
+$string['teachinglibrary'] = "Teaching Library";
 
 $string['phdstudents'] = "PhD Students";
 $string['postdoc'] = "PostDocs";
@@ -521,7 +518,7 @@ $string['interessierteoeffentlichkeit'] = "Interessierte Öffentlichkeit";
 
 $string['doctoralschools'] = "Doctoral Schools";
 $string['personalwesenundfrauenfoerderung'] = "Personalwesen und Frauenförderung";
-$string['bibliotheksundarchivwesen'] = "Bibliotheks - und Archivwesen";
+$string['bibliotheksundarchivwesen'] = "Bibliotheks- und Archivwesen";
 $string['studienserviceundlehrwesen'] = "Studienservice und Lehrwesen";
 
 $string['organisationfilterdefinition'] = "Organisationsfilter";
@@ -555,6 +552,7 @@ $string['networkinginderwissenschaft'] = 'Networking in der Wissenschaft';
 $string['interdisziplinaereforschung'] = 'Interdisziplinäre Forschung';
 $string['forschungsfoerderung'] = 'Forschungsförderung';
 $string['karriereentwicklungplanung'] = 'Karriereentwicklung & -planung';
+$string['kommunikation'] = "Kommunikation";
 $string['kommunikationkooperation'] = "Kommunikation & Kooperation";
 $string['praesentation'] = 'Präsentation';
 $string['gespraechsverhandlungsfuehrung'] = 'Gesprächs- & Verhandlungsführung';
@@ -617,5 +615,7 @@ $string['basiswissenbiblio'] = "Basiswissen Bibliothek";
 $string['literatursuche'] = "Literatursuche";
 $string['orgauethikwissenschaft'] = "Organisation und Ethik des wissenschaftlichen Arbeitens";
 $string['spezialwissenbiblio'] = "Spezialwissen Bibliothek";
+$string['sciencecommunicationprogramme'] = "Science Communication Programme";
+$string['kompakttrainingfuehrungs'] = "Kompakttraining für Führungskräfte";
 
 $string['roleforselfregisteredusers'] = "Rolle für selbstregistrierte Nutzer:innen";

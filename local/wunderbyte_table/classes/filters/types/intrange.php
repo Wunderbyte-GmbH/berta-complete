@@ -33,7 +33,6 @@ use moodle_exception;
  * Wunderbyte table class is an extension of table_sql.
  */
 class intrange extends base {
-
     /**
      * Get standard filter options.
      * @param wunderbyte_table $table
@@ -78,7 +77,8 @@ class intrange extends base {
                 'local_wunderbyte_table',
                 '',
                 $this->columnidentifier,
-                'Every column can have only one filter applied');
+                'Every column can have only one filter applied'
+            );
         }
     }
 
@@ -96,7 +96,7 @@ class intrange extends base {
         string $checkboxlabel = '',
         int $defaultvaluestart = 0,
         int $defaultvalueend = 0
-        ) {
+    ) {
 
         $filter = [
             'checkboxlabel' => !empty($checkboxlabel) ? $checkboxlabel : get_string('apply_filter', 'local_wunderbyte_table'),
@@ -201,7 +201,6 @@ class intrange extends base {
             REGEXP_REPLACE($columnname, '[^0-9]', '', 'g') IS NOT NULL
             AND REGEXP_REPLACE($columnname, '[^0-9]', '', 'g') != ''
             AND CAST(REGEXP_REPLACE($columnname, '[^0-9]', '', 'g') AS INTEGER)";
-
         } else {
             // MariaDB/MySQL.
             // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
@@ -270,5 +269,43 @@ class intrange extends base {
         $tableobject[$key]['intrange']['intranges'][0]['endvalue'] = $values[1];
 
         return;
+    }
+
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param array $data
+     * @param string $filterspecificvalue
+     */
+    public static function render_mandatory_fields(&$mform, $data = [], $filterspecificvalue = '') {
+        $mform->addElement('html', '<p id="no-pairs-message" class="alert alert-info">No further seetings needed</p>');
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_new_filter_values($data, $filtercolumn) {
+        return [];
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_filterspecific_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            $data->wbfilterclass => true,
+            'intrange' => [],
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+        ];
+        return [$filterspecificvalues, ''];
     }
 }

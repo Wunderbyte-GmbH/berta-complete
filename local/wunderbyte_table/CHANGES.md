@@ -1,3 +1,84 @@
+## Version 2.0.51 (2025060600)
+* Improvement: Switch to reusable moodle-plugin-ci.yml workflow.
+* Improvement: Accesibility - Focus on Filters.
+* Bugfix: Fix strings for AMOS.
+
+## Version 2.0.50 (2025052700)
+* Improvement: Enable table container to be reloaded entirely if needed
+
+## Version 2.0.49 (2025052000)
+* Improvement: Make sure adding filters does not destroy table settings and includes various small improvements
+* Improvement: Hierarchy filter checkbox layout changes
+* Improvement: Add checkbox for hierarchical category
+* Improvement: Add hierarchical filter to demo
+* Improvement: Datepicker merging
+* Bugfix: Rename group to subdatepicker_group.
+* Bugfix: Data adjustment
+* Bugfix: Better placement for allowed column check (SQL columns only)
+* Bugfix: Fixes for custom filters – missing empty checks, etc.
+* Bugfix: Add custom filter button to template for cards container
+* Tests: Add new PHPUnit test method test_require_access()
+* Tests: Fix timezone issues in weekdays/hourlist test
+* Tests: Scenario for WB_Table navigation – switch view templates
+
+## Version 2.0.48 (2025043000)
+* New feature: Button to add individual filters can now be added in table settings for each table.
+* Improvement: Make sure adding filters is only possible for allowed SQL columns.
+* Improvement: All filter implemented and tested.
+* Improvement: Remove legacy code.
+* Improvement: Split datepicker class.
+* Improvement: Hierarchy filter implementation.
+* Improvement: Filter form.
+* Improvement: Refactoring class structure.
+* Improvement: Validation manager setup.
+* Improvement: Separate Moodle divs.
+* Improvement: Edit and add key value pair.
+* Improvement: Edit filter key value pair.
+* Improvement: Restructure to column manager.
+* Improvement: Add filter form.
+* Improvement: Allow table to be scrolled horizontally and add more space for right-sided components.
+* Improvement: Better filter sizes and reduce gaps.
+* Improvement: Add encodedtable in template for tests.
+* Bugfix: Fix weekdays strings.
+* Bugfix: Fix type error in unit tests.
+* Bugfix: Fix unit tests for filter types.
+
+## Version 2.0.47 (2025040800)
+* Bugfix: Make sure switcher remembers selected template for table is encoded.
+
+## Version 2.0.46 (2025040300)
+* Improvement: Add classes to template switcher mustache.
+* Bugfix: The hourlist and weekdays filters displays available intervals/weekdays now correctly.
+* Bugfix: Wrong type for showpagination.
+* Tests: Improved phpunit test.
+* Tests: Improved BEHAT tests.
+
+## Version 2.0.45 (2025040100)
+* New feature: Switch between table templates (individually for each user).
+* Bugfix: Display demp form instead in demo.php
+* Bugfix: use format_text instead of format_string on textarea.
+
+## Version 2.0.44 (2025030400)
+* Improvement: unify field controller
+* Bugfix: correctly apply format string to values from customfields and return values.
+* Bugfix: Correctly return value for wbt_field_controller base fields
+
+## Version 2.0.43 (2025022600)
+* Improvement: New get_values_array() function for customfields.
+* New feature: Add possibility to show download button at bottom of table.
+* Bugfix: Field property of field controller can be accessed directly without getter.
+* Test: Add test to verify sortorder in infinite scroll environment
+
+## Version 2.0.42 (2025021800)
+* New feature: Callbackfilter
+* New feature: Introduce sortable classes to allow sort specific sql and caches
+* Improvement: Possibility to turn off caching
+* Tests: Add automatic tests for callback filtering and new standard sortable class
+* Tests: Add phpunit test for testing standard filter
+
+## Version 2.0.41 (2025021200)
+* Set minlength to 1 (to also consider input of "AI" in fulltextsearch).
+
 ## Version 2.0.40 (2025012900)
 * Bugfix: Avoid empty get_in_or_equal error in function instantiate_by_shortnames of wbt_field_controller_info.
 

@@ -106,6 +106,12 @@ class singleton_service {
     /** @var array $allbookinginstances */
     public array $allbookinginstances;
 
+    /** @var array $customfieldbyshortname */
+    public array $customfieldbyshortname;
+
+    /** @var array $sanitzedstringkey */
+    public array $sanitzedstringkey;
+
 
     /**
      * Constructor
@@ -153,14 +159,15 @@ class singleton_service {
     /**
      * Service to store the array of answers in the singleton.
      * @param int $userid
+     * @param int $bookingid
      * @return array
      */
-    public static function get_answers_for_user($userid): array {
+    public static function get_answers_for_user(int $userid, int $bookingid): array {
 
         $instance = self::get_instance();
 
-        if (isset($instance->bookinganswersforuser[$userid])) {
-            return $instance->bookinganswersforuser[$userid];
+        if (isset($instance->bookinganswersforuser[$bookingid][$userid])) {
+            return $instance->bookinganswersforuser[$bookingid][$userid];
         } else {
             return [];
         }
@@ -169,14 +176,24 @@ class singleton_service {
     /**
      * Service to store the array of answers in the singleton.
      * @param int $userid
+     * @param int $bookingid if not provided, 0 is used to destroy system wide.
      * @return array
      */
-    public static function destroy_answers_for_user($userid): array {
+    public static function destroy_answers_for_user(int $userid, int $bookingid = 0): array {
 
         $instance = self::get_instance();
-
-        if (isset($instance->bookinganswersforuser[$userid])) {
-            unset($instance->bookinganswersforuser[$userid]);
+        if (empty($bookingid)) {
+            // Without bookingid, we need to destroy all answers for the user.
+            if (!empty($instance->bookinganswersforuser)) {
+                foreach ($instance->bookinganswersforuser as $key => $value) {
+                    if (isset($value[$userid])) {
+                        unset($instance->bookinganswersforuser[$key][$userid]);
+                    }
+                }
+            }
+        } else if (isset($instance->bookinganswersforuser[$bookingid][$userid])) {
+            // If a bookingid is provided, we need to destroy only the answers for that booking instance.
+            unset($instance->bookinganswersforuser[$bookingid][$userid]);
         }
         return [];
     }
@@ -184,14 +201,15 @@ class singleton_service {
     /**
      * Service to store the array of answers in the singleton.
      * @param int $userid
+     * @param int $bookingid
      * @param array $data
      * @return bool
      */
-    public static function set_answers_for_user($userid, $data): bool {
+    public static function set_answers_for_user(int $userid, int $bookingid, array $data): bool {
 
         $instance = self::get_instance();
 
-        $instance->bookinganswersforuser[$userid] = $data;
+        $instance->bookinganswersforuser[$bookingid][$userid] = $data;
 
         return true;
     }
@@ -209,7 +227,8 @@ class singleton_service {
         $bookingsettings = self::get_instance_of_booking_settings_by_cmid($cmid);
         $bookingid = $bookingsettings->id;
 
-        if (isset($instance->bookingsbycmid[$cmid])
+        if (
+            isset($instance->bookingsbycmid[$cmid])
             || isset($instance->bookingsbybookingid[$bookingid])
             || isset($instance->bookingsettingsbycmid[$cmid])
             || isset($instance->bookingsettingsbybookingid[$bookingid])
@@ -234,8 +253,10 @@ class singleton_service {
     public static function destroy_booking_option_singleton($optionid) {
         $instance = self::get_instance();
 
-        if (isset($instance->bookingoptionsettings[$optionid])
-            || isset($instance->bookingoptions[$optionid])) {
+        if (
+            isset($instance->bookingoptionsettings[$optionid])
+            || isset($instance->bookingoptions[$optionid])
+        ) {
             unset($instance->bookingoptionsettings[$optionid]);
             unset($instance->bookingoptions[$optionid]);
             return true;
@@ -267,15 +288,15 @@ class singleton_service {
 
     /**
      * When invalidating the cache, we need to also destroy the singleton of the user who booked.
-     *
+     * @param int $bookingid
      * @param int $userid
      * @return bool
      */
-    public static function destroy_booking_answers_for_user($userid) {
+    public static function destroy_booking_answers_for_user_in_booking_instance(int $bookingid, int $userid) {
         $instance = self::get_instance();
 
-        if (isset($instance->bookinganswersforuser[$userid])) {
-            unset($instance->bookinganswersforuser[$userid]);
+        if (isset($instance->bookinganswersforuser[$bookingid][$userid])) {
+            unset($instance->bookinganswersforuser[$bookingid][$userid]);
 
             return true;
         } else {
@@ -296,7 +317,6 @@ class singleton_service {
         if (isset($instance->bookingsbycmid[$cmid])) {
             return $instance->bookingsbycmid[$cmid];
         } else {
-
             // Before instating the new booking, we need to make sure that it already exists.
             try {
                 $booking = new booking($cmid);
@@ -418,7 +438,6 @@ class singleton_service {
             } catch (Exception $e) {
                 return null;
             }
-
         }
     }
 
@@ -617,9 +636,6 @@ class singleton_service {
      * @return array
      */
     public static function destroy_all_campaigns(): array {
-
-        global $DB;
-
         $instance = self::get_instance();
         unset($instance->campaigns);
 
@@ -776,7 +792,7 @@ class singleton_service {
             ];
             $instance->index[$uniqueid][$indexid] = 1;
         } else if (!isset($instance->index[$uniqueid][$indexid])) {
-            $instance->index[$uniqueid]['counter'] ++;
+            $instance->index[$uniqueid]['counter']++;
             $instance->index[$uniqueid][$indexid] = $instance->index[$uniqueid]['counter'];
         }
 
@@ -821,6 +837,28 @@ class singleton_service {
         }
 
         return $instance->allbookinginstances;
+    }
+
+    /**
+     * [Description for get_customfield_field_by_shortname]
+     *
+     * @param string $field
+     *
+     * @return object
+     *
+     */
+    public static function get_customfield_field_by_shortname(string $field) {
+        $instance = self::get_instance();
+
+        if (!isset($instance->customfieldbyshortname[$field])) {
+            global $DB;
+
+            $record = $DB->get_record('customfield_field', ['shortname' => $field]);
+
+            $instance->customfieldbyshortname[$field] = $record;
+        }
+
+        return $instance->customfieldbyshortname[$field];
     }
 
     /**

@@ -38,7 +38,17 @@ interface wbt_field_controller_base {
      * Get the actual string value of the customfield by index.
      *
      * @param string $key
+     * @param bool $formatstring
+     * @param bool $keyisencoded
      * @return string the string value for the index
      */
-    public function get_option_value_by_key(string $key): string;
+    public function get_option_value_by_key(string $key, bool $formatstring = true, bool $keyisencoded = false): string;
+
+    /**
+     * Get an array containing all key value pairs for the customfield.
+     * Depending on the type, these can be actually used values or possible values.
+     *
+     * @return array an array containing all key value pairs for the customfield
+     */
+    public function get_values_array(): array;
 }

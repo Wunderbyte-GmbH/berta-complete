@@ -26,6 +26,7 @@
 namespace local_shopping_cart\output;
 
 use context_system;
+use local_shopping_cart\context_helper;
 use local_shopping_cart\local\rebookings;
 use local_shopping_cart\local\cartstore;
 use local_shopping_cart\shopping_cart;
@@ -36,6 +37,7 @@ use renderable;
 use renderer_base;
 use stdClass;
 use templatable;
+use Throwable;
 
 /**
  * viewtable class to display view.php
@@ -111,10 +113,13 @@ class shoppingcart_history_list implements renderable, templatable {
      * @param bool $fromledger
      */
     public function __construct(int $userid, int $identifier = 0, $fromledger = false) {
-        global $DB;
+        global $DB, $PAGE;
 
         $this->userid = $userid;
         $this->fromledger = $fromledger;
+
+        // We need to have the context set for the format_string below.
+        context_helper::fix_page_context($PAGE);
 
         // Get currency from config.
         $this->currency = get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR';
@@ -130,6 +135,12 @@ class shoppingcart_history_list implements renderable, templatable {
                 $items = shopping_cart_history::return_data_via_identifier($identifier);
             } else {
                 $items = shopping_cart_history::return_data_from_ledger_via_identifier($identifier);
+            }
+
+            // Now we verify that the user is really the correct one.
+            $item = reset($items);
+            if (!has_capability('local/shopping_cart:cashier', context_system::instance())) {
+                $this->userid = $item->userid ?? 0;
             }
         } else {
             $items = shopping_cart_history::get_history_list_for_user($userid);
@@ -161,20 +172,19 @@ class shoppingcart_history_list implements renderable, templatable {
             if (
                 get_config('local_shopping_cart', 'showextrareceiptstousers')
                 && empty($item->uniqueid)
-                && in_array($item->payment, [8, 9])
+                && in_array($item->payment, [
+                    LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_TRANSFER,
+                    LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_PAID_BACK_BY_CASH,
+                    LOCAL_SHOPPING_CART_PAYMENT_METHOD_CREDITS_CORRECTION,
+                ])
             ) {
                 // Receipt URL for the item.
-
                 $urloptions = [
-                    'id' => $item->identifier,
+                    'success' => 1,
+                    'idcol' => 'id',
+                    'id' => $item->id,
                     'userid' => $item->userid,
                 ];
-
-                if (empty($item->identifier)) {
-                    $urloptions['idcol'] = 'id';
-                    $urloptions['id'] = $item->id;
-                }
-
                 $item->receipturl = new moodle_url("/local/shopping_cart/receipt.php", $urloptions);
 
                 // We want to show the credits at the place of the price.
@@ -187,10 +197,15 @@ class shoppingcart_history_list implements renderable, templatable {
             }
 
             // Receipt URL for the item.
-            $item->receipturl = new moodle_url("/local/shopping_cart/receipt.php", [
-                'id' => $item->identifier,
-                'userid' => $item->userid,
-            ]);
+            if (!empty($item->identifier) && !empty($item->userid)) {
+                $item->receipturl = new moodle_url("/local/shopping_cart/receipt.php", [
+                    'id' => $item->identifier,
+                    'userid' => $item->userid,
+                ]);
+            } else {
+                // Else we have no receipturl.
+                $item->receipturl = null;
+            }
 
             // Improvement: For installments, we need to aggregate all receipts (GH-92).
             $schistoryid = $DB->get_field_sql(
@@ -231,21 +246,26 @@ class shoppingcart_history_list implements renderable, templatable {
                         ];
                     }
                 }
-                // If it was canceled, we might have an identifier for the canceled item.
-                $canceledidentifier = $DB->get_field_sql(
-                    "SELECT identifier
-                       FROM {local_shopping_cart_ledger}
-                      WHERE schistoryid = :schistoryid
-                        AND identifier <> :identifier
-                        AND identifier IS NOT NULL
-                        AND paymentstatus = :paymentstatus
-                      LIMIT 1",
-                    [
-                        'schistoryid' => $schistoryid,
-                        'identifier' => $item->identifier,
-                        'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_CANCELED,
-                    ]
-                );
+                if ($item->paymentstatus == LOCAL_SHOPPING_CART_PAYMENT_CANCELED) {
+                    // If it was canceled, we might have an identifier for the canceled item.
+                    $canceledidentifier = $DB->get_field_sql(
+                        "SELECT identifier
+                        FROM {local_shopping_cart_ledger}
+                        WHERE schistoryid = :schistoryid
+                            AND identifier <> :identifier
+                            AND identifier IS NOT NULL
+                            AND paymentstatus = :paymentstatus
+                        LIMIT 1",
+                        [
+                            'schistoryid' => $schistoryid,
+                            'identifier' => $item->identifier,
+                            'paymentstatus' => LOCAL_SHOPPING_CART_PAYMENT_CANCELED,
+                        ]
+                    );
+                } else {
+                    $canceledidentifier = null;
+                }
+
                 if (!empty($canceledidentifier)) {
                     $item->cancelconfirmation = [
                         'identifier' => $canceledidentifier,
@@ -352,7 +372,7 @@ class shoppingcart_history_list implements renderable, templatable {
 
             if (get_config('local_shopping_cart', 'allowrebooking')) {
                 // Get the marked information.
-                $item->rebooking = shopping_cart_history::is_marked_for_rebooking($item->id, $userid);
+                $item->rebooking = shopping_cart_history::is_marked_for_rebooking($item->id, (int) $userid);
 
                 if (rebookings::allow_rebooking($item, $userid)) {
                     $item->showrebooking = true; // If it is shown at all.
@@ -445,7 +465,11 @@ class shoppingcart_history_list implements renderable, templatable {
                 $this->historyitems[$key]['price_gross'] = number_format(round((float) ($item['price_gross'] ?? 0), 2), 2, '.', '');
                 $this->historyitems[$key]['price_net'] = number_format(round((float) ($item['price_net'] ?? 0), 2), 2, '.', '');
             }
-            $this->historyitems[$key]['receipturl'] = $item['receipturl']->out(false);
+            if (!empty($item['receipturl'])) {
+                $this->historyitems[$key]['receipturl'] = $item['receipturl']->out(false);
+            } else {
+                $this->historyitems[$key]['receipturl'] = null;
+            }
         }
 
         $returnarray = ['historyitems' => $this->historyitems];

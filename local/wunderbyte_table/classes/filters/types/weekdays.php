@@ -22,15 +22,18 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- namespace local_wunderbyte_table\filters\types;
- use local_wunderbyte_table\filters\base;
+namespace local_wunderbyte_table\filters\types;
+
+use moodle_exception;
+use core_date;
+use local_wunderbyte_table\filters\base;
+use local_wunderbyte_table\wunderbyte_table;
 
 /**
  * Filter class with automatically supports the english weekdays as filter options.
  * @package local_wunderbyte_table
  */
 class weekdays extends base {
-
     /**
      * Set the column which should be filtered and possibly localize it.
      * @param string $columnidentifier
@@ -39,25 +42,34 @@ class weekdays extends base {
      * @param string $secondcolumnlocalized
      * @return void
      */
-    public function __construct(string $columnidentifier,
-                                string $localizedstring = '',
-                                string $secondcolumnidentifier = '',
-                                string $secondcolumnlocalized = '') {
+    public function __construct(
+        string $columnidentifier,
+        string $localizedstring = '',
+        string $secondcolumnidentifier = '',
+        string $secondcolumnlocalized = ''
+    ) {
 
-        $this->options = [
-            'monday' => get_string('monday', 'mod_booking'),
-            'tuesday' => get_string('tuesday', 'mod_booking'),
-            'wednesday' => get_string('wednesday', 'mod_booking'),
-            'thursday' => get_string('thursday', 'mod_booking'),
-            'friday' => get_string('friday', 'mod_booking'),
-            'saturday' => get_string('saturday', 'mod_booking'),
-            'sunday' => get_string('sunday', 'mod_booking'),
-        ];
-
+        $this->options = self::get_possible_weekdays_options();
         $this->columnidentifier = $columnidentifier;
         $this->localizedstring = empty($localizedstring) ? $columnidentifier : $localizedstring;
         $this->secondcolumnidentifier = $secondcolumnidentifier;
         $this->secondcolumnlocalized = empty($secondcolumnlocalized) ? $secondcolumnidentifier : $secondcolumnlocalized;
+    }
+
+    /**
+     * Add the filter to the array.
+     * @return array
+     */
+    public static function get_possible_weekdays_options() {
+        return [
+            'monday' => get_string('monday', 'calendar'),
+            'tuesday' => get_string('tuesday', 'calendar'),
+            'wednesday' => get_string('wednesday', 'calendar'),
+            'thursday' => get_string('thursday', 'calendar'),
+            'friday' => get_string('friday', 'calendar'),
+            'saturday' => get_string('saturday', 'calendar'),
+            'sunday' => get_string('sunday', 'calendar'),
+        ];
     }
 
     /**
@@ -92,7 +104,8 @@ class weekdays extends base {
                 'local_wunderbyte_table',
                 '',
                 $this->columnidentifier,
-                'Every column can have only one filter applied');
+                'Every column can have only one filter applied'
+            );
         }
     }
 
@@ -111,5 +124,165 @@ class weekdays extends base {
         foreach ($options as $key => $value) {
             $this->options[$key] = $value;
         }
+    }
+
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param array $data
+     * @param string $filterspecificvalue
+     */
+    public static function render_mandatory_fields(&$mform, $data = [], $filterspecificvalue = '') {
+        $mform->addElement('html', '<p id="no-pairs-message" class="alert alert-info">No further seetings needed</p>');
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_filterspecific_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            $data->wbfilterclass => true,
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+        ];
+        return [$filterspecificvalues, ''];
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_new_filter_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            $data->wbfilterclass => true,
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+        ];
+        $filterspecificvalues = array_merge($filterspecificvalues, self::get_possible_weekdays_options());
+        return $filterspecificvalues;
+    }
+
+    /**
+     * Get filter options for weekdays.
+     * @param wunderbyte_table $table
+     * @param string $key
+     * @return array
+     */
+    public static function get_data_for_filter_options(wunderbyte_table $table, string $key) {
+
+        $array = self::get_db_filter_column_weekdays($table, $key);
+
+        $returnarray = [];
+        // We get back the GMT timestamps. We need to translate them.
+        foreach ($array as $day => $value) {
+            $value->$key = "$day";
+            $returnarray[$day] = $value;
+        }
+
+        return $returnarray ?? [];
+    }
+
+    /**
+     * Makes sql request for weekdays .
+     * @param wunderbyte_table $table
+     * @param string $key
+     * @return array
+     */
+    protected static function get_db_filter_column_weekdays(wunderbyte_table $table, string $key) {
+        global $DB, $USER;
+
+        $databasetype = $DB->get_dbfamily();
+        $tz = core_date::get_user_timezone($USER); // We must apply user's timezone there.
+
+        // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
+        switch ($databasetype) {
+            case 'postgres':
+                $sql = "SELECT weekday, COUNT(weekday)
+                        FROM (
+                            SELECT TRIM(TO_CHAR(
+                                (TIMESTAMP 'epoch' + $key * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE '$tz', 'day'
+                            )) AS weekday
+                            FROM {$table->sql->from}
+                            WHERE {$table->sql->where} AND $key IS NOT NULL
+                        ) as weekdayss1
+                        GROUP BY weekday ";
+                break;
+            case 'mysql':
+                $sql = "SELECT weekday, COUNT(*) as count
+                        FROM (
+                            SELECT LOWER(DATE_FORMAT(
+                                CONVERT_TZ(FROM_UNIXTIME($key), 'UTC', '$tz'), '%W'
+                            )) AS weekday
+                            FROM {$table->sql->from}
+                            WHERE {$table->sql->where} AND $key IS NOT NULL
+                        ) as weekdayss1
+                        GROUP BY weekday";
+                break;
+            default:
+                $sql = '';
+                break;
+        }
+
+        if (empty($sql)) {
+            return [];
+        }
+
+        $records = $DB->get_records_sql($sql, $table->sql->params);
+
+        return $records;
+    }
+
+    /**
+     * Apply the filter of weekday class.
+     *
+     * @param string $filter
+     * @param string $columnname
+     * @param mixed $categoryvalue
+     * @param wunderbyte_table $table
+     *
+     * @return void
+     *
+     */
+    public function apply_filter(
+        string &$filter,
+        string $columnname,
+        $categoryvalue,
+        wunderbyte_table &$table
+    ): void {
+        global $DB, $USER;
+
+        $databasetype = $DB->get_dbfamily();
+        $tz = core_date::get_user_timezone($USER); // We must apply user's timezone there.
+        $filtercounter = 1;
+        $filter .= " ( ";
+        foreach ($categoryvalue as $key => $value) {
+            $filter .= $filtercounter == 1 ? "" : " OR ";
+            $paramsvaluekey = $table->set_params((string) ($value), false);
+            // The $key param is the name of the table in the column, so we can safely use it directly without fear of injection.
+            switch ($databasetype) {
+                case 'postgres':
+                    $filter .= " TRIM(TO_CHAR(
+                    (TIMESTAMP 'epoch' + $columnname * INTERVAL '1 second') AT TIME ZONE 'UTC' AT TIME ZONE '$tz', 'day'
+                    )) = :$paramsvaluekey
+                    AND $columnname IS NOT NULL";
+                    break;
+                default:
+                    $filter .= " LOWER(DATE_FORMAT(
+                    CONVERT_TZ(FROM_UNIXTIME($columnname), 'UTC', '$tz'), '%W'
+                    )) = :$paramsvaluekey
+                    AND $columnname IS NOT NULL";
+            }
+            $filtercounter++;
+        }
+        $filter .= " ) ";
     }
 }

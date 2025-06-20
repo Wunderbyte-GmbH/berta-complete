@@ -41,10 +41,14 @@ use mod_booking\teachers_handler;
 use mod_booking\utils\wb_payment;
 use mod_booking\booking_rules\rules_info;
 use mod_booking\booking_rules\booking_rules;
+use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
+use mod_booking\customfield\booking_handler;
+use mod_booking\option\fields\certificate;
+use mod_booking\option\fields\competencies;
 
 // Default fields for bookingoptions in view.php and for download.
 define('MOD_BOOKING_BOOKINGOPTION_DEFAULTFIELDS', "identifier,titleprefix,text,description,teacher,responsiblecontact," .
-"showdates,dayofweektime,location,institution,course,minanswers,bookings,bookingopeningtime,bookingclosingtime");
+"showdates,dayofweektime,location,institution,course,minanswers,bookings,bookingopeningtime,bookingclosingtime,coursestarttime");
 
 // View params.
 define('MOD_BOOKING_VIEW_PARAM_LIST', 0); // List view.
@@ -79,7 +83,7 @@ define('MOD_BOOKING_MSGPARAM_CHANGE_NOTIFICATION', 8);
 define('MOD_BOOKING_MSGPARAM_POLLURL_PARTICIPANT', 9);
 define('MOD_BOOKING_MSGPARAM_POLLURL_TEACHER', 10);
 define('MOD_BOOKING_MSGPARAM_COMPLETED', 11);
-define('MOD_BOOKING_MSGPARAM_SESSIONREMINDER', 12);
+define('MOD_BOOKING_MSGPARAM_SESSIONREMINDER', 12); // Note: Only kept for legacy. Replaced by Booking Rule.
 define('MOD_BOOKING_MSGPARAM_REPORTREMINDER', 13); // Reminder sent from report.php.
 define('MOD_BOOKING_MSGPARAM_CUSTOM_MESSAGE', 14);
 
@@ -90,6 +94,28 @@ define('MOD_BOOKING_STATUSPARAM_RESERVED', 2);
 define('MOD_BOOKING_STATUSPARAM_NOTIFYMELIST', 3); // Get message when place is open.
 define('MOD_BOOKING_STATUSPARAM_NOTBOOKED', 4);
 define('MOD_BOOKING_STATUSPARAM_DELETED', 5);
+
+// Values for Booking history.
+define('MOD_BOOKING_STATUSPARAM_BOOKED_DELETED', 10);
+define('MOD_BOOKING_STATUSPARAM_WAITINGLIST_DELETED', 11);
+define('MOD_BOOKING_STATUSPARAM_WAITINGLIST_CONFIRMED', 12);
+define('MOD_BOOKING_STATUSPARAM_RESERVED_DELETED', 13);
+define('MOD_BOOKING_STATUSPARAM_NOTIFYMELIST_DELETED', 14);
+define('MOD_BOOKING_STATUSPARAM_PRESENCE_CHANGED', 15);
+define('MOD_BOOKING_STATUSPARAM_BOOKINGOPTION_MOVED', 16);
+define('MOD_BOOKING_STATUSPARAM_BOOKOTHEROPTIONS', 17);
+define('MOD_BOOKING_STATUSPARAM_COMPLETION_CHANGED', 18);
+define('MOD_BOOKING_STATUSPARAM_NOTES_EDITED', 19);
+
+// Define booking presence status parameters.
+define('MOD_BOOKING_PRESENCE_STATUS_NOTSET', 0);
+define('MOD_BOOKING_PRESENCE_STATUS_COMPLETE', 1);
+define('MOD_BOOKING_PRESENCE_STATUS_INCOMPLETE', 2);
+define('MOD_BOOKING_PRESENCE_STATUS_NOSHOW', 3);
+define('MOD_BOOKING_PRESENCE_STATUS_FAILED', 4);
+define('MOD_BOOKING_PRESENCE_STATUS_UNKNOWN', 5);
+define('MOD_BOOKING_PRESENCE_STATUS_ATTENDING', 6);
+define('MOD_BOOKING_PRESENCE_STATUS_EXCUSED', 7);
 
 // Params to define behavior of booking_option::update.
 define('MOD_BOOKING_UPDATE_OPTIONS_PARAM_DEFAULT', 1);
@@ -105,7 +131,6 @@ define('MOD_BOOKING_MSGCONTRPARAM_VIEW_CONFIRMATION', 4);
 // Define booking availability condition ids.
 define('MOD_BOOKING_BO_COND_CONFIRMCANCEL', 170);
 define('MOD_BOOKING_BO_COND_ALREADYBOOKED', 150);
-define('MOD_BOOKING_BO_COND_ALREADYRESERVED', 140);
 define('MOD_BOOKING_BO_COND_ISCANCELLED', 130);
 define('MOD_BOOKING_BO_COND_ISBOOKABLEINSTANCE', 125);
 define('MOD_BOOKING_BO_COND_ISBOOKABLE', 120);
@@ -113,6 +138,7 @@ define('MOD_BOOKING_BO_COND_ONWAITINGLIST', 110);
 
 define('MOD_BOOKING_BO_COND_CANCELMYSELF', 105);
 define('MOD_BOOKING_BO_COND_BOOKONDETAIL', 104);
+define('MOD_BOOKING_BO_COND_ALREADYRESERVED', 102);
 
 define('MOD_BOOKING_BO_COND_NOTIFYMELIST', 100);
 define('MOD_BOOKING_BO_COND_FULLYBOOKED', 90);
@@ -130,8 +156,10 @@ define('MOD_BOOKING_BO_COND_SUBBOOKING', 40);
 
 // Careful with changing these JSON COND values! They are stored.
 // If changed, DB Values need to be updated.
+define('MOD_BOOKING_BO_COND_OTHEROPTIONSAVAILABLE', 31);
 define('MOD_BOOKING_BO_COND_JSON_NOOVERLAPPING', 30);
 define('MOD_BOOKING_BO_COND_JSON_NOOVERLAPPINGPROXY', 29);
+define('MOD_BOOKING_BO_COND_JSON_MAXOPTIONSFROMCATEGORY', 28);
 define('MOD_BOOKING_BO_COND_JSON_ALLOWEDTOBOOKININSTANCE', 18); // We might want to moove this up?
 define('MOD_BOOKING_BO_COND_JSON_ENROLLEDINCOHORTS', 17);
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMFORM', 16);
@@ -141,6 +169,7 @@ define('MOD_BOOKING_BO_COND_JSON_PREVIOUSLYBOOKED', 13);
 define('MOD_BOOKING_BO_COND_JSON_CUSTOMUSERPROFILEFIELD', 12);
 define('MOD_BOOKING_BO_COND_JSON_USERPROFILEFIELD', 11);
 
+define('MOD_BOOKING_BO_COND_INSTANCEAVAILABILITY', 5);
 define('MOD_BOOKING_BO_COND_CAPBOOKINGCHOOSE', 4);
 
 define('MOD_BOOKING_BO_COND_ASKFORCONFIRMATION', 0);
@@ -191,6 +220,8 @@ define('MOD_BOOKING_OPTION_FIELD_ID', 10);
 define('MOD_BOOKING_OPTION_FIELD_JSON', 11);
 define('MOD_BOOKING_OPTION_FIELD_DUPLICATION', 12); // Needed for duplication to work.
 define('MOD_BOOKING_OPTION_FIELD_RETURNURL', 20);
+define('MOD_BOOKING_OPTION_FIELD_TIMECREATED', 22);
+define('MOD_BOOKING_OPTION_FIELD_TIMEMODIFIED', 23);
 define('MOD_BOOKING_OPTION_FIELD_FORMCONFIG', 25);
 define('MOD_BOOKING_OPTION_FIELD_MOVEOPTION', 28);
 define('MOD_BOOKING_OPTION_FIELD_TEMPLATE', 30);
@@ -232,6 +263,7 @@ define('MOD_BOOKING_OPTION_FIELD_PRICEFORMULAOFF', 300);
 define('MOD_BOOKING_OPTION_FIELD_CREDITS', 310);
 define('MOD_BOOKING_OPTION_FIELD_ELECTIVE', 320);
 define('MOD_BOOKING_OPTION_FIELD_COSTUMFIELDS', 330);
+define('MOD_BOOKING_OPTION_FIELD_COMPETENCIES', 331);
 define('MOD_BOOKING_OPTION_FIELD_AVAILABILITY', 340);
 define('MOD_BOOKING_OPTION_FIELD_BOOKINGOPENINGTIME', 350);
 define('MOD_BOOKING_OPTION_FIELD_BOOKINGCLOSINGTIME', 360);
@@ -246,14 +278,16 @@ define('MOD_BOOKING_OPTION_FIELD_ATTACHMENT', 430);
 define('MOD_BOOKING_OPTION_FIELD_NOTIFICATIONTEXT', 440);
 define('MOD_BOOKING_OPTION_FIELD_REMOVEAFTERMINUTES', 450);
 define('MOD_BOOKING_OPTION_FIELD_HOWMANYUSERS', 470);
+define('MOD_BOOKING_OPTION_FIELD_APPLYBOOKINGRULE', 475);
 define('MOD_BOOKING_OPTION_FIELD_BEFOREBOOKEDTEXT', 480);
 define('MOD_BOOKING_OPTION_FIELD_BEFORECOMPLETEDTEXT', 490);
 define('MOD_BOOKING_OPTION_FIELD_AFTERCOMPLETEDTEXT', 500);
+define('MOD_BOOKING_OPTION_FIELD_CERTIFICATE', 505);
 define('MOD_BOOKING_OPTION_FIELD_RECURRINGOPTIONS', 510);
 define('MOD_BOOKING_OPTION_FIELD_BOOKUSERS', 520);
-define('MOD_BOOKING_OPTION_FIELD_TIMEMODIFIED', 530);
 define('MOD_BOOKING_OPTION_FIELD_TEMPLATESAVE', 600);
 define('MOD_BOOKING_OPTION_FIELD_EVENTSLIST', 700);
+define('MOD_BOOKING_OPTION_FIELD_RULES', 800);
 define('MOD_BOOKING_OPTION_FIELD_AFTERSUBMITACTION', 999);
 
 // To define execution of field methods.
@@ -277,6 +311,9 @@ define('MOD_BOOKING_HEADER_SUBBOOKINGS', 'bookingsubbookingsheader');
 define('MOD_BOOKING_HEADER_CUSTOMFIELDS', 'category_'); // There can be multiple headers, with custom names.
 define('MOD_BOOKING_HEADER_TEMPLATESAVE', 'templateheader');
 define('MOD_BOOKING_HEADER_COURSES', 'coursesheader');
+define('MOD_BOOKING_HEADER_RULES', 'rulesheader');
+define('MOD_BOOKING_HEADER_CERTIFICATE', 'certificateheader');
+define('MOD_BOOKING_HEADER_COMPETENCIES', 'competenciesheader');
 
 define('MOD_BOOKING_MAX_CUSTOM_FIELDS', 3);
 define('MOD_BOOKING_FORM_OPTIONDATEID', 'optiondateid_');
@@ -295,10 +332,51 @@ define('MOD_BOOKING_SQL_FILTER_ACTIVE_BO_TIME', 2);
 define('MOD_BOOKING_CLASSES_EXCLUDED_FROM_CHANGES_TRACKING', [
 ]);
 
-// SQL Filter.
+// Overlapping handling.
 define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_EMPTY', 0);
 define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_WARN', 1);
 define('MOD_BOOKING_COND_OVERLAPPING_HANDLING_BLOCK', 2);
+
+// Autoenrol status.
+define('MOD_BOOKING_AUTOENROL_STATUS_EXCEPTION', 0);
+define('MOD_BOOKING_AUTOENROL_STATUS_ALREADY_ENROLLED', 1);
+define('MOD_BOOKING_AUTOENROL_STATUS_SUCCESS', 2);
+define('MOD_BOOKING_AUTOENROL_STATUS_LINK_NOT_VALID', 3);
+define('MOD_BOOKING_AUTOENROL_STATUS_NO_MORE_SEATS', 4);
+define('MOD_BOOKING_AUTOENROL_STATUS_LOGGED_IN_AS_GUEST', 5);
+define('MOD_BOOKING_AUTOENROL_STATUS_WAITINGLIST', 6);
+
+// Status for user submit response (enrolment into bookingoption).
+// 1 if we just added this booking option to the shopping cart, 2 for confirmation.
+define('MOD_BOOKING_BO_SUBMIT_STATUS_DEFAULT', 0);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_ADDED_TO_CART', 1);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_CONFIRMATION', 2);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_UN_CONFIRM', 3);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_AUTOENROL', 4);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_BOOKOTHEROPTION_CONDITIONS_BLOCKING', 5);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_BOOKOTHEROPTION_NOOVERBOOKING', 6);
+define('MOD_BOOKING_BO_SUBMIT_STATUS_BOOKOTHEROPTION_FORCE', 7);
+
+// Instance specific settings for cancellation.
+define('MOD_BOOKING_CANCANCELBOOK_ABSOLUTE', 0);
+define('MOD_BOOKING_CANCANCELBOOK_RELATIVE', 1);
+define('MOD_BOOKING_CANCANCELBOOK_UNLIMITED', 2);
+
+// Enrol into group of current course.
+define('MOD_BOOKING_ENROL_INTO_GROUP_OF_BOOKINGOPTION', -1);
+define('MOD_BOOKING_ENROL_GROUPTYPE_SOURCECOURSE', 'sourcecourseboid_');
+define('MOD_BOOKING_ENROL_GROUPTYPE_TARGETCOURSE', 'targetcourseboid_');
+
+// Recurring options.
+define('MOD_BOOKING_ALL_CHILDRED_UNLINK', 1);
+define('MOD_BOOKING_ALL_CHILDRED_DELETE', 2);
+define('MOD_BOOKING_RECURRING_UPDATE_CHILDREN', 1);
+define('MOD_BOOKING_RECURRING_UPDATE_SIBLINGS', 2);
+define('MOD_BOOKING_RECURRING_DONTUPDATE', 0);
+define('MOD_BOOKING_RECURRING_APPLY_TO_CHILDREN', 1);
+define('MOD_BOOKING_RECURRING_OVERWRITE_CHILDREN', 2);
+define('MOD_BOOKING_RECURRING_APPLY_TO_SIBLINGS', 3);
+define('MOD_BOOKING_RECURRING_OVERWRITE_SIBLINGS', 4);
 
 /**
  * Booking get coursemodule info.
@@ -315,7 +393,10 @@ function booking_get_coursemodule_info($cm) {
     }
 
     // Populate the custom completion rules as key => value pairs, but only if the completion mode is 'automatic'.
-    if ($cm->completion == COMPLETION_TRACKING_AUTOMATIC) {
+    if (
+        $cm->completion == COMPLETION_TRACKING_AUTOMATIC
+        && !empty($booking->settings)
+    ) {
         $info->customdata['customcompletionrules']['completionoptioncompleted'] = $booking->settings->enablecompletion;
     }
     return $info;
@@ -333,13 +414,13 @@ function booking_get_coursemodule_info($cm) {
  * @param array $args extra arguments
  * @param bool $forcedownload whether or not force download
  * @param array $options additional options affecting the file serving
- * @return bool false if file not found, does not return if found - justsend the file
+ * @return ?bool false if file not found, does not return if found - justsend the file
  *
  * @throws coding_exception
  * @throws moodle_exception
  * @throws require_login_exception
  */
-function booking_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
+function booking_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []): ?bool {
 
     // Check the contextlevel is as expected - if your plugin is a block.
     // We need context course if wee like to acces template files.
@@ -508,10 +589,8 @@ function booking_comment_permissions($commentparam): array {
     switch ($bdata->comments) {
         case 0:
             return ['post' => false, 'view' => false];
-            break;
         case 1:
             return ['post' => true, 'view' => true];
-            break;
         case 2:
             $udata = $DB->get_record(
                 'booking_answers',
@@ -522,7 +601,6 @@ function booking_comment_permissions($commentparam): array {
             } else {
                 return ['post' => false, 'view' => true];
             }
-            break;
         case 3:
             $udata = $DB->get_record(
                 'booking_answers',
@@ -533,7 +611,6 @@ function booking_comment_permissions($commentparam): array {
             } else {
                 return ['post' => false, 'view' => true];
             }
-            break;
     }
     return [];
 }
@@ -610,9 +687,7 @@ function booking_add_instance($booking) {
         $booking->categoryid = null;
     }
 
-    if (isset($booking->templateid) && $booking->templateid > 0) {
-        $booking->templateid = $booking->templateid;
-    } else {
+    if (empty($booking->templateid)) {
         $booking->templateid = 0;
     }
 
@@ -676,14 +751,78 @@ function booking_add_instance($booking) {
     if (isset($booking->cancelrelativedate)) {
         booking::add_data_to_json($booking, 'cancelrelativedate', $booking->cancelrelativedate);
     }
-
     if (isset($booking->allowupdatetimestamp)) {
         booking::add_data_to_json($booking, 'allowupdatetimestamp', $booking->allowupdatetimestamp);
+    }
+    if (isset($booking->viewparam)) {
+        // Save list view as default value.
+        booking::add_data_to_json($booking, "viewparam", MOD_BOOKING_VIEW_PARAM_LIST);
+    }
+    if (isset($booking->switchtemplates)) {
+        // By default, template switcher is turned off.
+        booking::add_data_to_json($booking, 'switchtemplates', 0);
+    }
+    if (isset($booking->switchtemplatesselection)) {
+        // By default, all booking view templates are selected.
+        booking::add_data_to_json($booking, 'switchtemplatesselection', array_keys(booking::get_array_of_possible_views()));
+    }
+    if (isset($booking->disablebooking)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "disablebooking", $booking->disablebooking);
+    }
+    if (isset($booking->overwriteblockingwarnings)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "overwriteblockingwarnings", $booking->overwriteblockingwarnings);
+    }
+    if (isset($booking->billboardtext)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "billboardtext", $booking->billboardtext);
+    }
+
+    if (!empty($booking->maxoptionsfromcategoryvalue)) {
+        $submitdata = [];
+        $field = get_config('booking', 'maxoptionsfromcategoryfield');
+        $fieldcontroller = wbt_field_controller_info::get_instance_by_shortname($field);
+        foreach ($booking->maxoptionsfromcategoryvalue as $id) {
+            $localizedstring = $fieldcontroller->get_option_value_by_key($id, false);
+            $submitdata[$id] = [
+                        'count' => $booking->maxoptionsfromcategorycount,
+                        'localizedstring' => $localizedstring,
+                ];
+        }
+        booking::add_data_to_json($booking, "maxoptionsfromcategory", json_encode($submitdata));
+        booking::add_data_to_json($booking, "maxoptionsfrominstance", $booking->maxoptionsfrominstance);
+    }
+
+    if (isset($booking->customfieldsforfilter)) {
+        $customfields = booking_handler::get_customfields($booking->customfieldsforfilter);
+        $fieldsfordb = [];
+        foreach ($customfields as $field) {
+            $fieldsfordb[$field->shortname] = $field->name;
+        }
+        booking::add_data_to_json($booking, "customfieldsforfilter", $fieldsfordb);
+    }
+
+    if (isset($booking->addtogroupofcurrentcourse)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "addtogroupofcurrentcourse", $booking->addtogroupofcurrentcourse);
+    }
+    if (isset($booking->unenrolfromgroupofcurrentcourse)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "unenrolfromgroupofcurrentcourse", 1);
     }
 
     // If no policy was entered, we still have to check for HTML tags.
     if (!isset($booking->bookingpolicy) || empty(strip_tags($booking->bookingpolicy))) {
         $booking->bookingpolicy = '';
+    }
+
+    if (isset($booking->circumventavailabilityconditions) && !empty($booking->circumventavailabilityconditions)) {
+        $data = [
+            'cvpwd' => $booking->circumventpassword ?? '',
+        ];
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "circumventcond", $data);
     }
 
     // Insert answer options from mod_form.
@@ -799,9 +938,7 @@ function booking_update_instance($booking) {
         $booking->signinsheetfields = implode(',', $booking->signinsheetfields);
     }
 
-    if (isset($booking->templateid) && $booking->templateid > 0) {
-        $booking->templateid = $booking->templateid;
-    } else {
+    if (empty($booking->templateid)) {
         $booking->templateid = 0;
     }
 
@@ -930,12 +1067,28 @@ function booking_update_instance($booking) {
     } else {
         booking::add_data_to_json($booking, "disablecancel", 1);
     }
-    // View param (list view or card view) is also stored in JSON.
+    // View param (list view or card view) is stored in JSON.
     if (empty($booking->viewparam)) {
         // Save list view as default value.
         booking::add_data_to_json($booking, "viewparam", MOD_BOOKING_VIEW_PARAM_LIST);
     } else {
         booking::add_data_to_json($booking, "viewparam", $booking->viewparam);
+    }
+    // Template switcher value is stored in JSON: 0 is off, 1 is on.
+    if (empty($booking->switchtemplates)) {
+        // By default, template switcher is turned off.
+        booking::add_data_to_json($booking, 'switchtemplates', 0);
+        // When template switcher is off, we don't need to store selected templates.
+        booking::remove_key_from_json($booking, 'switchtemplatesselection');
+    } else {
+        booking::add_data_to_json($booking, 'switchtemplates', $booking->switchtemplates);
+        // Only if template switcher is active, we store values for selected templates.
+        if (empty($booking->switchtemplatesselection)) {
+            // By default, use all possible templates.
+            booking::add_data_to_json($booking, 'switchtemplatesselection', array_keys(booking::get_array_of_possible_views()));
+        } else {
+            booking::add_data_to_json($booking, 'switchtemplatesselection', $booking->switchtemplatesselection);
+        }
     }
     if (empty($booking->disablebooking)) {
         // This will store the correct JSON to $optionvalues->json.
@@ -955,14 +1108,85 @@ function booking_update_instance($booking) {
     } else {
         booking::add_data_to_json($booking, "billboardtext", $booking->billboardtext);
     }
-    if (empty($booking->cancelrelativedate)) {
-        // If date is not relative, delete given entries for relative dates.
-        $booking->allowupdatedays = "0";
-        booking::add_data_to_json($booking, "cancelrelativedate", $booking->cancelrelativedate);
-        booking::add_data_to_json($booking, "allowupdatetimestamp", $booking->allowupdatetimestamp);
-    } else {
-        booking::add_data_to_json($booking, "cancelrelativedate", $booking->cancelrelativedate);
+    if (empty($booking->cancancelbook)) {
+        $booking->allowupdatedays = 0;
         booking::remove_key_from_json($booking, "allowupdatetimestamp");
+        booking::remove_key_from_json($booking, "cancelrelativedate");
+    } else {
+        // We need to store the chosen value (absolute, relative, unlimited) in the JSON.
+        booking::add_data_to_json($booking, "cancelrelativedate", $booking->cancelrelativedate);
+        // Depending on chosen cancel mode (absolute, relative, unlimited) we need to set the JSON correctly.
+        switch ($booking->cancelrelativedate) {
+            case MOD_BOOKING_CANCANCELBOOK_ABSOLUTE:
+                $booking->allowupdatedays = 0; // Only relevant if relative.
+                // Add absolute cancelling date to JSON.
+                booking::add_data_to_json($booking, "allowupdatetimestamp", $booking->allowupdatetimestamp);
+                break;
+            case MOD_BOOKING_CANCANCELBOOK_RELATIVE:
+                // Remove absolute cancelling date from JSON.
+                booking::remove_key_from_json($booking, "allowupdatetimestamp");
+                break;
+            case MOD_BOOKING_CANCANCELBOOK_UNLIMITED:
+                $booking->allowupdatedays = 0; // Only relevant if relative.
+                // Remove absolute cancelling date from JSON.
+                booking::remove_key_from_json($booking, "allowupdatetimestamp");
+                break;
+        }
+    }
+
+    if (empty($booking->maxoptionsfromcategorycount)) {
+        booking::remove_key_from_json($booking, "maxoptionsfromcategory");
+        booking::remove_key_from_json($booking, "maxoptionsfrominstance");
+    } else if (!empty($booking->maxoptionsfromcategoryvalue)) {
+        $submitdata = [];
+        $field = get_config('booking', 'maxoptionsfromcategoryfield');
+        $fieldcontroller = wbt_field_controller_info::get_instance_by_shortname($field);
+        foreach ($booking->maxoptionsfromcategoryvalue as $id) {
+            $localizedstring = $fieldcontroller->get_option_value_by_key($id, false, true);
+            $submitdata[$id] = [
+                        'count' => $booking->maxoptionsfromcategorycount,
+                        'localizedstring' => $localizedstring,
+                ];
+        }
+
+        booking::add_data_to_json($booking, "maxoptionsfromcategory", json_encode($submitdata));
+        booking::add_data_to_json($booking, "maxoptionsfrominstance", $booking->maxoptionsfrominstance);
+    }
+
+    if (empty($booking->customfieldsforfilter)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::remove_key_from_json($booking, "customfieldsforfilter");
+    } else {
+        $customfields = booking_handler::get_customfields($booking->customfieldsforfilter);
+        $fieldsfordb = [];
+        foreach ($customfields as $field) {
+            $fieldsfordb[$field->shortname] = $field->name;
+        }
+        booking::add_data_to_json($booking, "customfieldsforfilter", $fieldsfordb);
+    }
+
+    if (empty($booking->addtogroupofcurrentcourse)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::remove_key_from_json($booking, "addtogroupofcurrentcourse");
+    } else {
+        booking::add_data_to_json($booking, "addtogroupofcurrentcourse", $booking->addtogroupofcurrentcourse);
+    }
+
+    if (empty($booking->unenrolfromgroupofcurrentcourse)) {
+        // This will store the correct JSON to $optionvalues->json.
+        booking::remove_key_from_json($booking, "unenrolfromgroupofcurrentcourse");
+    } else {
+        booking::add_data_to_json($booking, "unenrolfromgroupofcurrentcourse", 1);
+    }
+
+    if (isset($booking->circumventavailabilityconditions) && !empty($booking->circumventavailabilityconditions)) {
+        $data = [
+            'cvpwd' => $booking->circumventpassword ?? '',
+        ];
+        // This will store the correct JSON to $optionvalues->json.
+        booking::add_data_to_json($booking, "circumventcond", $data);
+    } else if (empty($booking->circumventavailabilityconditions)) {
+        booking::remove_key_from_json($booking, "circumventcond");
     }
 
     // Update, delete or insert answers.
@@ -1008,6 +1232,24 @@ function booking_update_instance($booking) {
 
     // When updating an instance, we need to invalidate the cache for booking instances.
     booking::purge_cache_for_booking_instance_by_cmid($cm->id);
+
+    // Bugfix: If source of mail templates is global templates, we do not need to save instance mail templates.
+    if (
+        isset($booking->mailtemplatessource)
+        && $booking->mailtemplatessource == 1
+    ) {
+        unset($booking->bookedtext);
+        unset($booking->waitingtext);
+        unset($booking->notifyemail);
+        unset($booking->notifyemailteachers);
+        unset($booking->statuschangetext);
+        unset($booking->deletedtext);
+        unset($booking->bookingchangedtext);
+        unset($booking->pollurltext);
+        unset($booking->pollurlteacherstext);
+        unset($booking->activitycompletiontext);
+        unset($booking->userleave);
+    }
 
     return $DB->update_record('booking', $booking);
 }
@@ -1465,7 +1707,7 @@ function booking_check_if_teacher($optionoroptionid = null, int $userid = 0) {
  * This inverts the completion status of the selected users.
  *
  * @param array $selectedusers
- * @param unknown $booking
+ * @param mixed $booking
  * @param int $cmid
  * @param int $optionid
  */
@@ -1479,7 +1721,7 @@ function booking_activitycompletion_teachers($selectedusers, $booking, $cmid, $o
     foreach ($selectedusers as $uid) {
         foreach ($uid as $ui) {
             // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
-            // TODO: Optimization of db query: instead of loop, one get_records query.
+            // Todo: Optimization of db query: instead of loop, one get_records query.
             $userdata = $DB->get_record(
                 'booking_teachers',
                 ['optionid' => $optionid, 'userid' => $ui]
@@ -1517,7 +1759,7 @@ function booking_activitycompletion_teachers($selectedusers, $booking, $cmid, $o
 /**
  * Generate new numbers for users
  *
- * @param unknown $bookingdatabooking
+ * @param mixed $bookingdatabooking
  * @param int $cmid
  * @param int $optionid
  * @param array $allselectedusers
@@ -1620,21 +1862,54 @@ function booking_activitycompletion($selectedusers, $booking, $cmid, $optionid) 
         );
 
         if ($userdata->completed == '1') {
+            $completionold = $userdata->completed;
             $userdata->completed = '0';
             $userdata->timemodified = time();
-
             $DB->update_record('booking_answers', $userdata);
             $countcomplete = $DB->count_records(
                 'booking_answers',
                 ['bookingid' => $booking->id, 'userid' => $selecteduser, 'completed' => '1']
             );
+            $status = MOD_BOOKING_STATUSPARAM_COMPLETION_CHANGED;
+            $answerid = $userdata->id;
+            $optionid = $userdata->optionid;
+            $bookingid = $userdata->bookingid;
+            $userid = $userdata->userid;
+            $completionchange = [
+                'completion' => [
+                    'completionold' => $completionold,
+                    'completionnew' => $userdata->completed,
+                ],
+            ];
+            booking_option::booking_history_insert($status, $answerid, $optionid, $bookingid, $userid, $completionchange);
 
             if ($completion->is_enabled($cm) && $booking->enablecompletion > $countcomplete) {
                 $completion->update_state($cm, COMPLETION_INCOMPLETE, $selecteduser);
             }
         } else {
+            $completionold = $userdata->completed;
             $userdata->completed = '1';
             $userdata->timemodified = time();
+            if (class_exists('tool_certificate\certificate')) {
+                $certid = certificate::issue_certificate($optionid, $selecteduser);
+            }
+
+            if (get_config('booking', 'usecompetencies')) {
+                $usercompetecies = competencies::assign_competencies($cmid, $optionid, $selecteduser);
+            }
+
+            $status = MOD_BOOKING_STATUSPARAM_COMPLETION_CHANGED;
+            $answerid = $userdata->id;
+            $optionid = $userdata->optionid;
+            $bookingid = $userdata->bookingid;
+            $userid = $userdata->userid;
+            $completionchange = [
+                'completion' => [
+                    'completionold' => $completionold,
+                    'completionnew' => $userdata->completed,
+                ],
+            ];
+            booking_option::booking_history_insert($status, $answerid, $optionid, $bookingid, $userid, $completionchange);
 
             // Trigger the completion event, in order to send the notification mail.
             $event = \mod_booking\event\bookingoption_completed::create([
@@ -1642,11 +1917,14 @@ function booking_activitycompletion($selectedusers, $booking, $cmid, $optionid) 
                 'objectid' => $optionid,
                 'userid' => $USER->id,
                 'relateduserid' => $selecteduser,
-                'other' => ['cmid' => $cmid],
+                'other' => [
+                            'cmid' => $cmid,
+                            'certid' => $certid ?? 0,
+                            ],
             ]);
             $event->trigger();
-            // Important: userid is the user who triggered, relateduserid is the affected user who completed.
 
+            // Important: userid is the user who triggered, relateduserid is the affected user who completed.
             $DB->update_record('booking_answers', $userdata);
             $countcomplete = $DB->count_records(
                 'booking_answers',
@@ -2062,7 +2340,7 @@ function booking_delete_instance($id) {
 
     $result = true;
 
-    $alloptionids = \mod_booking\booking::get_all_optionids($id);
+    $alloptionids = booking::get_all_optionids($id);
     foreach ($alloptionids as $optionid) {
         $bookingoption = singleton_service::get_instance_of_booking_option($cm->id, $optionid);
         $bookingoption->delete_booking_option();
@@ -2321,6 +2599,7 @@ function get_list_of_booking_events() {
     $eventinformation = [];
     $events = core_component::get_component_classes_in_namespace('mod_booking', 'event');
     foreach (array_keys($events) as $event) {
+        $event = (string) $event; // Just for linting.
         // We need to filter all classes that extend event base, or the base class itself.
         if (is_a($event, \core\event\base::class, true)) {
             $parts = explode('\\', $event);
@@ -2359,6 +2638,69 @@ function clean_string(string $text) {
         '/ /'           => ' ', // Nonbreaking space (equiv. to 0x160).
     ];
     return preg_replace(array_keys($utf8), array_values($utf8), $text);
+}
+
+/**
+ * Callback for tool_certificate - the fields available for the certificates
+ */
+function mod_booking_tool_certificate_fields() {
+    global $CFG;
+
+    if (!class_exists('tool_certificate\customfield\issue_handler')) {
+        return;
+    }
+    $handler = tool_certificate\customfield\issue_handler::create();
+    $handler->ensure_field_exists(
+        'bookingoptionid',
+        'number',
+        "",
+        false,
+        0
+    );
+    $handler->ensure_field_exists(
+        'bookingoptionname',
+        'text',
+        get_string('bookingoptionname', 'mod_booking'),
+        true,
+        get_string('bookingoptionname', 'mod_booking'),
+    );
+    $handler->ensure_field_exists(
+        'bookingoptiondescription',
+        'text',
+        get_string('bookingoptiondescription', 'mod_booking'),
+        true,
+        get_string('bookingoptiondescription', 'mod_booking'),
+    );
+}
+
+/**
+ * Helper function to check if the database is MariaDB and at least version 10.6.
+ * @return bool True if MariaDB 10.6 or higher, false otherwise.
+ */
+function db_is_at_least_mariadb_106_or_mysql_8() {
+    global $DB;
+
+    $versionstring = $DB->get_field_sql(
+        "SELECT VERSION() AS version"
+    );
+    if (strpos($versionstring, 'MariaDB') !== false) {
+        // Extract the version number from the string.
+        preg_match('/\d+\.\d+\.\d+/', $versionstring, $matches);
+        if (empty($matches)) {
+            return false; // If we cannot extract the version, return false.
+        }
+        if (version_compare($matches[0], '10.6', '>=')) {
+            // If it's a MariaDB and the version is 10.6 or higher, return true.
+            return true;
+        }
+    } else if ($DB->get_dbfamily() == 'mysql') {
+        if (version_compare($versionstring, '8.0', '>=')) {
+            // If it's MySQL and the version is 8.0 or higher, return true.
+            return true;
+        }
+    }
+    // No MariaDB >= 10.6 or MySQL > 8.0.
+    return false;
 }
 
 // With this function, we can execute code at the last moment.

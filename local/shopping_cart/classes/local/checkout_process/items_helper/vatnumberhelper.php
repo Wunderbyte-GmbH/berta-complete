@@ -59,9 +59,9 @@ class vatnumberhelper {
      *
      * @return array
      */
-    public static function get_countrycodes_array() {
+    public static function get_countrycodes_array(): array {
         $stringman = get_string_manager();
-        $countries = [
+        return [
             'novatnr' => $stringman->get_string('novatnr', 'local_shopping_cart', null, 'en'),
             'AT' => $stringman->get_string('at', 'local_shopping_cart', null, 'en'),
             'BE' => $stringman->get_string('be', 'local_shopping_cart', null, 'en'),
@@ -94,33 +94,40 @@ class vatnumberhelper {
             'XI' => $stringman->get_string('xi', 'local_shopping_cart', null, 'en'),
             'EU' => $stringman->get_string('eu', 'local_shopping_cart', null, 'en'),
         ];
-        return $countries;
     }
 
     /**
      * Function to verify VATNR of business partner online.
      * @param string $countrycode
      * @param string $vatnrnumber
-     * @return string
+     * @param ?object $client
+     * @return bool
      */
-    public static function check_vatnr_number(string $countrycode, string $vatnrnumber) {
-        $response = [];
+    public static function is_vatnr_valid(string $countrycode, string $vatnrnumber, ?object $client = null): bool {
+        // Special treatment for the Behat tests.
+        if (defined('BEHAT_SITE_RUNNING')) {
+            $key = 'mockvat_' . strtolower($countrycode) . '_' . strtolower($vatnrnumber);
+            $mockresponse = get_config('local_shopping_cart', $key);
+            if (!empty($mockresponse)) {
+                $decoded = json_decode($mockresponse, true);
+                return isset($decoded['valid']) && $decoded['valid'];
+            }
+        }
 
         if (
             empty($countrycode) ||
             empty($vatnrnumber)
         ) {
-            return '';
+            return false;
         }
         $vatregion = self::get_vat_region($countrycode);
         $vatnrnumber = str_replace($countrycode, '', $vatnrnumber);
-        $response = false;
         switch ($vatregion) {
             case 'gb':
                 $response = self::validate_with_hmrc($vatnrnumber);
                 break;
             case 'eu':
-                $response = self::validate_with_vies($countrycode, $vatnrnumber);
+                $response = self::validate_with_vies($countrycode, $vatnrnumber, $client);
                 break;
             default:
                 $response = self::validate_with_vatcomply($vatnrnumber);
@@ -213,11 +220,13 @@ class vatnumberhelper {
      * Function to return an array of localized country codes.
      * @param string $countrycode
      * @param string $vatnumber
+     * @param ?object $client
+     *
      * @return array
      */
-    public static function validate_with_vies($countrycode, $vatnumber) {
+    public static function validate_with_vies($countrycode, $vatnumber, ?object $client = null) {
         try {
-            $client = new SoapClient(self::WSDL);
+            $client = $client ?? new SoapClient(self::WSDL);
             return (array) $client->checkVat([
                 'countryCode' => $countrycode,
                 'vatNumber' => $vatnumber,

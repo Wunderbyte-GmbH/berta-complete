@@ -36,6 +36,7 @@ Feature: As admin I want to ensure that customization of the wunderbyte_table se
     And the following "activities" exist:
       | activity | name       | intro      | course | idnumber |
       | page     | PageName1  | PageDesc1  | C1     | PAGE1    |
+    And I change viewport size to "1600x3000"
 
   @javascript
   Scenario: WB_table: Verify filter settings working on download
@@ -75,3 +76,7 @@ Feature: As admin I want to ensure that customization of the wunderbyte_table se
     And I should see "1 filter(s) on: Username" in the ".wb-records-count-label" "css_element"
     ## Does not working for JS-inititiated download
     ## Then following "/local/wunderbyte_table/download.php?wbtsearch=teacher" should download "7370" bytes
+    And I set the following administration settings values:
+      | allowedittable |  |
+    And I clean wbtable cache
+    And I log out

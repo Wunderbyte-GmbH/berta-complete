@@ -29,7 +29,9 @@ namespace mod_booking\bo_availability\conditions;
 use context_system;
 use mod_booking\bo_availability\bo_condition;
 use mod_booking\bo_availability\bo_info;
+use mod_booking\booking;
 use mod_booking\booking_option_settings;
+use mod_booking\local\override_user_field;
 use mod_booking\singleton_service;
 use mod_booking\utils\wb_payment;
 use MoodleQuickForm;
@@ -137,8 +139,10 @@ class userprofilefield_1_default implements bo_condition {
         if (!isset($this->customsettings->profilefield)) {
             $isavailable = true;
         } else {
-
-            if (isloggedin()) {
+            if (
+                isloggedin()
+                && !isguestuser()
+            ) {
                 // Profilefield is set.
                 $user = singleton_service::get_instance_of_user($userid);
                 $profilefield = $this->customsettings->profilefield;
@@ -150,81 +154,22 @@ class userprofilefield_1_default implements bo_condition {
                 } else {
                     $value = $user->$profilefield;
                 }
-
-                // If value is not null, we compare it.
-                if ($value) {
-                    switch ($this->customsettings->operator) {
-                        case '=':
-                            if ($value == $this->customsettings->value) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '<':
-                            if ($value < $this->customsettings->value) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '>':
-                            if ($value > $this->customsettings->value) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '~':
-                            if (mb_strpos($value, $this->customsettings->value) !== false) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '!=':
-                            if ($value != $this->customsettings->value) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '!~':
-                            if (mb_strpos($value, $this->customsettings->value) === false) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '[]':
-                            $array = explode(",", $this->customsettings->value);
-                            if (in_array($value, $array)) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '[!]':
-                            $array = explode(",", $this->customsettings->value);
-                            if (!in_array($value, $array)) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '[~]':
-                            $array = explode(",", $this->customsettings->value);
-                            foreach ($array as $itemvalue) {
-                                if (mb_strpos($value, $itemvalue) === false) {
-                                    $isavailable = true;
-                                    break;
-                                }
-                            }
-                            break;
-                        case '[!~]':
-                            $array = explode(",", $this->customsettings->value);
-                            $isavailable = true;
-                            foreach ($array as $itemvalue) {
-                                if (mb_strpos($value, $itemvalue) === false) {
-                                    $isavailable = false;
-                                    break;
-                                }
-                            }
-                            break;
-                        case '()':
-                            if (empty($value)) {
-                                $isavailable = true;
-                            }
-                            break;
-                        case '(!)':
-                            if (!empty($value)) {
-                                $isavailable = true;
-                            }
-                            break;
+                $isavailable = self::compare_operator($value, $this->customsettings->operator, $this->customsettings->value);
+                if (!$isavailable) {
+                    $cvsetting = booking::get_value_of_json_by_key($settings->bookingid, 'circumventcond');
+                    if (
+                        isset($cvsetting)
+                        && !empty($cvsetting)
+                    ) {
+                        $overridefield = new override_user_field($settings->cmid);
+                        $pref = $overridefield->get_value_for_user($profilefield, $userid);
+                        if (!empty($pref)) {
+                            $isavailable = self::compare_operator(
+                                $pref,
+                                $this->customsettings->operator,
+                                $this->customsettings->value
+                            );
+                        }
                     }
                 }
             }
@@ -239,13 +184,106 @@ class userprofilefield_1_default implements bo_condition {
     }
 
     /**
+     * Compare given value with value from settings according to operator.
+     *
+     * @param string $value
+     * @param string $operator
+     * @param string $settingsvalue
+     *
+     * @return bool
+     *
+     */
+    private static function compare_operator(string $value, string $operator, string $settingsvalue) {
+        // If value is not null, we compare it.
+        $isavailable = false;
+        if ($value) {
+            switch ($operator) {
+                case '=':
+                    if ($value == $settingsvalue) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '<':
+                    if ($value < $settingsvalue) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '>':
+                    if ($value > $settingsvalue) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '~':
+                    if (mb_strpos($value, $settingsvalue) !== false) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '!=':
+                    if ($value != $settingsvalue) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '!~':
+                    if (mb_strpos($value, $settingsvalue) === false) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '[]':
+                    $array = explode(",", $settingsvalue);
+                    if (in_array($value, $array)) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '[!]':
+                    $array = explode(",", $settingsvalue);
+                    if (!in_array($value, $array)) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '[~]':
+                    $array = explode(",", $settingsvalue);
+                    foreach ($array as $itemvalue) {
+                        if (mb_strpos($value, $itemvalue) === false) {
+                            $isavailable = true;
+                            break;
+                        }
+                    }
+                    break;
+                case '[!~]':
+                    $array = explode(",", $settingsvalue);
+                    $isavailable = true;
+                    foreach ($array as $itemvalue) {
+                        if (mb_strpos($value, $itemvalue) === false) {
+                            $isavailable = false;
+                            break;
+                        }
+                    }
+                    break;
+                case '()':
+                    if (empty($value)) {
+                        $isavailable = true;
+                    }
+                    break;
+                case '(!)':
+                    if (!empty($value)) {
+                        $isavailable = true;
+                    }
+                    break;
+                default:
+                    $isavailable = true;
+                    break;
+            }
+        }
+        return $isavailable;
+    }
+    /**
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -331,11 +369,18 @@ class userprofilefield_1_default implements bo_condition {
                     }
                 }
 
-                $mform->addElement('advcheckbox', 'bo_cond_userprofilefield_1_default_restrict',
-                    get_string('boconduserprofilefield1defaultrestrict', 'mod_booking'));
+                $mform->addElement(
+                    'advcheckbox',
+                    'bo_cond_userprofilefield_1_default_restrict',
+                    get_string('boconduserprofilefield1defaultrestrict', 'mod_booking')
+                );
 
-                $mform->addElement('select', 'bo_cond_userprofilefield_field',
-                    get_string('boconduserprofilefieldfield', 'mod_booking'), $userprofilefieldsarray);
+                $mform->addElement(
+                    'select',
+                    'bo_cond_userprofilefield_field',
+                    get_string('boconduserprofilefieldfield', 'mod_booking'),
+                    $userprofilefieldsarray
+                );
                 $mform->hideIf('bo_cond_userprofilefield_field', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
 
                 $operators = [
@@ -352,31 +397,51 @@ class userprofilefield_1_default implements bo_condition {
                     '()' => get_string('isempty', 'mod_booking'),
                     '(!)' => get_string('isnotempty', 'mod_booking'),
                 ];
-                $mform->addElement('select', 'bo_cond_userprofilefield_operator',
-                    get_string('boconduserprofilefieldoperator', 'mod_booking'), $operators);
+                $mform->addElement(
+                    'select',
+                    'bo_cond_userprofilefield_operator',
+                    get_string('boconduserprofilefieldoperator', 'mod_booking'),
+                    $operators
+                );
                 $mform->hideIf('bo_cond_userprofilefield_operator', 'bo_cond_userprofilefield_field', 'eq', 0);
                 $mform->hideIf('bo_cond_userprofilefield_operator', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
 
-                $mform->addElement('text', 'bo_cond_userprofilefield_value',
-                    get_string('boconduserprofilefieldvalue', 'mod_booking'));
+                $mform->addElement(
+                    'text',
+                    'bo_cond_userprofilefield_value',
+                    get_string('boconduserprofilefieldvalue', 'mod_booking')
+                );
                 $mform->setType('bo_cond_userprofilefield_value', PARAM_RAW);
                 $mform->hideIf('bo_cond_userprofilefield_value', 'bo_cond_userprofilefield_field', 'eq', 0);
                 $mform->hideIf('bo_cond_userprofilefield_value', 'bo_cond_userprofilefield_1_default_restrict', 'notchecked');
 
-                $mform->addElement('checkbox', 'bo_cond_userprofilefield_overrideconditioncheckbox',
-                    get_string('overrideconditioncheckbox', 'mod_booking'));
+                $mform->addElement(
+                    'checkbox',
+                    'bo_cond_userprofilefield_overrideconditioncheckbox',
+                    get_string('overrideconditioncheckbox', 'mod_booking')
+                );
                 $mform->hideIf('bo_cond_userprofilefield_overrideconditioncheckbox', 'bo_cond_userprofilefield_field', 'eq', 0);
-                $mform->hideIf('bo_cond_userprofilefield_overrideconditioncheckbox', 'bo_cond_userprofilefield_1_default_restrict',
-                    'notchecked');
+                $mform->hideIf(
+                    'bo_cond_userprofilefield_overrideconditioncheckbox',
+                    'bo_cond_userprofilefield_1_default_restrict',
+                    'notchecked'
+                );
 
                 $overrideoperators = [
                     'OR' => get_string('overrideoperator:or', 'mod_booking'),
                     'AND' => get_string('overrideoperator:and', 'mod_booking'),
                 ];
-                $mform->addElement('select', 'bo_cond_userprofilefield_overrideoperator',
-                    get_string('overrideoperator', 'mod_booking'), $overrideoperators);
-                $mform->hideIf('bo_cond_userprofilefield_overrideoperator', 'bo_cond_userprofilefield_overrideconditioncheckbox',
-                    'notchecked');
+                $mform->addElement(
+                    'select',
+                    'bo_cond_userprofilefield_overrideoperator',
+                    get_string('overrideoperator', 'mod_booking'),
+                    $overrideoperators
+                );
+                $mform->hideIf(
+                    'bo_cond_userprofilefield_overrideoperator',
+                    'bo_cond_userprofilefield_overrideconditioncheckbox',
+                    'notchecked'
+                );
 
                 $overrideconditions = bo_info::get_conditions(MOD_BOOKING_CONDPARAM_CANBEOVERRIDDEN);
                 $overrideconditionsarray = [];
@@ -405,9 +470,11 @@ class userprofilefield_1_default implements bo_condition {
                                 $currentclassname = $jsoncondition->class;
                                 $currentcondition = $currentclassname::instance();
                                 // Currently conditions of the same type cannot be combined with each other.
-                                if ($jsoncondition->id != $this->id
+                                if (
+                                    $jsoncondition->id != $this->id
                                     && isset($currentcondition->overridable)
-                                    && ($currentcondition->overridable == true)) {
+                                    && ($currentcondition->overridable == true)
+                                ) {
                                     $overrideconditionsarray[$jsoncondition->id] = get_string('bocond' .
                                         str_replace("_", "", $jsoncondition->name), 'mod_booking');
                                 }
@@ -421,14 +488,24 @@ class userprofilefield_1_default implements bo_condition {
                     'tags' => false,
                     'multiple' => true,
                 ];
-                $mform->addElement('autocomplete', 'bo_cond_userprofilefield_overridecondition',
-                    get_string('overridecondition', 'mod_booking'), $overrideconditionsarray, $options);
-                $mform->hideIf('bo_cond_userprofilefield_overridecondition', 'bo_cond_userprofilefield_overrideconditioncheckbox',
-                    'notchecked');
+                $mform->addElement(
+                    'autocomplete',
+                    'bo_cond_userprofilefield_overridecondition',
+                    get_string('overridecondition', 'mod_booking'),
+                    $overrideconditionsarray,
+                    $options
+                );
+                $mform->hideIf(
+                    'bo_cond_userprofilefield_overridecondition',
+                    'bo_cond_userprofilefield_overrideconditioncheckbox',
+                    'notchecked'
+                );
             }
         } else {
             // No PRO license is active.
-            $mform->addElement('static', 'bo_cond_userprofilefield_1_default_restrict',
+            $mform->addElement(
+                'static',
+                'bo_cond_userprofilefield_1_default_restrict',
                 get_string('boconduserprofilefield1defaultrestrict', 'mod_booking'),
                 get_string('proversiononly', 'mod_booking'));
         }
@@ -459,7 +536,11 @@ class userprofilefield_1_default implements bo_condition {
 
         $conditionobject = new stdClass();
 
-        if (!empty($fromform->bo_cond_userprofilefield_1_default_restrict)) {
+        if (
+            !empty($fromform->bo_cond_userprofilefield_1_default_restrict)
+            && !empty($fromform->bo_cond_userprofilefield_field)
+            && !empty($fromform->bo_cond_userprofilefield_operator)
+        ) {
             // Remove the namespace from classname.
             $classname = __CLASS__;
             $classnameparts = explode('\\', $classname);
@@ -513,8 +594,13 @@ class userprofilefield_1_default implements bo_condition {
      * @param bool $fullwidth
      * @return array
      */
-    public function render_button(booking_option_settings $settings,
-        $userid = 0, $full = false, $not = false, bool $fullwidth = true): array {
+    public function render_button(
+        booking_option_settings $settings,
+        $userid = 0,
+        $full = false,
+        $not = false,
+        bool $fullwidth = true
+    ): array {
 
         $label = $this->get_description_string(false, $full, $settings);
 
@@ -555,10 +641,11 @@ class userprofilefield_1_default implements bo_condition {
                 }
             }
 
-            $description = $full ? get_string('boconduserprofilefieldfullnotavailable',
+            $description = $full ? get_string(
+                'boconduserprofilefieldfullnotavailable',
                 'mod_booking',
-                $this->customsettings) :
-                get_string('boconduserprofilefieldnotavailable', 'mod_booking');
+                $this->customsettings
+            ) : get_string('boconduserprofilefieldnotavailable', 'mod_booking');
         }
         return $description;
     }

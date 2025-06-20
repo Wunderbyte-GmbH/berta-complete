@@ -48,8 +48,8 @@ if (class_exists('\core_filters\text_filter')) {
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class text_filter extends \filtercodes_base_text_filter {
-    /** @var object $archetypes Object array of Moodle archetypes. */
-    public $archetypes = [];
+    /** @var array $archetyperoles Object array of Moodle archetypes. */
+    private static $archetyperoles = null;
     /** @var array $customroles array of Roles key is shortname and value is the id */
     private static $customroles = [];
     /**
@@ -58,6 +58,9 @@ class text_filter extends \filtercodes_base_text_filter {
      */
     private static $customrolespermissions = [];
 
+    /** @var bool $infiltercodes Flag to track if a filter is being called recursively */
+    private static $infiltercodes = false;
+
     /**
      * Constructor: Get the role IDs associated with each of the archetypes.
      */
@@ -65,13 +68,16 @@ class text_filter extends \filtercodes_base_text_filter {
 
         // Note: This array must correspond to the one in function hasminarchetype.
         $archetypelist = ['manager' => 1, 'coursecreator' => 2, 'editingteacher' => 3, 'teacher' => 4, 'student' => 5];
-        foreach ($archetypelist as $archetype => $level) {
-            $roleids = [];
-            // Build array of roles.
-            foreach (get_archetype_roles($archetype) as $role) {
-                $roleids[] = $role->id;
+        if (self::$archetyperoles === null) {
+            self::$archetyperoles = [];
+            foreach ($archetypelist as $archetype => $level) {
+                $roleids = [];
+                // Build array of roles.
+                foreach (get_archetype_roles($archetype) as $role) {
+                    $roleids[] = $role->id;
+                }
+                self::$archetyperoles[$archetype] = (object)['level' => $level, 'roleids' => $roleids];
             }
-            $this->archetypes[$archetype] = (object) ['level' => $level, 'roleids' => $roleids];
         }
     }
 
@@ -98,10 +104,10 @@ class text_filter extends \filtercodes_base_text_filter {
         if (is_role_switched($PAGE->course->id)) { // Has switched roles.
             $context = \context_course::instance($PAGE->course->id);
             $id = $USER->access['rsw'][$context->path];
-            $archetypes[$archetype] = in_array($id, $this->archetypes[$archetype]->roleids);
+            $archetypes[$archetype] = in_array($id, self::$archetyperoles[$archetype]->roleids);
         } else {
             // For each of the roles associated with the archetype, check if the user has one of the roles.
-            foreach ($this->archetypes[$archetype]->roleids as $roleid) {
+            foreach (self::$archetyperoles[$archetype]->roleids as $roleid) {
                 if (user_has_role_assignment($USER->id, $roleid, $PAGE->context->id)) {
                     $archetypes[$archetype] = true;
                 }
@@ -119,7 +125,7 @@ class text_filter extends \filtercodes_base_text_filter {
      */
     private function hasonlyarchetype($archetype) {
         if ($this->hasarchetype($archetype)) {
-            $archetypes = array_keys($this->archetypes);
+            $archetypes = array_keys(self::$archetyperoles);
             foreach ($archetypes as $archetypename) {
                 if ($archetypename != $archetype && $this->hasarchetype($archetypename)) {
                     return false;
@@ -130,7 +136,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 // Ignore site admin status if we have switched roles.
                 return true;
             } else {
-                return is_siteadmin();
+                return !is_siteadmin();
             }
         }
         return false;
@@ -147,7 +153,7 @@ class text_filter extends \filtercodes_base_text_filter {
         // Note: This array must start with one blank entry followed by the same list found in in __construct().
         $archetypelist = ['', 'manager', 'coursecreator', 'editingteacher', 'teacher', 'student'];
         // For each archetype level between the one specified and 'manager'.
-        for ($level = $this->archetypes[$minarchetype]->level; $level >= 1; $level--) {
+        for ($level = self::$archetyperoles[$minarchetype]->level; $level >= 1; $level--) {
             // Check to see if any of the user's roles correspond to the archetype.
             if ($this->hasarchetype($archetypelist[$level])) {
                 return true;
@@ -249,9 +255,14 @@ class text_filter extends \filtercodes_base_text_filter {
         global $PAGE;
 
         $sizes = ['sm' => 35, '2' => 35, 'md' => 100, '1' => 100, 'lg' => 512, '3' => 512];
-        if (empty($px = $sizes[$size])) {
+        if (isset($sizes[$size])) {
+            $px = $sizes[$size];
+        } else if (is_numeric($size)) {
             $px = $size; // Size was specified in pixels.
+        } else {
+            $px = 100; // Default size.
         }
+
         $userpicture = new \user_picture($user);
         $userpicture->size = $px; // Size in pixels.
         $url = $userpicture->get_url($PAGE);
@@ -529,6 +540,8 @@ class text_filter extends \filtercodes_base_text_filter {
             $dimmed = '';
         }
 
+        $category->name = format_string($category->name);
+
         $url = (new \moodle_url('/course/index.php', ['categoryid' => $category->id]))->out();
         if ($categoryshowpic) {
             $imgurl = $OUTPUT->get_generated_image_for_id($category->id + 65535);
@@ -631,9 +644,9 @@ class text_filter extends \filtercodes_base_text_filter {
                 case 'horizontal':
                     global $DB;
                     $category = $DB->get_record('course_categories', ['id' => $course->category]);
-                    $category = $category->name;
+                    $category = format_string($category->name);
 
-                    $summary = $course->summary == null ? '' : $course->summary;
+                    $summary = $course->summary == null ? '' : format_string($course->summary, true, ['context' => $context]);
                     $summary = substr($summary, -4) == '<br>' ? substr($summary, 0, strlen($summary) - 4) : $summary;
 
                     $content .= '
@@ -669,9 +682,9 @@ class text_filter extends \filtercodes_base_text_filter {
                 case 'table':
                     global $DB;
                     $category = $DB->get_record('course_categories', ['id' => $course->category]);
-                    $category = $category->name;
+                    $category = format_string($category->name);
 
-                    $summary = $course->summary == null ? '' : $course->summary;
+                    $summary = $course->summary == null ? '' : format_string($course->summary, true, ['context' => $context]);
                     $summary = substr($summary, -4) == '<br>' ? substr($summary, 0, strlen($summary) - 4) : $summary;
 
                     $content .= '
@@ -822,6 +835,21 @@ class text_filter extends \filtercodes_base_text_filter {
         return $progresspercent;
     }
 
+
+    /**
+     * Format a custom menu item text
+     *
+     * This function ensures that text used in custom menu items is properly formatted,
+     * specifically by replacing pipe characters (|) with HTML entity representation
+     * to prevent them from being interpreted as menu separators.
+     *
+     * @param string $text The menu item text to be formatted
+     * @return string The formatted menu item text with pipes replaced with HTML entities
+     */
+    private function format_custommenuitem($text): string {
+        return str_replace('|', '&#124;', format_string($text));
+    }
+
     /**
      * Generator Tags
      *
@@ -844,7 +872,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 $theme = $PAGE->theme->name;
                 $menu = '';
                 if ($this->hasminarchetype('editingteacher')) {
-                    $menu .= '{fa fa-wrench} {getstring}admin{/getstring}' . PHP_EOL;
+                    $menu .= '{getstring}admin{/getstring}' . PHP_EOL;
                 }
                 if ($this->hasminarchetype('coursecreator')) { // If a course creator or above.
                     $menu .= '-{getstring}administrationsite{/getstring}|/admin/search.php' . PHP_EOL;
@@ -854,7 +882,11 @@ class text_filter extends \filtercodes_base_text_filter {
                 }
                 if ($this->hasminarchetype('manager')) { // If a manager or above.
                     $menu .= '-{getstring}user{/getstring}: {getstring:admin}usermanagement{/getstring}|/admin/user.php' . PHP_EOL;
-                    if (is_siteadmin()) {
+                    $menu .= '-{getstring}user{/getstring}: {getstring}addnewuser{/getstring}'
+                        . '|/user/editadvanced.php?id=-1' . PHP_EOL;
+                    $menu .= '-{getstring}user{/getstring}: {getstring:tool_uploaduser}uploadusers{/getstring}'
+                        . '|/admin/tool/uploaduser/index.php' . PHP_EOL;
+                    if (is_siteadmin() && !is_role_switched($PAGE->course->id)) {
                         $menu .= '-{getstring}user{/getstring}: {getstring:mnet}profilefields{/getstring}|/user/profile/index.php' .
                             PHP_EOL;
                     }
@@ -1106,7 +1138,7 @@ class text_filter extends \filtercodes_base_text_filter {
                     if (count($availablelanguages) > 1) {
                         foreach ($availablelanguages as $langcode => $langname) {
                             // Create a link for each language.
-                            $menu .= '-' . $langname . '|' . $url . 'lang=' . $langcode . PHP_EOL;
+                            $menu .= '-' . $this->format_custommenuitem($langname) . '|' . $url . 'lang=' . $langcode . PHP_EOL;
                         }
                         if (!empty($menu)) {
                             $menu = get_string('language') . '||' . get_string('languageselector') . PHP_EOL . $menu;
@@ -1141,7 +1173,7 @@ class text_filter extends \filtercodes_base_text_filter {
                         $course = $DB->get_record('course', ['id' => $courseid]);
                         if ($course) {
                             $courseurl = (new \moodle_url('/course/view.php', ['id' => $course->id]))->out();
-                            $menu .= '-' . format_string($course->fullname) . '|' . $courseurl . "\n";
+                            $menu .= '-' . $this->format_custommenuitem($course->fullname) . '|' . $courseurl . "\n";
                         }
                     }
                     if (!empty($menu)) {
@@ -1277,6 +1309,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 if (!empty($tag) && stripos($text, '{global_' . $tag . '}') !== false) {
                     // Replace the tag with new content.
                     $content = get_config('filter_filtercodes', 'globalcontent' . $i);
+                    $content = format_text($content, FORMAT_HTML, ['noclean' => true, 'para' => false, 'newlines' => false]);
                     $replace['/\{global_' . $tag . '\}/i'] = $content;
                 }
             }
@@ -1586,7 +1619,7 @@ class text_filter extends \filtercodes_base_text_filter {
     public function filter($text, array $options = []) {
         global $CFG, $SITE, $PAGE, $USER, $DB;
 
-        if (strpos($text, '{') === false && strpos($text, '%7B') === false) {
+        if (strpos($text, '{') === false && strpos($text, '%7B') === false || self::$infiltercodes) {
             return $text;
         }
 
@@ -1601,6 +1634,7 @@ class text_filter extends \filtercodes_base_text_filter {
 
         // Handle escaped tags to be ignored. Remove them so they don't get processed if the option to [{escape braces}] is enabled.
         $text = $this->escapedtags($text);
+        self::$infiltercodes = true; // Prevent recursive calls to this function.
 
         // START: Process tags that may end up containing other tags first.
 
@@ -1761,10 +1795,9 @@ class text_filter extends \filtercodes_base_text_filter {
             if (stripos($text, '{courseshortname}') !== false) {
                 $course = $PAGE->course;
                 if ($course->id == $SITE->id) { // Front page - use site name.
-                    $replace['/\{courseshortname\}/i'] = format_string($SITE->shortname);
+                    $replace['/\{courseshortname\}/i'] = $SITE->shortname;
                 } else { // In a course - use course full name.
-                    $coursecontext = \context_course::instance($course->id);
-                    $replace['/\{courseshortname\}/i'] = format_string($course->shortname, true, ['context' => $coursecontext]);
+                    $replace['/\{courseshortname\}/i'] = $course->shortname;
                 }
             }
         }
@@ -2383,6 +2416,7 @@ class text_filter extends \filtercodes_base_text_filter {
         if ($this->replacetags($text, $replace) == false) {
             // No more tags? Put back the escaped tags, if any, and return the string.
             $text = $this->escapedtags($text);
+            self::$infiltercodes = false;
             return $text;
         }
 
@@ -2582,7 +2616,7 @@ class text_filter extends \filtercodes_base_text_filter {
             // Tag: {sitename}.
             // Description: The full name of the site name.
             // Parameters: None.
-            if (stripos($text, '{sitename') !== false) {
+            if (stripos($text, '{sitename}') !== false) {
                 $sitecontext = \context_system::instance();
                 $replace['/\{sitename\}/i'] = format_string($SITE->fullname, true, ['context' => $sitecontext]);
             }
@@ -2591,7 +2625,8 @@ class text_filter extends \filtercodes_base_text_filter {
             // Description: Site summary as defined in the Front Page/Site Home Settings.
             // Parameters: None.
             if (stripos($text, '{sitesummary}') !== false) {
-                $replace['/\{sitesummary\}/i'] = $SITE->fullname;
+                $sitecontext = \context_system::instance();
+                $replace['/\{sitesummary\}/i'] = format_string($SITE->summary, true, ['context' => $sitecontext]);
             }
 
             // Tag: {siteyear}.
@@ -2618,6 +2653,7 @@ class text_filter extends \filtercodes_base_text_filter {
         if ($this->replacetags($text, $replace) == false) {
             // No more tags? Put back the escaped tags, if any, and return the string.
             $text = $this->escapedtags($text);
+            self::$infiltercodes = false;
             return $text;
         }
 
@@ -2751,7 +2787,8 @@ class text_filter extends \filtercodes_base_text_filter {
                         '/\{userpictureimg\s+(\w+)\}/isuU',
                         function ($matches) use ($USER) {
                             $url = $this->getprofilepictureurl($USER, $matches[1]);
-                            $tag = '<img src="' . $url . '" alt="' . $USER->fullname . '" class="userpicture">';
+                            $fullname = get_string('fullnamedisplay', null, $USER);
+                            $tag = '<img src="' . $url . '" alt="' . $fullname . '" class="userpicture">';
                             return $tag;
                         },
                         $text
@@ -3363,7 +3400,7 @@ class text_filter extends \filtercodes_base_text_filter {
                     $list = '';
                     foreach ($mycourses as $mycourse) {
                         $list .= '<li><a href="' . (new \moodle_url('/course/view.php', ['id' => $mycourse->id]))->out() . '">' .
-                                $mycourse->fullname . '</a></li>';
+                            format_string($mycourse->fullname) . '</a></li>';
                     }
                     $replace['/\{mycourses\}/i'] = '<ul>' . (empty($list) ? "<li>$emptylist</li>" : $list) . '</ul>';
                     unset($list);
@@ -3374,9 +3411,9 @@ class text_filter extends \filtercodes_base_text_filter {
                 // Parameters: None.
                 if (stripos($text, '{myccourses}') !== false) {
                     $list = '';
-                    foreach ($myccourses as $myccourse) {
-                        $list .= '<li><a href="' . (new \moodle_url('/course/view.php', ['id' => $myccourse->id]))->out() . '">' .
-                                $myccourse->fullname . '</a></li>';
+                    foreach ($myccourses as $mycourse) {
+                        $list .= '<li><a href="' . (new \moodle_url('/course/view.php', ['id' => $mycourse->id]))->out() . '">' .
+                            format_string($mycourse->fullname) . '</a></li>';
                     }
                     $replace['/\{myccourses\}/i'] = '<ul>' . (empty($list) ? "<li>$emptycclist</li>" : $list) . '</ul>';
                     unset($list);
@@ -3388,7 +3425,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 if (stripos($text, '{mycoursesmenu}') !== false) {
                     $list = '';
                     foreach ($mycourses as $mycourse) {
-                        $list .= '-' . $mycourse->fullname . '|' .
+                        $list .= '-' . $this->format_custommenuitem($mycourse->fullname) . '|' .
                             (new \moodle_url('/course/view.php', ['id' => $mycourse->id]))->out() . PHP_EOL;
                     }
                     $replace['/\{mycoursesmenu\}/i'] = '-' . (empty($list) ? $emptylist : $list);
@@ -3508,7 +3545,7 @@ class text_filter extends \filtercodes_base_text_filter {
             if (stripos($text, '{categoryname}') !== false) {
                 if (!empty($catid)) {
                     // If category is not 0, get category name.
-                    $replace['/\{categoryname\}/i'] = $category->name;
+                    $replace['/\{categoryname\}/i'] = format_string($category->name);
                 } else {
                     // Otherwise, category has no name.
                     $replace['/\{categoryname\}/i'] = '';
@@ -3586,7 +3623,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 }
                 $list = '';
                 foreach ($categories as $id => $name) {
-                    $list .= '-' . $name . '|/course/index.php?categoryid=' . $id . PHP_EOL;
+                    $list .= '-' . $this->format_custommenuitem($name) . '|/course/index.php?categoryid=' . $id . PHP_EOL;
                 }
                 $replace['/\{categoriesmenu\}/i'] = $list;
                 unset($tag);
@@ -3615,10 +3652,9 @@ class text_filter extends \filtercodes_base_text_filter {
                         continue;
                     }
                     $dimmed = $category->visible ? '' : ' class="dimmed"';
-                    $list .= '<li' . $dimmed . '><a href="' . (new \moodle_url(
-                        '/course/index.php',
-                        ['categoryid' => $category->id]))->out()
-                        . '">' . $category->name . '</a></li>' . PHP_EOL;
+                    $link = new \moodle_url('/course/index.php', ['categoryid' => $category->id]);
+                    $link = $link->out();
+                    $list .= '<li' . $dimmed . '><a href="' . $link . '">' . format_string($category->name) . '</a></li>' . PHP_EOL;
                 }
                 $list = !empty($list) ? '<ul>' . $list . '</ul>' : '';
                 $categories->close();
@@ -3647,7 +3683,8 @@ class text_filter extends \filtercodes_base_text_filter {
                         // Skip if the category is not visible to the user.
                         continue;
                     }
-                    $list .= '-' . $category->name . '|/course/index.php?categoryid=' . $category->id . PHP_EOL;
+                    $list .= '-' . $this->format_custommenuitem($category->name)
+                         . '|/course/index.php?categoryid=' . $category->id . PHP_EOL;
                 }
                 $categories->close();
                 $replace['/\{categories0menu\}/i'] = $list;
@@ -3666,7 +3703,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 $categories = $DB->get_recordset_sql($sql, ['contextcoursecat' => CONTEXT_COURSECAT]);
                 foreach ($categories as $category) {
                     $list .= '<li><a href="' . (new \moodle_url('/course/index.php', ['categoryid' => $category->id]))->out() . '">'
-                            . $category->name . '</a></li>' . PHP_EOL;
+                            . format_string($category->name) . '</a></li>' . PHP_EOL;
                 }
                 $list = !empty($list) ? '<ul>' . $list . '</ul>' : '';
                 $categories->close();
@@ -3685,7 +3722,8 @@ class text_filter extends \filtercodes_base_text_filter {
                 $list = '';
                 $categories = $DB->get_recordset_sql($sql, ['contextcoursecat' => CONTEXT_COURSECAT]);
                 foreach ($categories as $category) {
-                    $list .= '-' . $category->name . '|/course/index.php?categoryid=' . $category->id . PHP_EOL;
+                    $list .= '-' . $this->format_custommenuitem($category->name)
+                        . '|/course/index.php?categoryid=' . $category->id . PHP_EOL;
                 }
                 $categories->close();
                 $replace['/\{categoriesxmenu\}/i'] = $list;
@@ -3812,7 +3850,7 @@ class text_filter extends \filtercodes_base_text_filter {
         }
 
         // Tag: {sectionname}.
-        // Description: The name of the section in which the current activity is located. Blank if not in a course.
+        // Description: The name of the section in which the current activity is located. Blank if not in course or on course page.
         // Parameters: None.
         if (stripos($text, '{sectionname}') !== false) {
             // If in a course and section name.
@@ -4101,7 +4139,7 @@ class text_filter extends \filtercodes_base_text_filter {
                     $tag = 'ifprofile_field_' . $field->shortname;
 
                     // If the tag exists, user is logged-in and we are allowed to evaluate this field.
-                    if (isset($profiledata[$field->id]) && $isuser && ($field->visible != '0' || $allowall)) {
+                    if (!empty($field->id) && isset($profiledata[$field->id]) && $isuser && ($field->visible != '0' || $allowall)) {
                         $data = trim($profiledata[$field->id]);
                     } else {
                         $data = '';
@@ -4184,7 +4222,7 @@ class text_filter extends \filtercodes_base_text_filter {
                                 break;
                             case 'contains':
                                 // If the specified field contains the specified value.
-                                // Example:{ifprofile email contains "@example.com"}...{/ifprofile}.
+                                // Example:{ifprofile email contains "@yoursite.com"}...{/ifprofile}.
                                 if (strpos($profilefields[$fieldname]->value, $value) !== false) {
                                     $content = $matches[4][$key];
                                 }
@@ -4574,7 +4612,7 @@ class text_filter extends \filtercodes_base_text_filter {
                     $replace['/\{ifminstudent\}/i'] = '';
                     $replace['/\{\/ifminstudent\}/i'] = '';
                 } else {
-                    // Remove the ifassistant strings.
+                    // Remove the ifminstudent strings.
                     $replace['/\{ifminstudent\}(.*)\{\/ifminstudent\}/isuU'] = '';
                 }
             }
@@ -4791,30 +4829,51 @@ class text_filter extends \filtercodes_base_text_filter {
                 }
             }
 
-            // Tag: {ifnotingroup id|idnumber}...{/ifnotingroup}.
-            // Description: Display content if the user is NOT a member of the specified group.
-            // Required Parameters: group id or idnumber.
-            // Requires content between tags.
+            // Tag: {ifnotingroup...}...{/ifnotingroup} with and without parameters.
             if (stripos($text, '{ifnotingroup') !== false) {
-                if (!isset($mygroupslist)) { // Fetch my groups.
-                    $mygroupslist = groups_get_all_groups($PAGE->course->id, $USER->id);
+                // Tag: {ifnotingroup}...{/ifnotingroup}.
+                // Description: Display content if the user is NOT a member of any group.
+                // Required Parameters: None.
+                // Requires content between tags.
+                if (stripos($text, '{ifnotingroup}') !== false) {
+                    if (!isset($mygroupslist)) { // Fetch my groups.
+                        $mygroupslist = groups_get_all_groups($PAGE->course->id, $USER->id);
+                    }
+                    if (empty($mygroupslist)) {
+                        // User is not in any group, just remove the tags.
+                        $replace['/\{ifnotingroup\}/i'] = '';
+                        $replace['/\{\/ifnotingroup\}/i'] = '';
+                    } else {
+                        // User is in at least one group, remove tags and content.
+                        $replace['/\{ifnotingroup\}(.*)\{\/ifnotingroup\}/isuU'] = '';
+                    }
                 }
-                $re = '/{ifnotingroup\s+(.*)\}(.*)\{\/ifnotingroup\}/isuU';
-                $found = preg_match_all($re, $text, $matches);
-                if ($found > 0) {
-                    foreach ($matches[1] as $groupid) {
-                        $key = '/{ifnotingroup\s+' . $groupid . '\}(.*)\{\/ifnotingroup\}/isuU';
-                        $ismember = false;
-                        foreach ($mygroupslist as $group) {
-                            if ($groupid == $group->id || $groupid == $group->idnumber) {
-                                $ismember = true;
-                                break;
+
+                // Tag: {ifnotingroup id|idnumber}...{/ifnotingroup}.
+                // Description: Display content if the user is NOT a member of the specified group.
+                // Required Parameters: group id or idnumber.
+                // Requires content between tags.
+                if (stripos($text, '{ifnotingroup') !== false) {
+                    if (!isset($mygroupslist)) { // Fetch my groups.
+                        $mygroupslist = groups_get_all_groups($PAGE->course->id, $USER->id);
+                    }
+                    $re = '/{ifnotingroup\s+(.*)\}(.*)\{\/ifnotingroup\}/isuU';
+                    $found = preg_match_all($re, $text, $matches);
+                    if ($found > 0) {
+                        foreach ($matches[1] as $groupid) {
+                            $key = '/{ifnotingroup\s+' . $groupid . '\}(.*)\{\/ifnotingroup\}/isuU';
+                            $ismember = false;
+                            foreach ($mygroupslist as $group) {
+                                if ($groupid == $group->id || $groupid == $group->idnumber) {
+                                    $ismember = true;
+                                    break;
+                                }
                             }
-                        }
-                        if ($ismember) { // Remove the ifnotingroup tags and content.
-                            $replace[$key] = '';
-                        } else { // Just remove the tags and keep the content.
-                            $replace[$key] = '$1';
+                            if ($ismember) { // Remove the ifnotingroup tags and content.
+                                $replace[$key] = '';
+                            } else { // Just remove the tags and keep the content.
+                                $replace[$key] = '$1';
+                            }
                         }
                     }
                 }
@@ -4849,7 +4908,7 @@ class text_filter extends \filtercodes_base_text_filter {
                 }
             }
 
-            // Tag: {ifnotingroup id|idnumber}...{/ifnotingroup}.
+            // Tag: {ifnotingrouping id|idnumber}...{/ifnotingrouping}.
             // Description: Display content if the user is NOT a member of the specified grouping.
             // Required Parameters: group id or idnumber.
             // Requires content between tags.
@@ -5325,11 +5384,19 @@ class text_filter extends \filtercodes_base_text_filter {
             static $helpwrapper = [];
             if (!isset($help)) {
                 $help = get_string('help');
-                $helpwrapper[0] = '<a class="btn btn-link p-0" role="button" data-container="body" data-toggle="popover"'
+                if ($CFG->branch >= 500) {
+                    $helpwrapper[0] = '<a class="btn btn-link p-0" role="button" data-bs-container="body" data-bs-toggle="popover"'
+                            . ' data-bs-placement="right" data-bs-content="<div class=&quot;no-overflow&quot;><p>';
+                    $helpwrapper[1] = '</p></div>" data-bs-html="true" tabindex="0" data-bs-trigger="focus"><i class="icon'
+                            . ' fa fa-circle-question text-info fa-fw " title="' . $help . '" aria-label="' . $help . '"></i></a>';
+                } else {
+                    $helpwrapper[0] = '<a class="btn btn-link p-0" role="button" data-container="body" data-toggle="popover"'
                         . ' data-placement="right" data-content="<div class=&quot;no-overflow&quot;><p>';
-                $helpwrapper[1] = '</p></div>" data-html="true" tabindex="0" data-trigger="focus"><i class="icon'
+                    $helpwrapper[1] = '</p></div>" data-html="true" tabindex="0" data-trigger="focus"><i class="icon'
                         . ' fa fa-question-circle text-info fa-fw " title="' . $help . '" aria-label="' . $help . '"></i></a>';
+                }
             }
+
             $newtext = preg_replace_callback(
                 '/\{help\}(.*)\{\/help\}/isuU',
                 function ($matches) use ($helpwrapper) {
@@ -5351,10 +5418,17 @@ class text_filter extends \filtercodes_base_text_filter {
             static $infowrapper = [];
             if (!isset($info)) {
                 $info = get_string('info');
-                $infowrapper[0] = '<a class="btn btn-link p-0" role="button" data-container="body" data-toggle="popover"'
+                if ($CFG->branch >= 500) {
+                    $infowrapper[0] = '<a class="btn btn-link p-0" role="button" data-bs-container="body" data-bs-toggle="popover"'
+                        . ' data-bs-placement="right" data-bs-content="<div class=&quot;no-overflow&quot;><p>';
+                    $infowrapper[1] = '</p></div>" data-bs-html="true" tabindex="0" data-bs-trigger="focus"><i class="icon'
+                        . ' fa fa-circle-info text-info fa-fw " title="' . $info . '" aria-label="' . $info . '"></i></a>';
+                } else {
+                    $infowrapper[0] = '<a class="btn btn-link p-0" role="button" data-container="body" data-toggle="popover"'
                         . ' data-placement="right" data-content="<div class=&quot;no-overflow&quot;><p>';
-                $infowrapper[1] = '</p></div>" data-html="true" tabindex="0" data-trigger="focus"><i class="icon'
+                    $infowrapper[1] = '</p></div>" data-html="true" tabindex="0" data-trigger="focus"><i class="icon'
                         . ' fa fa-info-circle text-info fa-fw " title="' . $info . '" aria-label="' . $info . '"></i></a>';
+                }
             }
             $newtext = preg_replace_callback(
                 '/\{info\}(.*)\{\/info\}/isuU',
@@ -5373,6 +5447,7 @@ class text_filter extends \filtercodes_base_text_filter {
         if ($this->replacetags($text, $replace) == false) {
             // No more tags? Put back the escaped tags, if any, and return the string.
             $text = $this->escapedtags($text);
+            self::$infiltercodes = false;
             return $text;
         }
 
@@ -5444,6 +5519,9 @@ class text_filter extends \filtercodes_base_text_filter {
                 function ($matches) {
                     // Remove HTML tags created by filters like Activity Name Auto-Linking and Convert URLs Into Links.
                     $url = strip_tags($matches[1]);
+                    if (strpos($url, '&amp;') === 0) {
+                        $url = s($url);
+                    }
                     $label = $matches[2];
                     return '<a href="' . $url . '" class="btn btn-primary">' . $label . '</a>';
                 },
@@ -5459,6 +5537,7 @@ class text_filter extends \filtercodes_base_text_filter {
         $this->replacetags($text, $replace);
         // Put back the escaped tags.
         $text = $this->escapedtags($text);
+        self::$infiltercodes = false;
         return $text;
     }
 }

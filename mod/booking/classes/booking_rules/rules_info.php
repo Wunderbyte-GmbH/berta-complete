@@ -27,6 +27,7 @@ namespace mod_booking\booking_rules;
 
 use context;
 use context_module;
+use core_component;
 use dml_exception;
 use context_system;
 use mod_booking\local\templaterule;
@@ -232,8 +233,13 @@ class rules_info {
             return new stdClass();
         }
 
-        // If we have an ID, we retrieve the right rule from DB.
-        $record = $DB->get_record('booking_rules', ['id' => $data->id]);
+        if ($data->id < 0) {
+            // We get the value from the predefined templates.
+            $record = templaterule::get_template_record_by_id($data->id);
+        } else {
+            // If we have an ID, we retrieve the right rule from DB.
+            $record = $DB->get_record('booking_rules', ['id' => $data->id]);
+        }
 
         $data->contextid = $record->contextid;
 
@@ -320,6 +326,10 @@ class rules_info {
         // Eventbased rules don't have to be reapplied.
         if ($records = booking_rules::get_list_of_saved_rules_by_context($contextid, '')) {
             foreach ($records as $record) {
+                if (empty($record->isactive)) {
+                    continue;
+                }
+
                 if ($record->rulename != 'rule_daysbefore') {
                     continue;
                 }
@@ -391,6 +401,9 @@ class rules_info {
 
         $contextid = $event->contextid;
         $records = booking_rules::get_list_of_saved_rules_by_context($contextid, $eventname);
+
+        // There are cases where an event is triggered twice in a very narrow timespan.
+        $data['timecreated'] = strtotime(date('Y-m-d H:00:00', ($data['timecreated'] ?? time()) + 3600));
 
         // Now we check all the existing rules from booking.
         foreach ($records as $record) {

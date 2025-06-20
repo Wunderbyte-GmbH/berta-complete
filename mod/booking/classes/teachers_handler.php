@@ -52,7 +52,6 @@ use stdClass;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class teachers_handler {
-
     /** @var int $optionid */
     public $optionid = 0;
 
@@ -73,9 +72,12 @@ class teachers_handler {
     public function add_to_mform(MoodleQuickForm &$mform) {
         global $DB, $OUTPUT;
 
-        $mform->addElement('header', 'bookingoptionteachers',
+        $mform->addElement(
+            'header',
+            'bookingoptionteachers',
             '<i class="fa fa-fw fa-graduation-cap" aria-hidden="true"></i>&nbsp;' .
-            get_string('teachers', 'mod_booking'));
+            get_string('teachers', 'mod_booking')
+        );
 
         /* Important note: Currently, all users can be added as teachers for a booking option.
         In the future, there might be a user profile field defining users which are allowed
@@ -96,7 +98,8 @@ class teachers_handler {
             $list[$teacher->userid] =
                 $OUTPUT->render_from_template(
                     'mod_booking/form-user-selector-suggestion',
-                    $details);
+                    $details
+                );
         }
 
         $options = [
@@ -104,27 +107,34 @@ class teachers_handler {
             'multiple' => true,
             'noselectionstring' => '',
             'ajax' => 'mod_booking/form_users_selector',
-            'valuehtmlcallback' => function($value) {
+            'valuehtmlcallback' => function ($value) {
                 global $OUTPUT;
                 if (empty($value)) {
                     return get_string('choose...', 'mod_booking');
                 }
                 $user = singleton_service::get_instance_of_user((int)$value);
                 $details = [
-                    'id' => $user->id,
-                    'email' => $user->email,
-                    'firstname' => $user->firstname,
-                    'lastname' => $user->lastname,
+                    'id' => $user->id ?? 0,
+                    'email' => $user->email ?? '',
+                    'firstname' => $user->firstname ?? '',
+                    'lastname' => $user->lastname ?? '',
                 ];
                 return $OUTPUT->render_from_template(
-                        'mod_booking/form-user-selector-suggestion', $details);
+                    'mod_booking/form-user-selector-suggestion',
+                    $details
+                );
             },
         ];
         /* Important note: Currently, all users can be added as teachers for optiondates.
         In the future, there might be a user profile field defining users which are allowed
         to be added as substitute teachers. */
-        $mform->addElement('autocomplete', 'teachersforoption', get_string('assignteachers', 'mod_booking'),
-            $list, $options);
+        $mform->addElement(
+            'autocomplete',
+            'teachersforoption',
+            get_string('assignteachers', 'mod_booking'),
+            $list,
+            $options
+        );
 
         $mform->addHelpButton('teachersforoption', 'teachersforoption', 'mod_booking');
 
@@ -135,8 +145,12 @@ class teachers_handler {
                 'cmid' => $optionsettings->cmid,
                 'optionid' => $this->optionid,
             ]);
-            $mform->addElement('static', 'info:teachersforoptiondates', '',
-                    get_string('info:teachersforoptiondates', 'mod_booking', $optiondatesteachersreporturl->out()));
+            $mform->addElement(
+                'static',
+                'info:teachersforoptiondates',
+                '',
+                get_string('info:teachersforoptiondates', 'mod_booking', $optiondatesteachersreporturl->out())
+            );
         }
     }
 
@@ -165,7 +179,11 @@ class teachers_handler {
      */
     public function set_data(stdClass &$data) {
 
-        if (!empty($this->optionid) && $this->optionid > 0) {
+        if (
+            !isset($data->{MOD_BOOKING_FORM_TEACHERS})
+            && !empty($this->optionid)
+            && $this->optionid > 0
+        ) {
             $optionsettings = singleton_service::get_instance_of_booking_option_settings($this->optionid);
             $teachers = $optionsettings->teachers;
             $teacherids = [];
@@ -244,8 +262,13 @@ class teachers_handler {
             if (!in_array($oldteacherid, $teacherids)) {
                 // The teacher has been removed.
                 if (!self::unsubscribe_teacher_from_booking_option($oldteacherid, $this->optionid, $optionsettings->cmid)) {
-                    throw new moodle_exception('cannotremovesubscriber', 'booking', '', null,
-                        'Cannot remove subscriber with id: ' . $oldteacherid);
+                    throw new moodle_exception(
+                        'cannotremovesubscriber',
+                        'booking',
+                        '',
+                        null,
+                        'Cannot remove subscriber with id: ' . $oldteacherid
+                    );
                 }
             }
         }
@@ -262,8 +285,14 @@ class teachers_handler {
      * @param int $courseid true if we want to enrol the teacher into the relevant course
      * @return bool true if teacher was subscribed
      */
-    public function subscribe_teacher_to_booking_option(int $userid, int $optionid, int $cmid, $groupid = null,
-        bool $doenrol = true, int $courseid = 0) {
+    public function subscribe_teacher_to_booking_option(
+        int $userid,
+        int $optionid,
+        int $cmid,
+        $groupid = null,
+        bool $doenrol = true,
+        int $courseid = 0
+    ) {
 
         global $DB, $USER, $COURSE;
 
@@ -276,11 +305,14 @@ class teachers_handler {
             // Always enrol into current course with defined role.
             $teacherrole = get_config('booking', 'definedteacherrole');
             if ($teacherrole) {
-                $option->enrol_user($userid, true, $teacherrole, true, $COURSE->id);
+                $option->enrol_user($userid, true, $teacherrole, true, $bookingsettings->course);
             }
 
             // Even if teacher already exists in DB, we still might want to enrol him/her into a NEW course.
-            if ($doenrol) {
+            if (
+                $doenrol
+                && !empty($bookingsettings->teacherroleid)
+            ) {
                 // We enrol teacher with the type defined in settings.
                 $option->enrol_user($userid, true, $bookingsettings->teacherroleid, true, $courseid);
 
@@ -340,9 +372,10 @@ class teachers_handler {
         global $DB, $USER;
 
         $event = \mod_booking\event\teacher_removed::create(
-                ['userid' => $USER->id, 'relateduserid' => $userid, 'objectid' => $optionid,
+            ['userid' => $USER->id, 'relateduserid' => $userid, 'objectid' => $optionid,
                     'context' => context_module::instance($cmid),
-                ]);
+            ]
+        );
         $event->trigger();
 
         // Also delete the teacher from every optiondate in the future.
@@ -350,8 +383,10 @@ class teachers_handler {
         // If needed, the entries can be removed manually via teachers journal.
         self::remove_teacher_from_all_optiondates($optionid, $userid, time());
 
-        return ($DB->delete_records('booking_teachers',
-                ['userid' => $userid, 'optionid' => $optionid]));
+        return ($DB->delete_records(
+            'booking_teachers',
+            ['userid' => $userid, 'optionid' => $optionid]
+        ));
     }
 
     // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
@@ -368,7 +403,7 @@ class teachers_handler {
 
         global $DB;
 
-        if (empty($optionid) || empty ($userid)) {
+        if (empty($optionid) || empty($userid)) {
             debugging('Could not connect teacher to optiondates because of missing userid or optionid.');
             return;
         }
@@ -377,7 +412,6 @@ class teachers_handler {
         $existingoptiondates = $DB->get_records('booking_optiondates', ['optionid' => $optionid]);
         if (!empty($existingoptiondates)) {
             foreach ($existingoptiondates as $existingoptiondate) {
-
                 // If a timestamp was supplied, then we only add the teacher...
                 // ...to optiondates AFTER this timestamp.
                 if (!empty($timestamp) && $existingoptiondate->coursestarttime < $timestamp) {
@@ -389,8 +423,12 @@ class teachers_handler {
                 // 2. Insert the teacher into booking_optiondates_teachers for every optiondate.
 
                 // Only do this if the record does not exist already.
-                if (!$DB->record_exists('booking_optiondates_teachers',
-                                        ['optiondateid' => $newentry->optiondateid, 'userid' => $newentry->userid])) {
+                if (
+                    !$DB->record_exists(
+                        'booking_optiondates_teachers',
+                        ['optiondateid' => $newentry->optiondateid, 'userid' => $newentry->userid]
+                    )
+                ) {
                         $DB->insert_record('booking_optiondates_teachers', $newentry);
                 }
             }
@@ -438,7 +476,7 @@ class teachers_handler {
     public static function remove_teacher_from_all_optiondates(int $optionid, int $userid, int $timestamp = 0) {
         global $DB;
 
-        if (empty($optionid) || empty ($userid)) {
+        if (empty($optionid) || empty($userid)) {
             throw new moodle_exception('Could not remove teacher from optiondates because of missing userid or optionid.');
         }
 
@@ -446,7 +484,6 @@ class teachers_handler {
         $existingoptiondates = $DB->get_records('booking_optiondates', ['optionid' => $optionid]);
         if (!empty($existingoptiondates)) {
             foreach ($existingoptiondates as $existingoptiondate) {
-
                 // If we have a timestamp set, we only remove the teacher from optiondates AFTER this timestamp.
                 if (!empty($timestamp) && $existingoptiondate->coursestarttime < $timestamp) {
                     continue;
@@ -540,7 +577,6 @@ class teachers_handler {
         global $DB;
 
         if (isset($data->teacheremail)) {
-
             return self::get_user_ids_from_string($data->teacheremail, $throwerror);
         }
     }

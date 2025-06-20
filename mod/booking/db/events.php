@@ -27,6 +27,10 @@ defined('MOODLE_INTERNAL') || die();
 
 $observers = [
     [
+        'eventname' => '\local_wunderbyte_table\event\template_switched',
+        'callback' => 'mod_booking_observer::template_switched',
+    ],
+    [
         'eventname' => '\core\event\user_created',
         'callback' => 'mod_booking_observer::user_created',
     ],
@@ -63,14 +67,6 @@ $observers = [
         'callback' => 'mod_booking_observer::bookingoptiondate_deleted',
     ],
     [
-        'eventname' => '\mod_booking\event\teacher_added',
-        'callback' => 'mod_booking_observer::teacher_added',
-    ],
-    [
-        'eventname' => '\mod_booking\event\teacher_removed',
-        'callback' => 'mod_booking_observer::teacher_removed',
-    ],
-    [
         'eventname' => '\mod_booking\event\custom_field_changed',
         'callback' => 'mod_booking_observer::custom_field_changed',
     ],
@@ -87,10 +83,6 @@ $observers = [
         'callback' => 'mod_booking_observer::pricecategory_changed',
     ],
     [
-        'eventname' => '*',
-        'callback' => 'mod_booking_observer::execute_rule',
-    ],
-    [
         'eventname' => '\core\event\course_completed',
         'callback' => 'mod_booking_observer::course_completed',
     ],
@@ -98,6 +90,24 @@ $observers = [
         'eventname' => '\core\event\course_module_updated',
         'callback' => 'mod_booking_observer::course_module_updated',
     ],
-
-
+    [
+        'eventname' => '\core\event\group_member_added',
+        'callback' => 'mod_booking_observer::group_membership_changed',
+    ],
+    [
+        'eventname' => '\core\event\group_member_removed',
+        'callback' => 'mod_booking_observer::group_membership_changed',
+    ],
+    [
+        'eventname' => '*',
+        'callback' => 'mod_booking_observer::execute_rule',
+    ],
+    [
+        'eventname' => '\mod_booking\event\bookinganswer_presencechanged',
+        'callback' => 'mod_booking_observer::bookinganswer_presencechanged',
+    ],
+    [
+        'eventname' => '\mod_booking\event\bookinganswer_notesedited',
+        'callback' => 'mod_booking_observer::bookinganswer_notesedited',
+    ],
 ];

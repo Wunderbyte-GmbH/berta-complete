@@ -25,62 +25,84 @@
 
 namespace local_shopping_cart;
 
+use advanced_testcase;
+use local_shopping_cart\local\cartstore;
 use local_shopping_cart\local\entities\cartitem;
-use PHPUnit\Framework\TestCase;
 use ReflectionClass;
 
 /**
  * Test for cartitem
- * @covers \cartitem
+ * @covers \local_shopping_cart\local\entities\cartitem
  */
-final class cartitem_test extends TestCase {
+final class cartitem_test extends advanced_testcase {
+    /**
+     * Set up the test environment.
+     */
+    protected function setUp(): void {
+        parent::setUp();
+        $this->resetAfterTest();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        parent::tearDown();
+        // Mandatory clean-up.
+        cartstore::reset();
+        \cache_helper::purge_by_definition('local_shopping_cart', 'cacheshopping');
+    }
 
     /**
      * Test taxcategory not set
-     * @covers \cartitem->tax_category
+     * @covers \local_shopping_cart\local\entities\cartitem
      *
      * @return [type]
      */
     public function test_taxcategory_not_set(): void {
         $price = 10.00;
-        $cartitem = new cartitem(1,
-                'Testitem 1',
-                $price,
-                get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
-                'local_shopping_cart',
-                'main',
-                'My Testitem 1 description');
+        $cartitem = new cartitem(
+            1,
+            'Testitem 1',
+            $price,
+            get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
+            'local_shopping_cart',
+            'main',
+            'My Testitem 1 description'
+        );
 
         $this->assertNull($cartitem->tax_category());
     }
 
     /**
      * Test taxcategory set
-     * @covers \cartitem->tax_category
+     * @covers \local_shopping_cart\local\entities\cartitem
      *
      * @return [type]
      */
     public function test_taxcategory_set(): void {
         $price = 10.00;
-        $cartitem = new cartitem(1,
-                'Testitem 1',
-                $price,
-                get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
-                'local_shopping_cart',
-                'main',
-                'My Testitem 1 description',
-                '',
-                null,
-                null,
-                null,
-                'A');
+        $cartitem = new cartitem(
+            1,
+            'Testitem 1',
+            $price,
+            get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
+            'local_shopping_cart',
+            'main',
+            'My Testitem 1 description',
+            '',
+            null,
+            null,
+            null,
+            'A'
+        );
 
         $this->assertEquals('A', $cartitem->tax_category());
     }
 
     /**
      * Test array contains all fields
-     * @covers \cartitem->as_array
+     * @covers \local_shopping_cart\local\entities\cartitem
      *
      * @return [type]
      */
@@ -88,13 +110,14 @@ final class cartitem_test extends TestCase {
         $reflection = new ReflectionClass(cartitem::class);
         $definedproperties = $reflection->getProperties();
 
-        $cartitem = new cartitem(1,
-                'Testitem 1',
-                10.0,
-                get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
-                'local_shopping_cart',
-                'main',
-                'My Testitem 1 description',
+        $cartitem = new cartitem(
+            1,
+            'Testitem 1',
+            10.0,
+            get_config('local_shopping_cart', 'globalcurrency') ?? 'EUR',
+            'local_shopping_cart',
+            'main',
+            'My Testitem 1 description',
         );
 
         $cartitemarray = $cartitem->as_array();
@@ -107,7 +130,7 @@ final class cartitem_test extends TestCase {
 
     /**
      * Test costcenter not set
-     * @covers \cartitem->costcenter
+     * @covers \local_shopping_cart\local\entities\cartitem
      *
      * @return void
      */
@@ -145,5 +168,4 @@ final class cartitem_test extends TestCase {
 
         $this->assertEquals($costcenter, $cartitem->costcenter);
     }
-
 }

@@ -100,7 +100,11 @@ class booking_answers {
         $this->bookingoptionsettings = $bookingoptionsettings;
 
         $cache = \cache::make('mod_booking', 'bookingoptionsanswers');
-        $data = $cache->get($optionid);
+        if (!get_config('booking', 'cacheturnoffforbookinganswers')) {
+            $data = $cache->get($optionid);
+        } else {
+            $data = false;
+        }
 
         if (!$data) {
             // phpcs:ignore Squiz.PHP.CommentedOutCode.Found
@@ -111,8 +115,16 @@ class booking_answers {
             AND u.deleted = 0
             ORDER BY ba.timecreated ASC"; */
 
-            [$sql, $params] = self::return_sql_to_get_answers($optionid);
-            $answers = $DB->get_records_sql($sql, $params);
+            try {
+                [$sql, $params] = self::return_sql_to_get_answers($optionid);
+                $answers = $DB->get_records_sql($sql, $params);
+            } catch (Throwable $e) {
+                if ($CFG->debug === E_ALL) {
+                    throw $e;
+                } else {
+                    $answers = [];
+                }
+            }
 
             // We don't want to query for empty bookings, so we also cache these.
             if (count($answers) == 0) {
@@ -166,8 +178,9 @@ class booking_answers {
                 'usersdeleted' => $this->usersdeleted,
                 'userstonotify' => $this->userstonotify,
             ];
-
-            $cache->set($optionid, $data);
+            if (!get_config('booking', 'cacheturnoffforbookinganswers')) {
+                $cache->set($optionid, $data);
+            }
         } else {
             $this->answers = $data->answers;
             $this->users = $data->users;
@@ -255,7 +268,7 @@ class booking_answers {
 
             $returnarray['freeonlist'] = $returnarray['maxanswers'] - $returnarray['booked'];
 
-             // Determine if the option is booked out.
+             // Determine if the option is fully booked.
             if ($returnarray['freeonlist'] <= 0) {
                 $returnarray['fullybooked'] = true;
             } else {
@@ -269,6 +282,8 @@ class booking_answers {
         if ($maxoverbooking > 0) {
             $returnarray['maxoverbooking'] = $maxoverbooking;
             $returnarray['freeonwaitinglist'] = $maxoverbooking - $returnarray['waiting'];
+        } else if ($maxoverbooking == -1) {
+            $returnarray['freeonwaitinglist'] = -1;
         }
 
         if (!empty($this->bookingoptionsettings->minanswers) && $this->bookingoptionsettings->minanswers > 0) {
@@ -424,6 +439,94 @@ class booking_answers {
     }
 
     /**
+     * This function checks if the user already booked options similar to the current instance of the booking option.
+     * And if the user has already booked the maximum number of options from the same category.
+     *
+     * @param int $userid
+     * @param array $restriction
+     * @param string $field
+     *
+     * @return array
+     *
+     */
+    public function exceeds_max_bookings(int $userid, array $restriction, string $field): array {
+        if (!isloggedin() || isguestuser()) {
+            return [];
+        }
+        // Check if restriction applies to current answer.
+        $field = get_config('booking', 'maxoptionsfromcategoryfield');
+
+        // First check if the field of the current option contains the entry we are looking for.
+        $match = '';
+        foreach ($restriction as $key => $data) {
+            $localizedentry = $data->localizedstring;
+            if (
+                !isset($this->bookingoptionsettings->customfields[$field])
+                || ($this->bookingoptionsettings->customfields[$field] != $localizedentry
+                    && !(is_array($this->bookingoptionsettings->customfields[$field])
+                        && in_array($localizedentry, $this->bookingoptionsettings->customfields[$field])))
+            ) {
+                continue;
+            } else {
+                $match = $localizedentry;
+                break;
+            }
+        }
+        if (empty($match)) {
+            return [];
+        }
+        $answerspercategory = [];
+        $myanswers = $this->get_all_answers_for_user_cached(
+            $userid,
+            0,
+            [
+                MOD_BOOKING_STATUSPARAM_BOOKED,
+                MOD_BOOKING_STATUSPARAM_WAITINGLIST,
+                MOD_BOOKING_STATUSPARAM_RESERVED,
+            ],
+            false
+        );
+
+        // If the user has no answers, then there is no problem.
+        if (empty($myanswers)) {
+            return [];
+        }
+        $limittoinstance = booking::get_value_of_json_by_key(
+            (int) $this->bookingoptionsettings->bookingid,
+            'maxoptionsfrominstance'
+        ) ?? 1;
+        foreach ($myanswers as $answer) {
+            $bosetting = singleton_service::get_instance_of_booking_option_settings($answer->optionid);
+            if (!isset($bosetting->customfields[$field])) {
+                continue;
+            }
+            if (
+                $bosetting->customfields[$field] === $localizedentry
+                || (is_array($bosetting->customfields[$field])
+                && in_array($localizedentry, $bosetting->customfields[$field]))
+            ) {
+                if (
+                    !empty($limittoinstance)
+                    && $bosetting->bookingid != $this->bookingoptionsettings->bookingid
+                ) {
+                    // The settings define if comparison is counted only for bookings in the same instance.
+                    continue;
+                }
+                $answerspercategory[$answer->baid] = $answer;
+            }
+        }
+        // If the user has no answers in this category, then there is no problem.
+        if (empty($answerspercategory)) {
+            return [];
+        }
+        // Finally count the number of answers and check if it is more than the limit.
+        if (count($answerspercategory) >= $restriction[$key]->count) {
+            return $answerspercategory;
+        }
+        return [];
+    }
+
+    /**
      * Checks overlapping of dates.
      *
      * @param mixed $starttime1
@@ -458,41 +561,53 @@ class booking_answers {
 
     /**
      * Returns the number of active bookings for a given user for the whole instance.
-     * This is not cached!
      *
      * @param int $userid
      * @param int $bookingid not cmid
      * @return int
      */
-    public static function number_of_active_bookings_for_user(int $userid, int $bookingid) {
-        global $DB;
+    public function get_count_of_answers_for_user(int $userid, int $bookingid) {
 
-        $params = [
-            'statuswaitinglist' => MOD_BOOKING_STATUSPARAM_WAITINGLIST,
-            'bookingid' => $bookingid,
-            'userid' => $userid,
-        ];
+        $answers = $this->get_all_answers_for_user_cached(
+            $userid,
+            $bookingid,
+            [
+                MOD_BOOKING_STATUSPARAM_BOOKED,
+                MOD_BOOKING_STATUSPARAM_WAITINGLIST,
+            ]
+        );
 
-        $sql = "SELECT COUNT(ba.id) cnt
-                FROM {booking_answers} ba
-                JOIN {booking_options} bo
-                ON bo.id = ba.optionid
-                WHERE ba.waitinglist <= :statuswaitinglist
-                AND ba.bookingid = :bookingid
-                AND ba.userid = :userid";
-
+        // If the config setting 'maxperuserdontcountpassed' is set, we don't count passed bookings.
         if (get_config('booking', 'maxperuserdontcountpassed')) {
-            $params['now'] = time();
-            $sql .= " AND (bo.courseendtime > :now OR bo.courseendtime IS NULL OR bo.courseendtime = 0)";
+            $now = time();
+            foreach ($answers as $key => $answer) {
+                if (!empty($answer->courseendtime) && $answer->courseendtime < $now) {
+                    unset($answers[$key]);
+                }
+            }
         }
+        // If the config setting 'maxperuserdontcountcompleted' is set, we don't count completed bookings.
         if (get_config('booking', 'maxperuserdontcountcompleted')) {
-            $sql .= " AND ba.completed = 0 AND ba.status NOT IN (1,6)";
+            foreach ($answers as $key => $answer) {
+                if (
+                    ($answer->completed == 1)
+                    || $answer->status == MOD_BOOKING_PRESENCE_STATUS_COMPLETE
+                    || $answer->status == MOD_BOOKING_PRESENCE_STATUS_ATTENDING
+                ) {
+                    unset($answers[$key]);
+                }
+            }
         }
         if (get_config('booking', 'maxperuserdontcountnoshow')) {
-            $sql .= " AND ba.status <> 3";
+            foreach ($answers as $key => $answer) {
+                if ($answer->status == MOD_BOOKING_PRESENCE_STATUS_NOSHOW) {
+                    unset($answers[$key]);
+                }
+            }
         }
 
-        return $DB->count_records_sql($sql, $params);
+        // Do not count reserved options.
+        return count($answers);
     }
 
     /**
@@ -537,15 +652,15 @@ class booking_answers {
         $context = context_system::instance();
 
         if (
+            !has_capability('mod/booking:updatebooking', $context)
+            && get_config('booking', 'bookingplacesinfotexts')
+        ) {
+            $bookinginformation['showbookingplacesinfotext'] = true;
+        }
+
+        if (
             !empty($bookinginformation['maxanswers'])
         ) {
-            if (
-                !has_capability('mod/booking:updatebooking', $context)
-                && get_config('booking', 'bookingplacesinfotexts')
-            ) {
-                $bookinginformation['showbookingplacesinfotext'] = true;
-            }
-
             $bookingplaceslowpercentage = get_config('booking', 'bookingplaceslowpercentage');
             $actualpercentage = ($bookinginformation['freeonlist'] / $bookinginformation['maxanswers']) * 100;
 
@@ -565,6 +680,18 @@ class booking_answers {
                 $bookinginformation['bookingplacesclass'] = 'text-success avail';
                 $bookinginformation['bookingplacesiconclass'] = 'avail';
             }
+        } else {
+            $bookinginformation['bookingplacesinfotext'] = get_string('bookingplacesunlimitedmessage', 'mod_booking');
+            $bookinginformation['bookingplacesclass'] = 'text-success avail';
+            $bookinginformation['bookingplacesiconclass'] = 'avail';
+
+            if (
+                !has_capability('mod/booking:updatebooking', $context)
+                && get_config('booking', 'bookingplacesinfotexts')
+            ) {
+                // We need to set maxanswers to true, to actually show the text when maxanswer is 0 (unlimited).
+                $bookinginformation['maxanswers'] = true;
+            }
         }
         // Waiting list places.
         if (!empty($bookinginformation['maxoverbooking'])) {
@@ -576,8 +703,12 @@ class booking_answers {
             }
 
             $waitinglistlowpercentage = get_config('booking', 'waitinglistlowpercentage');
-            $actualwlpercentage = ($bookinginformation['freeonwaitinglist'] /
+            if ($bookinginformation['freeonwaitinglist'] == -1) {
+                $actualwlpercentage = 100;
+            } else {
+                $actualwlpercentage = ($bookinginformation['freeonwaitinglist'] /
                 $bookinginformation['maxoverbooking']) * 100;
+            }
 
             if ($bookinginformation['freeonwaitinglist'] == 0) {
                 // No places left.
@@ -669,105 +800,220 @@ class booking_answers {
      * @return (string|int[])[]
      */
     public static function return_sql_for_booked_users(string $scope, int $scopeid, int $statusparam) {
-
-        if ($scope != "option") {
+        global $DB;
+        if (!in_array($scope, ["option", "optiondate"])) {
             $advancedsqlstart = "SELECT
-                ba.id,
+                bo.id,
+                bo.id as optionid,
+                ba.waitinglist,
                 cm.id AS cmid,
                 c.id AS courseid,
                 c.fullname AS coursename,
-                ba.optionid,
                 bo.titleprefix,
                 bo.text,
                 b.name AS instancename,
-                u.id AS userid,
-                u.username,
-                u.firstname,
-                u.lastname,
-                u.email,
-                ba.timemodified,
-                ba.timecreated,
-                ba.json
-            FROM {booking_answers} ba
-            JOIN {booking_options} bo ON bo.id = ba.optionid
-            JOIN {user} u ON ba.userid = u.id
+                COUNT(ba.id) answerscount,
+                SUM(pcnt.presencecount) presencecount,
+                '" . $scope . "' AS scope
+            FROM {booking_options} bo
+            LEFT JOIN {booking_answers} ba ON bo.id = ba.optionid
+            LEFT JOIN {user} u ON ba.userid = u.id
             JOIN {course_modules} cm ON bo.bookingid = cm.instance
             JOIN {booking} b ON b.id = bo.bookingid
             JOIN {course} c ON c.id = b.course
             JOIN {modules} m ON m.id = cm.module
-            WHERE
+            LEFT JOIN (
+                SELECT boda.optionid, boda.userid, COUNT(*) AS presencecount
+                FROM {booking_optiondates_answers} boda
+                WHERE boda.status = :statustocount
+                GROUP BY boda.optionid, boda.userid
+            ) pcnt
+            ON pcnt.optionid = ba.optionid AND pcnt.userid = u.id";
+
+            if ($statusparam === 0) {
+                $advancedsqlwhere = "WHERE
+                    m.name = 'booking'
+                    AND (ba.waitinglist = 0 OR ba.waitinglist IS NULL)";
+            } else {
+                $advancedsqlwhere = "WHERE
                 m.name = 'booking'
                 AND ba.waitinglist = :statusparam";
+            }
 
-            $advancedsqlend = "ORDER BY bo.titleprefix, bo.text, ba.timemodified, ba.id ASC
+            $advancedsqlgroupby = "GROUP BY cm.id, c.id, c.fullname, bo.id, ba.waitinglist, bo.titleprefix, bo.text, b.name";
+
+            $advancedsqlend = "ORDER BY bo.titleprefix, bo.text ASC
                 LIMIT 10000000000";
         }
 
         $where = '1=1';
 
         switch ($scope) {
-            case 'option':
-                $optionid = $scopeid;
+            case 'optiondate':
+                $optiondateid = $scopeid;
                 // We need to set a limit for the query in mysqlfamily.
-                $fields = 's1.*, ROW_NUMBER() OVER (ORDER BY s1.timemodified, s1.id DESC) AS rank';
-                $from = "(
-                    SELECT
-                        ba.id,
-                        u.id AS userid,
-                        u.username,
+                $fields = 's1.*';
+                $from = " (
+                    SELECT " .
+                        $DB->sql_concat("bo.id", "'-'", "bod.id", "'-'", "u.id") .
+                        " id,
+                        bod.id optiondateid,
+                        bod.coursestarttime,
+                        bod.courseendtime,
+                        ba.userid,
+                        ba.waitinglist,
+                        boda.status,
+                        boda.json,
+                        boda.notes,
+                        bo.id optionid,
+                        bo.titleprefix,
+                        bo.text,
                         u.firstname,
                         u.lastname,
                         u.email,
-                        ba.timemodified,
-                        ba.timecreated,
-                        ba.optionid,
-                        ba.json
-                    FROM {booking_answers} ba
-                    JOIN {user} u ON ba.userid = u.id
-                    WHERE ba.optionid=:optionid AND ba.waitinglist=:statusparam
-                    ORDER BY ba.timemodified, ba.id ASC
+                        '" . $scope . "' AS scope
+                    FROM {booking_optiondates} bod
+                    JOIN {booking_options} bo
+                    ON bo.id = bod.optionid
+                    JOIN {booking_answers} ba
+                    ON bo.id = ba.optionid
+                    JOIN {user} u
+                    ON u.id = ba.userid
+                    LEFT JOIN {booking_optiondates_answers} boda
+                    ON bod.id = boda.optiondateid AND bo.id = boda.optionid AND ba.userid = boda.userid
+                    WHERE bod.id = :optiondateid AND ba.waitinglist = :statusparam
+                    ORDER BY u.lastname, u.firstname, bod.coursestarttime ASC
                     LIMIT 10000000000
                 ) s1";
+                $params = [
+                    'optiondateid' => $optiondateid,
+                    'statusparam' => MOD_BOOKING_STATUSPARAM_BOOKED,
+                ];
+                break;
+            case 'option':
+                $optionid = $scopeid;
+
                 $params = [
                     'optionid' => $optionid,
                     'statusparam' => $statusparam,
                 ];
+
+                // If presence counter is activated, we add that to SQL.
+                $selectpresencecount = '';
+                $presencecountsqlpart = '';
+                if (get_config('booking', 'bookingstrackerpresencecounter')) {
+                    $selectpresencecount = 'pcnt.presencecount,';
+                    $presencecountsqlpart =
+                        "LEFT JOIN (
+                            SELECT boda.optionid, boda.userid, COUNT(*) AS presencecount
+                            FROM {booking_optiondates_answers} boda
+                            WHERE boda.optionid = :optionid2 AND boda.status = :statustocount
+                            GROUP BY boda.optionid, boda.userid
+                        ) pcnt
+                        ON pcnt.optionid = ba.optionid AND pcnt.userid = u.id";
+                    $params['optionid2'] = $optionid;
+                    $params['statustocount'] = get_config('booking', 'bookingstrackerpresencecountervaluetocount');
+                }
+
+                // Only for waiting list, we need to add the rank.
+                $ranksqlpart = '';
+                $orderby = ' ORDER BY lastname, firstname, timemodified ASC';
+                if ($statusparam == MOD_BOOKING_STATUSPARAM_WAITINGLIST) {
+                    // For waiting list, we need to determine the rank order.
+                    $ranksqlpart = ', (
+                        SELECT COUNT(*)
+                        FROM (
+                            SELECT
+                                ba.id,
+                                ba.timemodified
+                            FROM {booking_answers} ba
+                            WHERE ba.optionid=:optionid3 AND ba.waitinglist=:statusparam2
+                        ) s3
+                        WHERE (s3.timemodified < s2.timemodified) OR (s3.timemodified = s2.timemodified AND s3.id <= s2.id)
+                    ) AS userrank';
+                    $orderby = ' ORDER BY userrank ASC';
+
+                    // Params for rank order.
+                    $params['statusparam2'] = $statusparam;
+                    $params['optionid3'] = $optionid;
+                }
+
+                // We need to set a limit for the query in mysqlfamily.
+                $fields = 's1.*';
+                $from = "
+                (
+                    SELECT s2.* $ranksqlpart
+                    FROM (
+                        SELECT
+                            ba.id,
+                            u.id AS userid,
+                            u.username,
+                            u.firstname,
+                            u.lastname,
+                            u.email,
+                            ba.waitinglist,
+                            ba.status,
+                            ba.notes,
+                            $selectpresencecount
+                            ba.timemodified,
+                            ba.timecreated,
+                            ba.optionid,
+                            ba.json,
+                            '" . $scope . "' AS scope
+                        FROM {booking_answers} ba
+                        JOIN {user} u ON ba.userid = u.id
+                        $presencecountsqlpart
+                        WHERE ba.optionid=:optionid AND ba.waitinglist=:statusparam
+                        LIMIT 1000000
+                    ) s2
+                    $orderby
+                ) s1";
+
                 break;
             case 'instance':
                 $cmid = $scopeid;
                 $fields = 's1.*';
-                $from = "(
+                $from = " (
                     $advancedsqlstart
+                    $advancedsqlwhere
                     AND cm.id = :cmid
+                    $advancedsqlgroupby
                     $advancedsqlend
                 ) s1";
                 $params = [
                     'cmid' => $cmid,
                     'statusparam' => $statusparam,
+                    'statustocount' => get_config('booking', 'bookingstrackerpresencecountervaluetocount'),
                 ];
                 break;
             case 'course':
                 $courseid = $scopeid;
                 $fields = 's1.*';
-                $from = "(
+                $from = " (
                     $advancedsqlstart
+                    $advancedsqlwhere
                     AND c.id = :courseid
+                    $advancedsqlgroupby
                     $advancedsqlend
                 ) s1";
                 $params = [
                     'courseid' => $courseid,
                     'statusparam' => $statusparam,
+                    'statustocount' => get_config('booking', 'bookingstrackerpresencecountervaluetocount'),
                 ];
                 break;
             case 'system':
             default:
                 $fields = 's1.*';
-                $from = "(
+                $from = " (
                     $advancedsqlstart
+                    $advancedsqlwhere
+                    $advancedsqlgroupby
                     $advancedsqlend
                 ) s1";
                 $params = [
                     'statusparam' => $statusparam,
+                    'statustocount' => get_config('booking', 'bookingstrackerpresencecountervaluetocount'),
                 ];
                 break;
         }
@@ -796,42 +1042,49 @@ class booking_answers {
      * The request is cached and uses singleton pattern.
      *
      * @param int $userid
-     * @param int $cmid
+     * @param int $bookingid
      * @param array $status
-     * @param bool $withcoursetimes
+     * @param bool $excludeselflearningcourses
      *
      * @return array
      *
      */
     private function get_all_answers_for_user_cached(
         int $userid,
-        int $cmid = 0,
+        int $bookingid = 0,
         array $status = [
             MOD_BOOKING_STATUSPARAM_BOOKED,
             MOD_BOOKING_STATUSPARAM_WAITINGLIST,
             MOD_BOOKING_STATUSPARAM_RESERVED,
         ],
-        bool $withcoursetimes = false
+        bool $excludeselflearningcourses = false
     ) {
 
         global $DB, $CFG;
 
         $answers = [];
-        $data = singleton_service::get_answers_for_user($userid);
+        $data = singleton_service::get_answers_for_user($userid, $bookingid);
         if (isset($data['answers'])) {
             $answers = $data['answers'];
         }
+
+        // This is important so we only get instance-specific cache!
+        $cachekey = "myanswers$bookingid";
 
         try {
             // If we don't have the answers in the singleton, we look in the cache.
             if (empty($answers)) {
                 $cache = \cache::make('mod_booking', 'bookinganswers');
-                $data = $cache->get('myanswers');
+                if (!get_config('booking', 'cacheturnoffforbookinganswers')) {
+                    $data = $cache->get($cachekey);
+                } else {
+                    $data = false;
+                }
                 $statustofetch = [];
                 $answers = [];
                 // We don't have any answers, we get the ones we need.
                 if (!$data) {
-                    [$sql, $params] = $this->return_sql_to_get_answers(0, $userid, $status, $withcoursetimes);
+                    [$sql, $params] = $this->return_sql_to_get_answers(0, $bookingid, $userid, $status);
 
                     $answers = $DB->get_records_sql($sql, $params);
 
@@ -850,7 +1103,7 @@ class booking_answers {
                     }
 
                     if (!empty($statustofetch)) {
-                        [$sql, $params] = $this->return_sql_to_get_answers(0, $userid, $statustofetch);
+                        [$sql, $params] = $this->return_sql_to_get_answers(0, $bookingid, $userid, $statustofetch);
                         $answers = $DB->get_records_sql($sql, $params);
                     }
 
@@ -859,12 +1112,46 @@ class booking_answers {
                 }
 
                 $answers = $data['answers'];
-                singleton_service::set_answers_for_user($userid, $data);
-                $cache->set('myanswers', $data);
+                singleton_service::set_answers_for_user($userid, $bookingid, $data);
+                if (!get_config('booking', 'cacheturnoffforbookinganswers')) {
+                    $cache->set($cachekey, $data);
+                }
             }
         } catch (Throwable $e) {
-            if ($CFG->debug = (E_ALL | E_STRICT)) {
+            if ($CFG->debug === E_ALL) {
                 throw $e;
+            }
+        }
+
+        if ($excludeselflearningcourses) {
+            foreach ($answers as $key => $answer) {
+                if (
+                    !empty($answer->nooverlappinghandling)
+                    && isset($answer->json) && !empty($answer->json)
+                ) {
+                    $jsondata = json_decode($answer->json);
+                    if (
+                        isset($jsondata->selflearningcourse)
+                        && $jsondata->selflearningcourse != 1
+                    ) {
+                        unset($answers[$key]);
+                        continue;
+                    }
+                }
+            }
+        }
+        // Make sure to filter the status if the cache contains more values than supposed.
+        if (
+            $status != [
+                MOD_BOOKING_STATUSPARAM_BOOKED,
+                MOD_BOOKING_STATUSPARAM_WAITINGLIST,
+                MOD_BOOKING_STATUSPARAM_RESERVED,
+                ]
+        ) {
+            foreach ($answers as $key => $answer) {
+                if (!in_array((int) $answer->waitinglist, $status)) {
+                    unset($answers[$key]);
+                }
             }
         }
         return $answers;
@@ -874,23 +1161,22 @@ class booking_answers {
      * This returns the sql to fetch all the answers. Might be restricted fo booking optinos or for users or none.
      *
      * @param int $optionid
+     * @param int $bookingid
      * @param int $userid
      * @param array $status
-     * @param bool $withcoursetimes
      *
      * @return array
-     *
      */
     private function return_sql_to_get_answers(
         int $optionid = 0,
+        int $bookingid = 0,
         int $userid = 0,
         array $status = [
             MOD_BOOKING_STATUSPARAM_BOOKED,
             MOD_BOOKING_STATUSPARAM_WAITINGLIST,
             MOD_BOOKING_STATUSPARAM_RESERVED,
             MOD_BOOKING_STATUSPARAM_NOTIFYMELIST,
-        ],
-        $withcoursetimes = false
+        ]
     ) {
         global $DB;
 
@@ -905,20 +1191,17 @@ class booking_answers {
             $wherearray[] = ' ba.optionid = :optionid ';
         }
 
+        if (!empty($bookingid)) {
+            $params['bookingid'] = $bookingid;
+            $wherearray[] = ' ba.bookingid = :bookingid ';
+        }
+
         if (!empty($userid)) {
             $params['userid'] = $userid;
             $wherearray[] = ' ba.userid = :userid ';
         }
-
-        if ($withcoursetimes) {
-            $overlapping = bo_info::check_for_sqljson_key_in_array('bo.availability', 'nooverlappinghandling');
-            $withcoursestarttimesselect = " , bo.coursestarttime, bo.courseendtime, $overlapping as nooverlappinghandling";
-            $withcoursestarttimesjoin = " JOIN {booking_options} bo ON ba.optionid = bo.id ";
-            $wherearray[] = ' NOT (bo.json LIKE \'%"selflearningcourse":"1"%\' OR bo.json LIKE \'%"selflearningcourse":1%\')';
-        } else {
-            $withcoursestarttimesselect = "";
-            $withcoursestarttimesjoin = "";
-        }
+        $overlapping = bo_info::check_for_sqljson_key_in_array('bo.availability', 'nooverlappinghandling');
+        $withcoursestarttimesselect = ", $overlapping as nooverlappinghandling";
 
         $where = implode(' AND ', $wherearray);
 
@@ -928,14 +1211,18 @@ class booking_answers {
                 ba.userid,
                 ba.waitinglist,
                 ba.completed,
+                ba.status,
                 ba.timemodified,
+                ba.bookingid,
                 ba.optionid,
                 ba.timecreated,
                 ba.json,
-                ba.places
+                ba.places,
+                bo.coursestarttime,
+                bo.courseendtime
                 $withcoursestarttimesselect
             FROM {booking_answers} ba
-            $withcoursestarttimesjoin
+            JOIN {booking_options} bo ON ba.optionid = bo.id
             WHERE $where
             ORDER BY ba.timemodified ASC";
 

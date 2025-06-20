@@ -20,10 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 use cache_helper;
 use stdClass;
 use moodle_exception;
-use core_user;
-use core_text;
 use context_system;
-use context_user;
 use core\message\message;
 use mod_booking\booking_option;
 use mod_booking\booking_settings;
@@ -34,7 +31,7 @@ use mod_booking\output\renderer;
 use mod_booking\placeholders\placeholders_info;
 use mod_booking\task\send_confirmation_mails;
 
-require_once($CFG->dirroot.'/user/profile/lib.php');
+require_once($CFG->dirroot . '/user/profile/lib.php');
 
 /**
  * Manage booking messages which will be sent by email.
@@ -45,7 +42,6 @@ require_once($CFG->dirroot.'/user/profile/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class message_controller {
-
     /** @var int $msgcontrparam send mail now | queue adhoc task */
     private $msgcontrparam;
 
@@ -121,6 +117,12 @@ class message_controller {
     /** @var float $price price given in installment */
     private $price;
 
+    /** @var stdClass $rulesettings duedate of installment. */
+    private $rulesettings;
+
+    /** @var array $ruleid the id of the running rule. */
+    private $ruleid;
+
     /**
      * Constructor
      *
@@ -138,6 +140,7 @@ class message_controller {
      * @param int $duedate UNIX timestamp for duedate of installment
      * @param float $price price of installment
      * @param string $rulejson event data
+     * @param ?int $ruleid the id of the running rule
      */
     public function __construct(
         int $msgcontrparam,
@@ -153,17 +156,30 @@ class message_controller {
         int $installmentnr = 0,
         int $duedate = 0,
         float $price = 0.0,
-        string $rulejson = ''
+        string $rulejson = '',
+        ?int $ruleid = null
     ) {
 
-        global $USER, $PAGE, $SESSION;
+        global $USER, $PAGE, $DB;
+
+        if (!is_null($ruleid)) {
+            // For some reason $this->rulejson doesn't get passed to the controller.
+            // So instead we use the ruleid that we have added to this class.
+            // Get the rulesjson and convert into an array for later
+            // There is probably an exisiting method for this, but I couldn't find it.
+            $this->rulesettings = $DB->get_record('booking_rules', ['id' => $ruleid], 'rulejson');
+            if ($this->rulesettings) {
+                $this->rulesettings = json_decode($this->rulesettings->rulejson);
+                $this->ruleid = $ruleid;
+            }
+        }
 
         $user = singleton_service::get_instance_of_user($userid);
         $originallanguage = force_current_language($user->lang);
         $customsubject = format_text($customsubject, FORMAT_HTML, ['noclean' => true]);
         $custommessage = format_text($custommessage, FORMAT_HTML, ['noclean' => true]);
 
-        // TODO: This is a bad idea. We need to find out the correct places where we really need to purge!
+        // Todo: This is a bad idea. We need to find out the correct places where we really need to purge!
         // Purge booking instance settings before sending mails to make sure, we use correct data.
         cache_helper::invalidate_by_event('setbackbookinginstances', [$cmid]);
 
@@ -192,8 +208,10 @@ class message_controller {
         $optionid = $settings->id;
 
         if (empty($optionid)) {
-            debugging('ERROR: Option settings could not be created. Most probably, the option was deleted from DB.',
-                DEBUG_DEVELOPER);
+            debugging(
+                'ERROR: Option settings could not be created. Most probably, the option was deleted from DB.',
+                DEBUG_DEVELOPER
+            );
             return;
         }
 
@@ -215,9 +233,17 @@ class message_controller {
         $this->params = new stdClass();
 
         // Apply placeholder to subject.
-        $customsubject = placeholders_info::render_text($customsubject, $this->optionsettings->cmid, $this->optionid, $this->userid,
-        $this->installmentnr, $this->duedate, $this->price,
-        $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE, $this->rulejson);
+        $customsubject = placeholders_info::render_text(
+            $customsubject,
+            $this->optionsettings->cmid,
+            $this->optionid,
+            $this->userid,
+            $this->installmentnr,
+            $this->duedate,
+            $this->price,
+            $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE,
+            $this->rulejson
+        );
 
         // For custom messages only.
         if ($this->messageparam == MOD_BOOKING_MSGPARAM_CUSTOM_MESSAGE) {
@@ -247,8 +273,10 @@ class message_controller {
         if ($this->messageparam == MOD_BOOKING_MSGPARAM_SESSIONREMINDER) {
             // Rendered session description.
             $this->stringparams->sessiondescription = get_rendered_eventdescription(
-                $this->optionid, $this->cmid,
-                MOD_BOOKING_DESCRIPTION_CALENDAR);
+                $this->optionid,
+                $this->cmid,
+                MOD_BOOKING_DESCRIPTION_CALENDAR
+            );
         }
 
         // Set the correct description param.
@@ -303,14 +331,17 @@ class message_controller {
         if ($this->messageparam == MOD_BOOKING_MSGPARAM_CUSTOM_MESSAGE) {
             // For custom messages, we already have a message body.
             $text = $this->custommessage;
-        } else if (isset($this->bookingsettings->mailtemplatessource) && $this->bookingsettings->mailtemplatessource == 1
-            && in_array($this->messagefieldname, $mailtemplatesfieldnames)) {
+        } else if (
+            isset($this->bookingsettings->mailtemplatessource) && $this->bookingsettings->mailtemplatessource == 1
+            && in_array($this->messagefieldname, $mailtemplatesfieldnames)
+        ) {
             // Check if global mail templates are enabled and if the field name also has a global mail template.
             // Get the mail template specified in plugin config.
             $text = get_config('booking', 'global' . $this->messagefieldname);
-
-        } else if (isset($this->bookingsettings->{$this->messagefieldname})
-            && $this->bookingsettings->{$this->messagefieldname} === "0") {
+        } else if (
+            isset($this->bookingsettings->{$this->messagefieldname})
+            && $this->bookingsettings->{$this->messagefieldname} === "0"
+        ) {
             /* NOTE: By entering 0 into a mail template, we can turn the specific mail reminder off.
             This is why we need the === check for the exact string of "0". */
             $text = "0";
@@ -332,9 +363,17 @@ class message_controller {
         }
 
         // We apply the default placeholders.
-        $text = placeholders_info::render_text($text, $this->optionsettings->cmid, $this->optionid, $this->userid,
-            $this->installmentnr, $this->duedate, $this->price,
-            $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE, $this->rulejson);
+        $text = placeholders_info::render_text(
+            $text,
+            $this->optionsettings->cmid,
+            $this->optionid,
+            $this->userid,
+            $this->installmentnr,
+            $this->duedate,
+            $this->price,
+            $this->descriptionparam ?? MOD_BOOKING_DESCRIPTION_WEBSITE,
+            $this->rulejson
+        );
 
         return $text;
     }
@@ -423,7 +462,7 @@ class message_controller {
         }
 
         // Add attachments if there are any.
-        list($attachments, $attachname) = $this->get_attachments($updated);
+        [$attachments, $attachname] = $this->get_attachments($updated);
 
         if (!empty($attachments)) {
             $messagedata->attachment = $attachments;
@@ -440,25 +479,76 @@ class message_controller {
     public function send_or_queue(): bool {
 
         // If user entered "0" as template, then mails are turned off for this type of messages.
-        if ($this->messagebody === "0"
+        if (
+            $this->messagebody === "0"
             // Make sure, we don't send anything, if booking option is hidden.
-            || $this->optionsettings->invisible == 1) {
+            || $this->optionsettings->invisible == 1
+        ) {
             $this->msgcontrparam = MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND;
         }
 
         // Only send if we have message data and if the user hasn't been deleted.
         // Also, do not send, if the param MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND has been set.
-        if ($this->msgcontrparam != MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND
-            && !empty( $this->messagedata ) && !$this->user->deleted) {
-
+        if (
+            $this->msgcontrparam != MOD_BOOKING_MSGCONTRPARAM_DO_NOT_SEND
+            && !empty($this->messagedata) && !$this->user->deleted
+        ) {
             if ($this->msgcontrparam == MOD_BOOKING_MSGCONTRPARAM_QUEUE_ADHOC) {
-
                 return $this->send_mail_with_adhoc_task();
-
             } else {
+                // If the rule has sendical set then we get the ical attachment.
+                // Create it in file storage and put it in the message object.
+                if (!empty($this->rulesettings->actiondata) && !empty($this->rulesettings->actiondata->sendical)) {
+                    $update = false;
+                    if ($this->rulesettings->actiondata->sendicalcreateorcancel == 'cancel') {
+                        $update = true;
+                    }
+
+                    // Pass the update param - false will create a remove calendar invite.
+                    /* Todo: The system still fires an unsubscribe message.
+                    I believe this is a hangover of the old non rules booking system. (danbuntu) */
+                    [$attachments, $attachname] = $this->get_attachments($update);
+
+                    if (!empty($attachments)) {
+                        // Todo: this should probably be a method in the ical class.
+                        // Left here to limit to number of changed files.
+                        // Store the file correctly in order to be able to attach it.
+                        $fs = get_file_storage();
+                        $context = context_system::instance(); // Use a suitable context, such as course or module context.
+                        $tempfilepath = $attachments['booking.ics'];
+
+                        // Check if the file exists in the temp path.
+                        if (file_exists($tempfilepath)) {
+                            // Prepare file record in Moodle storage.
+                            $filerecord = [
+                                    'contextid' => $context->id,
+                                    'component' => 'mod_booking', // Change to your component.
+                                    'filearea' => 'message_attachments', // A custom file area for attachments.
+                                    'itemid' => 0, // Item ID (0 for general use or unique identifier for the message).
+                                    'filepath' => '/', // Always use '/' as the root directory.
+                                    'filename' => $attachname,
+                                    'userid' => $this->messagedata->userto->id,
+                            ];
+
+                            // Create or retrieve the file in Moodle's file storage.
+                            $storedfile = $fs->create_file_from_pathname($filerecord, $tempfilepath);
+
+                            // Set the file as an attachment.
+                            $this->messagedata->attachment = $storedfile;
+                            $this->messagedata->attachname = $attachname;
+                        } else {
+                            // Todo: There is possibly a better way to handle this error nicely - or remove the check entirely.
+                            throw new \moodle_exception('Attachment file not found.');
+                        }
+                    }
+                }
 
                 // In all other cases, use message_send.
                 if (message_send($this->messagedata)) {
+                    if (!empty($this->rulesettings->actiondata) && !empty($this->rulesettings->actiondata->sendical)) {
+                        // Tidy up the now not needed file.
+                        $storedfile->delete();
+                    }
 
                     // Use an event to log that a message has been sent.
                     $event = \mod_booking\event\message_sent::create([
@@ -471,6 +561,9 @@ class message_controller {
                             'subject' => $this->messagedata->subject,
                             'objectid' => $this->optionid ?? 0,
                             'message' => $this->messagedata->fullmessage ?? '',
+                            // Store the full html message as this is useful if the message every needs to be replayed or audited.
+                            'messagehtml' => $this->messagedata->fullmessagehtml ?? '',
+                            'bookingruleid' => $this->ruleid ?? null,
                         ],
                     ]);
                     $event->trigger();
@@ -496,7 +589,6 @@ class message_controller {
         $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($this->cmid);
 
         if (!empty($bookingsettings->sendmail) || !empty($bookingsettings->copymail)) {
-
             if (!empty($bookingsettings->sendmail)) {
                 $sendtask = new send_confirmation_mails();
                 $this->messagedata->optionid = $this->optionid;
@@ -507,16 +599,22 @@ class message_controller {
             // If the setting to send a copy to the booking manger has been enabled,
             // then also send a copy to the booking manager.
             // DO NOT send copies of change notifications to booking managers.
-            if (!empty($bookingsettings->copymail) &&
+            if (
+                !empty($bookingsettings->copymail) &&
                 $this->messageparam != MOD_BOOKING_MSGPARAM_CHANGE_NOTIFICATION
             ) {
                 // Get booking manager from booking instance settings.
                 $this->messagedata->userto = $bookingsettings->bookingmanageruser;
 
-                if ($this->messageparam == MOD_BOOKING_MSGPARAM_CONFIRMATION ||
-                    $this->messageparam == MOD_BOOKING_MSGPARAM_WAITINGLIST) {
-                    $this->messagedata->subject = get_string($this->messagefieldname . 'subjectbookingmanager',
-                        'mod_booking', $this->stringparams);
+                if (
+                    $this->messageparam == MOD_BOOKING_MSGPARAM_CONFIRMATION ||
+                    $this->messageparam == MOD_BOOKING_MSGPARAM_WAITINGLIST
+                ) {
+                    $this->messagedata->subject = get_string(
+                        $this->messagefieldname . 'subjectbookingmanager',
+                        'mod_booking',
+                        $this->stringparams
+                    );
                 }
 
                 $sendtask = new send_confirmation_mails();
@@ -532,27 +630,28 @@ class message_controller {
 
     /**
      * Get ical attachments.
-     * @param bool $updated if set to true, it will create an update ical (METHOD: REQUEST, SEQUENCE: 1)
+     * @param bool $updated if set to true, it will create an update ical
      * @return array [array $attachments, string $attachname]
      */
     private function get_attachments(bool $updated = false): array {
         $attachments = null;
         $attachname = '';
 
-        if ($this->messageparam == MOD_BOOKING_MSGPARAM_CANCELLED_BY_PARTICIPANT
-            || $this->messageparam == MOD_BOOKING_MSGPARAM_CANCELLED_BY_TEACHER_OR_SYSTEM) {
+        if (
+            $this->messageparam == MOD_BOOKING_MSGPARAM_CANCELLED_BY_PARTICIPANT
+            || $this->messageparam == MOD_BOOKING_MSGPARAM_CANCELLED_BY_TEACHER_OR_SYSTEM
+        ) {
             // Check if setting to send a cancel ical is enabled.
             if (get_config('booking', 'icalcancel')) {
                 $ical = new ical($this->bookingsettings, $this->optionsettings, $this->user, $this->bookingmanager, false);
                 $attachments = $ical->get_attachments(true);
                 $attachname = $ical->get_name();
             }
-
         } else {
             // Generate ical attachments to go with the message. Check if ical attachments enabled.
             if (get_config('booking', 'attachical')) {
                 $ical = new ical($this->bookingsettings, $this->optionsettings, $this->user, $this->bookingmanager, $updated);
-                $attachments = $ical->get_attachments(false);
+                $attachments = $ical->get_attachments($updated);
                 $attachname = $ical->get_name();
             }
         }
@@ -567,7 +666,6 @@ class message_controller {
     public function get_messagebody(): string {
 
         return $this->messagebody;
-
     }
 
     /**

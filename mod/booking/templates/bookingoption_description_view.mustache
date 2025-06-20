@@ -165,6 +165,7 @@
             {{#invisible}}
                 <div class="booking-option-info-invisible">{{#str}} invisibleoption, mod_booking {{/str}}</div>
             {{/invisible}}
+            {{#statusdescription}}<div class="bo_statusdescription"><p>{{{.}}}</p></div>{{/statusdescription}}
             <h6 class="h6-category">
                 {{sport}}
             </h6>
@@ -327,6 +328,16 @@
                 </div>
             </div>
         </div>
+        {{#competencyheader}}
+            <details class="competency">
+                <summary class="competencyheader">
+                    {{competencyheader}}
+                </summary>
+                <div class="competencycontent">
+                    {{{competencies}}}
+                </div>
+            </details>
+        {{/competencyheader}}
     </div>
 </div>
 

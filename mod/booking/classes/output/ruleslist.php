@@ -39,7 +39,6 @@ use templatable;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ruleslist implements renderable, templatable {
-
     /** @var array $rules */
     public $rules = [];
 
@@ -65,13 +64,21 @@ class ruleslist implements renderable, templatable {
 
         foreach ($rules as $rule) {
             $ruleobj = json_decode($rule->rulejson);
-            $rule->name = $ruleobj->name;
-            $rule->actionname = $ruleobj->actionname;
-            $rule->conditionname = $ruleobj->conditionname;
-            // Localize the names.
-            $rule->localizedrulename = get_string(str_replace("_", "", $rule->rulename), 'mod_booking');
-            $rule->localizedactionname = get_string(str_replace("_", "", $ruleobj->actionname), 'mod_booking');
-            $rule->localizedconditionname = get_string(str_replace("_", "", $ruleobj->conditionname), 'mod_booking');
+            $rule->name = $ruleobj->name ?? '';
+            $rule->actionname = $ruleobj->actionname ?? '';
+            $rule->conditionname = $ruleobj->conditionname ?? '';
+
+            // Localize the names if possible.
+            $localizedrulename = str_replace("_", "", $rule->rulename) ?? '';
+            $localizedconditionname = str_replace("_", "", $rule->conditionname) ?? '';
+            $localizedactionname = str_replace("_", "", $rule->actionname) ?? '';
+
+            $rule->localizedrulename = !empty($localizedrulename) ?
+                get_string($localizedrulename, 'mod_booking') : '';
+            $rule->localizedconditionname = !empty($localizedconditionname) ?
+                get_string($localizedconditionname, 'mod_booking') : '';
+            $rule->localizedactionname = !empty($localizedactionname) ?
+                get_string($localizedactionname, 'mod_booking') : '';
 
             // Filter for rules of this or other context.
             if ($rule->contextid == $contextid) {
@@ -90,25 +97,33 @@ class ruleslist implements renderable, templatable {
                     JOIN {course_modules} cm ON cm.id = ctx.instanceid
                     JOIN {course} c ON cm.course = c.id
                     WHERE ctx.id = :contextid
-                    AND ctx.contextlevel = 70
+                    AND ctx.contextlevel = :contextlevel
                     ";
-                $params = ['contextid' => $rule->contextid];
+                $params = [
+                    'contextid' => $rule->contextid,
+                    'contextlevel' => CONTEXT_MODULE,
+                ];
                 $ruledata = $DB->get_record_sql($sql, $params);
+                if (empty($ruledata->instanceid)) {
+                    continue;
+                }
                 $url = new moodle_url('/mod/booking/edit_rules.php', ['cmid' => $ruledata->instanceid]);
-                $booking = singleton_service::get_instance_of_booking_by_cmid($ruledata->instanceid);
+                $bookingsettings = singleton_service::get_instance_of_booking_settings_by_cmid($ruledata->instanceid);
 
                 $rule->courseid = $ruledata->courseid;
                 $rule->coursename = $ruledata->coursename;
                 $rule->linktorulesininstance = $url->out();
-                $rule->bookingname = $booking->settings->name;
+                $rule->bookingname = $bookingsettings->name;
 
                 $contexts[$rule->contextid] = 1;
                 $this->rulesothercontext[] = (array)$rule;
             }
             // Make sure, rules from the same course appear next to each other in the list.
-            usort($this->rulesothercontext, function ($a, $b) {
-                return strcmp($a['coursename'], $b['coursename']);
-            });
+            if (!empty($this->rulesothercontext)) {
+                usort($this->rulesothercontext, function ($a, $b) {
+                    return strcmp($a['coursename'], $b['coursename']);
+                });
+            }
         }
         $this->contextid = $contextid;
         $this->enableaddbutton = $enableaddbutton;

@@ -129,6 +129,11 @@ if (isset($success) && isset($historylist)) {
 } else {
     $cartstore = cartstore::instance($userid);
     $data = $cartstore->get_localized_data();
+
+    // This will reset our cached code.
+    // Therefore, we need to call it before the get expanded checkout data.
+    shopping_cart::check_for_ongoing_payment($userid);
+
     $cartstore->get_expanded_checkout_data($data);
 }
 
@@ -145,7 +150,7 @@ foreach ($requiredaddresskeys as $addresstype) {
         $addressid = "";
     }
     if ($addressid && !empty(trim($addressid)) && is_numeric($addressid)) {
-        $address = address_operations::get_specific_user_addresses($addressid);
+        $address = address_operations::get_specific_user_address($addressid);
         if ($address !== false) {
             $address->label = ucfirst($requriedaddresses[$addresstype]['addresslabel']);
             $address->country = $countries[$address->state];
@@ -168,6 +173,10 @@ $checkoutmanager = new checkout_manager($data);
 
 $checkoutmanagerdata = $checkoutmanager->render_overview();
 $data = array_merge($data, $checkoutmanagerdata);
+
+// Use paymentarea main instead of empty.
+$data['area'] = 'main';
+
 if (empty($jsononly)) {
     // Convert numbers to strings with 2 fixed decimals right before rendering.
     shopping_cart::convert_prices_to_number_format($data);

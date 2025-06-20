@@ -13,9 +13,8 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
-
-/*
- * @package    local_wunderbyte_table
+/**
+ * @module    local_wunderbyte_table
  * @copyright  Wunderbyte GmbH <info@wunderbyte.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -35,7 +34,7 @@ var checked = {};
  * @param {string} idstring
  * @param {string} encodedtable
  */
- export function initializeCheckboxes(selector, idstring, encodedtable) {
+export function initializeCheckboxes(selector, idstring, encodedtable) {
 
   const filterContainer = document.querySelector(selector + SELECTORS.FILTER);
 
@@ -44,9 +43,10 @@ var checked = {};
   }
   const selects = filterContainer.querySelectorAll("select[id^='filteroperationselect']");
   const filterElements = filterContainer.querySelectorAll("input[class^='filterelement']");
+  const hierarchcheckboxes = filterContainer.querySelectorAll('.hierarchycategory-checkbox');
 
   if (!filterElements) {
-      return;
+    return;
   }
 
   // We create the key for the checked items of this table.
@@ -56,13 +56,15 @@ var checked = {};
 
   // We run through all the filter elements and make sure that we store the state we received from php.
   filterElements.forEach(element => {
-    // eslint-disable-next-line no-console
-    console.log(element.name);
     getChecked(element.name, selector, idstring);
   });
 
   applyChangelistener(filterElements, selector, idstring, encodedtable);
   applyChangelistener(selects, selector, idstring, encodedtable);
+
+  if (hierarchcheckboxes) {
+    handleHierarchyCategoryCheckbox(hierarchcheckboxes, filterElements, selector, idstring, encodedtable);
+  }
 
   filterContainer.dataset.initialized = true;
 }
@@ -143,7 +145,7 @@ export function initializeResetFilterButton(selector, idstring, encodedtable) {
  * @param {*} idstring
  * @param {*} encodedtable
  */
- export function toggleFilterelement(e, selector, idstring, encodedtable) {
+export function toggleFilterelement(e, selector, idstring, encodedtable) {
 
   e.stopPropagation();
   e.preventDefault();
@@ -160,10 +162,20 @@ export function initializeResetFilterButton(selector, idstring, encodedtable) {
       getChecked(e.target.name, selector, idstring);
     }
 
-    // Reload the filtered elements via ajax.
+    triggerReload(idstring, encodedtable);
+  }, 400);
+}
+
+/**
+ * Trigger the reload with filter, search, sort.
+ *
+ * @param {*} idstring
+ * @param {*} encodedtable
+ *
+ */
+function triggerReload(idstring, encodedtable) {
+      // Reload the filtered elements via ajax.
     const filterobjects = getFilterObjects(idstring);
-          // eslint-disable-next-line no-console
-          console.log("filterobjects: " + filterobjects);
     const searchstring = getSearchInput(idstring);
     const sort = getSortSelection(idstring);
 
@@ -179,7 +191,6 @@ export function initializeResetFilterButton(selector, idstring, encodedtable) {
       null,
       filterobjects,
       searchstring);
-  }, 400);
 }
 
 /**
@@ -219,14 +230,14 @@ export function getDates(e, selector, idstring) {
     unsetEmptyFieldsInCheckedObject(name, null, idstring);
     // Vorher noch ein if exists etc.
     Object.keys(checked[idstring]).forEach(function(key) {
-        Object.keys(checked[idstring][key]).forEach(function(okey) {
-            if (okey == filtername) {
-              resetCheckedObject(idstring, key, filtername);
-              unsetEmptyFieldsInCheckedObject(key, null, idstring);
-            }
-          }
-        );
+      Object.keys(checked[idstring][key]).forEach(function(okey) {
+        if (okey == filtername) {
+          resetCheckedObject(idstring, key, filtername);
+          unsetEmptyFieldsInCheckedObject(key, null, idstring);
+        }
       }
+      );
+    }
     );
   }
   updateFilterCounter(name, selector, idstring);
@@ -333,7 +344,7 @@ function setTimespanFilter(filtercontainer, filtername, idstring, name) {
       secondoperator = "fo";
       break;
     default:
-    break;
+      break;
   }
   if (!secondcolumn) {
     secondcolumn = firstcolumn;
@@ -476,11 +487,11 @@ export function updateUrlWithFilterSearchSort(filterobjects, searchstring, sort,
     url.searchParams.append('wbtfilter', filterobjects);
   }
   if (searchstring !== "" &&
-  searchstring !== null) {
+    searchstring !== null) {
     url.searchParams.append('wbtsearch', searchstring);
   }
   if (sort !== "" &&
-  sort !== null) {
+    sort !== null) {
     url.searchParams.append('tsort', sort);
   }
   if (dir !== null &&
@@ -504,7 +515,7 @@ export function updateDownloadUrlWithFilterSearchSort(idstring, filterobjects, s
   // The container will hold wunderbyteTableClass, wunderbyteTableFilter, wunderbyteTableSearch classes.
   let container = document.querySelector(".wunderbyte_table_container_" + idstring);
   if (!container) {
-      return;
+    return;
   }
 
   let url = '';
@@ -531,11 +542,11 @@ export function updateDownloadUrlWithFilterSearchSort(idstring, filterobjects, s
     url.searchParams.append('wbtfilter', filterobjects);
   }
   if (searchstring !== "" &&
-  searchstring !== null) {
+    searchstring !== null) {
     url.searchParams.append('wbtsearch', searchstring);
   }
   if (sort !== "" &&
-  sort !== null) {
+    sort !== null) {
     url.searchParams.append('tsort', sort);
   }
   if (dir !== null &&
@@ -595,17 +606,17 @@ export function getIntRange(e, selector, idstring) {
 
   const alertelement = filtercontainer.querySelector('div[id*="intrangefilter_alert"]');
   if (!isInt(fromvalue)
-      || !isInt(tovalue)) {
+    || !isInt(tovalue)) {
 
-      alertelement.removeAttribute('hidden');
+    alertelement.removeAttribute('hidden');
   } else {
-      alertelement.setAttribute('hidden', 'true');
+    alertelement.setAttribute('hidden', 'true');
 
-      // Stripping leading zeros.
-      fromvalue = parseInt(fromvalue, 10);
-      fromvalue = fromvalue.toString();
-      tovalue = parseInt(tovalue, 10);
-      tovalue = tovalue.toString();
+    // Stripping leading zeros.
+    fromvalue = parseInt(fromvalue, 10);
+    fromvalue = fromvalue.toString();
+    tovalue = parseInt(tovalue, 10);
+    tovalue = tovalue.toString();
   }
 
   if (fromvalue.length > 0 || tovalue.length > 0) {
@@ -629,9 +640,6 @@ export function getFilterObjects(idstring) {
   if (!(idstring in checked)) {
     return '';
   }
-
-  // eslint-disable-next-line no-console
-  console.log(idstring);
 
   let hasvalues = false;
 
@@ -694,9 +702,9 @@ function updateFilterCounter(name, selector, idstring) {
 
   let counter = checked[idstring][name] ? checked[idstring][name].length : 0;
   if ((counter > 0 && (typeof checked[idstring][name] === 'string') ||
-      (typeof checked[idstring][name] === 'object' && !Array.isArray(checked[idstring][name])))) {
-        // Handle different cases of filters here (datepicker, intrange).
-        // TODO: Find a better marker for difference of filters.
+    (typeof checked[idstring][name] === 'object' && !Array.isArray(checked[idstring][name])))) {
+    // Handle different cases of filters here (datepicker, intrange).
+    // TODO: Find a better marker for difference of filters.
     counter = 1;
   }
 
@@ -722,4 +730,37 @@ function updateFilterCounter(name, selector, idstring) {
       resetElement.classList.add('hidden');
     }
   }
+}
+
+/**
+ * Attach a click listener for these checkboxes to check all boxes in category.
+ *
+ * @param {*} parentCheckboxes
+ * @param {*} filterElements
+ * @param {*} selector
+ * @param {*} idstring
+ * @param {*} encodedtable
+ *
+ */
+function handleHierarchyCategoryCheckbox(parentCheckboxes, filterElements, selector, idstring, encodedtable) {
+    parentCheckboxes.forEach(parentCheckbox => {
+      parentCheckbox.addEventListener('click', function() {
+            // Get the closest parent <ul> element
+            const wrapper = parentCheckbox.closest('ul');
+
+            // Find all child checkboxes inside this <ul>
+            const childCheckboxes = wrapper.querySelectorAll('.form-check-input');
+
+            childCheckboxes.forEach(childCheckbox => {
+                // Only click if current state doesn't match parent
+                if (childCheckbox.checked !== parentCheckbox.checked) {
+                    childCheckbox.checked = parentCheckbox.checked; // Triggers associated JS
+                }
+            });
+            filterElements.forEach(element => {
+              getChecked(element.name, selector, idstring);
+            });
+            triggerReload(idstring, encodedtable);
+        });
+    });
 }

@@ -34,6 +34,7 @@ use mod_booking_generator;
 use context_system;
 use stdClass;
 use core\event\notification_sent;
+use tool_mocktesttime\time_mock;
 
 /**
  * Class handling tests for booking reminder mails.
@@ -44,13 +45,26 @@ use core\event\notification_sent;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class send_reminder_mails_test extends advanced_testcase {
-
     /**
      * Tests set up.
      */
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        global $DB;
+
+        parent::tearDown();
+        // Mandatory clean-up.
+        singleton_service::destroy_instance();
     }
 
     /**
@@ -62,6 +76,8 @@ final class send_reminder_mails_test extends advanced_testcase {
      */
     public function test_send_teacher_remimder(): void {
         global $DB, $CFG;
+
+        self::tearDown();
 
         // It is important to set timezone to have all dates correct!
         $this->setTimezone('Europe/London');
@@ -75,7 +91,7 @@ final class send_reminder_mails_test extends advanced_testcase {
             'pollurlteacherstext' => ['text' => 'text'],
             'notificationtext' => ['text' => 'text'], 'userleave' => ['text' => 'text'],
             'bookingpolicy' => 'bookingpolicy', 'tags' => '', 'completion' => 2,
-            'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+            'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
         ];
 
         // Spoecific setting to notify teachers.

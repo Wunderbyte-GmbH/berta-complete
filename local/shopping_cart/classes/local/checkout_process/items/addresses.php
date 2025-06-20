@@ -61,7 +61,7 @@ class addresses extends checkout_base_item {
      * @param array $cachedata
      * @return array
      */
-    public function render_body($cachedata): array {
+    public static function render_body($cachedata): array {
         global $PAGE;
         $data = self::get_template_render_data();
         $data['required_addresses'] = self::set_data_from_cache(
@@ -104,7 +104,7 @@ class addresses extends checkout_base_item {
      *
      * @return array all required template data
      */
-    public function get_template_render_data(): array {
+    public static function get_template_render_data(): array {
         $data = self::get_user_data();
         $addressesfromdb = address_operations::get_all_user_addresses($data["userid"]);
         $countries = get_string_manager()->get_list_of_countries();
@@ -129,16 +129,18 @@ class addresses extends checkout_base_item {
     }
 
     /**
-     * Generates complete required-address data as specified by the plugin config.
+     * Get some data of current user.
      *
-     * @return array list of all required addresses with a key and localized string
+     * @return array array containing user data
      */
     public static function get_user_data(): array {
         global $USER;
         return [
-            "usermail" => $USER->email,
-            "username" => $USER->firstname . $USER->lastname,
-            "userid" => $USER->id,
+            "userid" => $USER->id ?? 0,
+            "username" => $USER->username ?? '',
+            "firstname" => $USER->firstname ?? '',
+            "lastname" => $USER->lastname ?? '',
+            "email" => $USER->email ?? '',
         ];
     }
 
@@ -147,7 +149,7 @@ class addresses extends checkout_base_item {
      *
      * @return array list of all required addresses with a key and localized string
      */
-    public function get_required_address_data(): array {
+    public static function get_required_address_data(): array {
         $requiredaddresseslocalized = [];
         $requiredaddresskeys = self::get_required_address_keys();
         foreach ($requiredaddresskeys as $addresstype) {
@@ -171,7 +173,7 @@ class addresses extends checkout_base_item {
      *
      * @return array list of all required address keys
      */
-    private static function get_required_address_keys(): array {
+    public static function get_required_address_keys(): array {
         $addressesrequired = get_config('local_shopping_cart', 'addresses_required');
         $requiredaddresskeys = array_filter(explode(',', $addressesrequired));
         return $requiredaddresskeys;
@@ -195,7 +197,10 @@ class addresses extends checkout_base_item {
         $validationdata = json_decode($validationdata);
         foreach ($requiredaddresskeys as $requiredaddresskey) {
             foreach ($validationdata as $address) {
-                if (mb_strpos($address->name, $requiredaddresskey) !== false) {
+                if (
+                    isset($address->name) &&
+                    mb_strpos($address->name, $requiredaddresskey) !== false
+                ) {
                     $data[$address->name] = $address->value;
                 }
             }
@@ -216,7 +221,7 @@ class addresses extends checkout_base_item {
      * @return bool
      *
      */
-    private function is_valid(
+    public function is_valid(
         $requiredaddresskeys,
         $data
     ): bool {
@@ -224,9 +229,9 @@ class addresses extends checkout_base_item {
         $currentkeys = count($data);
         if (
             $requiredkeys === $currentkeys &&
-            self::is_address_valid($requiredaddresskeys)
+            $this->is_address_valid($requiredaddresskeys)
         ) {
-            $cartstore = cartstore::instance($this->identifier);
+            $cartstore = cartstore::instance(self::$identifier);
 
             $cartstoredata = [];
             if (!empty($requiredaddresskeys["selectedaddress_billing"])) {
@@ -250,10 +255,10 @@ class addresses extends checkout_base_item {
      * @return bool
      *
      */
-    private function is_address_valid(
+    private static function is_address_valid(
         $requiredaddresskeys
     ): bool {
-        $addressesfromdb = address_operations::get_all_user_addresses($this->identifier);
+        $addressesfromdb = address_operations::get_all_user_addresses(self::$identifier);
         foreach ($requiredaddresskeys as $requiredaddresskey) {
             if (!isset($addressesfromdb[$requiredaddresskey])) {
                 return false;

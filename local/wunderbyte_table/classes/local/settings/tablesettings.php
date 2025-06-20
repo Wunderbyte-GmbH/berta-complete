@@ -37,7 +37,6 @@ use stdClass;
  * @package local_wunderbyte_table
  */
 class tablesettings {
-
     /**
      * This returns the settings like they were initially programmed for the specific table.
      *
@@ -76,6 +75,7 @@ class tablesettings {
         $table->showdownloadbutton = $settingsobject->general->showdownloadbutton;
         $table->applyfilterondownload = $settingsobject->general->applyfilterondownload;
         $table->showreloadbutton = $settingsobject->general->showreloadbutton;
+        $table->showdownloadbuttonatbottom = $settingsobject->general->showdownloadbuttonatbottom;
         $table->showfilterontop = $settingsobject->general->showfilterontop;
         $table->showcountlabel = $settingsobject->general->showcountlabel;
         $table->showrowcountselect = $settingsobject->general->showrowcountselect;
@@ -85,7 +85,7 @@ class tablesettings {
         $table->filteronloadinactive = $settingsobject->general->filteronloadinactive;
         $table->placebuttonandpageelementsontop = $settingsobject->general->placebuttonandpageelementsontop;
         $table->infinitescroll = $settingsobject->general->infinitescroll;
-
+        $table->showaddfilterbutton = $settingsobject->general->showaddfilterbutton;
     }
 
     /**
@@ -118,7 +118,7 @@ class tablesettings {
             $orderby = '';
         }
 
-        list($inorequal, $params) = $DB->get_in_or_equal($searcharray, SQL_PARAMS_NAMED);
+        [$inorequal, $params] = $DB->get_in_or_equal($searcharray, SQL_PARAMS_NAMED);
 
         if (!empty($hash)) {
             $params['hash'] = $hash;
@@ -159,6 +159,14 @@ class tablesettings {
 
         $mform->addElement('advcheckbox', 'gs_wb_showfilterontop', get_string('showfilterontop', 'local_wunderbyte_table'));
 
+        $mform->addElement('advcheckbox', 'gs_wb_showaddfilterbutton', get_string('showaddfilterbutton', 'local_wunderbyte_table'));
+
+        $mform->addElement(
+            'advcheckbox',
+            'gs_wb_showdownloadbuttonatbottom',
+            get_string('showdownloadbuttonatbottom', 'local_wunderbyte_table')
+        );
+
         $mform->addElement('advcheckbox', 'gs_wb_showcountlabel', get_string('showcountlabel', 'local_wunderbyte_table'));
 
         $mform->addElement('advcheckbox', 'gs_wb_stickyheader', get_string('stickyheader', 'local_wunderbyte_table'));
@@ -167,18 +175,23 @@ class tablesettings {
 
         $mform->addElement('advcheckbox', 'gs_wb_addcheckboxes', get_string('addcheckboxes', 'local_wunderbyte_table'));
 
-        $mform->addElement('advcheckbox', 'gs_wb_placebuttonandpageelementsontop',
-            get_string('placebuttonandpageelementsontop', 'local_wunderbyte_table'));
+        $mform->addElement(
+            'advcheckbox',
+            'gs_wb_placebuttonandpageelementsontop',
+            get_string('placebuttonandpageelementsontop', 'local_wunderbyte_table')
+        );
 
-        $mform->addElement('advcheckbox', 'gs_wb_filteronloadinactive',
-            get_string('filteronloadinactive', 'local_wunderbyte_table'));
+        $mform->addElement(
+            'advcheckbox',
+            'gs_wb_filteronloadinactive',
+            get_string('filteronloadinactive', 'local_wunderbyte_table')
+        );
 
         $mform->addElement('text', 'gs_wb_pagesize', get_string('pagesize', 'local_wunderbyte_table'));
         $mform->setType('pagesize', PARAM_INT);
 
         $mform->addElement('text', 'gs_wb_infinitescroll', get_string('infinitescroll', 'local_wunderbyte_table'));
         $mform->setType('infinitescroll', PARAM_INT);
-
     }
 
     /**
@@ -198,30 +211,21 @@ class tablesettings {
         $ts = json_decode($jsontablesettings);
 
         $data->gs_wb_showdownloadbutton = $ts->general->showdownloadbutton ?? ($table->showdownloadbutton ? 1 : 0);
-
         $data->gs_wb_applyfilterondownload = $ts->general->applyfilterondownload ?? ($table->applyfilterondownload ? 1 : 0);
-
+        $data->gs_wb_showaddfilterbutton = $ts->general->showaddfilterbutton ?? ($table->showaddfilterbutton ? 1 : 0);
         $data->gs_wb_showreloadbutton = $ts->general->showreloadbutton ?? ($table->showreloadbutton ? 1 : 0);
-
         $data->gs_wb_showfilterontop = $ts->general->showfilterontop ?? ($table->showfilterontop ? 1 : 0);
-
+        $data->gs_wb_showdownloadbuttonatbottom = $ts->general->showdownloadbuttonatbottom ??
+            ($table->showdownloadbuttonatbottom ? 1 : 0);
         $data->gs_wb_showcountlabel = $ts->general->showcountlabel ?? ($table->showcountlabel ? 1 : 0);
-
         $data->gs_wb_stickyheader = $ts->general->stickyheader ?? ($table->stickyheader ? 1 : 0);
-
         $data->gs_wb_showrowcountselect = $ts->general->showrowcountselect ?? ($table->showrowcountselect ? 1 : 0);
-
         $data->gs_wb_addcheckboxes = $ts->general->addcheckboxes ?? ($table->addcheckboxes ? 1 : 0);
-
         $data->gs_wb_filteronloadinactive = $ts->general->filteronloadinactive ?? ($table->filteronloadinactive ? 1 : 0);
-
         $data->gs_wb_placebuttonandpageelementsontop
             = $ts->general->placebuttonandpageelementsontop ?? ($table->placebuttonandpageelementsontop ? 1 : 0);
-
         $data->gs_wb_pagesize = $ts->general->pagesize ?? $table->pagesize;
-
         $data->gs_wb_infinitescroll = $ts->general->infinitescroll ?? $table->infinitescroll;
-
     }
 
     /**
@@ -244,12 +248,11 @@ class tablesettings {
 
         // Now we update with the new values.
         foreach ($formdata as $key => $value) {
-
             if (in_array($key, $keystoskip)) {
                 continue;
             }
 
-            list($columnidentifier, $fieldidentifier) = explode('_wb_', $key);
+            [$columnidentifier, $fieldidentifier] = explode('_wb_', $key);
 
             // We don't treat the gs column identifier.
             if ($columnidentifier === 'gs') {
@@ -278,10 +281,12 @@ class tablesettings {
         $lang = filter::current_language();
         $cachekey = $table->tablecachehash . $lang . '_filterjson';
 
-        filter::save_settings($table,
-                              $cachekey,
-                              (array)$originaltablesettings,
-                              false);
+        filter::save_settings(
+            $table,
+            $cachekey,
+            (array)$originaltablesettings,
+            false
+        );
 
         $cache = cache::make($table->cachecomponent, $table->rawcachename);
         $cache->purge();

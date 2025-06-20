@@ -24,6 +24,8 @@
 
 namespace mod_booking\bo_availability\conditions;
 
+use local_shopping_cart\local\cartstore;
+use local_shopping_cart\shopping_cart;
 use mod_booking\bo_availability\bo_condition;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_option_settings;
@@ -42,7 +44,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class alreadyreserved implements bo_condition {
-
     /** @var int $id default conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_ALREADYRESERVED;
 
@@ -114,10 +115,10 @@ class alreadyreserved implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -223,6 +224,21 @@ class alreadyreserved implements bo_condition {
         $booking = singleton_service::get_instance_of_booking_settings_by_cmid($settings->cmid);
 
         if (empty($booking->iselective)) {
+            if (
+                get_config('booking', 'screstoreitemfromreserved')
+                && class_exists('local_shopping_cart\shopping_cart')
+            ) {
+                $cartstore = cartstore::instance($userid);
+                if (empty($cartstore->get_item('mod_booking', 'option', $settings->id))) {
+                    shopping_cart::add_item_to_cart(
+                        'mod_booking',
+                        'option',
+                        $settings->id,
+                        $userid
+                    );
+                }
+            }
+
             $data = $settings->return_booking_option_information($user);
 
             if ($fullwidth) {
@@ -231,7 +247,6 @@ class alreadyreserved implements bo_condition {
 
             return ['mod_booking/bookit_price', $data];
         } else {
-
             $label = get_string('selected', 'mod_booking');
             return bo_info::render_button($settings, $userid, $label, 'alert alert-warning', true, $fullwidth, 'alert', 'option');
         }

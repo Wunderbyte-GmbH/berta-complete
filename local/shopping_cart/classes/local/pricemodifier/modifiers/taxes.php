@@ -64,7 +64,7 @@ abstract class taxes extends modifier_base {
                     get_config('local_shopping_cart', 'defaulttaxcategory'),
                     get_config('local_shopping_cart', 'taxcategories')
             );
-            $data['items'] = self::update_item_price_data(array_values($data['items']), $data['userid'], $taxcategories);
+            self::update_item_price_data($data['items'], $data['userid'], $taxcategories);
             $data['price'] = shopping_cart::calculate_total_price($data["items"]);
             $data['price_net'] = shopping_cart::calculate_total_price($data["items"], true);
             $data['initialtotal'] = $data['price'];
@@ -85,7 +85,7 @@ abstract class taxes extends modifier_base {
      * @return array
      */
     public static function update_item_price_data(
-            array $items,
+            array &$items,
             int $userid,
             ?taxcategories $taxcategories
         ): array {
@@ -99,14 +99,15 @@ abstract class taxes extends modifier_base {
                     $itemisnet = get_config('local_shopping_cart', 'itempriceisnet');
                     $iseuropean = vatnrchecker::is_european($countrycode);
                     $isowncountry = vatnrchecker::is_own_country($countrycode);
-                    $hasvarnr = $cartstore->has_vatnr_data();
+                    $hasvatnumber = $cartstore->has_vatnr_data();
                     if ($itemisnet) {
                         $netprice = $items[$key]['price']; // Price is now considered a net price.
                         if (
                             $iseuropean &&
-                            $hasvarnr &&
+                            $hasvatnumber &&
                             !$isowncountry
                         ) {
+                            // EU reverse charge applies. No taxes added to net.
                             $grossprice = $netprice;
                             $taxpercent = 0;
                         } else if ($item['area'] == "rebookitem") {
@@ -127,7 +128,7 @@ abstract class taxes extends modifier_base {
                         $netprice = round($items[$key]['price'] / (1 + $taxpercent), 2);
                         if (
                             $iseuropean &&
-                            $hasvarnr &&
+                            $hasvatnumber &&
                             !$isowncountry
                         ) {
                             $grossprice = $netprice;

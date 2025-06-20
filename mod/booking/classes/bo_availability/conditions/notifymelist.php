@@ -49,7 +49,6 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class notifymelist implements bo_condition {
-
     /** @var int $id Standard Conditions have hardcoded ids. */
     public $id = MOD_BOOKING_BO_COND_NOTIFYMELIST;
 
@@ -112,7 +111,6 @@ class notifymelist implements bo_condition {
             || (
                 class_exists('local_shopping_cart\shopping_cart')
                 && has_capability('local/shopping_cart:cashier', context_system::instance())
-                && $userid != $USER->id
             )
             || !isloggedin()
             || isguestuser()
@@ -124,17 +122,20 @@ class notifymelist implements bo_condition {
             $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
             $bookinginformation = $bookinganswer->return_all_booking_information($userid);
             // If the user is not yet booked, and option is not fully booked, we return true.
+            $freeonwaitinglist = $bookinginformation['notbooked']['freeonwaitinglist'] ?? 0;
             if (isset($bookinginformation['notbooked'])) {
                 if ($bookinginformation['notbooked']['fullybooked'] === false) {
                     $isavailable = true;
-                } else if ($bookinginformation['notbooked']['freeonwaitinglist'] ?? 0 > 0) {
+                } else if (
+                    ($freeonwaitinglist > 0)
+                    || $freeonwaitinglist == -1
+                ) {
                     $isavailable = true;
                 }
             } else if (isset($bookinganswer->usersonwaitinglist[$userid])) {
                 // If the user is already booked on waitinglist, this is also true.
                 $isavailable = true;
             }
-
         }
 
         // If it's inversed, we inverse.
@@ -149,10 +150,10 @@ class notifymelist implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -257,8 +258,11 @@ class notifymelist implements bo_condition {
         $bookinganswer = singleton_service::get_instance_of_booking_answers($settings);
         $bookinginformation = $bookinganswer->return_all_booking_information($userid);
 
-        $notifyme = new button_notifyme($userid, $settings->id,
-                $bookinginformation['notbooked']['onnotifylist'] ?? false);
+        $notifyme = new button_notifyme(
+            $userid,
+            $settings->id,
+            $bookinginformation['notbooked']['onnotifylist'] ?? false
+        );
 
         return [
             'mod_booking/button_notifyme',
@@ -284,11 +288,11 @@ class notifymelist implements bo_condition {
             return $desc;
         }
         if ($isavailable) {
-            $description = $full ? get_string('bocondalreadybookedfullavailable', 'mod_booking') :
-                get_string('bocondalreadybookedavailable', 'mod_booking');
+            $description = $full ? get_string('bocondfullybookedfullavailable', 'mod_booking') :
+                get_string('bocondfullybookedavailable', 'mod_booking');
         } else {
-            $description = $full ? get_string('bocondalreadybookedfullnotavailable', 'mod_booking') :
-                get_string('bocondalreadybookednotavailable', 'mod_booking');
+            $description = $full ? get_string('bocondfullybookedfullnotavailable', 'mod_booking') :
+                get_string('bocondfullybookednotavailable', 'mod_booking');
         }
         return $description;
     }

@@ -109,10 +109,10 @@ class iscancelled implements bo_condition {
      * Each function can return additional sql.
      * This will be used if the conditions should not only block booking...
      * ... but actually hide the conditons alltogether.
-     *
+     * @param int $userid
      * @return array
      */
-    public function return_sql(): array {
+    public function return_sql(int $userid = 0): array {
 
         return ['', '', '', [], ''];
     }
@@ -209,7 +209,23 @@ class iscancelled implements bo_condition {
 
         $label = $this->get_description_string(false, $full, $settings);
 
-        return bo_info::render_button($settings, $userid, $label, 'alert alert-danger', true, $fullwidth, 'alert', 'option');
+        $detaildots = alreadybooked::detaildots($settings, $userid);
+
+        return bo_info::render_button(
+            $settings,
+            $userid,
+            $label,
+            'alert alert-danger',
+            true,
+            $fullwidth,
+            'alert',
+            'option',
+            true,
+            '',
+            '',
+            '',
+            $detaildots
+        );
     }
 
     /**

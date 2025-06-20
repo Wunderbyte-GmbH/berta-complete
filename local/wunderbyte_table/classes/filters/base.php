@@ -37,6 +37,10 @@ use stdClass;
  */
 abstract class base {
     /**
+     * @var array instances
+     */
+    protected static array $instances = [];
+    /**
      * @var string columnidentifier
      */
     protected string $columnidentifier = '';
@@ -61,6 +65,20 @@ abstract class base {
      * @var array
      */
     protected array $options = [];
+
+    /**
+     * Property to indicate if class has implemented a callback
+     *
+     * @var bool
+     */
+    public $hascallback = false;
+
+    /**
+     * Expected value.
+     *
+     * @var string
+     */
+    public $expectedvalue;
 
     /**
      * Set the column which should be filtered and possibly localize it.
@@ -92,7 +110,6 @@ abstract class base {
      * @throws coding_exception
      */
     public static function definition(MoodleQuickForm &$mform, array &$formdata, stdClass $filter) {
-
         $classname = get_called_class();
         // We only want the last part of the classname.
         $array = explode('\\', $classname);
@@ -174,9 +191,7 @@ abstract class base {
      * @return array
      */
     public static function get_data_for_filter_options(wunderbyte_table $table, string $key) {
-
         $returnarray = filter::get_db_filter_column($table, $key);
-
         return $returnarray ?? [];
     }
 
@@ -188,13 +203,12 @@ abstract class base {
      * @param array $filtersettings
      * @param string $fckey
      * @param array $values
-     * @return array
+     * @return void
      */
     public static function add_to_categoryobject(array &$categoryobject, array $filtersettings, string $fckey, array $values) {
-
         // Don't treat this filter if there are no values here.
         if (!is_array($values)) {
-            return [];
+            return;
         }
 
         $valueswithcount = self::apply_filtercount($values, $fckey, $filtersettings);
@@ -312,7 +326,7 @@ abstract class base {
 
         if (!isset($categoryobject['default']) || count($categoryobject['default']['values']) == 0) {
             // We don't add the filter if there is nothing in there.
-            return [];
+            return;
         }
 
         if ($sortarray == null) {
@@ -322,6 +336,7 @@ abstract class base {
 
         // Make the arrays mustache ready, we have to jump through loops.
         $categoryobject['default']['values'] = array_values($categoryobject['default']['values']);
+        return;
     }
 
     /**
@@ -369,7 +384,6 @@ abstract class base {
                     unset($values[$keytoexplode]);
                 }
             }
-
             unset($filtersettings[$fckey]['explode']);
         }
         return $valueswithcount;
@@ -416,17 +430,8 @@ abstract class base {
             if (
                 isset($table->subcolumns['datafields'][$columnname]['jsonattribute'])
             ) {
-                    $paramsvaluekey = $table->set_params("%" . $value ."%");
+                    $paramsvaluekey = $table->set_params("%" . $value . "%");
                     $filter .= $DB->sql_like("$columnname", ":$paramsvaluekey", false);
-            } else if (
-                is_numeric($value)
-                && isset($table->subcolumns['datafields'][$columnname]['local_wunderbyte_table\filters\types\hourlist'])
-            ) {
-                // Known issue. See https://github.com/Wunderbyte-GmbH/Wunderbyte-GmbH/issues/304.
-                // Here we check if it's an hourslist filter.
-                $delta = filter::get_timezone_offset(); // Timezone might vary according to location.
-                $paramsvaluekey = $table->set_params((string) ($value + $delta), false);
-                $filter .= filter::apply_hourlist_filter($columnname, ":$paramsvaluekey");
             } else {
                 // We want to find the value in an array of values.
                 // Therefore, we have to use or as well.
@@ -443,6 +448,16 @@ abstract class base {
     }
 
     /**
+     * Getter for column identifier string.
+     *
+     * @return string
+     *
+     */
+    public function return_columnidentifier() {
+        return $this->columnidentifier;
+    }
+
+    /**
      * Add keys and values for applied filters. This will only be applied if filter is active.
      *
      * @param mixed $tableobject
@@ -454,5 +469,81 @@ abstract class base {
      */
     public static function prepare_filter_for_rendering(&$tableobject, array $filterarray, int $key) {
         return;
+    }
+
+    /**
+     * Function to filter std Class records by the set callback.
+     * We have positiv & negativ filter.
+     *
+     * @param array $records
+     * @param bool $not
+     *
+     * @return array
+     *
+     */
+    public function filter_by_callback(array $records, $not = false) {
+        // In the base version, we do no filtering either way.
+        return $records;
+    }
+
+    /**
+     * The expected value.
+     *
+     * @param string $expectedvalue
+     *
+     * @return void
+     *
+     */
+    public function set_expected_value(string $expectedvalue) {
+        $this->expectedvalue = $expectedvalue;
+    }
+
+    /**
+     * The expected value.
+     * @param \MoodleQuickForm $mform
+     * @param array $data
+     * @param string $filterspecificvalue
+     */
+    public static function render_mandatory_fields(&$mform, $data = [], $filterspecificvalue = '') {
+        $mform = new MoodleQuickForm('dynamicform', 'post', '');
+        $mform->addElement(
+            'static',
+            'user_information',
+            '',
+            'No additional fields needed'
+        );
+    }
+
+    /**
+     * The expected value.
+     * @param array $data
+     * @return array
+     */
+    public static function validate_filter_data($data) {
+        return ['name' => 'error'];
+    }
+
+    /**
+     * The expected value.
+     * @param array $fieldsandsubmitteddata
+     */
+    public static function get_dynamic_values($fieldsandsubmitteddata) {
+        return [];
+    }
+
+    /**
+     * The expected value.
+     * @param object $data
+     * @param string $filtercolumn
+     * @return array
+     */
+    public static function get_filterspecific_values($data, $filtercolumn) {
+        $filterenablelabel = $filtercolumn . '_wb_checked';
+        $filterspecificvalues = [
+            'localizedname' => $data->localizedname ?? '',
+            'wbfilterclass' => $data->wbfilterclass ?? '',
+            $filterenablelabel => $data->$filterenablelabel ?? '0',
+        ];
+        return [$filterspecificvalues, ''];
     }
 }

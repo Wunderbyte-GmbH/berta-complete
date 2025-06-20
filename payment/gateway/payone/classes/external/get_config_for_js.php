@@ -178,9 +178,9 @@ class get_config_for_js extends external_api {
             $longmtid = $merchanttransactionid;
         }
 
-        $sdk = new payone_sdk($config['clientid'], $config['secret'], $config['brandname'], $sandbox );
+        $sdk = payone_sdk::create($config['clientid'], $config['secret'], $config['brandname'], $sandbox );
 
-        $paymentdata = new \stdClass();
+        $paymentdata = new stdClass();
         $paymentdata->tid = $merchanttransactionid;
         $paymentdata->merchantParameters = $longmtid;
         $paymentdata->amount = helper::get_rounded_cost($payable->get_amount(), $payable->get_currency(), $surcharge);
@@ -193,7 +193,7 @@ class get_config_for_js extends external_api {
             $purchaseid = $responsedata->getMerchantReference();
 
             // Pepare db item.
-            $record = new \stdClass();
+            $record = new stdClass();
             $record->tid = $responsedata->getHostedCheckoutId();
             $record->itemid = $itemid;
             $record->userid = (int) $USER->id;
@@ -205,7 +205,10 @@ class get_config_for_js extends external_api {
             $record->customorderid = $longmtid;
 
             // Check for duplicate.
-            if (!$existingrecord = $DB->get_record('paygw_payone_openorders', ['itemid' => $itemid, 'userid' => $USER->id])) {
+            if (
+                !$existingrecord =
+                    $DB->get_record('paygw_payone_openorders', ['itemid' => $itemid, 'userid' => $USER->id, 'tid' => $record->tid])
+            ) {
                 $id = $DB->insert_record('paygw_payone_openorders', $record);
 
                 // We trigger the payment_added event.

@@ -24,7 +24,9 @@
  */
 
 namespace local_shopping_cart;
+use core\task\manager;
 use local_shopping_cart\event\payment_confirmed;
+use local_shopping_cart\local\taskmanager;
 use local_shopping_cart\output\shoppingcart_history_list;
 
 defined('MOODLE_INTERNAL') || die();
@@ -623,7 +625,8 @@ class shopping_cart {
 
         $cartstore = cartstore::instance($userid);
         $items = $cartstore->get_items();
-        $cartstore->set_expiration($expirationtime);
+        // When the currently used expiration time is higher than the one we want to set, we take the higher one.
+        $expirationtime = $cartstore->set_expiration($expirationtime);
 
         foreach ($items as $taskdata) {
             // We don't touch booking fee.
@@ -631,11 +634,27 @@ class shopping_cart {
             if ($taskdata['componentname'] === 'local_shpping_cart') {
                 continue;
             }
+
+            // We need to unset expiration time to make sure we don't recreate the tasks.
+            unset($taskdata['expirationtime']);
+
+            $customdata = [
+                'itemid' => $taskdata['itemid'],
+                'userid' => $userid,
+                'componentname' => $taskdata['componentname'],
+                "area" => "option",
+            ];
+
             $deleteitemtask = new delete_item_task();
             $deleteitemtask->set_userid($userid);
             $deleteitemtask->set_next_run_time($expirationtime);
-            $deleteitemtask->set_custom_data($taskdata);
-            \core\task\manager::reschedule_or_queue_adhoc_task($deleteitemtask);
+            $deleteitemtask->set_custom_data($customdata);
+            $storedexpirationtime = taskmanager::reschedule_or_queue_adhoc_task_to_later($deleteitemtask);
+
+            // Here we check if we had a task scheduled for later.
+            if ($storedexpirationtime > $expirationtime) {
+                $expirationtime = $cartstore->set_expiration($storedexpirationtime);
+            }
         }
     }
 
@@ -734,12 +753,9 @@ class shopping_cart {
 
             // Even if we get the data from history, we still need to look in cache.
             // With this, we will know how much the user actually paid and how much comes from her credits.
-            shopping_cart_credits::prepare_checkout($data, $userid);
-
             // Now we need to store the new credit balance.
             if (
-                !empty($data['deductible'])
-                && ($data['credit'] != $data['remainingcredit'])
+                !empty($data['usecredit'])
             ) {
                 shopping_cart_credits::use_credit($userid, $data);
                 $creditsalreadyused = true;
@@ -801,6 +817,7 @@ class shopping_cart {
             $ledgerrecord->annotation = get_string('creditsusedannotation', 'local_shopping_cart');
             $ledgerrecord->address_billing = $data['address_billing'] ?? 0;
             $ledgerrecord->address_shipping = $data['address_shipping'] ?? 0;
+            $ledgerrecord->vatnumber = $data['vatnrnumber'] ?? null;
             self::add_record_to_ledger_table($ledgerrecord);
         }
 
@@ -808,6 +825,11 @@ class shopping_cart {
         foreach ($data['items'] as $item) {
             // We might retrieve the items from history or via cache. From history, they come as stdClass.
             $item = (array) $item;
+
+            // We make sure that all our items have the address and billing information.
+            $item['address_billing'] = $data['address_billing'] ?? '';
+            $item['address_shipping'] = $data['address_shipping'] ?? '';
+            $item['vatnumber'] = $data['vatnrnumber'] ?? '';
 
             $totalprice += $item['price'];
 
@@ -1125,6 +1147,12 @@ class shopping_cart {
                     && $cancelationfeesettings > 0
                 ) {
                     $customcredit -= $cancelationfeesettings;
+                }
+
+                if (
+                    get_config('local_shopping_cart', 'calculateconsumation')
+                    || get_config('local_shopping_cart', 'calculateconsumationfixedpercentage') > 0
+                ) {
                     $applygivenquota = 1;
                 }
             }
@@ -1571,7 +1599,9 @@ class shopping_cart {
                     continue;
                 }
 
-                $sql = "SELECT DISTINCT sch.identifier, sch.userid, oo.timecreated, COALESCE(oo.tid, '') as tid
+                $uniqueid = $DB->sql_concat("COALESCE(oo.tid, '')", "'-'", "sch.identifier");
+
+                $sql = "SELECT DISTINCT $uniqueid as id, sch.identifier, sch.userid, oo.timecreated, COALESCE(oo.tid, '') as tid
                         FROM {local_shopping_cart_history} sch
                         JOIN {" . $table . "} oo
                         ON oo.itemid = sch.identifier AND oo.userid=sch.userid

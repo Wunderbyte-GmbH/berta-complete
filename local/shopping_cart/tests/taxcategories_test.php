@@ -25,19 +25,35 @@
 
 namespace local_shopping_cart;
 
-use local_shopping_cart\local\entities\cartitem;
-use PHPUnit\Framework\TestCase;
-use ReflectionClass;
+use advanced_testcase;
+use local_shopping_cart\local\cartstore;
 
 /**
  * Test for taxcategories
- * @covers \taxcategories
+ * @covers \local_shopping_cart\taxcategories
  */
-final class taxcategories_test extends TestCase {
+final class taxcategories_test extends advanced_testcase {
+    /**
+     * Set up the test environment.
+     */
+    protected function setUp(): void {
+        parent::setUp();
+        $this->resetAfterTest();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        parent::tearDown();
+        // Mandatory clean-up.
+        cartstore::reset();
+        \cache_helper::purge_by_definition('local_shopping_cart', 'cacheshopping');
+    }
 
     /**
      * Test complex raw string is valid: taxcategories::is_valid_raw_string()
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -67,7 +83,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test complex raw string without default category is invalid: taxcategories::is_valid_raw_string()
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -80,7 +96,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test empty raw string is invalid
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -91,7 +107,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test single value raw string is valid
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -102,7 +118,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test single line raw string is valid
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -113,7 +129,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test multi line raw string is valid
-     * @covers \taxcategories::is_valid_raw_string
+     * @covers \local_shopping_cart\taxcategories::is_valid_raw_string
      *
      * @return [type]
      */
@@ -124,7 +140,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test single line
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -142,7 +158,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test single value empty default category
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -163,7 +179,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test multi line
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -184,7 +200,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test tax for category no country code
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -202,7 +218,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test tax for no category no country code
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -216,7 +232,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test tax for no category but country code
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -231,7 +247,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test tax for category and country code
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */
@@ -246,7 +262,7 @@ final class taxcategories_test extends TestCase {
 
     /**
      * Test tax for tax_for_category() and country code use defaults taxcategories::from_raw_string()
-     * @covers \taxcategories::from_raw_string
+     * @covers \local_shopping_cart\taxcategories::from_raw_string
      *
      * @return [type]
      */

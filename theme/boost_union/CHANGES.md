@@ -4,7 +4,85 @@ moodle-theme_boost_union
 Changes
 -------
 
-### Unreleased
+### v4.4-r23
+
+* 2025-06-09 - Tests: Fix a failing Behat test on the 'Allow admins to use the tertiary navigation' scenario, resolves #973
+* 2025-06-04 - Bugfix: Enabling the footersuppresslogininfo setting prevented the reset of the failed login attempts counter, resolves #658
+
+### v4.4-r22
+
+* 2025-05-30 - Improvement: Transform the plain paragraphs on some settings pages into Bootstrap alerts for a nicer look.
+* 2025-05-27 - Bugfix: The page scrolled to the top when a dynamic courses submenu got clicked, resolves #962.
+
+### v4.4-r21
+
+* 2025-05-21 - Bugfix: Smart menu "Visibility by language" restriction was not applied correctly after changes of the current language, resolves #697.
+* 2025-05-20 - Release: Set the Boost Union logo and tagline as screenshot for the theme overview page, resolves #925
+
+### v4.4-r20
+
+* 2025-05-19 - Bugfix: Fix broken starred courses popover which resulted in a faulty feature backport.
+
+### v4.4-r19
+
+* 2025-05-08 - Feature: Allow the admin to configure the link target of the cog icon in the starred courses popover, resolves #939
+* 2025-05-08 - Bugfix: Smart menu item icon was not black when hovered on a black navbar, resolves #936
+
+### v4.4-r18
+
+* 2025-05-06 - Tests: The fine-grained personal access token (theme-boost_union-extscsstest.behat) had expired, resolves #932
+* 2025-05-06 - Regression: Course search page did not use the improved course listings anymore, resolves #930
+* 2025-05-02 - Bugfix: On mobile devices, the course listing combo box produced horizontal scroll bars, resolves #926.
+* 2025-04-30 - Bugfix: Modified smart menu transition time had an impact on the slider, resolves #922.
+* 2025-04-30 - Bugfix: Fix a HTML nesting glitch for the course lists on site home, resolves #919.
+* 2025-04-28 - Improvement: Remove a surplus CSS statement regarding the back-to-top button.
+
+### v4.4-r17
+
+* 2025-04-25 - Improvement: Fix a small glitch in the slider's language strings
+* 2025-04-24 - Bugfix: Make sure that the navbar highlight is not shown in the dark navbar, resolves #908.
+* 2025-04-22 - Bugfix: Support multilang course category names in stickyheaders, resolves #905.
+
+### v4.4-r16
+
+* 2025-04-06 - Bugfix: Enrol page used modified course listing renderer from category index / site home as well, resolves #895.
+* 2025-04-01 - Feature: Add moodle documentation smartmenu item type, resolves #657.
+
+### v4.4-r15
+
+* 2025-03-29 - Bugfix: Remove assumption that syscontext->id = 1, resolves #627
+* 2025-03-28 - Improvement: Add resizing to flavour logo and compact logo, resolves #212.
+* 2025-03-27 - Improvement: Add admin main navigation to smart menu items page as well, resolves #882.
+* 2025-03-27 - Improvement: Add tertiary navigation to Boost Union admin settings pages to allow jumping from one settings page to another, resolves #876.
+               Child theme support: If you are running a Boost Union Child theme, please make sure to adapt your child theme to our latest boilerplate.
+
+### v4.4-r14
+
+* 2025-03-26 - Bugfix: Footer button got pushed upwards even though no bottom menu bar was present, resolves #784.
+* 2025-03-25 - Bugfix: If a course category is hidden, the "go to course" button (in the course cards view) got a wrong color, resolves #877.
+* 2025-03-25 - Bugfix: Make sure that the sticky category headers (in the course cards view) does not cover the more menu, resolves #866.
+* 2025-03-25 - Bugfix: Do not show the sticky category headers (in the course cards view) for categories with just a few courses, resolves #866.
+* 2025-03-24 - Bugfix: SmartMenu caused JavaScript error 'Uncaught TypeError: moreMenu is null', resolves #850.
+* 2025-03-10 - Bugfix: Guests could not use the side entrance login page, resolves #653.
+* 2025-03-10 - Bugfix: Fix unwanted redirect to IdP from locallogin.php in case alternateloginurl is set, resolves #775.
+* 2025-03-10 - Improvement: Show a clearer warning to the admin about the risks of disabling the local login form, resolves #777.
+* 2025-03-10 - Improvement: Allow the side entrace login page to be enabled independent from the localloginenable setting, resolves #782
+
+### v4.4-r13
+
+* 2025-03-10 - Bugfix: The course details modal did not work on all site home widgets, resolves #851.
+* 2025-03-09 - Bugfix: The theme's SCSS could not be built if setting activityiconcolorfidelity was not set yet, resolves #838
+* 2025-03-09 - Upgrade: Remove theme_boost_union_before_standard_html_head and theme_boost_union_before_standard_top_of_body_html callbacks from Moodle 4.5 and 4.4 releases finally, resolves #640.
+* 2025-03-09 - Improvement: Introduce a Boost Union specific string for "submit" to be used in the accessbility support form which allows better translatons, resolves #830.
+* 2025-03-08 - Improvement: Add setting to limit the maximum width of the navbar logo if it is too broad or has a special aspect ratio, resolves #544.
+
+### v4.4-r12
+
+* 2025-02-22 - Feature: Add some styling to the category listings on site home and on the category index pages, resolves #840.
+* 2025-02-16 - Feature: Show the course listing on site home and on the category index pages as (proper) list, resolves #573.
+* 2025-02-07 - Feature: Show the course listing on site home and on the category index pages as cards, resolves #558.
+
+### v4.4-r11
 
 * 2025-02-12 - Bugfix: Accessibility page link in description differed from real location, resolves #818.
 

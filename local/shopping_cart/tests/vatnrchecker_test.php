@@ -25,64 +25,101 @@
 
 namespace local_shopping_cart;
 
+use advanced_testcase;
+use local_shopping_cart\local\cartstore;
+use local_shopping_cart\local\checkout_process\items_helper\vatnumberhelper;
 use local_shopping_cart\local\vatnrchecker;
 use PHPUnit\Framework\TestCase;
+use SoapClient;
 /**
  * Test for taxcategories
- * @covers \taxcategories
+ * @covers \local_shopping_cart\taxcategories
  */
-final class vatnrchecker_test extends TestCase {
+final class vatnrchecker_test extends advanced_testcase {
+    /**
+     * Soap Mock instance.
+     *
+     * @var object
+     */
+    protected object $soapmock;
+
+    /**
+     * Tests set up.
+     */
+    public function setUp(): void {
+        parent::setUp();
+        // Mock SoapClient.
+        $this->soapmock = $this->getMockBuilder(SoapClient::class)
+            ->setConstructorArgs(["https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"])
+            ->setMethods(['checkVat'])
+            ->getMock();
+    }
+
+    /**
+     * Mandatory clean-up after each test.
+     */
+    public function tearDown(): void {
+        parent::tearDown();
+        // Mandatory clean-up.
+        cartstore::reset();
+        \cache_helper::purge_by_definition('local_shopping_cart', 'cacheshopping');
+    }
+
     /**
      * Test vatnrchecker - invalid eu
-     * @covers \vatnrchecker::check_vatnr_number
+     * @covers \local_shopping_cart\local\vatnrchecker
      * @return void
      */
     public function test_invalid_at_vat_number(): void {
         $countrycode = 'AT';
         $vatnrnumber = '123456789';
 
-        $checkvatnr = vatnrchecker::check_vatnr_number($countrycode, $vatnrnumber);
+        $this->soapmock->method('checkVat')->willReturn(['valid' => false]);
+
+        $checkvatnr = vatnumberhelper::is_vatnr_valid($countrycode, $vatnrnumber, $this->soapmock);
 
         $this->assertFalse($checkvatnr);
     }
 
     /**
      * Test vatnrchecker - valid eu
-     * @covers \vatnrchecker::check_vatnr_number
+     * @covers \local_shopping_cart\local\vatnrchecker
      * @return void
      */
     public function test_valid_at_vat_number(): void {
         $countrycode = 'AT';
         $vatnrnumber = 'U74259768';
 
-        $checkvatnr = vatnrchecker::check_vatnr_number($countrycode, $vatnrnumber);
+        $this->soapmock->method('checkVat')->willReturn(['valid' => true]);
+
+        $checkvatnr = vatnumberhelper::is_vatnr_valid($countrycode, $vatnrnumber, $this->soapmock);
 
         $this->assertTrue($checkvatnr);
     }
 
     /**
      * Test vatnrchecker - invalid eu
-     * @covers \vatnrchecker::check_vatnr_number
+     * @covers \local_shopping_cart\local\vatnrchecker
      * @return void
      */
     public function test_invalid_gb_vat_number(): void {
         $countrycode = 'GB';
         $vatnrnumber = '123456789';
 
-        $checkvatnr = vatnrchecker::check_vatnr_number($countrycode, $vatnrnumber);
+        $checkvatnr = vatnumberhelper::is_vatnr_valid($countrycode, $vatnrnumber);
 
         $this->assertFalse($checkvatnr);
     }
 
     /**
      * Test vatnrchecker - valid eu
-     * @covers \vatnrchecker::check_vatnr_number
+     * @covers \local_shopping_cart\local\vatnrchecker
      * @return void
      */
     public function test_valid_gb_vat_number(): void {
         $countrycode = 'GB';
         $vatnrnumber = '100079899';
-        $checkvatnr = vatnrchecker::check_vatnr_number($countrycode, $vatnrnumber);
+        $checkvatnr = vatnumberhelper::is_vatnr_valid($countrycode, $vatnrnumber);
         $this->assertTrue($checkvatnr);
     }
 }

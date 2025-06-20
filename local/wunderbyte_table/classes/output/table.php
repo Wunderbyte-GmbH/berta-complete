@@ -39,7 +39,6 @@ use templatable;
  *
  */
 class table implements renderable, templatable {
-
     /**
      * idstring of the table, needed for output
      *
@@ -140,6 +139,13 @@ class table implements renderable, templatable {
     private $showdownloadbutton = true;
 
     /**
+     * Button to add custom filters to table.
+     *
+     * @var bool
+     */
+    private $showaddfilterbutton = true;
+
+    /**
      * Applyfilterondownload.
      *
      * @var bool
@@ -200,6 +206,12 @@ class table implements renderable, templatable {
      * @var bool Show a label where number of totalrows and filtered rows are displayed.
      */
     public $showfilterontop = false;
+
+    /**
+     *
+     * @var bool Show download button at bottom instead of top (default).
+     */
+    public $showdownloadbuttonatbottom = false;
 
     /**
      * Action buttons
@@ -265,6 +277,12 @@ class table implements renderable, templatable {
     public $templatedata = [];
 
     /**
+     * Array of templates for template switcher.
+     * @var array
+     */
+    public $switchtemplates = [];
+
+    /**
      * Constructor.
      *
      * @param wunderbyte_table $table
@@ -285,6 +303,23 @@ class table implements renderable, templatable {
 
         $this->errormessage = $table->errormessage;
 
+        // Make sure the chosen template is marked as selected.
+        if (!empty($this->wbtable->switchtemplates['templates'])) {
+            foreach ($this->wbtable->switchtemplates['templates'] as &$t) {
+                if (
+                    ($t['template'] == get_user_preferences('wbtable_chosen_template_' . $this->wbtable->uniqueid))
+                    && ($t['viewparam'] == get_user_preferences(
+                        'wbtable_chosen_template_viewparam_' . $this->wbtable->uniqueid
+                    ))
+                ) {
+                    $t['selected'] = true;
+                } else {
+                    unset($t['selected']);
+                }
+            }
+        }
+        $this->switchtemplates = $this->wbtable->switchtemplates ?? null;
+
         // We don't want the encoded table stable, regardless of previous actions.
         $this->encodedtable = empty($encodedtable) ? $table->return_encoded_table() : $encodedtable;
 
@@ -298,11 +333,13 @@ class table implements renderable, templatable {
         $this->showfilterbutton = $table->showfilterbutton;
         $this->applyfilterondownload = $table->applyfilterondownload;
         $this->showreloadbutton = $table->showreloadbutton;
+        $this->showaddfilterbutton = $table->showaddfilterbutton;
 
-        if (get_config('local_wunderbyte_table', 'allowedittable')
-            && has_capability('local/wunderbyte_table:canedittable', $table->context)) {
-
-                $this->edittable = true;
+        if (
+            get_config('local_wunderbyte_table', 'allowedittable')
+            && has_capability('local/wunderbyte_table:canedittable', $table->context)
+        ) {
+            $this->edittable = true;
         } else {
             $this->edittable = false;
         }
@@ -310,6 +347,8 @@ class table implements renderable, templatable {
         $this->showcountlabel = $table->showcountlabel;
 
         $this->showfilterontop = $table->showfilterontop;
+
+        $this->showdownloadbuttonatbottom = $table->showdownloadbuttonatbottom;
 
         $this->tableheight = $table->tableheight;
 
@@ -331,7 +370,9 @@ class table implements renderable, templatable {
 
         $this->templatedata = $table->templatedata;
 
-        list($this->totalrecords, $this->filteredrecords) = $table->return_records_count();
+        $this->switchtemplates = $table->switchtemplates;
+
+        [$this->totalrecords, $this->filteredrecords] = $table->return_records_count();
 
         // If we want to use fulltextsearch, we add the search key to the output.
         if (!empty($table->fulltextsearchcolumns)) {
@@ -374,11 +415,9 @@ class table implements renderable, templatable {
 
             $counter = 0;
             foreach ($row as $key => $value) {
-
                 // We run through all our set subcolumnsidentifiers.
 
                 foreach ($table->subcolumns as $subcolumnskey => $subcolumnsvalue) {
-
                     if (isset($subcolumnsvalue[$key])) {
                         $subcolumnsvalue[$key]['key'] = $key;
                         $subcolumnsvalue[$key]['value'] = $value;
@@ -398,7 +437,7 @@ class table implements renderable, templatable {
                     $rowarray['datafields'] = [];
                 }
 
-                $foundid = array_filter($rowarray['datafields'], function($x) {
+                $foundid = array_filter($rowarray['datafields'], function ($x) {
                     return $x['key'] === 'id';
                 });
 
@@ -413,15 +452,12 @@ class table implements renderable, templatable {
             $this->table['rows'][] = $rowarray;
             // Only if it's not yet set, we set the header.
             if (!isset($this->table['header'])) {
-
                 $this->table['header'] = $rowarray;
             }
         }
 
         if (!empty($table->headers)) {
-
             foreach ($table->columns as $column => $key) {
-
                 $localized = $table->headers[$key] ?? $column;
                 $item = [
                     'key' => $column,
@@ -429,9 +465,10 @@ class table implements renderable, templatable {
                 ];
 
                 // Whether there should be up down arrows in the header.
-                if (in_array($column, $table->sortablecolumns, true)
-                    || in_array($column, array_keys($table->sortablecolumns), true)) {
-
+                if (
+                    in_array($column, $table->sortablecolumns, true)
+                    || in_array($column, array_keys($table->sortablecolumns), true)
+                ) {
                     $item['sortable'] = true;
                 };
 
@@ -500,11 +537,13 @@ class table implements renderable, templatable {
                         $page['ellipsis'] = 'ellipsis';
                         $pages[] = $page;
                     }
-                } else if ($pagenumber <= $shownumberofpages
+                } else if (
+                    $pagenumber <= $shownumberofpages
                     || $pagenumber > ($numberofpages - $shownumberofpages)
                     || ($pagenumber > ($currpage - $shownumberofpages)
                         && ($pagenumber < ($currpage + $shownumberofpages))
-                    )) {
+                    )
+                ) {
                     $page['pagenumber'] = $pagenumber;
                     if ($pagenumber === $currpage) {
                         $page['active'] = 'active';
@@ -533,7 +572,6 @@ class table implements renderable, templatable {
                 $this->pagination['previouspage'] = $currpage - 1;
             }
             $this->pagination['pages'] = $pages;
-
         } else if ($table->infinitescroll > 0) {
             $this->pagination['nopages'] = 'nopages';
             $this->pagination['infinitescroll'] = true;
@@ -610,7 +648,7 @@ class table implements renderable, templatable {
     public function return_as_list() {
         global $CFG;
 
-          $data = [
+        $data = [
             'idstring' => $this->idstring,
             'uniqueid' => $this->uniqueid,
             'encodedtable' => $this->encodedtable,
@@ -619,12 +657,14 @@ class table implements renderable, templatable {
             'totalrecords' => $this->totalrecords,
             'norecords' => $this->totalrecords == 0 ? true : false,
             'filteredrecords' => $this->filteredrecords,
-            'countlabelstring' => get_string('countlabel',
+            'countlabelstring' => get_string(
+                'countlabel',
                 'local_wunderbyte_table',
                 (object)[
                     'totalrecords' => $this->totalrecords,
                     'filteredrecords' => $this->totalrows,
-                ]),
+                ]
+            ),
             'filtercount' => $this->filtercountstring,
             'searchtext' => $this->searchtext,
             'searchtextapplied' => $this->search,
@@ -640,90 +680,112 @@ class table implements renderable, templatable {
             'errormessage' => !empty($this->errormessage) ? $this->errormessage : false,
             'showrowcountselect' => $this->showcountselect(),
             'showfilterontop' => $this->showfilterontop,
+            'showdownloadbuttonatbottom' => $this->showdownloadbuttonatbottom,
             'displayelementsontop' => $this->placebuttonandpageelementsontop ?? null,
             'showspinner' => true,
-            ];
+            'switchtemplates' => $this->switchtemplates ?? null,
+        ];
 
-          // Only if we want to show the searchfield, we actually add the key.
-          if ($this->search) {
-              $data['search'] = true;
-              if ($CFG->version >= 2023042400) {
-                  // Moodle 4.2 uses Fontawesome 6.
-                  $data['searchiconclasses'] = 'fa-solid fa-magnifying-glass wunderbyteTableSearchIcon';
-              } else {
-                  // For older versions, use Fontawesome 4.
-                  $data['searchiconclasses'] = 'fa fa-search fa-xl mt-2';
-              }
-          }
+        // Only if we want to show the searchfield, we actually add the key.
+        if ($this->search) {
+            $data['search'] = true;
+            if ($CFG->version >= 2023042400) {
+                // Moodle 4.2 uses Fontawesome 6.
+                $data['searchiconclasses'] = 'fa-solid fa-magnifying-glass wunderbyteTableSearchIcon';
+            } else {
+                // For older versions, use Fontawesome 4.
+                $data['searchiconclasses'] = 'fa fa-search fa-xl mt-2';
+            }
+        }
 
-          // Only if we want to show the sortelements, we actually add the key.
-          if (!empty($this->sort)) {
-              if (!$this->cardsort) {
-                  $data['sort'] = $this->sort;
-              } else {
-                  $data['cardsort'] = $this->sort;
-              }
-          }
+        // We need to to the same for switchtemplates (template switcher).
+        if (!empty($this->switchtemplates)) {
+            if ($CFG->version >= 2023042400) {
+                // Moodle 4.2 uses Fontawesome 6.
+                $data['switchtemplatesiconclasses'] = 'fa-solid fa-table-list wunderbyteTableSwitchTemplatesIcon';
+            } else {
+                // For older versions, use Fontawesome 4.
+                $data['switchtemplatesiconclasses'] = 'fa fa-th-list fa-xl mt-2';
+            }
+        }
 
-          // Only if we want to show the searchfield, we actually add the key.
-          if ($this->showreloadbutton) {
-              $data['reload'] = true;
-          }
+        // Only if we want to show the sortelements, we actually add the key.
+        if (!empty($this->sort)) {
+            if (!$this->cardsort) {
+                $data['sort'] = $this->sort;
+            } else {
+                $data['cardsort'] = $this->sort;
+            }
+        }
 
-          // Only if we want to show the searchfield, we actually add the key.
-          if ($this->edittable) {
-              $data['edit'] = true;
-          }
+        // Only if we want to show the searchfield, we actually add the key.
+        if ($this->showreloadbutton) {
+            $data['reload'] = true;
+        }
 
-          if ($this->showcountlabel) {
-              $data['countlabel'] = true;
-          }
+        // Only if we want to show the searchfield, we actually add the key.
+        if ($this->edittable) {
+            $data['edit'] = true;
+        }
 
-          if (!empty($this->stickyheader)) {
-              $data['stickyheader'] = $this->stickyheader;
-          }
+        if ($this->showcountlabel) {
+            $data['countlabel'] = true;
+        }
 
-          if (!empty($this->tableheight)) {
-              $data['tableheight'] = $this->tableheight;
-          }
+        if (!empty($this->stickyheader)) {
+            $data['stickyheader'] = $this->stickyheader;
+        }
 
-          // Only if we want to show the print elements, we actually add the key.
-          if ($this->showdownloadbutton) {
-              $data['print'] = true;
-              $data['printoptions'] = $this->printoptions;
-              if (!empty($this->applyfilterondownload)) {
-                  $data['applyfilterondownload'] = "1";
-              }
-          }
+        if (!empty($this->tableheight)) {
+            $data['tableheight'] = $this->tableheight;
+        }
 
-          if (!empty($this->categories)) {
-              // If there there is a filterobject, we check if on load filters should be hidden or displayed (default).
-              if ($this->categories['filterinactive'] == true) {
-                  $data['showcomponentstoggle'] = false;
-                  $data['showfilterbutton'] = $this->showfilterbutton;
-                  $data['filterdeactivated'] = true;
-              } else {
-                  $data['showcomponentstoggle'] = true;
-                  $data['showfilterbutton'] = $this->showfilterbutton;
-              }
-          }
+        // Only if we want to show the print elements, we actually add the key.
+        if ($this->showdownloadbutton) {
+            $data['print'] = true;
+            $data['printoptions'] = $this->printoptions;
+            if (!empty($this->applyfilterondownload)) {
+                $data['applyfilterondownload'] = "1";
+            }
+        }
 
-          if (!empty($this->actionbuttons)) {
-              $data['showactionbuttons'] = $this->actionbuttons;
-          }
+        if ($this->showaddfilterbutton) {
+            $data['showaddfilterbutton'] = true;
+        }
 
-          if (class_exists('local_shopping_cart\shopping_cart')) {
-              $data['shoppingcartisavailable'] = true;
-          }
+        if (!empty($this->categories)) {
+            // If there there is a filterobject, we check if on load filters should be hidden or displayed (default).
+            if ($this->categories['filterinactive'] == true) {
+                $data['showcomponentstoggle'] = false;
+                $data['showfilterbutton'] = $this->showfilterbutton;
+                $data['filterdeactivated'] = true;
+            } else {
+                $data['showcomponentstoggle'] = true;
+                $data['showfilterbutton'] = $this->showfilterbutton;
+            }
+        }
 
-          // We need a param to check in the css if the version is minimum 4.2.
-          if ($CFG->version >= 2023042400) {
-              $data['moodleversionminfourtwo'] = 'moodleversionminfourtwo';
-          }
+        if (!empty($this->actionbuttons)) {
+            $data['showactionbuttons'] = $this->actionbuttons;
+        }
 
-          $this->apply_template_data($data);
+        if (class_exists('local_shopping_cart\shopping_cart')) {
+            $data['shoppingcartisavailable'] = true;
+        }
 
-            return $data;
+        // We need a param to check in the css if the version is minimum 4.2.
+        if ($CFG->version >= 2023042400) {
+            $data['moodleversionminfourtwo'] = 'moodleversionminfourtwo';
+        }
+
+        // Make sure switchtemplates array is not passed, if it's empty.
+        if (empty($this->switchtemplates)) {
+            $data['switchtemplates'] = null;
+        }
+
+        $this->apply_template_data($data);
+
+        return $data;
     }
 
     /**
@@ -760,16 +822,17 @@ class table implements renderable, templatable {
 
         global $SESSION;
 
-        if (empty($this->wbtable->sortablecolumns )) {
+        if (empty($this->wbtable->sortablecolumns)) {
             return null;
         }
 
+        $isassociative = array_keys($this->wbtable->sortablecolumns) !== range(0, count($this->wbtable->sortablecolumns) - 1);
+
         $sortarray['options'] = [];
         foreach ($this->wbtable->sortablecolumns as $key => $value) {
-
             // If we have an assoziative array, we have localized values.
             // Else, we need to use the same value twice.
-            if (!isset($this->wbtable->columns[$key])) {
+            if (!$isassociative) {
                 $key = $value;
             }
 
@@ -783,8 +846,10 @@ class table implements renderable, templatable {
 
             $sortarray['options'][] = $item;
         }
-        if ($this->wbtable->return_current_sortorder() == SORT_ASC ||
-            empty($this->wbtable->return_current_sortorder())) {
+        if (
+            $this->wbtable->return_current_sortorder() == SORT_ASC ||
+            empty($this->wbtable->return_current_sortorder())
+        ) {
             // Sort up is the default.
             $sortarray['sortup'] = true;
             $sortarray['sortdown'] = null; // For mustache, we neeed null, not false.
@@ -827,20 +892,16 @@ class table implements renderable, templatable {
                 foreach ($column['datepicker']['datepickers'] as $vkey => $value) {
                     if (isset($value['timestamp'])) {
                         if ((is_string($value['timestamp']) && !is_numeric($value['timestamp']))) {
-
                             $time = strtotime($value['timestamp']);
                         } else {
                             $time = (int)$value['timestamp'];
                         }
                         $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['datereadable'] = date('Y-m-d', $time);
                         $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['timereadable'] = date('h:i', $time);
-
                     }
                     if (isset($value['starttimestamp'])) {
-
                         if (is_string($value['starttimestamp']) && !is_numeric($value['starttimestamp'])) {
                             $time = strtotime($value['starttimestamp']);
-
                         } else {
                             $time = (int)$value['starttimestamp'];
                         }
@@ -848,7 +909,6 @@ class table implements renderable, templatable {
                         $tableobject[$tokey]['datepicker']['datepickers'][$vkey]['starttimereadable'] = date('h:i', $time);
                     }
                     if (isset($value['endtimestamp'])) {
-
                         if (is_string($value['endtimestamp']) && !is_numeric($value['endtimestamp'])) {
                             $time = strtotime($value['endtimestamp']);
                         } else {
@@ -895,7 +955,7 @@ class table implements renderable, templatable {
                                 $date = date('Y-m-d', $unixcode);
                                 $time = date('H:i', $unixcode);
                                 // We check which filter of the column is checked and apply the values.
-                                // TODO: Handle cases where we have a start- & enddate.
+                                // Todo: Handle cases where we have a start- & enddate.
                                 foreach ($tableobject[$tokey]['datepicker']['datepickers'] as $dkey => $dvalues) {
                                     if ($dvalues['label'] == $sfkey) {
                                         $tableobject[$tokey]['datepicker']['datepickers'][$dkey]['datereadable'] = $date;
@@ -940,7 +1000,6 @@ class table implements renderable, templatable {
                                     }
                                 }
                             }
-
                         } else {
                             // So we can now check all the entries in the filterobject...
                             // ...to see if we find the concrete filter at the right place (values) in the tableobject.
@@ -987,12 +1046,14 @@ class table implements renderable, templatable {
         $string = "";
         if ($filtersum > 0) {
             $string .= " | " .
-            get_string('filtercountmessage',
-            'local_wunderbyte_table',
-                (object)[
-                    'filtercolumns' => $filtercolumns,
-                    'filtersum' => $filtersum,
-                ]);
+                get_string(
+                    'filtercountmessage',
+                    'local_wunderbyte_table',
+                    (object)[
+                        'filtercolumns' => $filtercolumns,
+                        'filtersum' => $filtersum,
+                    ]
+                );
         }
         if (!empty($table->searchtext)) {
             if (!empty($string)) {

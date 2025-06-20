@@ -35,6 +35,7 @@ use mod_booking\booking_context_helper;
 use mod_booking\booking_option;
 use mod_booking\local\modechecker;
 use mod_booking\option\dates_handler;
+use mod_booking\option\fields\competencies;
 use mod_booking\price;
 use mod_booking\singleton_service;
 use moodle_url;
@@ -183,6 +184,12 @@ class bookingoption_description implements renderable, templatable {
     /** @var bool $selflearningcourseshowdurationinfoexpired */
     private $selflearningcourseshowdurationinfoexpired = null;
 
+    /** @var string $competencies */
+    private $competencies = '';
+
+    /** @var string $competencyheader */
+    private $competencyheader = '';
+
     /**
      * Constructor.
      *
@@ -300,8 +307,10 @@ class bookingoption_description implements renderable, templatable {
         // Show info until when the booking option can be cancelled.
         // If cancelling was disabled in the booking option or for the whole instance...
         // ...then we do not show the cancel until info.
-        if (booking_option::get_value_of_json_by_key($optionid, 'disablecancel')
-            || booking::get_value_of_json_by_key($settings->bookingid, 'disablecancel')) {
+        if (
+            booking_option::get_value_of_json_by_key($optionid, 'disablecancel')
+            || booking::get_value_of_json_by_key($settings->bookingid, 'disablecancel')
+        ) {
             $this->canceluntil = null;
         } else {
             // Check if the option has its own canceluntil date.
@@ -427,27 +436,13 @@ class bookingoption_description implements renderable, templatable {
         if (empty($settings->bookingopeningtime)) {
             $this->bookingopeningtime = null;
         } else {
-            switch (current_language()) {
-                case 'de':
-                    $this->bookingopeningtime = date('d.m.Y, H:i', $settings->bookingopeningtime);
-                    break;
-                default:
-                    $this->bookingopeningtime = date('M d, Y, H:i', $settings->bookingopeningtime);
-                    break;
-            }
+            $this->bookingopeningtime = userdate($settings->bookingopeningtime, get_string('strftimedatetime', 'langconfig'));
         }
 
         if (empty($settings->bookingclosingtime)) {
             $this->bookingclosingtime = null;
         } else {
-            switch (current_language()) {
-                case 'de':
-                    $this->bookingclosingtime = date('d.m.Y, H:i', $settings->bookingclosingtime);
-                    break;
-                default:
-                    $this->bookingclosingtime = date('M d, Y, H:i', $settings->bookingclosingtime);
-                    break;
-            }
+            $this->bookingclosingtime = userdate($settings->bookingclosingtime, get_string('strftimedatetime', 'langconfig'));
         }
 
         if (isset($settings->customfields)) {
@@ -521,6 +516,11 @@ class bookingoption_description implements renderable, templatable {
                     // Currently this is only working for the current USER.
                     $this->booknowbutton = get_string('infowaitinglist', 'booking');
                 }
+                // If competencies are active, we return a list here.
+                $this->competencies = competencies::get_list_of_similar_options(
+                    $bookingoption->settings->competencies ?? "",
+                    $bookingoption
+                );
                 break;
 
             case MOD_BOOKING_DESCRIPTION_CALENDAR:
@@ -556,6 +556,15 @@ class bookingoption_description implements renderable, templatable {
                 $this->usertobuyfor = price::return_user_to_buy_for();
 
                 $this->bookitsection = booking_bookit::render_bookit_button($settings, $this->usertobuyfor->id);
+
+                // If competencies are active, we return a list here.
+                $this->competencies = competencies::get_list_of_similar_options(
+                    $bookingoption->settings->competencies ?? "",
+                    $bookingoption
+                );
+                if (!empty($this->competencies)) {
+                    $this->competencyheader = get_string('showsimilaroptions', 'mod_booking');
+                }
 
                 break;
         }
@@ -614,6 +623,8 @@ class bookingoption_description implements renderable, templatable {
             'returnurl' => !empty($this->returnurl) ? $this->returnurl : false,
             'canceluntil' => $this->canceluntil,
             'canstillbecancelled' => $this->canstillbecancelled,
+            'competencies' => $this->competencies,
+            'competencyheader' => $this->competencyheader,
         ];
 
         if (!empty($this->timeremaining)) {

@@ -13,26 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/*
- * @package    local_urise
- * @author     Christian Badusch
- * @copyright  2024 Wunderbyte GmbH <info@wunderbyte.at>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 /**
- * Handle Calendar.
- *
- * @module     local_urise
- * @copyright  2024 Wunderbyte GmbH
- * @author     Georg Maißer
+ * @module    local_wunderbyte_table
+ * @copyright  Wunderbyte GmbH <info@wunderbyte.at>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-
 import {
     get_strings as getStrings,
- } from 'core/str';
+} from 'core/str';
 
 /**
  * [Description for init]
@@ -47,7 +35,6 @@ export async function init(id) {
     const data = calendarElement.dataset.rowswithdates;
     const datesobject = JSON.parse(data);
 
-
     const isLeapYear = (year) => {
         return (
             (year % 4 === 0 && year % 100 !== 0 && year % 400 !== 0) ||
@@ -61,54 +48,54 @@ export async function init(id) {
 
     const strings = [
         {
-          key: 'january',
-          component: 'local_wunderbyte_table',
+            key: 'january',
+            component: 'local_wunderbyte_table',
         },
         {
-          key: 'february',
-          component: 'local_wunderbyte_table',
+            key: 'february',
+            component: 'local_wunderbyte_table',
         },
         {
-          key: 'march',
-          component: 'local_wunderbyte_table',
+            key: 'march',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'april',
-        component: 'local_wunderbyte_table',
+            key: 'april',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'may',
-        component: 'local_wunderbyte_table',
+            key: 'may',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'june',
-        component: 'local_wunderbyte_table',
+            key: 'june',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'july',
-        component: 'local_wunderbyte_table',
+            key: 'july',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'august',
-        component: 'local_wunderbyte_table',
+            key: 'august',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'september',
-        component: 'local_wunderbyte_table',
+            key: 'september',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'october',
-        component: 'local_wunderbyte_table',
+            key: 'october',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'november',
-        component: 'local_wunderbyte_table',
+            key: 'november',
+            component: 'local_wunderbyte_table',
         },
         {
-        key: 'december',
-        component: 'local_wunderbyte_table',
+            key: 'december',
+            component: 'local_wunderbyte_table',
         },
-      ];
+    ];
 
     const localizedstrings = await getStrings(strings);
     const monthNames = localizedstrings;
@@ -130,7 +117,6 @@ export async function init(id) {
     };
 
     const generateCalendar = (month, year) => {
-
         const highlightSessions = [];
         datesobject.forEach(session => {
             const date = new Date(session.coursestarttime * 1000);
@@ -161,7 +147,6 @@ export async function init(id) {
 
         let firstDay = new Date(year, month);
 
-
         for (let i = 0; i <= daysOfMonth[month] + firstDay.getDay() - 1; i++) {
             let day = document.createElement('div');
             if (i >= firstDay.getDay()) {
@@ -188,8 +173,8 @@ export async function init(id) {
                     let link = document.createElement('a');
                     link.classList.add('stretched-link');
                     link.href = matchedHighlightSession.url;
-                // Insert the <a> element into the div
-                day.appendChild(link);
+                    // Insert the <a> element into the div
+                    day.appendChild(link);
                 }
 
             }

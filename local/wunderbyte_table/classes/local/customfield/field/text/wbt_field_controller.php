@@ -38,18 +38,62 @@ use local_wunderbyte_table\local\customfield\wbt_field_controller_base;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class wbt_field_controller extends field_controller implements wbt_field_controller_base {
-
     /**
      * Get the actual string value of the customfield.
      *
      * @param string $key
+     * @param bool $formatstring
+     * @param bool $keyisencoded
      * @return string the string value
      */
-    public function get_option_value_by_key(string $key): string {
+    public function get_option_value_by_key(string $key, bool $formatstring = true, bool $keyisencoded = false): string {
         if (!empty($key)) {
-            // For normal text fields we need format_string.
-            return format_string($key);
+            if ($keyisencoded) {
+                $returnvalue = base64_decode($key);
+            } else {
+                $returnvalue = $key;
+            }
+
+            // For normal text fields we might need format_string.
+            if ($formatstring) {
+                $returnvalue = format_string($returnvalue);
+            }
+            return $returnvalue;
         }
         return '';
+    }
+
+    /**
+     * Get an array containing all key value pairs for the customfield.
+     * Depending on the type, these can be actually used values or possible values.
+     *
+     * @return array an array containing all key value pairs for the customfield
+     */
+    public function get_values_array(): array {
+        global $DB;
+
+        switch ($DB->get_dbfamily()) {
+            case 'mysql':
+                $sql = "SELECT DISTINCT TO_BASE64(value) AS id, value AS data
+                          FROM {customfield_data} cd
+                         WHERE fieldid = :fieldid";
+                break;
+            default:
+                $sql = "SELECT DISTINCT encode(value::bytea, 'base64') AS id, value AS data
+                          FROM {customfield_data} cd
+                         WHERE fieldid = :fieldid";
+                break;
+        }
+        // We need to be able to get back to data, for textbased entries, therefore we use the value as id and data.
+        $params = [
+            'fieldid' => $this->field->get('id'),
+        ];
+        try {
+            $records = $DB->get_records_sql($sql, $params);
+        } catch (\Throwable $th) {
+            return [];
+        }
+
+        return $records;
     }
 }

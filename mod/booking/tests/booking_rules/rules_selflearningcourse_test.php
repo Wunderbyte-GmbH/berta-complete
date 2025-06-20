@@ -38,6 +38,7 @@ use local_shopping_cart\shopping_cart_history;
 use local_shopping_cart\local\cartstore;
 use local_shopping_cart\output\shoppingcart_history_list;
 use stdClass;
+use tool_mocktesttime\time_mock;
 
 defined('MOODLE_INTERNAL') || die();
 global $CFG;
@@ -59,12 +60,13 @@ final class rules_selflearningcourse_test extends advanced_testcase {
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
+        time_mock::init();
+        time_mock::set_mock_time(strtotime('now'));
+        singleton_service::destroy_instance();
     }
 
     /**
      * Test of booking option with price as well as cancellation by user.
-     *
-     * @covers \booking_bookit
      *
      * @param array $coursedata
      * @param array $pricecategories
@@ -72,9 +74,8 @@ final class rules_selflearningcourse_test extends advanced_testcase {
      * @param array $expected
      * @throws \coding_exception
      * @throws \dml_exception
-     *
+     * @covers \mod_booking\booking_bookit::bookit
      * @dataProvider booking_common_settings_provider
-     *
      */
     public function test_booking_bookit_with_price_and_cancellation(
         array $coursedata,
@@ -83,6 +84,9 @@ final class rules_selflearningcourse_test extends advanced_testcase {
         $expected
     ): void {
         global $DB, $CFG;
+
+        // Clean up singletons.
+        self::tearDown();
 
         $users = [];
         $bookingoptions = [];
@@ -144,6 +148,16 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                 // Create booking options.
                 foreach ($bdata['bookingoptions'] as $option) {
                     $option['bookingid'] = $booking->id;
+
+                    if (!empty($option['skipbookingrules'])) {
+                        $rulename = $option['skipbookingrules'];
+                        $sql = "SELECT id
+                                FROM {booking_rules}
+                                WHERE rulejson LIKE '%$rulename%'";
+                        $ruleid = $DB->get_field_sql($sql);
+                        $option['skipbookingrules'] = $ruleid;
+                    }
+
                     $option = $plugingenerator->create_option((object)$option);
 
                     $bookingoptions[$option->identifier] = $option;
@@ -262,6 +276,8 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                 }
             }
         }
+        // Clean up singletons.
+        self::tearDown();
     }
 
 
@@ -366,6 +382,18 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                 'selflearningcourse' => 1,
                 'duration' => 84400 * 4, // 4 days.
             ],
+            [
+                'text' => 'self learning course, rules test',
+                'description' => 'self learning course, rules test',
+                'identifier' => 'selflearningcoursenotifypreviousdaytest',
+                'maxanswers' => 1,
+                'useprice' => 0,
+                'importing' => 1,
+                'selflearningcourse' => 1,
+                'duration' => 84400 * 1, // 4 days.
+                'skipbookingrulesmode' => 0, // 0 is opt out, 1 is opt in.
+                'skipbookingrules' => '1dayafter', // We use name here and fetch id in test.
+            ],
         ];
 
         $standardbookinginstances =
@@ -384,7 +412,7 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                 'notificationtext' => ['text' => 'text'],
                 'userleave' => ['text' => 'text'],
                 'tags' => '',
-                'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+                'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
                 'bookingoptions' => $standardbookingoptions,
                 'sendmail' => 0,
             ],
@@ -402,7 +430,7 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                 'notificationtext' => ['text' => 'text'],
                 'userleave' => ['text' => 'text'],
                 'tags' => '',
-                'showviews' => ['mybooking,myoptions,showall,showactive,myinstitution'],
+                'showviews' => ['mybooking,myoptions,optionsiamresponsiblefor,showall,showactive,myinstitution'],
                 'bookingoptions' => $standardbookingoptions,
                 'sendmail' => 0,
             ],
@@ -561,6 +589,31 @@ final class rules_selflearningcourse_test extends advanced_testcase {
                         [
                             'subject' => '1 day before',
                             'nextruntime' => strtotime('+ 3 days'),
+                            'days' => '1',
+                        ],
+                    ],
+                ],
+                [
+                    'user' => 'student1',
+                    'boookingoption' => 'selflearningcoursenotifypreviousdaytest', // Ask for confirmation, price.
+                    'bo_cond' => MOD_BOOKING_BO_COND_BOOKITBUTTON,
+                    'showprice' => false,
+                    'price' => 10,
+                    'numberoftasks' => 3, // 2 from previous test.
+                    'taskexpected' => [
+                        [
+                            'subject' => '1 day after', // From previous test.
+                            'nextruntime' => strtotime('+ 5 days'),
+                            'days' => '-1',
+                        ],
+                        [
+                            'subject' => '1 day before', // From previous test.
+                            'nextruntime' => strtotime('+ 3 days'),
+                            'days' => '1',
+                        ],
+                        [
+                            'subject' => '1 day before',
+                            'nextruntime' => strtotime('now'),
                             'days' => '1',
                         ],
                     ],

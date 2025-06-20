@@ -31,4 +31,35 @@ $shortcodes = [
         'wraps' => false,
         'description' => 'wbnewslist',
     ],
+    'wbnewscourse' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_course',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
+    'wbnewsmycourses' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_mycourses',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
+    'wbnewsavailablecourses' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_availablecourses',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
+    'wbnewscompletedcourses' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_completedcourses',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
+    'wbnewsinprogresscourses' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_inprogresscourses',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
+    'wbnewshlfsnews' => [
+        'callback' => 'local_wb_news\shortcodes::wbnews_hlfs_news',
+        'wraps' => false,
+        'description' => 'wbnewscourse',
+    ],
 ];
+
