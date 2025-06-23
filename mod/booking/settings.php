@@ -18,7 +18,7 @@
  * Global settings
  *
  * @package mod_booking
- * @copyright 2017 David Bogner, http://www.edulabs.org
+ * @copyright 2025 Wunderbyte GmbH <info@wunderbyte.at>
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -32,6 +32,7 @@ require_once($CFG->dirroot . '/mod/booking/lib.php');
 require_once($CFG->dirroot . '/user/profile/lib.php');
 
 use mod_booking\booking;
+use mod_booking\plugininfo\bookingextension_interface;
 use mod_booking\local\checkanswers\checkanswers;
 use mod_booking\price;
 use mod_booking\utils\wb_payment;
@@ -123,6 +124,17 @@ $ADMIN->add(
     )
 );
 
+// Load all settings from booking extensions.
+foreach (core_plugin_manager::instance()->get_plugins_of_type('bookingextension') as $plugin) {
+    $fullclassname = "\\bookingextension_{$plugin->name}\\{$plugin->name}";
+    $plugin = new $fullclassname();
+    if (!$plugin instanceof bookingextension_interface) {
+        continue; // Skip if the plugin does not implement the interface.
+    }
+    /** @var bookingextension_interface $plugin */
+    $plugin->load_settings($ADMIN, 'modbookingfolder', $hassiteconfig);
+}
+
 $ADMIN->add('modbookingfolder', $settings);
 
 if ($ADMIN->fulltree) {
@@ -162,6 +174,16 @@ if ($ADMIN->fulltree) {
 
     // Has PRO version been activated?
     $proversion = wb_payment::pro_version_is_activated();
+
+    // Code snippet to choose user profile fields.
+    $userprofilefieldsarray[0] = get_string('choose...', 'mod_booking');
+    $userprofilefields = profile_get_custom_fields();
+    if (!empty($userprofilefields)) {
+        // Create an array of key => value pairs for the dropdown.
+        foreach ($userprofilefields as $userprofilefield) {
+            $userprofilefieldsarray[$userprofilefield->shortname] = "$userprofilefield->name ($userprofilefield->shortname)";
+        }
+    }
 
     $settings->add(
         new admin_setting_heading(
@@ -283,6 +305,19 @@ if ($ADMIN->fulltree) {
             )
         );
 
+        // Show extra information (custom fields, comments...) for optiondates in the booking options overview list.
+        $showoptiondatesextrainfo = new admin_setting_configcheckbox(
+            'booking/showoptiondatesextrainfo',
+            get_string('showoptiondatesextrainfo', 'mod_booking'),
+            get_string('showoptiondatesextrainfo_desc', 'mod_booking'),
+            0
+        );
+        $showoptiondatesextrainfo->set_updatedcallback(function () {
+            cache_helper::purge_by_event('setbackencodedtables');
+            cache_helper::purge_by_event('changesinwunderbytetable');
+        });
+        $settings->add($showoptiondatesextrainfo);
+
         // Turn off modals.
         $settings->add(
             new admin_setting_configcheckbox(
@@ -314,7 +349,6 @@ if ($ADMIN->fulltree) {
                 $presenceoptions
             )
         );
-
     } else {
         $settings->add(
             new admin_setting_heading(
@@ -717,6 +751,38 @@ if ($ADMIN->fulltree) {
                 get_string('teachersettings_desc', 'mod_booking')
             )
         );
+        // Reduce teachers selection to those with a specific user profile field.
+        $settings->add(
+            new admin_setting_configcheckbox(
+                'booking/selectteacherswithprofilefieldonly',
+                get_string('selectteacherswithprofilefieldonly', 'mod_booking'),
+                get_string('selectteacherswithprofilefieldonlydesc', 'mod_booking'),
+                0
+            )
+        );
+        if (get_config('booking', 'selectteacherswithprofilefieldonly')) {
+            // Custom user profile field which defines teachers of booking options.
+            $settings->add(
+                new admin_setting_configselect(
+                    'booking/selectteacherswithprofilefieldonlyfield',
+                    get_string('selectteacherswithprofilefieldonlyfield', 'mod_booking'),
+                    '',
+                    0,
+                    $userprofilefieldsarray
+                )
+            );
+            // Value of custom user profile field. Can also be a list of comma-separated values.
+            $settings->add(
+                new admin_setting_configtext(
+                    'booking/selectteacherswithprofilefieldonlyvalue',
+                    get_string('selectteacherswithprofilefieldonlyvalue', 'mod_booking'),
+                    get_string('selectteacherswithprofilefieldonlyvaluedesc', 'mod_booking'),
+                    '',
+                    PARAM_TEXT
+                )
+            );
+        }
+
         $settings->add(
             new admin_setting_configcheckbox(
                 'booking/teacherslinkonteacher',
@@ -731,6 +797,24 @@ if ($ADMIN->fulltree) {
                 get_string('teachersnologinrequired', 'mod_booking'),
                 get_string('teachersnologinrequired_desc', 'mod_booking'),
                 0
+            )
+        );
+        $records = $DB->get_records_sql("SELECT b.id, b.name FROM {booking} b ORDER BY b.name");
+        if (empty($records)) {
+            $bookinginstances[0] = get_string('nobookinginstancesexist', 'mod_booking');
+        } else {
+            $bookinginstances[0] = get_string('noselection', 'mod_booking');
+            foreach ($records as $record) {
+                $bookinginstances[$record->id] = "$record->name ($record->id)";
+            }
+        }
+        $settings->add(
+            new admin_setting_configmultiselect(
+                'booking/teacherpageshiddenbookingids',
+                get_string('teacherpageshiddenbookingids', 'mod_booking'),
+                '',
+                [0],
+                $bookinginstances
             )
         );
         $settings->add(
@@ -972,7 +1056,6 @@ if ($ADMIN->fulltree) {
         foreach ($records as $record) {
             $options[$record->id] = $record->name;
         }
-
         $settings->add(
             new admin_setting_configmultiselect(
                 'booking/templatetags',
@@ -1240,17 +1323,6 @@ if ($ADMIN->fulltree) {
         )
     );
 
-    // Choose the user profile field which is used to store each user's price category.
-    $userprofilefieldsarray[0] = get_string('userprofilefieldoff', 'mod_booking');
-    $userprofilefields = profile_get_custom_fields();
-    if (!empty($userprofilefields)) {
-        $userprofilefieldsarray = [];
-        // Create an array of key => value pairs for the dropdown.
-        foreach ($userprofilefields as $userprofilefield) {
-            $userprofilefieldsarray[$userprofilefield->shortname] = $userprofilefield->name;
-        }
-    }
-
     $settings->add(
         new admin_setting_configselect(
             'booking/pricecategoryfield',
@@ -1321,7 +1393,6 @@ if ($ADMIN->fulltree) {
             $userprofilefieldsarray
         )
     );
-
     $settings->add(
         new admin_setting_configselect(
             'booking/cfcostcenter',
@@ -2060,9 +2131,6 @@ if ($ADMIN->fulltree) {
             )
         );
     }
-
-    // phpcs:ignore moodle.Commenting.TodoComment.MissingInfoInline
-    // TODO: globalactivitycompletiontext is currently not implemented because activitycompletiontext isn't either.
 }
 
 $settings = null;

@@ -26,6 +26,7 @@ namespace mod_booking\output;
 
 use context_module;
 use context_system;
+use core_plugin_manager;
 use html_writer;
 use local_wunderbyte_table\local\customfield\wbt_field_controller_info;
 use mod_booking\booking;
@@ -189,6 +190,9 @@ class bookingoption_description implements renderable, templatable {
 
     /** @var string $competencyheader */
     private $competencyheader = '';
+
+    /** @var array $subpluginstemplatedata */
+    private $subpluginstemplatedata = [];
 
     /**
      * Constructor.
@@ -391,9 +395,8 @@ class bookingoption_description implements renderable, templatable {
         // Attachments.
         $this->attachments = booking_option::render_attachments($optionid, 'optionview-bookingoption-attachments mb-3');
 
-        // Every date will be an array of datestring and customfields.
-        // But customfields will only be shown if we show booking option information inline.
-        // Make sure, that optiondates (sessions) are not stored for self-learning courses.
+        // Every date will be an array of datestrings, customfields and additional info like entities.
+        // Make sure, that optiondates (sessions) are not stored/shown for self-learning courses.
         if (empty($settings->selflearningcourse)) {
             $this->dates = $bookingoption->return_array_of_sessions(
                 $bookingevent,
@@ -568,6 +571,15 @@ class bookingoption_description implements renderable, templatable {
 
                 break;
         }
+        foreach (core_plugin_manager::instance()->get_plugins_of_type('bookingextension') as $plugin) {
+            $class = "\\bookingextension_{$plugin->name}\\{$plugin->name}";
+            $sublplugindata = $class::set_template_data_for_optionview($settings);
+            if (!empty($sublplugindata)) {
+                foreach ($sublplugindata as $data) {
+                    $this->subpluginstemplatedata[] = $data;
+                }
+            }
+        }
     }
 
     /**
@@ -625,6 +637,7 @@ class bookingoption_description implements renderable, templatable {
             'canstillbecancelled' => $this->canstillbecancelled,
             'competencies' => $this->competencies,
             'competencyheader' => $this->competencyheader,
+            'subpluginstemplatedata' => $this->subpluginstemplatedata,
         ];
 
         if (!empty($this->timeremaining)) {

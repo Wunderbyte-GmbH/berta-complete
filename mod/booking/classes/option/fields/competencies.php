@@ -349,7 +349,6 @@ class competencies extends field_base {
      * Resolve appelations of competencies.
      *
      * @return array
-     *
      */
     public static function get_filter_options(): array {
         $competencies = self::get_competencies_including_framework();
@@ -361,16 +360,13 @@ class competencies extends field_base {
      * Return a rendered list of options with the same competencies assigned.
      *
      * @param string $competencies
-     * @param booking_option $currentoption
-     *
+     * @param booking_option|null $currentoption
      * @return string
-     *
      */
     public static function get_list_of_similar_options(
-        string $competencies,
-        booking_option $currentoption
-    ) {
-
+        $competencies,
+        $currentoption = null
+    ): string {
         if (
             !get_config('booking', 'usecompetencies')
             || empty($competencies)
@@ -379,13 +375,13 @@ class competencies extends field_base {
         }
 
         $args = [
-            'cmid' => '11',
+            'cmid' => isset($currentoption) && isset($currentoption->cmid) ? $currentoption->cmid : '',
             'columnfilter_competencies' => $competencies,
             'all' => "true",
             'exclude' => 'competencies', // Make sure the button that triggers the filter is not displayed.
         ];
         $env = new stdClass();
-        $list = shortcodes::courselist('courselist', $args, null, $env, $env);
+        $list = shortcodes::allbookingoptions('courselist', $args, null, $env, $env);
         return $list;
     }
 }

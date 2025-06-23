@@ -29,6 +29,7 @@ use coding_exception;
 use core_component;
 use context_system;
 use context;
+use core_plugin_manager;
 use ddl_exception;
 use ddl_change_structure_exception;
 use dml_exception;
@@ -184,6 +185,7 @@ class optionformconfig_info {
      *
      */
     public static function return_configured_fields_for_capability(int $contextid, string $capability) {
+
         if (empty($capability)) {
             $json = '[]';
         } else if (isset(self::$arrayoffieldsets[$contextid][$capability])) {
@@ -192,7 +194,6 @@ class optionformconfig_info {
             // If we find a record in DB, we use it.
             if ($record = self::return_capabilities_from_db($contextid, $capability)) {
                 $json = $record->json;
-                self::$arrayoffieldsets[$contextid][$capability] = $json;
             }
             // But we still check if we need to add fields.
             // We get really all fields, without restriction.
@@ -200,11 +201,24 @@ class optionformconfig_info {
                 "mod_booking",
                 'option\fields'
             );
+
+            // Additionally, we have to check if we have fields in Booking extensions.
+            $bookingextensions = core_plugin_manager::instance()->get_plugins_of_type('bookingextension');
+            if (!empty($bookingextensions)) {
+                foreach ($bookingextensions as $bookingextension) {
+                    $fields = array_merge($fields, core_component::get_component_classes_in_namespace(
+                        $bookingextension->component,
+                        'option\fields'
+                    ));
+                }
+            }
+
             $fields = array_map(
                 fn($a) =>
                 (object)[
                     'id' => $a::$id,
                     'classname' => $a::return_classname_name(),
+                    'fullclassname' => $a::return_full_classname(),
                     'checked' => in_array(MOD_BOOKING_OPTION_FIELD_STANDARD, $a::$fieldcategories) ?
                         1 : 0,
                     'necessary' => in_array(MOD_BOOKING_OPTION_FIELD_NECESSARY, $a::$fieldcategories) ?
@@ -228,6 +242,9 @@ class optionformconfig_info {
                     $filteredarray = array_filter($storedfields, fn($a) => $a->id == $value->id);
                     if (!empty($filteredarray)) {
                         $storefield = reset($filteredarray);
+                        if (!property_exists($storefield, 'fullclassname') && property_exists($value, 'fullclassname')) {
+                            $storefield->fullclassname = $value->fullclassname;
+                        }
                         $newfields[] = $storefield;
                     } else {
                         $newfields[] = $value;
@@ -235,6 +252,7 @@ class optionformconfig_info {
                 }
                 $json = json_encode($newfields);
             }
+            self::$arrayoffieldsets[$contextid][$capability] = $json;
         }
 
         return [

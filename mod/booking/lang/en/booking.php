@@ -1611,6 +1611,7 @@ $string['newoptiondate'] = 'Create a new session...';
 $string['newtemplatesaved'] = 'New template for booking option was saved.';
 $string['next'] = 'Next';
 $string['no'] = 'No';
+$string['nobookinginstancesexist'] = 'No booking instances exist yet';
 $string['nobookingpossible'] = 'No booking possible.';
 $string['nobookingselected'] = 'No booking option selected';
 $string['nocancelreason'] = "You need to give a reason for canceling this booking option";
@@ -2066,7 +2067,7 @@ $string['recordsimporteddescription'] = '{$a} booking options imported via csv';
 $string['recreategroup'] = 'Recreate group in the target course and enrol users in group';
 $string['recurringactioninfo'] = 'This action will be executed when you save this form (by clicking on "Save" button). <b>Be careful</b>, this can not be undone!';
 $string['recurringchildoptions'] = 'Children of this booking option:';
-$string['recurringheader'] = '<i class="fa-solid fa-repeat" aria-hidden="true"></i>&nbsp;Recurring options';
+$string['recurringheader'] = '<i class="fa fa-fw fa-repeat" aria-hidden="true"></i>&nbsp;Recurring options';
 $string['recurringmultiparenting'] = 'Create recurring options repeatedly from same parent';
 $string['recurringmultiparenting_desc'] = 'If a booking option is already a "parent" should it be possible to create another set of recurring options?';
 $string['recurringnotpossibleinfo'] = '<div class="alert alert-info" role="alert">
@@ -2258,6 +2259,12 @@ $string['selectoptionsfirst'] = "Please select booking options first.";
 $string['selectpresencestatus'] = "Choose presence status";
 $string['selectstudentinbo'] = "Select users of a booking option";
 $string['selectteacherinbo'] = "Select teachers of a booking option";
+$string['selectteacherswithprofilefieldonly'] = 'Restrict trainer selection';
+$string['selectteacherswithprofilefieldonlydesc'] = 'Only users with a specific value in a defined user profile field can be selected as trainers.<br>
+<span class="text-danger">Note: <b>Save and reload the page</b> to select the profile field and specify the value.</span>';
+$string['selectteacherswithprofilefieldonlyfield'] = '⤷ Select user profile field for trainers';
+$string['selectteacherswithprofilefieldonlyvalue'] = '⤷ Value';
+$string['selectteacherswithprofilefieldonlyvaluedesc'] = 'Either enter a specific value or a comma-separated list of possible values';
 $string['selectuserfromevent'] = "Select user from event";
 $string['selectusers'] = "Directly select users without connection to the booking option";
 $string['selectusershoppingcart'] = "Choose user who has to pay installments";
@@ -2362,6 +2369,10 @@ $string['showlistoncoursepage_help'] = 'If you activate this setting, the course
 $string['showmessages'] = 'Show messages';
 $string['showmybookingsonly'] = 'My booked options';
 $string['showmyfieldofstudyonly'] = "My field of study";
+$string['showoptiondatesextrainfo'] = 'Show additional information for dates';
+$string['showoptiondatesextrainfo_desc'] = 'Show comments and extra infos of sessions (dates) in the list of booking options
+(on the booking option detail page the extra infos will always be shown regardless of this setting).
+<i>Note: Links to online rooms (Teams, Zoom...) will only be shown on the details page.</i>';
 $string['showpriceifnotloggedin'] = 'Display price(s) for users not logged in';
 $string['showprogressbars'] = 'Show progress bars of time passed';
 $string['showrecentupdates'] = 'Show recent updates';
@@ -2453,6 +2464,7 @@ $string['subject'] = 'Subject';
 $string['submitandadd'] = 'Add a new booking option';
 $string['submitandgoback'] = 'Close this form';
 $string['submitandstay'] = 'Stay here';
+$string['subplugintype_bookingextension_plural'] = 'Booking extensions';
 $string['subscribersto'] = 'Teachers for \'{$a}\'';
 $string['subscribetocourse'] = 'Enrol users in the course';
 $string['subscribeuser'] = 'Do you really want to enrol the users in the following course';
@@ -2507,6 +2519,7 @@ $string['tasksendremindermails'] = 'Booking: Send reminder mails';
 $string['teacher'] = 'Teacher';
 $string['teacherdescription'] = 'Description';
 $string['teachernotfound'] = 'Teacher could not be found or does not exist.';
+$string['teacherpageshiddenbookingids'] = 'Booking instances to be hidden on teacher pages';
 $string['teacherroleid'] = 'Select the following role to enrol teachers in a newly created course (if given).';
 $string['teachers'] = 'Teachers';
 $string['teachersallowmailtobookedusers'] = 'Allow teachers to send an e-mail to all booked users using their own mail client';
