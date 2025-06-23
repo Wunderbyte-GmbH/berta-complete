@@ -25,7 +25,9 @@
 
 namespace local_taskflow\output;
 
+use local_taskflow\local\actions\targets\targets_factory;
 use local_taskflow\local\assignments\assignment;
+use local_taskflow\local\supervisor\supervisor;
 use renderable;
 use renderer_base;
 use templatable;
@@ -66,13 +68,25 @@ class singleassignment implements renderable, templatable {
         $this->data['fullname'] = $assignmentdata->fullname;
         $this->data['assignmentdata']->duedate = userdate($assignmentdata->duedate);
 
+        $supervisor = supervisor::get_supervisor_for_user($assignmentdata->userid);
+        if (!empty($supervisor->id)) {
+            $this->data['supervisoremail'] = $supervisor->email;
+            $this->data['supervisorfullname'] = "$supervisor->firstname $supervisor->lastname";
+        }
         if (class_exists('mod_booking\\shortcodes')) {
             $targets = json_decode($assignmentdata->targets, true);
             $competencyids = '';
             $this->data['courselist'] = "";
             if (is_array($targets)) {
                 foreach ($targets as $target) {
+                    $target['allowuploadevidence'] = false;
+
+                    $target['targetname'] = targets_factory::get_name($target['targettype'], $target['targetid']);
+
+
+                    // Competencies assignments can also be overriden by the user by proofing their competency via upload.
                     if (isset($target['targettype']) && $target['targettype'] === 'competency') {
+                        $target['allowuploadevidence'] = get_config('local_taskflow', 'allowuploadevidence');
                         $target['evidence'] =
                             \local_taskflow\local\competencies\assignment_competency::get_with_evidence_by_user_and_competency(
                                 $assignmentdata->userid,
@@ -115,7 +129,6 @@ class singleassignment implements renderable, templatable {
                     }
                 }
 
-
                 $list = \mod_booking\option\fields\competencies::get_list_of_similar_options($competencyids);
                 if (empty($list)) {
                     $list = get_string('nocoursesavailable', 'local_taskflow');
@@ -131,7 +144,6 @@ class singleassignment implements renderable, templatable {
         $userpicture->size = 1;
         $this->data['profilepicurl'] = $userpicture->get_url($PAGE)->out(false);
         $this->data['ismyassignment'] = $assignment->is_my_assignment();
-
 
         // Get user assignment list.
         $args = [

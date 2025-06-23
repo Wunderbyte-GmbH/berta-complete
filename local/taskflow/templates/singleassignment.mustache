@@ -26,7 +26,7 @@
 }}
 
 <!-- Ensure the following markup resides within the content area of your Moodle page -->
-<div class="container my-4">
+<div class="container my-4" id="userassignmentview">
   <!-- Eckdaten -->
   <div class="card mb-4">
     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center pr-4">
@@ -38,6 +38,7 @@
         <p>{{description}}</p>
         <hr>
         <p>{{#str}} duedateto , local_taskflow {{/str}} <b>{{duedate}}</b></p>
+        <p>{{#str}} supervisor:contacther , local_taskflow {{/str}} <b><a href="mailto:{{supervisoremail}}">{{supervisorfullname}}</a></b></p>
         {{#target}}
         <hr>
         <h5>{{#str}} competencies , local_taskflow {{/str}}:</h5>
@@ -48,16 +49,19 @@
             <dd class="col-sm-12">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>{{targetname}}</span>
-                    {{^evidence.evidence_name}}
-                    <button class="btn btn-primary btn-sm"
-                        data-action="openuserevidencemodal"
-                        data-targetid="{{targetid}}"
-                        data-assignmentid="{{assignmentid}}"
-                        data-competencyid="{{targetid}}"
-                        data-evidenceid="{{evidence.competencyevidenceid}}">
-                        <i class="fas fa-upload"></i> {{#str}} uploadevidence , local_taskflow {{/str}}
-                    </button>
-                    {{/evidence.evidence_name}}
+                    {{#allowuploadevidence}}
+                        {{^evidence.evidence_name}}
+                        <button class="btn btn-primary btn-sm"
+                            data-action="openuserevidencemodal"
+                            data-targetid="{{targetid}}"
+                            data-assignmentid="{{assignmentid}}"
+                            data-competencyid="{{targetid}}"
+                            data-evidenceid="{{evidence.competencyevidenceid}}"
+                            data-assingmentcompetencyid="{{evidence.id}}">
+                            <i class="fas fa-upload"></i> {{#str}} uploadevidence , local_taskflow {{/str}}
+                        </button>
+                        {{/evidence.evidence_name}}
+                    {{/allowuploadevidence}}
                     {{#evidence.evidence_name}}
                     <div class="d-flex justify-content-between align-items-center">
                     <button class="btn btn-primary btn-sm mr-2"
@@ -65,7 +69,8 @@
                         data-targetid="{{targetid}}"
                         data-assignmentid="{{assignmentid}}"
                         data-competencyid="{{targetid}}"
-                        data-evidenceid="{{evidence.competencyevidenceid}}">
+                        data-evidenceid="{{evidence.competencyevidenceid}}"
+                        data-assingmentcompetencyid="{{evidence.id}}">
                         <i class="fas fa-edit"></i> {{#str}} edit {{/str}}
                     </button>
                     <button class="btn btn-danger btn-sm"
@@ -73,7 +78,8 @@
                         data-targetid="{{targetid}}"
                         data-assignmentid="{{assignmentid}}"
                         data-competencyid="{{targetid}}"
-                        data-evidenceid="{{evidence.competencyevidenceid}}">
+                        data-evidenceid="{{evidence.competencyevidenceid}}"
+                        data-assingmentcompetencyid="{{evidence.id}}">
                         <i class="fas fa-trash"></i> {{#str}} delete {{/str}}
                     </button>
                     </div>
@@ -136,7 +142,7 @@
     </div>
     {{/courselist}}
     {{#myassignments}}
-    <div class="card mb-4">
+    <div class="card mb-4" id="myassignments">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center pr-4">
         <h2>{{#str}} myassignments , local_taskflow {{/str}}:</h2>
         <div class="profile-circle"><i class="fas fa-tasks text-dark" aria-hidden="true"></i></div>

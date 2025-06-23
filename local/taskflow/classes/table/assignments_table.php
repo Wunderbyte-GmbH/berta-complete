@@ -24,6 +24,7 @@
  */
 
 namespace local_taskflow\table;
+use context_system;
 use html_writer;
 use local_taskflow\local\assignments\activity_status\assignment_activity_status;
 use local_taskflow\local\assignments\status\assignment_status;
@@ -47,14 +48,25 @@ class assignments_table extends wunderbyte_table {
     public function col_actions($values) {
         global $CFG;
 
-        $url = new moodle_url('/local/taskflow/editassignment.php', [
+        $url = new moodle_url('/local/taskflow/assignment.php', [
             'id' => $values->id,
         ]);
 
         $html = html_writer::div(html_writer::link(
             $url->out(),
-            "<i class='icon fa fa-edit'></i>"
+            '<i class="icon fa fa-info-circle"></i>'
         ));
+        if (has_capability('local/taskflow:editassignment', context_system::instance())) {
+            $url = new moodle_url('/local/taskflow/editassignment.php', [
+                'id' => $values->id,
+            ]);
+
+            $html .= html_writer::div(html_writer::link(
+                $url->out(),
+                "<i class='icon fa fa-edit'></i>"
+            ));
+        }
+
         return $html;
     }
 
@@ -100,5 +112,17 @@ class assignments_table extends wunderbyte_table {
      */
     public function col_statuslabel($values): string {
         return assignment_status::get_label($values->status);
+    }
+
+    /**
+     * Rule Link
+     * @param mixed $values
+     * @return string
+     */
+    public function col_rulename($values): string {
+        $url = new moodle_url('/local/taskflow/assignment.php', [
+            'id' => $values->id,
+        ]);
+        return html_writer::link($url, $values->rulename, ['class' => 'assignment-rulename']);
     }
 }
