@@ -48,7 +48,8 @@ class bookingoption extends targets_base implements targets_interface {
      */
     private function __construct(stdClass $data) {
         $this->id = $data->id;
-        $this->name = $data->text;
+        $url = new \moodle_url('/mod/booking/view.php', ['id' => $this->id]);
+        $this->name = \html_writer::link($url, format_string($data->text));
     }
 
     /**
@@ -69,6 +70,9 @@ class bookingoption extends targets_base implements targets_interface {
                 [ 'id' => $targetid],
                 'id, text'
             );
+            if ($data == false) {
+                return null;
+            }
             self::$instances[$targetid] = new self($data);
         }
         return self::$instances[$targetid];

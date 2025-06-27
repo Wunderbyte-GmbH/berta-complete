@@ -24,11 +24,10 @@
 
 namespace local_taskflow\form;
 
-use assign;
 use context_system;
 use core_form\dynamic_form;
-use local_taskflow\local\assignments\assignment;
 use local_taskflow\local\competencies\assignment_competency;
+use local_taskflow\local\history\history;
 use moodle_url;
 use stdClass;
 use context_user;
@@ -49,6 +48,10 @@ class userevidence extends dynamic_form {
         $mform->setType('evidenceid', PARAM_INT);
         $mform->setConstant('evidenceid', $this->_ajaxformdata['evidenceid']);
 
+        $mform->addElement('hidden', 'assignmentid');
+        $mform->setType('assignmentid', PARAM_INT);
+        $mform->setConstant('assignmentid', $this->_ajaxformdata['assignmentid'] ?? 0);
+
         $mform->addElement('hidden', 'userid');
         $mform->setType('userid', PARAM_INT);
         $mform->setConstant('userid', $this->_ajaxformdata['userid']);
@@ -68,9 +71,6 @@ class userevidence extends dynamic_form {
         // Name.
         $mform->addElement('text', 'name', get_string('userevidencename', 'tool_lp'), 'maxlength="100"');
         $mform->setType('name', PARAM_TEXT);
-        // if ($this->_ajaxformdata['statusmode'] == 'setstatus') {
-        //     $mform->addRule('name', null, 'required', null, 'server');
-        // }
         $mform->addRule('name', get_string('maximumchars', '', 100), 'maxlength', 100, 'client');
         // Description.
         $mform->addElement('editor', 'description', get_string('userevidencedescription', 'tool_lp'), ['rows' => 10]);
@@ -117,6 +117,8 @@ class userevidence extends dynamic_form {
         global $DB;
         $data = $this->get_data();
         $competencyid = $data->competencyid;
+        $assignemnetid = $data->assignmentid;
+        unset($data->assignmentid);
         unset($data->competencyid);
         $draftitemid = $data->files;
         unset($data->files);
@@ -137,11 +139,23 @@ class userevidence extends dynamic_form {
                 }
                 $assigncompetency = new stdClass();
                 $assigncompetency->competencyevidenceid = $evidence->get('id');
+                $assigncompetency->assignmentid = $assignemnetid;
                 $assigncompetency->userid = $data->userid;
                 $assigncompetency->timecreated = time();
                 $assigncompetency->timemodified = time();
                 $assigncompetency->competencyid = $competencyid;
                 $DB->insert_record('local_taskflow_assignment_competency', $assigncompetency, true);
+                history::log(
+                    $assignemnetid,
+                    $data->userid,
+                    history::TYPE_COMPETENCY_UPLOAD,
+                    [
+                        'action' => 'create',
+                        'name' => $data->name,
+                        'description' => $data->description,
+                        'url' => $data->url,
+                    ]
+                );
                 $transaction->allow_commit();
             } catch (\Exception $e) {
                 $transaction->rollback($e);
@@ -150,6 +164,17 @@ class userevidence extends dynamic_form {
             $data->id = $data->evidenceid;
             unset($data->evidenceid);
             $evidence = \core_competency\api::update_user_evidence($data, $draftitemid);
+            history::log(
+                $assignemnetid,
+                $data->userid,
+                history::TYPE_COMPETENCY_UPLOAD,
+                [
+                    'action' => 'create',
+                    'name' => $data->name,
+                    'description' => $data->description,
+                    'url' => $data->url,
+                ]
+            );
             if (!$evidence instanceof user_evidence) {
                 throw new \moodle_exception('errorcreatinguserevidence', 'tool_lp');
             }
@@ -175,7 +200,12 @@ class userevidence extends dynamic_form {
         $assigncompetency->read();
         $assigncompetency->set('status', $data->setstatus);
         $assigncompetency->update();
-
+        if ($assigncompetency->get('status') == 'approved') {
+            $assigncompetency->set_competency();
+        }
+        if ($assigncompetency->get('status') == 'rejected' || $assigncompetency->get('status') == 'underreview') {
+            $assigncompetency->delete_competency();
+        }
         return $data;
     }
 
@@ -210,6 +240,7 @@ class userevidence extends dynamic_form {
                 $data['name'] = $userevidence->get('name');
                 $data['url'] = $userevidence->get('url');
                 $data['userid'] = $userevidence->get('userid');
+
                 $itemid = null;
                 if ($userevidence) {
                     $itemid = $userevidence->get('id');
@@ -218,6 +249,10 @@ class userevidence extends dynamic_form {
                 $draftitemid = file_get_submitted_draft_itemid('files');
                 file_prepare_draft_area($draftitemid, $context->id, 'core_competency', 'userevidence', $itemid);
                 $data['files'] = $draftitemid;
+                $assigncompetency = new assignment_competency();
+                $assigncompetency->set('id', $data['assingmentcompetencyid']);
+                $assigncompetency->read();
+                $data['setstatus'] = $assigncompetency->get('status');
             } else {
                 // If no assignment data is found, we initialize an empty array.
                 $data = (object)[];
@@ -226,6 +261,7 @@ class userevidence extends dynamic_form {
 
         if (
             has_capability('moodle/site:config', context_system::instance())
+            && !empty($data['assingmentcompetencyid'])
             && $data['assingmentcompetencyid']
             && $data['statusmode'] == 'setstatus' && !isset($data['setstatus'])
         ) {

@@ -28,6 +28,7 @@ namespace local_taskflow\local\messages\types;
 use core\task\manager;
 use local_taskflow\local\history\history;
 use local_taskflow\local\messages\message_sending_time;
+use local_taskflow\local\messages\message_recipient;
 use local_taskflow\local\messages\messages_interface;
 use local_taskflow\local\messages\placeholders\placeholders_factory;
 use local_taskflow\sheduled_tasks\send_taskflow_message;
@@ -99,6 +100,32 @@ class standard implements messages_interface {
 
     /**
      * Factory for the organisational units
+     * @return bool
+     */
+    public function is_still_valid() {
+        switch ($this->assignment->status ?? '0') {
+            case '10':
+                return $this->send_only_messages_after_completion();
+            default:
+                break;
+        }
+        return true;
+    }
+
+    /**
+     * Factory for the organisational units
+     * @return bool
+     */
+    public function send_only_messages_after_completion() {
+        $sendingsettings = json_decode($this->message->sending_settings);
+        if ($sendingsettings->sendstart == 'completion') {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Factory for the organisational units
      * @return void
      */
     public function send_and_save_message() {
@@ -119,19 +146,27 @@ class standard implements messages_interface {
             $messagedata = placeholders_factory::render_placeholders(
                 $this->message,
                 $this->ruleid,
-                $this->userid
+                $this->userid,
+                $this->assignment
             );
         }
+        $recipientoperator = new message_recipient($this->userid, $messagedata);
+        $recepient = $recipientoperator->get_recepient();
+        if (empty($recepient)) {
+            return;
+        }
+
+        $body = $messagedata->message->body ?? '';
         $eventdata = new \core\message\message();
         $eventdata->component = 'local_taskflow';
         $eventdata->name = 'notificationmessage';
         $eventdata->userfrom = \core_user::get_noreply_user();
         $eventdata->userto = $this->userid;
         $eventdata->subject = $messagedata->message->heading ?? 'Taskflow notification';
-        $eventdata->fullmessage = $messagedata->message->body ?? '';
+        $eventdata->fullmessage = $body;
         $eventdata->fullmessageformat = FORMAT_MARKDOWN;
-        $eventdata->fullmessagehtml = $messagedata->message->body ?? '';
-        $eventdata->smallmessage = $messagedata->message->body ?? '';
+        $eventdata->fullmessagehtml = nl2br($body);
+        $eventdata->smallmessage = shorten_text($body, 100);
         $eventdata->notification = 1;
         message_send($eventdata);
         $this->log_message_in_history($messagedata->message);
@@ -158,6 +193,17 @@ class standard implements messages_interface {
         );
 
         return;
+    }
+
+    /**
+     * Factory for the organisational units
+     * @return bool
+     */
+    public function is_sheduled_type() {
+        if ($this->message->class == 'standard') {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -216,11 +262,12 @@ class standard implements messages_interface {
      */
     private function get_sent_message() {
         global $DB;
-        return $DB->get_record(self::TABLENAME, [
+        $records = $DB->get_records(self::TABLENAME, [
             'messageid' => $this->message->id,
             'ruleid' => $this->ruleid,
             'userid' => $this->userid,
         ]);
+        return array_shift($records);
     }
 
     /**

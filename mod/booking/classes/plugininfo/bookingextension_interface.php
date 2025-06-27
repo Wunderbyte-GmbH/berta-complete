@@ -77,4 +77,23 @@ interface bookingextension_interface {
      *
      */
     public static function set_template_data_for_optionview(object $settings): array;
+
+    /**
+     * Add an Option to col_action in the bookingoptions_wbtable.php
+     *
+     * @param object $settings
+     * @param mixed $context
+     *
+     * @return string
+     *
+     */
+    public static function add_options_to_col_actions(object $settings, mixed $context): string;
+
+    /**
+     * Returns array of allowed event keys for booking rule react on event.
+     *
+     * @return array
+     *
+     */
+    public static function get_allowedruleeventkeys(): array;
 }

@@ -17,6 +17,8 @@
 namespace local_taskflow\usecases;
 
 use advanced_testcase;
+use cache_helper;
+use completion_completion;
 use context_course;
 use local_taskflow\event\rule_created_updated;
 
@@ -41,7 +43,22 @@ final class betty_best_test extends advanced_testcase {
         $this->resetAfterTest(true);
         \local_taskflow\local\units\unit_relations::reset_instances();
         \local_taskflow\local\rules\rules::reset_instances();
+        $this->set_config_values();
         $this->create_custom_profile_field();
+    }
+
+    /**
+     * Setup the test environment.
+     */
+    protected function set_config_values(): void {
+        global $DB;
+        $settingvalues = [
+            'supervisor_field' => 'supervisor',
+        ];
+        foreach ($settingvalues as $key => $value) {
+            set_config($key, $value, 'local_taskflow');
+        }
+        cache_helper::invalidate_by_event('config', ['local_taskflow']);
     }
 
     /**
@@ -51,6 +68,9 @@ final class betty_best_test extends advanced_testcase {
         global $DB;
         $shortname = 'supervisor';
         $name = ucfirst($shortname);
+        if ($DB->record_exists('user_info_field', ['shortname' => $shortname])) {
+            return 0;
+        }
 
         $field = (object)[
             'shortname' => $shortname,
@@ -89,11 +109,17 @@ final class betty_best_test extends advanced_testcase {
             'email' => 'betty@example.com',
         ]);
 
+        $testingsupervisor = $this->getDataGenerator()->create_user([
+            'firstname' => 'Super',
+            'lastname' => 'Visor',
+            'email' => 'auper@visor.com',
+        ]);
+
         $fieldid = $DB->get_field('user_info_field', 'id', ['shortname' => 'supervisor'], MUST_EXIST);
         $DB->insert_record('user_info_data', (object)[
             'userid' => $user->id,
             'fieldid' => $fieldid,
-            'data' => '124', // This value will be matched against in the rule's filter.
+            'data' => $testingsupervisor->id,
             'dataformat' => FORMAT_HTML,
         ]);
         return $user;
@@ -120,7 +146,7 @@ final class betty_best_test extends advanced_testcase {
      * @param int $userid
      */
     protected function course_completed($courseid, $userid): void {
-        $completion = new \completion_completion([
+        $completion = new completion_completion([
             'course' => $courseid,
             'userid' => $userid,
         ]);
@@ -169,7 +195,7 @@ final class betty_best_test extends advanced_testcase {
                             [
                                 "filtertype" => "user_profile_field",
                                 "userprofilefield" => "supervisor",
-                                "operator" => "equals",
+                                "operator" => "not_equals",
                                 "value" => "124",
                                 "key" => "role",
                             ],
@@ -223,6 +249,9 @@ final class betty_best_test extends advanced_testcase {
      * @covers \local_taskflow\observer
      * @covers \local_taskflow\sheduled_tasks\send_taskflow_message
      * @covers \local_taskflow\local\assignments\status\assignment_status
+     * @covers \local_taskflow\local\messages\message_sending_time
+     * @covers \local_taskflow\local\messages\message_recipient
+     * @covers \local_taskflow\local\messages\placeholders\placeholders_factory
      */
     public function test_betty_best(): void {
         global $DB;

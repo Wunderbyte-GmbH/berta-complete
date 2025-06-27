@@ -39,12 +39,13 @@ class placeholders_factory {
      * @param stdClass $message
      * @param int $ruleid
      * @param int $userid
+     * @param stdClass $assignment
      * @return stdClass
      */
-    public static function render_placeholders($message, $ruleid, $userid) {
+    public static function render_placeholders($message, $ruleid, $userid, $assignment) {
         $placeholders = self::get_placeholder($message->message);
         foreach ($placeholders as $placeholdertype) {
-            $placeholder = new $placeholdertype($ruleid, $userid);
+            $placeholder = new $placeholdertype($ruleid, $userid, $assignment);
             $placeholder->render($message);
         }
         return $message;
@@ -58,7 +59,7 @@ class placeholders_factory {
     public static function has_placeholders($message) {
         $potentialplaceholders = [];
         foreach ($message as $part) {
-            preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $part, $matches);
+            preg_match_all('/<([a-zA-Z0-9_]+)>/', $part, $matches);
             $potentialplaceholders = array_merge($matches[1], $potentialplaceholders);
         }
         foreach ($potentialplaceholders as $potentialplaceholder) {
@@ -76,11 +77,12 @@ class placeholders_factory {
      * @return array
      */
     private static function get_placeholder($message) {
+        global $CFG;
         $validplaceholders = [];
         $potentialplaceholders = [];
 
         foreach ($message as $part) {
-            preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $part, $matches);
+            preg_match_all('/<([a-zA-Z0-9_]+)>/', $part, $matches);
             $potentialplaceholders = array_merge($matches[1], $potentialplaceholders);
         }
         foreach ($potentialplaceholders as $potentialplaceholder) {
@@ -101,7 +103,7 @@ class placeholders_factory {
         $validplaceholders = [];
         $potentialplaceholders = [];
         foreach ($message as $part) {
-            preg_match_all('/\{([a-zA-Z0-9_]+)\}/', $part, $matches);
+            preg_match_all('/<([a-zA-Z0-9_]+)>/', $part, $matches);
             $potentialplaceholders = array_merge($matches[1], $potentialplaceholders);
         }
         foreach ($potentialplaceholders as $potentialplaceholder) {

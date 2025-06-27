@@ -38,7 +38,7 @@ class message_form_entity {
         global $USER, $DB;
         $record = new stdClass();
         $record->id = $formdata->id ?? 0;
-        $record->class = $formdata->type;
+        $record->class = $this->set_messagetype($formdata->sendstart);
         $record->message = json_encode([
             'heading' => $formdata->heading,
             'body' => $formdata->body,
@@ -46,6 +46,7 @@ class message_form_entity {
         $record->usermodified = $USER->id;
         $record->priority = $formdata->priority;
         $record->sending_settings = json_encode([
+            'recipientrole' => $formdata->recipientrole ?? '',
             'senddirection' => $formdata->senddirection,
             'sendstart' => $formdata->sendstart,
             'senddays' => $formdata->senddays,
@@ -59,6 +60,21 @@ class message_form_entity {
             $DB->update_record('local_taskflow_messages', $record);
         }
         return $record->id;
+    }
+
+    /**
+     * Definition.
+     * @param string $sendstart
+     * @return string
+     */
+    private function set_messagetype($sendstart) {
+        if (
+            $sendstart == 'completion' ||
+            $sendstart == 'status_change'
+        ) {
+            return 'onevent';
+        }
+        return 'standard';
     }
 
     /**
@@ -77,10 +93,10 @@ class message_form_entity {
             $decoded = json_decode($record->message ?? '{}');
             $data->heading = $decoded->heading ?? '';
             $data->body = $decoded->body ?? '';
-
             $data->priority = $record->priority;
 
             $sending = json_decode($record->sending_settings ?? '{}');
+            $data->recipientrole = $sending->recipientrole ?? '';
             $data->senddirection = $sending->senddirection ?? '';
             $data->sendstart = $sending->sendstart ?? '';
             $data->senddays = $sending->senddays ?? '';

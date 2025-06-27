@@ -25,6 +25,7 @@
 
 namespace local_taskflow\local\actions\types;
 
+use core_competency\competency;
 use mod_booking\bo_availability\bo_info;
 use mod_booking\booking_bookit;
 use mod_booking\singleton_service;
@@ -81,6 +82,9 @@ class enroll implements actions_interface {
             case 'bookingoption':
                 // Check if the course exists.
                 return $this->is_active_bookingoption();
+            case 'competency':
+                // Check if the course exists.
+                return $this->is_active_competency();
             default:
                 return false;
         }
@@ -100,6 +104,8 @@ class enroll implements actions_interface {
             case 'bookingoption':
                 // Check if the course exists.
                 return $this->enrol_to_bookingoption();
+            case 'competency':
+                return $this->enrol_to_competency();
             default:
                 return false;
         }
@@ -112,6 +118,12 @@ class enroll implements actions_interface {
      *
      */
     private function enrol_to_course() {
+        $context = context_course::instance($this->target->targetid);
+        $isenrolled = is_enrolled($context, $this->userid);
+        if ($isenrolled) {
+            return true;
+        }
+
         $enrol = enrol_get_plugin('manual');
         if ($this->manualinstance !== null) {
             global $DB;
@@ -167,8 +179,58 @@ class enroll implements actions_interface {
 
         // We always run this twice, because we need to confirm that the user is actually enrolled.
         $result = booking_bookit::bookit('option', $settings->id, $this->userid);
-        $result = booking_bookit::bookit('option', $settings->id, $this->userid);
 
+        return true;
+    }
+
+    /**
+     * Enrols the user to the course
+     *
+     * @return bool
+     *
+     */
+    private function enrol_to_competency() {
+        global $DB;
+        $competencyid = $this->target->targetid;
+        $sql = "SELECT c.id
+                FROM {course} c
+                JOIN {competency_coursecomp} cc ON cc.courseid = c.id
+                WHERE cc.competencyid = :competencyid";
+
+        $courses = $DB->get_records_sql($sql, ['competencyid' => $competencyid]);
+
+        foreach ($courses as $course) {
+            $context = context_course::instance($course->id);
+            if (is_enrolled($context, $this->userid)) {
+                continue;
+            }
+            $enrolinstances = enrol_get_instances($course->id, true);
+            $manualinstance = null;
+
+            foreach ($enrolinstances as $instance) {
+                if ($instance->enrol === 'manual') {
+                    $manualinstance = $instance;
+                    break;
+                }
+            }
+
+            if (!$manualinstance) {
+                throw new moodle_exception('No manual enrolment method found for course ID ' . $course->id);
+            }
+
+            $enrolplugin = enrol_get_plugin('manual');
+            if (!$enrolplugin) {
+                throw new moodle_exception('Manual enrolment plugin not enabled.');
+            }
+
+            $studentrole = $DB->get_record('role', ['shortname' => 'student'], '*', MUST_EXIST);
+            $enrolplugin->enrol_user(
+                $manualinstance,
+                $this->userid,
+                $studentrole->id,
+                time()
+            );
+        }
         return true;
     }
 
@@ -191,9 +253,8 @@ class enroll implements actions_interface {
         $context = context_course::instance($courseid);
         $isenrolled = is_enrolled($context, $this->userid);
         if ($isenrolled) {
-            return false;
+            return true;
         }
-
         $instances = enrol_get_instances($courseid, true);
         foreach ($instances as $instance) {
             if ($instance->enrol === 'manual') {
@@ -243,5 +304,21 @@ class enroll implements actions_interface {
         }
 
         return true;
+    }
+
+    /**
+     * Checks if the booking option is active and available for enrolment.
+     *
+     * @return bool
+     *
+     */
+    private function is_active_competency(): bool {
+        global $DB;
+        $competencyid = $this->target->targetid;
+        $competency = competency::get_record(['id' => $competencyid]);
+        if ($competency) {
+            return true;
+        }
+        return false;
     }
 }

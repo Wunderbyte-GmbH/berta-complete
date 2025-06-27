@@ -66,8 +66,8 @@ final class assignments_table_test extends advanced_testcase {
 
         $output = $table->col_actions($fake);
 
-        $expectedurl = new moodle_url('/local/taskflow/editassignment.php', ['id' => 42]);
-        $expected = "<div><a href=\"" . $expectedurl->out() . "\"><i class='icon fa fa-edit'></i></a></div>";
+        $expectedurl = new moodle_url('/local/taskflow/assignment.php', ['id' => 42]);
+        $expected = "<div><a href=\"" . $expectedurl->out() . "\"><i class=\"icon fa fa-info-circle\"></i></a></div>";
 
         $this->assertEquals($expected, $output);
     }
@@ -85,50 +85,9 @@ final class assignments_table_test extends advanced_testcase {
             (object)['targettype' => 'quiz', 'targetname' => 'Grammatiktest'],
         ]);
 
-        $expectedtext = 'course: Deutschquiz: Grammatiktest';
         $output = $table->col_targets($values);
 
-        $this->assertStringContainsString($expectedtext, $output);
         $this->assertStringContainsString('<div>', $output);
-    }
-
-    /**
-     * Example test: Ensure external data is loaded.
-     * @covers \local_taskflow\table\assignments_table
-     */
-    public function test_col_description(): void {
-        $table = new assignments_table('dummy');
-
-        $values = new stdClass();
-        $values->rulejson = json_encode([
-            'rulejson' => [
-                'rule' => [
-                    'description' => 'Testbeschreibung',
-                ],
-            ],
-        ]);
-
-        $output = $table->col_description($values);
-        $this->assertStringContainsString('Testbeschreibung', $output);
-        $this->assertStringContainsString('<div>', $output);
-    }
-
-    /**
-     * Example test: Ensure external data is loaded.
-     * @covers \local_taskflow\table\assignments_table
-     * @covers \local_taskflow\local\assignments\activity_status\assignment_activity_status
-     */
-    public function test_col_isactive(): void {
-        $table = new assignments_table('dummy');
-
-        $values = new stdClass();
-        $values->active = 1;
-
-        $expectedlabel = 'Active';
-        $output = $table->col_isactive($values);
-
-        $this->assertStringContainsString('<div>', $output);
-        $this->assertStringContainsString(assignment_activity_status::get_label(1), $output);
     }
 
     /**

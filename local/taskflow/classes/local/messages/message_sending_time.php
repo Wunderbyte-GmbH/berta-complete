@@ -25,7 +25,6 @@
 
 namespace local_taskflow\local\messages;
 
-use local_taskflow\local\rules\rules;
 use stdClass;
 
 /**
@@ -57,8 +56,10 @@ class message_sending_time {
     public function calaculate_sending_time($assignemnt) {
         $sendingsettings = json_decode($this->message->sending_settings);
 
-        $targetdate = $assignemnt->assigneddate ?? time();
-        if ($sendingsettings->sendstart == 'end') {
+        $targetdate = time();
+        if ($sendingsettings->sendstart == 'start') {
+            $targetdate = $assignemnt->assigneddate ?? time();
+        } else if ($sendingsettings->sendstart == 'end') {
             $targetdate = $assignemnt->duedate ?? time();
         }
 

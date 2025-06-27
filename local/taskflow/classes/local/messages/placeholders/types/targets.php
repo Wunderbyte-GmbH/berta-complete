@@ -37,20 +37,25 @@ use stdClass;
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class targets implements placeholders_interface {
-    /** @var int Event name for user updated. */
-    public rules $rule;
+    /** @var mixed Event name for user updated. */
+    public mixed $rule;
+
+    /** @var mixed Event name for user updated. */
+    public mixed $user;
 
     /** @var stdClass Event name for user updated. */
-    public stdClass $user;
+    public stdClass $assignment;
 
     /**
      * Factory for the organisational units
      * @param int $ruleid
      * @param int $userid
+     * @param stdClass $assignment
      */
-    public function __construct($ruleid, $userid) {
+    public function __construct($ruleid, $userid, $assignment) {
         $this->rule = $this->get_rule($ruleid);
         $this->user = \core_user::get_user($userid);
+        $this->assignment = $assignment;
     }
 
     /**
@@ -58,7 +63,7 @@ class targets implements placeholders_interface {
      * @param stdClass $message
      */
     public function render(&$message) {
-        $placeholdertarget = "{targets}";
+        $placeholdertarget = "<targets>";
         $placeholderreplace = $this->get_replacement($message->id);
         foreach ($message->message as &$messagepart) {
             $messagepart = str_replace(

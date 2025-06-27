@@ -24,11 +24,15 @@
  */
 
 namespace local_taskflow\table;
+use cache_helper;
 use context_system;
+use core_user;
 use html_writer;
 use local_taskflow\local\assignments\activity_status\assignment_activity_status;
+use local_taskflow\local\assignments\assignments_facade;
 use local_taskflow\local\assignments\status\assignment_status;
 use local_wunderbyte_table\wunderbyte_table;
+use local_wunderbyte_table\output\table;
 use moodle_url;
 
 /**
@@ -46,7 +50,7 @@ class assignments_table extends wunderbyte_table {
      * @return string
      */
     public function col_actions($values) {
-        global $CFG;
+        global $OUTPUT;
 
         $url = new moodle_url('/local/taskflow/assignment.php', [
             'id' => $values->id,
@@ -56,6 +60,7 @@ class assignments_table extends wunderbyte_table {
             $url->out(),
             '<i class="icon fa fa-info-circle"></i>'
         ));
+        $data = [];
         if (has_capability('local/taskflow:editassignment', context_system::instance())) {
             $url = new moodle_url('/local/taskflow/editassignment.php', [
                 'id' => $values->id,
@@ -65,9 +70,35 @@ class assignments_table extends wunderbyte_table {
                 $url->out(),
                 "<i class='icon fa fa-edit'></i>"
             ));
-        }
 
-        return $html;
+            $class = 'fa fa-eye-slash';
+            $title = get_string('assignmentactivate', 'local_taskflow');
+            if ((int) $values->active > 0) {
+                $class = 'fa fa-eye';
+                $title = get_string('assignmentdeactivate', 'local_taskflow');
+            }
+
+            $data[] = [
+                'label' => '', // Name of your action button.
+                'href' => '#', // You can either use the link, or JS, or both.
+                'iclass' => $class, // Add an icon before the label.
+                'arialabel' => 'eye', // Add an aria-label string to your icon.
+                'title' => $title,
+                'id' => $values->id . '-'  . $this->uniqueid,
+                'name' => $this->uniqueid . '-' . $values->id,
+                'methodname' => 'toggleassigmentactive', // The method needs to be added to your child of wunderbyte_table class.
+                'nomodal' => true,
+                'data' => [ // Will be added eg as data-id = $values->id, so values can be transmitted to the method above.
+                    'id' => $values->id,
+                    'username' => $values->fullname,
+                    'rulename' => $values->rulename,
+                ],
+            ];
+            table::transform_actionbuttons_array($data);
+        }
+        return
+            $html .
+            $OUTPUT->render_from_template('local_wunderbyte_table/component_actionbutton', ['showactionbuttons' => $data]);
     }
 
     /**
@@ -78,31 +109,17 @@ class assignments_table extends wunderbyte_table {
     public function col_targets($values) {
         $jsonobject = json_decode($values->targets) ?? [];
         $html = '';
+        $stringmanager = get_string_manager();
         foreach ($jsonobject as $item) {
-            $html .= "$item->targettype: $item->targetname";
+            if ($stringmanager->string_exists($item->targettype, 'local_taskflow')) {
+                $type = get_string($item->targettype, 'local_taskflow');
+            } else {
+                $type = $item->targettype;
+            }
+
+            $html .= "<b>$type:</b> $item->targetname </br>";
         }
         return html_writer::div($html);
-    }
-
-    /**
-     * Description.
-     * @param mixed $values
-     * @return string
-     */
-    public function col_description($values) {
-        $jsonobject = json_decode($values->rulejson) ?? [];
-        $html = $jsonobject->rulejson->rule->description ?? '';
-        return html_writer::div($html);
-    }
-
-    /**
-     * Is active.
-     * @param mixed $values
-     * @return string
-     */
-    public function col_isactive($values) {
-        $label = assignment_activity_status::get_label($values->active);
-        return html_writer::div($label);
     }
 
     /**
@@ -124,5 +141,45 @@ class assignments_table extends wunderbyte_table {
             'id' => $values->id,
         ]);
         return html_writer::link($url, $values->rulename, ['class' => 'assignment-rulename']);
+    }
+
+    /**
+     * All other columns are here.
+     *
+     * @param mixed $column
+     * @param mixed $values
+     *
+     * @return string
+     *
+     */
+    public function other_cols($column, $values): string {
+        switch ($column) {
+            // Cast userid to name of user.
+            case "custom_" . get_config('local_taskflow', 'supervisor_field'):
+                $user = core_user::get_user($values->$column);
+                return core_user::get_fullname($user) ?? '';
+            default:
+                return $values->$column ?? '';
+        }
+    }
+
+    /**
+     * Toggle active state of assignement to active - unactive.
+     *
+     * @param int $id
+     * @param string $data
+     *
+     * @return array
+     *
+     */
+    public function action_toggleassigmentactive(int $id, string $data) {
+        $state = assignments_facade::toggle_assignment_active($id);
+        $dataobject = json_decode($data);
+        $uncheckedmessage = get_string('assignmentuncheckedmess', 'local_taskflow', $dataobject);
+        $checkedmessage = get_string('assignmentcheckedmess', 'local_taskflow', $dataobject);
+        return [
+           'success' => 1,
+           'message' => $state > 0 ? $checkedmessage : $uncheckedmessage,
+        ];
     }
 }

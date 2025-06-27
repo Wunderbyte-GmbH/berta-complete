@@ -25,6 +25,8 @@
 
 namespace local_taskflow\local\completion_process\types;
 
+use core_competency\api;
+
 /**
  * Class unit
  *
@@ -37,6 +39,10 @@ class competency extends types_base implements types_interface {
      * @return bool
      */
     public function is_completed() {
+        global $DB;
+        if (!$DB->record_exists('competency_usercomp', ['competencyid' => $this->targetid, 'userid' => $this->userid])) {
+            return false;
+        }
         return true;
     }
 }

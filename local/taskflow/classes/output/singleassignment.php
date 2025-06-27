@@ -25,8 +25,10 @@
 
 namespace local_taskflow\output;
 
+use Exception;
 use local_taskflow\local\actions\targets\targets_factory;
 use local_taskflow\local\assignments\assignment;
+use local_taskflow\local\completion_process\completion_operator;
 use local_taskflow\local\supervisor\supervisor;
 use renderable;
 use renderer_base;
@@ -57,7 +59,7 @@ class singleassignment implements renderable, templatable {
         global $DB, $PAGE;
 
         if (empty($data['id'])) {
-            throw new \moodle_exception('invalidassignmentid', 'local_taskflow');
+            throw new moodle_exception('invalidassignmentid', 'local_taskflow');
         }
         $assignment = new assignment($data['id']);
         $assignmentdata = $assignment->return_class_data();
@@ -68,73 +70,33 @@ class singleassignment implements renderable, templatable {
         $this->data['fullname'] = $assignmentdata->fullname;
         $this->data['assignmentdata']->duedate = userdate($assignmentdata->duedate);
 
+        if (class_exists('mod_booking\\price')) {
+            \mod_booking\price::set_bookforuser($assignmentdata->userid);
+        }
+
         $supervisor = supervisor::get_supervisor_for_user($assignmentdata->userid);
         if (!empty($supervisor->id)) {
             $this->data['supervisoremail'] = $supervisor->email;
             $this->data['supervisorfullname'] = "$supervisor->firstname $supervisor->lastname";
         }
         if (class_exists('mod_booking\\shortcodes')) {
+
             $targets = json_decode($assignmentdata->targets, true);
-            $competencyids = '';
-            $this->data['courselist'] = "";
+            $this->data['courselist'] = [];
             if (is_array($targets)) {
                 foreach ($targets as $target) {
                     $target['allowuploadevidence'] = false;
-
                     $target['targetname'] = targets_factory::get_name($target['targettype'], $target['targetid']);
-
-
-                    // Competencies assignments can also be overriden by the user by proofing their competency via upload.
-                    if (isset($target['targettype']) && $target['targettype'] === 'competency') {
-                        $target['allowuploadevidence'] = get_config('local_taskflow', 'allowuploadevidence');
-                        $target['evidence'] =
-                            \local_taskflow\local\competencies\assignment_competency::get_with_evidence_by_user_and_competency(
-                                $assignmentdata->userid,
-                                $target['targetid']
-                            );
-
-                        if (empty((array) $target['evidence'])) {
-                            unset($target['evidence']);
-                        } else {
-                            $userevidence = \core_competency\api::read_user_evidence($target['evidence']->competencyevidenceid);
-                            $fs = get_file_storage();
-
-                            $files = $fs->get_area_files(
-                                context_user::instance($assignmentdata->userid)->id,
-                                'core_competency',
-                                'userevidence',
-                                $userevidence->get('id'),
-                                'sortorder, itemid, filepath, filename',
-                                false
-                            );
-
-                            foreach ($files as $file) {
-                                $url = moodle_url::make_pluginfile_url(
-                                    $file->get_contextid(),
-                                    $file->get_component(),
-                                    $file->get_filearea(),
-                                    $file->get_itemid(),
-                                    $file->get_filepath(),
-                                    $file->get_filename()
-                                );
-                                $target['file'][] = [
-                                    'url' => $url->out(),
-                                    'name' => $file->get_filename(),
-                                ];
-                            }
-                        }
-
-                        $this->data['target'][] = $target;
-                        $competencyids .= $target['targetid'];
-                    }
+                    $co = new completion_operator(
+                        $target['targetid'],
+                        $assignmentdata->userid,
+                        $target['targettype'],
+                    );
+                    $target['iscompleted'] = $co->is_target_completed();
+                    $target['assignmentid'] = $data['id'];
+                    $target['targettypestr'] = get_string($target['targettype'], 'local_taskflow');
+                    $this->process_target($target, $assignmentdata);
                 }
-
-                $list = \mod_booking\option\fields\competencies::get_list_of_similar_options($competencyids);
-                if (empty($list)) {
-                    $list = get_string('nocoursesavailable', 'local_taskflow');
-                }
-                $this->data['courselist'] .= $list;
-                $this->data['courselist'] .= '<br>';
             }
         }
 
@@ -151,6 +113,100 @@ class singleassignment implements renderable, templatable {
         $env = new stdClass();
         $myassignments = \local_taskflow\shortcodes::myassignments('myassignments', $args, null, $env, $env);
         $this->data['myassignments'] = $myassignments;
+    }
+
+    /**
+     * Prepare course list for the target.
+     * @param array $target
+     * @return array
+     */
+    public function prepare_courselist($target): array {
+        $courselist = [];
+        $courselist['targetname'] = targets_factory::get_name($target['targettype'], $target['targetid']);
+        $courselist['list'] = \mod_booking\option\fields\competencies::get_list_of_similar_options($target['targetid']);
+        if (empty($list)) {
+            $list = get_string('nocoursesavailable', 'local_taskflow');
+        }
+        return $courselist;
+    }
+
+    /**
+     * Process competency target.
+     * @param array $target
+     * @param mixed $assignmentdata
+     * @return array
+     */
+    private function process_competency_target($target, $assignmentdata): array {
+        $target['allowuploadevidence'] = get_config('local_taskflow', 'allowuploadevidence');
+
+        $target['evidence'] = \local_taskflow\local\competencies\assignment_competency::get_with_evidence_by_user_and_competency(
+            $assignmentdata->userid,
+            $target['targetid']
+        );
+
+        if (empty((array) $target['evidence'])) {
+            unset($target['evidence']);
+        } else {
+            $userevidence = \core_competency\api::read_user_evidence($target['evidence']->competencyevidenceid);
+            $fs = get_file_storage();
+
+            $files = $fs->get_area_files(
+                context_user::instance($assignmentdata->userid)->id,
+                'core_competency',
+                'userevidence',
+                $userevidence->get('id'),
+                'sortorder, itemid, filepath, filename',
+                false
+            );
+
+            foreach ($files as $file) {
+                $url = moodle_url::make_pluginfile_url(
+                    $file->get_contextid(),
+                    $file->get_component(),
+                    $file->get_filearea(),
+                    $file->get_itemid(),
+                    $file->get_filepath(),
+                    $file->get_filename()
+                );
+
+                $target['file'][] = [
+                    'url' => $url->out(),
+                    'name' => $file->get_filename(),
+                ];
+            }
+        }
+        return $target;
+    }
+
+    /**
+     * Process booking target.
+     * @param array $target
+     * @param \stdClass $assignment
+     * @return array
+     */
+    private function process_booking_target(array $target, stdClass $assignment) {
+        return $target;
+    }
+
+
+    /**
+     * Process the target based on its type.
+     * @param array $target
+     * @param mixed $assignmentdata
+     * @return void
+     */
+    private function process_target(array $target, stdClass $assignmentdata): void {
+        switch ($target['targettype'] ?? null) {
+            case 'competency':
+                $this->data['target'][]  = $this->process_competency_target($target, $assignmentdata);
+                $this->data['courselist'][] = $this->prepare_courselist($target);
+                break;
+            case 'bookingoption':
+                $this->data['target'][] = $this->process_booking_target($target, $assignmentdata);
+                break;
+            default:
+                $this->data['target'][] = $target;
+        }
     }
 
     /**
