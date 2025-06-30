@@ -30,6 +30,7 @@ use local_taskflow\local\actions\targets\targets_factory;
 use local_taskflow\local\assignments\assignment;
 use local_taskflow\local\completion_process\completion_operator;
 use local_taskflow\local\supervisor\supervisor;
+use mod_booking\singleton_service;
 use renderable;
 use renderer_base;
 use templatable;
@@ -37,6 +38,7 @@ use context_user;
 use moodle_exception;
 use moodle_url;
 use stdClass;
+use html_writer;
 /**
  * Display this element
  * @package local_taskflow
@@ -55,7 +57,6 @@ class singleassignment implements renderable, templatable {
      * @param array $data
      */
     public function __construct(array $data) {
-
         global $DB, $PAGE;
 
         if (empty($data['id'])) {
@@ -80,9 +81,7 @@ class singleassignment implements renderable, templatable {
             $this->data['supervisorfullname'] = "$supervisor->firstname $supervisor->lastname";
         }
         if (class_exists('mod_booking\\shortcodes')) {
-
             $targets = json_decode($assignmentdata->targets, true);
-            $this->data['courselist'] = [];
             if (is_array($targets)) {
                 foreach ($targets as $target) {
                     $target['allowuploadevidence'] = false;
@@ -185,9 +184,35 @@ class singleassignment implements renderable, templatable {
      * @return array
      */
     private function process_booking_target(array $target, stdClass $assignment) {
+        global $PAGE;
+
+        $returnurl = $PAGE->url->out();
+        $settings = singleton_service::get_instance_of_booking_option_settings($target['targetid']);
+        $url = new moodle_url("/mod/booking/optionview.php", [
+            "optionid" => (int)$settings->id,
+            "cmid" => (int)$settings->cmid,
+            "userid" => (int)$assignment->userid,
+            'returnto' => 'url',
+            'returnurl' => $returnurl,
+        ]);
+        $target['targetname'] = html_writer::link($url, format_string($target['targetname']));
+
         return $target;
     }
 
+    /**
+     * Process booking target.
+     * @param array $target
+     * @param \stdClass $assignment
+     * @return array
+     */
+    private function process_course_target(array $target, stdClass $assignment) {
+        $url = new moodle_url('/course/view.php', [
+            'id' => $target['targetid'],
+        ]);
+        $target['targetname'] = html_writer::link($url, $target['targetname']);
+        return $target;
+    }
 
     /**
      * Process the target based on its type.
@@ -199,10 +224,14 @@ class singleassignment implements renderable, templatable {
         switch ($target['targettype'] ?? null) {
             case 'competency':
                 $this->data['target'][]  = $this->process_competency_target($target, $assignmentdata);
+                $this->data['hascompetency'] = true;
                 $this->data['courselist'][] = $this->prepare_courselist($target);
                 break;
             case 'bookingoption':
                 $this->data['target'][] = $this->process_booking_target($target, $assignmentdata);
+                break;
+            case 'moodlecourse':
+                $this->data['target'][] = $this->process_course_target($target, $assignmentdata);
                 break;
             default:
                 $this->data['target'][] = $target;
